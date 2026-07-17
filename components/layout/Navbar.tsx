@@ -6,7 +6,6 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
 
 const navLinks = [
   { label: "עבודות", href: "/#projects" },
@@ -18,12 +17,13 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <motion.header
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className="fixed inset-x-0 top-0 z-50 border-b border-white/6 bg-background/85 backdrop-blur-md"
-    >
+    <>
+      <motion.header
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="fixed inset-x-0 top-0 z-50 border-b border-white/6 bg-background/85 backdrop-blur-md"
+      >
       <div className="relative mx-auto flex h-[68px] max-w-[1200px] items-center justify-between px-6">
         {/* Logo — pinned to the visual left, brand-convention regardless of RTL */}
         <Link href="/" className="absolute left-6 top-1/2 flex -translate-y-1/2 items-center">
@@ -69,34 +69,53 @@ export default function Navbar() {
           {menuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
+      </motion.header>
 
+      {/* Mobile menu — bottom sheet, native-feeling instead of a top dropdown.
+          Rendered as a sibling of motion.header, not a descendant: Framer
+          Motion leaves a `transform` style on animated elements even at
+          rest, and any transformed ancestor turns into a containing block
+          for position:fixed descendants — which silently breaks "fixed"
+          positioning (it anchors to the header's box instead of the
+          viewport) if this sheet lived inside the header. */}
       <AnimatePresence>
         {menuOpen && (
-          <motion.nav
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className={cn("overflow-hidden border-t border-white/6 bg-background/95 backdrop-blur-md md:hidden")}
-          >
-            <div className="flex flex-col gap-1 px-6 py-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMenuOpen(false)}
-                  className="rounded-lg px-2 py-3 font-display text-base font-medium text-white/75 transition-colors hover:bg-white/5 hover:text-primary-light"
-                >
-                  {link.label}
-                </Link>
-              ))}
-              <Button href="/contact" variant="primary" showArrow={false} className="mt-2 justify-center">
-                התחל פרויקט
-              </Button>
-            </div>
-          </motion.nav>
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setMenuOpen(false)}
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+            />
+            <motion.nav
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 32, stiffness: 320 }}
+              className="fixed inset-x-0 bottom-0 z-40 rounded-t-3xl border-t border-white/10 bg-background pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-[0_-20px_60px_rgba(0,0,0,0.5)] md:hidden"
+            >
+              <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-white/20" />
+              <div className="flex flex-col gap-1 px-6 pt-5">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMenuOpen(false)}
+                    className="rounded-xl px-3 py-4 font-display text-lg font-medium text-white/80 transition-colors active:bg-white/5"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                <Button href="/contact" variant="primary" showArrow={false} className="mt-3 justify-center py-3.5 text-base">
+                  התחל פרויקט
+                </Button>
+              </div>
+            </motion.nav>
+          </>
         )}
       </AnimatePresence>
-    </motion.header>
+    </>
   );
 }
