@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import { SceneCanvas } from "@/components/three/SceneCanvas";
+import MobileHeroBackground from "./MobileHeroBackground";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ export default function HeroSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
   const show3D = !prefersReducedMotion && !isMobile;
+  const showMobileBackground = !prefersReducedMotion && isMobile;
 
   return (
     <section
@@ -30,6 +32,8 @@ export default function HeroSection() {
           <SceneCanvas camera={{ position: [0, 0, 7], fov: 38 }}>
             <HeroScene />
           </SceneCanvas>
+        ) : showMobileBackground ? (
+          <MobileHeroBackground />
         ) : (
           <div
             className="absolute inset-0"
