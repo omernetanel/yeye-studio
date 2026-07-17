@@ -1,83 +1,44 @@
-﻿"use client";
+"use client";
 
 import { motion } from "framer-motion";
-import ShimmerButton from "@/components/ui/ShimmerButton";
+import Button from "@/components/ui/Button";
+
+const particles = [...Array(16)].map((_, i) => ({
+  size: i % 3 === 0 ? 3 : 2,
+  color: i % 2 === 0 ? "#2a33f3" : "#6B8FF8",
+  left: `${8 + ((i * 7.5) % 84)}%`,
+  top: `${15 + ((i * 13) % 70)}%`,
+  duration: 3 + (i % 4),
+  delay: i * 0.4,
+}));
 
 export default function CTASection() {
   return (
-    <section id="contact" style={{
-      backgroundColor: "transparent",
-      padding: "120px 24px",
-      position: "relative",
-      overflow: "hidden",
-      textAlign: "center",
-    }}>
-      {/* Floating particles */}
-      {[...Array(16)].map((_, i) => (
+    <section id="contact" className="relative overflow-hidden px-6 py-24 text-center md:py-32">
+      {particles.map((p, i) => (
         <motion.div
           key={i}
-          animate={{
-            y: [0, -20, 0],
-            opacity: [0.2, 0.6, 0.2],
-          }}
-          transition={{
-            duration: 3 + (i % 4),
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: i * 0.4,
-          }}
-          style={{
-            position: "absolute",
-            width: i % 3 === 0 ? "3px" : "2px",
-            height: i % 3 === 0 ? "3px" : "2px",
-            borderRadius: "50%",
-            backgroundColor: i % 2 === 0 ? "#2a33f3" : "#6B8FF8",
-            left: `${8 + (i * 7.5) % 84}%`,
-            top: `${15 + (i * 13) % 70}%`,
-            pointerEvents: "none",
-          }}
+          animate={{ y: [0, -20, 0], opacity: [0.2, 0.6, 0.2] }}
+          transition={{ duration: p.duration, repeat: Infinity, ease: "easeInOut", delay: p.delay }}
+          className="pointer-events-none absolute rounded-full"
+          style={{ width: p.size, height: p.size, backgroundColor: p.color, left: p.left, top: p.top }}
         />
       ))}
 
-      {/* Pulsing background glow */}
       <motion.div
-        animate={{
-          scale: [1, 1.15, 1],
-          opacity: [0.25, 0.45, 0.25],
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: "700px",
-          height: "350px",
-          background: "radial-gradient(ellipse, rgba(42,51,243,0.35) 0%, transparent 70%)",
-          filter: "blur(40px)",
-          pointerEvents: "none",
-        }}
+        animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.45, 0.25] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute top-1/2 left-1/2 h-[350px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[40px]"
+        style={{ background: "radial-gradient(ellipse, rgba(42,51,243,0.35) 0%, transparent 70%)" }}
       />
 
-      <div style={{ position: "relative", zIndex: 1 }}>
+      <div className="relative z-10">
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.5 }}
-          style={{
-            fontFamily: "'GoogleSans', Arial, sans-serif",
-            fontSize: "14px",
-            color: "#6B8FF8",
-            fontWeight: 500,
-            letterSpacing: "0.08em",
-            marginBottom: "24px",
-            textTransform: "uppercase",
-          }}
+          className="mb-6 font-display text-sm font-medium tracking-[0.08em] text-primary-light uppercase"
         >
           מוכנים להתחיל?
         </motion.p>
@@ -87,26 +48,11 @@ export default function CTASection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-          style={{
-            fontFamily: "'GoogleSans', Arial, sans-serif",
-            fontWeight: 800,
-            fontSize: "clamp(40px, 5vw, 72px)",
-            color: "white",
-            lineHeight: 1.1,
-            letterSpacing: "-0.03em",
-            marginBottom: "24px",
-          }}
+          className="mb-6 font-display text-[clamp(40px,5vw,72px)] leading-[1.1] font-extrabold tracking-tight text-white"
         >
           בוא נבנה משהו
           <br />
-          <span style={{
-            backgroundImage: "linear-gradient(135deg, #2a33f3 0%, #6B8FF8 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          }}>
-            שבאמת עובד.
-          </span>
+          <span className="bg-[image:var(--gradient-brand)] bg-clip-text text-transparent">שבאמת עובד.</span>
         </motion.h2>
 
         <motion.p
@@ -114,13 +60,7 @@ export default function CTASection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          style={{
-            fontFamily: "'Assistant', Arial, sans-serif",
-            fontSize: "18px",
-            color: "rgba(255,255,255,0.45)",
-            marginBottom: "40px",
-            lineHeight: 1.7,
-          }}
+          className="mb-10 font-body text-lg text-white/45"
         >
           ייעוץ ראשוני ללא עלות. נשמח לשמוע על הפרויקט שלך.
         </motion.p>
@@ -131,7 +71,9 @@ export default function CTASection() {
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <ShimmerButton href="/contact" variant="primary">בוא נתחיל ביחד</ShimmerButton>
+          <Button href="/contact" variant="primary">
+            בוא נתחיל ביחד
+          </Button>
         </motion.div>
       </div>
     </section>
