@@ -3,6 +3,7 @@
 import { motion, type Variants } from "framer-motion";
 import ProjectCard from "@/components/ui/ProjectCard";
 import Button from "@/components/ui/Button";
+import SwipeCarousel from "@/components/ui/SwipeCarousel";
 import { projects } from "@/lib/projects";
 
 const comingSoonSlots = [1, 2, 3];
@@ -35,11 +36,35 @@ export default function ProjectsSection() {
           <div className="mx-auto h-[3px] w-[50px] rounded-full bg-[image:var(--gradient-brand)]" />
         </motion.div>
 
+        {/* Mobile: one swipe carousel — real projects, then "coming soon" slots */}
+        <SwipeCarousel className="mb-10" slideWidth="82%">
+          {[
+            ...projects.map((project) => (
+              <ProjectCard
+                key={project.slug}
+                title={project.title}
+                category={project.category}
+                imageSrc={project.image}
+                href={`/projects/${project.slug}`}
+              />
+            )),
+            ...comingSoonSlots.map((slot) => (
+              <div
+                key={slot}
+                className="flex aspect-[16/10] items-center justify-center rounded-[14px] border border-white/6 bg-white/[0.03]"
+              >
+                <span className="font-display text-xs text-white/15">בקרוב</span>
+              </div>
+            )),
+          ]}
+        </SwipeCarousel>
+
+        {/* Tablet/desktop: full grid, real projects then coming-soon row */}
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-60px" }}
-          className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3"
+          className="mb-4 hidden gap-4 sm:grid sm:grid-cols-3"
         >
           {projects.map((project, i) => (
             <motion.div key={project.slug} custom={i} variants={fadeUp}>
@@ -52,7 +77,7 @@ export default function ProjectsSection() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-60px" }}
-          className="mb-12 grid grid-cols-1 gap-4 sm:grid-cols-3"
+          className="mb-12 hidden gap-4 sm:grid sm:grid-cols-3"
         >
           {comingSoonSlots.map((slot, i) => (
             <motion.div
