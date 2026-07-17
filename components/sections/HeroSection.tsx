@@ -1,128 +1,92 @@
-﻿"use client";
+"use client";
 
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import ShimmerButton from "@/components/ui/ShimmerButton";
+import Button from "@/components/ui/Button";
+import { SceneCanvas } from "@/components/three/SceneCanvas";
+import { usePrefersReducedMotion } from "@/lib/reduced-motion";
+import { useIsMobile } from "@/lib/use-mobile";
+import { cn } from "@/lib/utils";
+
+const HeroScene = dynamic(() => import("@/components/three/HeroScene"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const headline = ["אנחנו בונים אתרים", "ומערכות שמייצרות", "לקוחות לעסקים."];
 
 export default function HeroSection() {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isMobile = useIsMobile();
+  const show3D = !prefersReducedMotion && !isMobile;
+
   return (
-    <div style={{ position: "relative" }}>
-      <section
-        style={{
-          position: "relative",
-          minHeight: "calc(100vh - 80px)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-          backgroundColor: "transparent",
-        }}
-      >
-        {/* Plus decorators */}
-        <span style={{ position: "absolute", top: "16%", right: "10%", color: "rgba(255,255,255,0.15)", fontSize: "16px", zIndex: 1, userSelect: "none" }}>+</span>
-        <span style={{ position: "absolute", top: "12%", left: "22%", color: "rgba(255,255,255,0.07)", fontSize: "16px", zIndex: 1, userSelect: "none" }}>+</span>
-        <span style={{ position: "absolute", bottom: "28%", left: "10%", color: "rgba(255,255,255,0.06)", fontSize: "16px", zIndex: 1, userSelect: "none" }}>+</span>
-
-        {/* Content */}
-        <div style={{
-          position: "relative",
-          zIndex: 2,
-          width: "100%",
-          maxWidth: "960px",
-          margin: "0 auto",
-          padding: "180px 24px 60px",
-          textAlign: "center",
-          direction: "rtl",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}>
-          <motion.h1
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.2 }}
+    <section
+      id="hero"
+      className="relative flex min-h-[calc(100vh-80px)] items-center justify-center overflow-hidden"
+    >
+      <div className="absolute inset-0 z-0">
+        {show3D ? (
+          <SceneCanvas camera={{ position: [0, 0, 7], fov: 38 }}>
+            <HeroScene />
+          </SceneCanvas>
+        ) : (
+          <div
+            className="absolute inset-0"
             style={{
-              fontFamily: "'GoogleSans', Arial, sans-serif",
-              fontWeight: 600,
-              lineHeight: 1.12,
-              letterSpacing: "-0.02em",
-              marginBottom: "24px",
-              fontSize: "clamp(52px, 6.5vw, 80px)",
-              width: "100%",
+              background:
+                "radial-gradient(ellipse 60% 50% at 50% 40%, color-mix(in srgb, var(--color-primary) 22%, transparent) 0%, transparent 70%)",
             }}
-          >
-            <motion.span
-              style={{ display: "block", color: "white" }}
-              initial={{ opacity: 0, y: 28 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.75, ease: "easeOut", delay: 0.3 }}
-            >
-              אנחנו בונים אתרים
-            </motion.span>
-            <motion.span
-              style={{
-                display: "block",
-                backgroundImage: "linear-gradient(135deg, #2a33f3 0%, #6B8FF8 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-              initial={{ opacity: 0, y: 28 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.75, ease: "easeOut", delay: 0.42 }}
-            >
-              ומערכות שמייצרות
-            </motion.span>
-            <motion.span
-              style={{ display: "block", color: "white" }}
-              initial={{ opacity: 0, y: 28 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.75, ease: "easeOut", delay: 0.54 }}
-            >
-              לקוחות לעסקים.
-            </motion.span>
-          </motion.h1>
+          />
+        )}
+      </div>
 
-          <motion.p
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, ease: "easeOut", delay: 0.7 }}
-            style={{
-              fontFamily: "'GoogleSans', Arial, sans-serif",
-              fontSize: "17px",
-              color: "rgba(255,255,255,0.72)",
-              maxWidth: "380px",
-              lineHeight: 1.8,
-              marginBottom: "32px",
-              textAlign: "center",
-            }}
-          >
-            עיצוב UX מדויק, פיתוח מהיר, וחווית משתמש
-            <br />
-            שמביאה תוצאות אמיתיות.
-          </motion.p>
-        </div>
-      </section>
+      <div className="relative z-10 mx-auto flex w-full max-w-[960px] flex-col items-center px-6 pt-[180px] pb-[60px] text-center">
+        <motion.h1
+          initial="hidden"
+          animate="visible"
+          className="font-display text-hero font-semibold tracking-tight text-white"
+        >
+          {headline.map((line, i) => (
+            <motion.span
+              key={line}
+              variants={{ hidden: { opacity: 0, y: 28 }, visible: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.75, ease: "easeOut", delay: 0.3 + i * 0.12 }}
+              className={cn(
+                "block",
+                i === 1 && "bg-[image:var(--gradient-brand)] bg-clip-text text-transparent"
+              )}
+            >
+              {line}
+            </motion.span>
+          ))}
+        </motion.h1>
 
-      {/* Buttons */}
-      <motion.div
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.75, ease: "easeOut", delay: 0.85 }}
-        style={{
-          marginTop: "-56px",
-          position: "relative",
-          zIndex: 10,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "14px",
-          flexWrap: "wrap",
-          paddingBottom: "60px",
-        }}
-      >
-        <ShimmerButton href="/contact" variant="outline">בוא נתחיל פרויקט</ShimmerButton>
-        <ShimmerButton href="#projects" variant="primary">צפה בעבודות</ShimmerButton>
-      </motion.div>
-    </div>
+        <motion.p
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.75, ease: "easeOut", delay: 0.7 }}
+          className="mt-8 max-w-[380px] font-display text-[17px] leading-[1.8] text-white/72"
+        >
+          עיצוב UX מדויק, פיתוח מהיר, וחוויית משתמש
+          <br />
+          שמביאה תוצאות אמיתיות.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.75, ease: "easeOut", delay: 0.85 }}
+          className="mt-9 flex flex-wrap items-center justify-center gap-3.5"
+        >
+          <Button href="/contact" variant="outline">
+            בוא נתחיל פרויקט
+          </Button>
+          <Button href="#projects" variant="primary">
+            צפה בעבודות
+          </Button>
+        </motion.div>
+      </div>
+    </section>
   );
 }
