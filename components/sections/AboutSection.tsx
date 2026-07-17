@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Code2, Paintbrush, Target, type LucideIcon } from "lucide-react";
 import Card from "@/components/ui/Card";
 import SectionHeading from "@/components/ui/SectionHeading";
+import SwipeCarousel from "@/components/ui/SwipeCarousel";
 
 interface Value {
   icon: LucideIcon;
@@ -29,8 +30,21 @@ const values: Value[] = [
   },
 ];
 
-function ValueCard({ value, index }: { value: Value; index: number }) {
+function ValueCardContent({ value }: { value: Value }) {
   const Icon = value.icon;
+  return (
+    <Card className="flex h-full flex-col items-end gap-3.5">
+      <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-primary-light/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-primary)_35%,transparent)_0%,rgba(20,20,30,0.4)_75%)]">
+        <Icon size={24} strokeWidth={1.5} className="text-primary-light drop-shadow-[0_0_6px_rgba(42,51,243,0.7)]" />
+      </div>
+      <span className="font-display text-[17px] font-bold text-white">{value.title}</span>
+      <div className="h-px w-5 bg-primary-light/50" />
+      <p className="font-body text-[13.5px] leading-[1.7] text-white/45">{value.description}</p>
+    </Card>
+  );
+}
+
+function ValueCard({ value, index }: { value: Value; index: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.7 }}
@@ -39,14 +53,7 @@ function ValueCard({ value, index }: { value: Value; index: number }) {
       transition={{ duration: 0.7, ease: [0.34, 1.56, 0.64, 1], delay: (2 - index) * 0.3 }}
       className="h-full"
     >
-      <Card className="flex h-full flex-col items-end gap-3.5">
-        <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-primary-light/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-primary)_35%,transparent)_0%,rgba(20,20,30,0.4)_75%)]">
-          <Icon size={24} strokeWidth={1.5} className="text-primary-light drop-shadow-[0_0_6px_rgba(42,51,243,0.7)]" />
-        </div>
-        <span className="font-display text-[17px] font-bold text-white">{value.title}</span>
-        <div className="h-px w-5 bg-primary-light/50" />
-        <p className="font-body text-[13.5px] leading-[1.7] text-white/45">{value.description}</p>
-      </Card>
+      <ValueCardContent value={value} />
     </motion.div>
   );
 }
@@ -83,7 +90,13 @@ export default function AboutSection() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+            <SwipeCarousel className="sm:hidden" slideWidth="80%">
+              {values.map((value) => (
+                <ValueCardContent key={value.title} value={value} />
+              ))}
+            </SwipeCarousel>
+
+            <div className="hidden gap-5 sm:grid sm:grid-cols-3">
               {values.map((value, i) => (
                 <ValueCard key={value.title} value={value} index={i} />
               ))}

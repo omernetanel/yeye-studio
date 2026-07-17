@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { LayoutDashboard, Monitor, Rocket, ShoppingCart } from "lucide-react";
 import ServiceCard from "@/components/ui/ServiceCard";
 import SectionHeading from "@/components/ui/SectionHeading";
+import SwipeCarousel from "@/components/ui/SwipeCarousel";
 
 const services = [
   {
@@ -38,7 +39,15 @@ export default function ServicesSection() {
       <div className="mx-auto max-w-[1200px]">
         <SectionHeading title="מה אנחנו עושים?" className="mb-10 md:mb-14" />
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Mobile: touch-native swipe carousel, one card at a time */}
+        <SwipeCarousel className="sm:hidden">
+          {services.map((service) => (
+            <ServiceCard key={service.title} {...service} />
+          ))}
+        </SwipeCarousel>
+
+        {/* Tablet/desktop: grid */}
+        <div className="hidden gap-5 sm:grid sm:grid-cols-2 lg:grid-cols-4">
           {services.map((service, i) => (
             <motion.div
               key={service.title}
