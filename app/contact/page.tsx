@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ScrollToTop from "@/components/ui/ScrollToTop";
-import emailjs from "@emailjs/browser";
 
 const projectTypes = [
   "חנות אונליין",
@@ -31,18 +30,12 @@ export default function ContactPage() {
     }
     setStatus("sending");
     try {
-      await emailjs.send(
-        "YeyeStudio",
-        "template_37626eh",
-        {
-          from_name: form.from_name,
-          project_type: form.project_type,
-          business_description: form.business_description,
-          timeline: form.timeline,
-          reply_to: form.reply_to,
-        },
-        "obctAO1VDa1HYThDB"
-      );
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!response.ok) throw new Error("contact request failed");
       setStatus("success");
 
       // WhatsApp
