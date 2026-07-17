@@ -1,9 +1,17 @@
-﻿"use client";
+"use client";
 
 import { motion } from "framer-motion";
-import { Target, Code2, Paintbrush } from "lucide-react";
+import { Code2, Paintbrush, Target, type LucideIcon } from "lucide-react";
+import Card from "@/components/ui/Card";
+import SectionHeading from "@/components/ui/SectionHeading";
 
-const values = [
+interface Value {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}
+
+const values: Value[] = [
   {
     icon: Target,
     title: "Results-Driven",
@@ -21,217 +29,63 @@ const values = [
   },
 ];
 
-function TiltCard({ value, index }: { value: typeof values[0]; index: number }) {
+function ValueCard({ value, index }: { value: Value; index: number }) {
   const Icon = value.icon;
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.7 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.7, ease: [0.34, 1.56, 0.64, 1], delay: (2 - index) * 0.3 }}
-      style={{ perspective: "1000px", height: "100%" }}
+      className="h-full"
     >
-      <div
-        style={{
-          position: "relative",
-          background: "linear-gradient(180deg, rgba(20,20,28,0.75) 0%, rgba(13,13,18,0.85) 100%)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          borderRadius: "20px",
-          border: "1px solid rgba(107,143,248,0.1)",
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25), inset 0 0 0 1px rgba(107,143,248,0.06)",
-          padding: "28px 24px",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-          gap: "14px",
-          textAlign: "right",
-          cursor: "default",
-          overflow: "hidden",
-        }}
-      >
-
-        {/* Corner glow — subtle depth accent */}
-        <div style={{
-          position: "absolute",
-          bottom: "0",
-          right: "0",
-          width: "150px",
-          height: "150px",
-          background: "radial-gradient(ellipse at 100% 100%, rgba(107,143,248,0.13) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }} />
-
-        {/* Icon in glowing gradient circle */}
-        <div style={{
-          position: "relative",
-          zIndex: 1,
-          transform: "translateZ(20px)",
-          width: "52px",
-          height: "52px",
-          borderRadius: "50%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "radial-gradient(circle at 30% 30%, rgba(42,51,243,0.35) 0%, rgba(20,20,30,0.4) 75%)",
-          border: "1px solid rgba(107,143,248,0.25)",
-          boxShadow: "0 0 18px rgba(42,51,243,0.35), inset 0 1px 1px rgba(255,255,255,0.15)",
-        }}>
-          <Icon
-            size={24}
-            strokeWidth={1.5}
-            color="#6B8FF8"
-            style={{ filter: "drop-shadow(0 0 6px rgba(42,51,243,0.7))" }}
-          />
+      <Card className="flex h-full flex-col items-end gap-3.5">
+        <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-primary-light/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-primary)_35%,transparent)_0%,rgba(20,20,30,0.4)_75%)]">
+          <Icon size={24} strokeWidth={1.5} className="text-primary-light drop-shadow-[0_0_6px_rgba(42,51,243,0.7)]" />
         </div>
-
-        <span style={{
-          position: "relative",
-          zIndex: 1,
-          transform: "translateZ(20px)",
-          fontFamily: "'GoogleSans', Arial, sans-serif",
-          fontWeight: 700,
-          fontSize: "17px",
-          color: "white",
-        }}>
-          {value.title}
-        </span>
-
-        <div style={{
-          width: "20px",
-          height: "1px",
-          backgroundColor: "rgba(107,143,248,0.5)",
-        }} />
-
-        <p style={{
-          position: "relative",
-          zIndex: 1,
-          transform: "translateZ(15px)",
-          fontFamily: "'Assistant', Arial, sans-serif",
-          fontSize: "13.5px",
-          color: "rgba(255,255,255,0.45)",
-          lineHeight: 1.7,
-        }}>
-          {value.description}
-        </p>
-      </div>
+        <span className="font-display text-[17px] font-bold text-white">{value.title}</span>
+        <div className="h-px w-5 bg-primary-light/50" />
+        <p className="font-body text-[13.5px] leading-[1.7] text-white/45">{value.description}</p>
+      </Card>
     </motion.div>
   );
 }
 
 export default function AboutSection() {
   return (
-    <section id="about" style={{ backgroundColor: "transparent", padding: "50px 24px", scrollMarginTop: "100px" }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto", direction: "rtl" }}>
+    <section id="about" className="px-6 py-12 md:py-16">
+      <div className="mx-auto max-w-[1200px]">
+        <SectionHeading title="מי אנחנו?" className="mb-12 md:mb-14" />
 
-        {/* Title */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          style={{ textAlign: "center", marginBottom: "56px" }}
-        >
-          <h2 style={{
-            fontFamily: "'GoogleSans', Arial, sans-serif",
-            fontWeight: 700,
-            fontSize: "34px",
-            color: "white",
-            lineHeight: 1.2,
-            marginBottom: "16px",
-          }}>
-            מי אנחנו?
-          </h2>
-          <motion.div
-            initial={{ width: 0 }}
-            whileInView={{ width: "80px" }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-            style={{
-              height: "3px",
-              background: "linear-gradient(90deg, #2a33f3, #6B8FF8)",
-              borderRadius: "2px",
-              margin: "0 auto",
-              overflow: "hidden",
-            }}
-          />
-        </motion.div>
-
-        {/* Main row */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            gap: "56px",
-            alignItems: "stretch",
-          }}
+          className="flex flex-col items-stretch gap-10 md:flex-row md:gap-14"
         >
-          {/* Photo — right in RTL, taller now to match card column */}
-          <div style={{
-            flexShrink: 0,
-            width: "360px",
-            borderRadius: "20px",
-            backgroundColor: "#0f0f14",
-            border: "1px solid rgba(255,255,255,0.06)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}>
-            <span style={{
-              fontFamily: "'GoogleSans', Arial, sans-serif",
-              fontSize: "13px",
-              color: "rgba(255,255,255,0.15)",
-              letterSpacing: "0.05em",
-            }}>
-              תמונה בקרוב
-            </span>
+          {/* Photo placeholder — real photo pending */}
+          <div className="flex aspect-[4/3] shrink-0 items-center justify-center rounded-2xl border border-white/6 bg-[#0f0f14] md:aspect-auto md:w-[360px]">
+            <span className="font-display text-[13px] tracking-wide text-white/15">תמונה בקרוב</span>
           </div>
 
-          {/* Text + tilt cards */}
-          <div style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}>
-            {/* Text */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px", textAlign: "right" }}>
-              <p style={{
-                fontFamily: "'Assistant', Arial, sans-serif",
-                fontSize: "19px",
-                color: "rgba(255,255,255,0.88)",
-                lineHeight: 1.85,
-              }}>
-                YEYE Studio נולד מתוך אובססיה לפרטים קטנים ואמונה עמוקה שכל עסק — גדול או קטן — ראוי לנוכחות דיגיטלית{" "}
-                <strong style={{ color: "white" }}>ברמה הגבוהה ביותר</strong>.
+          {/* Text + value cards */}
+          <div className="flex flex-1 flex-col justify-between gap-8">
+            <div className="flex flex-col gap-5">
+              <p className="font-body text-[19px] leading-[1.85] text-white/88">
+                YEYE LABS נולד מתוך אובססיה לפרטים קטנים ואמונה עמוקה שכל עסק — גדול או קטן — ראוי לנוכחות דיגיטלית{" "}
+                <strong className="text-white">ברמה הגבוהה ביותר</strong>.
               </p>
-              <p style={{
-                fontFamily: "'Assistant', Arial, sans-serif",
-                fontSize: "19px",
-                color: "rgba(255,255,255,0.88)",
-                lineHeight: 1.85,
-              }}>
+              <p className="font-body text-[19px] leading-[1.85] text-white/88">
                 אנחנו מעצבים ומפתחים מגיל צעיר, עם ניסיון של שנים בבניית חוויות דיגיטליות{" "}
-                <strong style={{ color: "white" }}>שלא רק נראות טוב — אלא עובדות</strong>.
-                כל פרויקט מקבל את מלוא הקשב, הדייק והאנרגיה שלנו.
+                <strong className="text-white">שלא רק נראות טוב — אלא עובדות</strong>. כל פרויקט מקבל את מלוא
+                הקשב, הדיוק והאנרגיה שלנו.
               </p>
             </div>
 
-            {/* Tilt cards row */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: "20px",
-              marginTop: "32px",
-            }}>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
               {values.map((value, i) => (
-                <TiltCard key={value.title} value={value} index={i} />
+                <ValueCard key={value.title} value={value} index={i} />
               ))}
             </div>
           </div>
