@@ -7,6 +7,7 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
 import { cn } from "@/lib/utils";
 import SectionHeading from "@/components/ui/SectionHeading";
+import SwipeCarousel from "@/components/ui/SwipeCarousel";
 import {
   CodeIllustration,
   DesignIllustration,
@@ -51,7 +52,7 @@ const steps: StepDef[] = [
   },
 ];
 
-function StepContent({ step, active }: { step: StepDef; active: boolean }) {
+function StepContent({ step, active, showDots = true }: { step: StepDef; active: boolean; showDots?: boolean }) {
   const Illustration = step.Illustration;
   return (
     <div className="mx-auto grid w-full max-w-[1100px] grid-cols-1 items-center gap-12 px-6 md:grid-cols-2 md:gap-20">
@@ -61,17 +62,19 @@ function StepContent({ step, active }: { step: StepDef; active: boolean }) {
         </span>
         <h3 className="font-display text-3xl leading-tight font-bold text-white md:text-4xl">{step.title}</h3>
         <p className="max-w-[420px] font-body text-lg leading-[1.85] text-white/55">{step.description}</p>
-        <div className="mt-2 flex gap-2">
-          {steps.map((s) => (
-            <div
-              key={s.number}
-              className={cn(
-                "h-1.5 rounded-full bg-primary transition-all duration-300",
-                s.number === step.number ? "w-6" : "w-1.5 bg-white/15"
-              )}
-            />
-          ))}
-        </div>
+        {showDots && (
+          <div className="mt-2 flex gap-2">
+            {steps.map((s) => (
+              <div
+                key={s.number}
+                className={cn(
+                  "h-1.5 rounded-full bg-primary transition-all duration-300",
+                  s.number === step.number ? "w-6" : "w-1.5 bg-white/15"
+                )}
+              />
+            ))}
+          </div>
+        )}
       </div>
       <div className="flex items-center justify-center">
         <Illustration active={active} />
@@ -166,6 +169,28 @@ function StackedSteps() {
   );
 }
 
+function SwipeStepSlide({ step }: { step: StepDef }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: false, amount: 0.6 });
+
+  return (
+    <div ref={ref}>
+      <StepContent step={step} active={inView} showDots={false} />
+    </div>
+  );
+}
+
+/** Mobile, motion allowed: swipe through steps instead of one long scroll — the touch equivalent of the desktop pin-advance. */
+function SwipeSteps() {
+  return (
+    <SwipeCarousel slideWidth="88%">
+      {steps.map((step) => (
+        <SwipeStepSlide key={step.number} step={step} />
+      ))}
+    </SwipeCarousel>
+  );
+}
+
 export default function ProcessSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
@@ -184,13 +209,14 @@ export default function ProcessSection() {
     setMounted(true);
   }, []);
   const usePinned = mounted && !prefersReducedMotion && !isMobile;
+  const useSwipe = mounted && !prefersReducedMotion && isMobile;
 
   return (
     <section id="process" className="relative py-16 md:py-20">
       <div className="mx-auto max-w-[1200px] px-6">
         <SectionHeading title="איך אנחנו עובדים?" className="mb-12 md:mb-16" />
       </div>
-      {usePinned ? <PinnedSteps /> : <StackedSteps />}
+      {usePinned ? <PinnedSteps /> : useSwipe ? <SwipeSteps /> : <StackedSteps />}
     </section>
   );
 }
