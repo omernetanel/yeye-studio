@@ -1,18 +1,26 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ScrollToTop from "@/components/ui/ScrollToTop";
+import Label from "@/components/ui/Label";
+import Input from "@/components/ui/Input";
+import Textarea from "@/components/ui/Textarea";
+import Button from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
 
-const projectTypes = [
-  "חנות אונליין",
-  "דף נחיתה",
-  "אתר תדמית",
-  "מערכת ניהול",
-  "אחר",
-];
+const projectTypes = ["חנות אונליין", "דף נחיתה", "אתר תדמית", "מערכת ניהול", "אחר"];
+
+const particles = [...Array(20)].map((_, i) => ({
+  size: i % 3 === 0 ? 3 : 2,
+  color: i % 2 === 0 ? "#2a33f3" : "#6B8FF8",
+  left: `${5 + ((i * 4.8) % 90)}%`,
+  top: `${10 + ((i * 11) % 80)}%`,
+  duration: 3 + (i % 4),
+  delay: i * 0.35,
+}));
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -24,10 +32,10 @@ export default function ContactPage() {
   });
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
 
-  const handleSubmit = async () => {
-    if (!form.from_name || !form.project_type || !form.business_description || !form.reply_to) {
-      return;
-    }
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!form.from_name || !form.project_type || !form.business_description || !form.reply_to) return;
+
     setStatus("sending");
     try {
       const response = await fetch("/api/contact", {
@@ -38,9 +46,8 @@ export default function ContactPage() {
       if (!response.ok) throw new Error("contact request failed");
       setStatus("success");
 
-      // WhatsApp
       const msg = encodeURIComponent(
-        `היי YEYE Studio! אני ${form.from_name}, מחפש ${form.project_type}. ${form.business_description}`
+        `היי YEYE LABS! אני ${form.from_name}, מחפש ${form.project_type}. ${form.business_description}`
       );
       window.open(`https://wa.me/972552434775?text=${msg}`, "_blank");
     } catch {
@@ -50,39 +57,19 @@ export default function ContactPage() {
 
   if (status === "success") {
     return (
-      <main style={{ minHeight: "100vh", backgroundColor: "#0a0a0a" }}>
+      <main className="min-h-screen bg-background">
         <ScrollToTop />
         <Navbar />
-        <div style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          direction: "rtl",
-          padding: "24px",
-        }}>
+        <div className="flex min-h-screen items-center justify-center px-6">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            style={{ textAlign: "center", maxWidth: "480px" }}
+            className="max-w-[480px] text-center"
           >
-            <div style={{ fontSize: "48px", marginBottom: "24px" }}>✅</div>
-            <h1 style={{
-              fontFamily: "'GoogleSans', Arial, sans-serif",
-              fontWeight: 700,
-              fontSize: "36px",
-              color: "white",
-              marginBottom: "16px",
-            }}>
-              קיבלנו את הפנייה שלך!
-            </h1>
-            <p style={{
-              fontFamily: "'Assistant', Arial, sans-serif",
-              fontSize: "17px",
-              color: "rgba(255,255,255,0.55)",
-              lineHeight: 1.8,
-            }}>
+            <div className="mb-6 text-5xl">✅</div>
+            <h1 className="mb-4 font-display text-4xl font-bold text-white">קיבלנו את הפנייה שלך!</h1>
+            <p className="font-body text-[17px] leading-[1.8] text-white/55">
               ניצור איתך קשר תוך 48 שעות. בינתיים, פתחנו לך שיחת WhatsApp כדי שנוכל להתחיל לדבר.
             </p>
           </motion.div>
@@ -93,193 +80,86 @@ export default function ContactPage() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", backgroundColor: "#0a0a0a", position: "relative", overflow: "hidden" }}>
+    <main className="relative min-h-screen overflow-hidden bg-background">
       <ScrollToTop />
 
-      {/* Top arc gradient */}
-      <div style={{
-        position: "fixed",
-        top: "-300px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        width: "800px",
-        height: "600px",
-        borderRadius: "50%",
-        background: "radial-gradient(ellipse, rgba(42,51,243,0.35) 0%, transparent 70%)",
-        filter: "blur(60px)",
-        pointerEvents: "none",
-        zIndex: 0,
-      }} />
-
-      {/* Pulsing glow */}
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.2, 0.35, 0.2],
-        }}
-        transition={{
-          duration: 5,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
+      <div
+        className="pointer-events-none fixed top-[-300px] left-1/2 z-0 h-[600px] w-[800px] -translate-x-1/2 rounded-full blur-[60px]"
         style={{
-          position: "fixed",
-          top: "30%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: "600px",
-          height: "400px",
-          background: "radial-gradient(ellipse, rgba(42,51,243,0.25) 0%, transparent 70%)",
-          filter: "blur(60px)",
-          pointerEvents: "none",
-          zIndex: 0,
+          background: "radial-gradient(ellipse, color-mix(in srgb, var(--color-primary) 35%, transparent) 0%, transparent 70%)",
         }}
       />
-
-      {/* Floating particles */}
-      {[...Array(20)].map((_, i) => (
+      <motion.div
+        animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.35, 0.2] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none fixed top-[30%] left-1/2 z-0 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[60px]"
+        style={{
+          background: "radial-gradient(ellipse, color-mix(in srgb, var(--color-primary) 25%, transparent) 0%, transparent 70%)",
+        }}
+      />
+      {particles.map((p, i) => (
         <motion.div
           key={i}
-          animate={{
-            y: [0, -24, 0],
-            opacity: [0.15, 0.5, 0.15],
-          }}
-          transition={{
-            duration: 3 + (i % 4),
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: i * 0.35,
-          }}
-          style={{
-            position: "fixed",
-            width: i % 3 === 0 ? "3px" : "2px",
-            height: i % 3 === 0 ? "3px" : "2px",
-            borderRadius: "50%",
-            backgroundColor: i % 2 === 0 ? "#2a33f3" : "#6B8FF8",
-            left: `${5 + (i * 4.8) % 90}%`,
-            top: `${10 + (i * 11) % 80}%`,
-            pointerEvents: "none",
-            zIndex: 0,
-          }}
+          animate={{ y: [0, -24, 0], opacity: [0.15, 0.5, 0.15] }}
+          transition={{ duration: p.duration, repeat: Infinity, ease: "easeInOut", delay: p.delay }}
+          className="pointer-events-none fixed z-0 rounded-full"
+          style={{ width: p.size, height: p.size, backgroundColor: p.color, left: p.left, top: p.top }}
         />
       ))}
 
       <Navbar />
-      <div style={{
-        position: "relative",
-        zIndex: 1,
-        maxWidth: "680px",
-        margin: "0 auto",
-        padding: "140px 24px 80px",
-        direction: "rtl",
-      }}>
-        {/* Header */}
+      <div className="relative z-10 mx-auto max-w-[680px] px-6 pt-[140px] pb-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          style={{ marginBottom: "56px", textAlign: "center" }}
+          className="mb-14 text-center"
         >
-          <h1 style={{
-            fontFamily: "'GoogleSans', Arial, sans-serif",
-            fontWeight: 700,
-            fontSize: "48px",
-            color: "white",
-            marginBottom: "16px",
-            letterSpacing: "-0.02em",
-            lineHeight: 1.1,
-          }}>
-            בוא נבנה משהו גדול
-          </h1>
+          <h1 className="mb-4 font-display text-5xl font-bold tracking-tight text-white">בוא נבנה משהו גדול</h1>
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: "80px" }}
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
-            style={{
-              height: "3px",
-              background: "linear-gradient(90deg, #2a33f3, #6B8FF8)",
-              borderRadius: "2px",
-              margin: "0 auto 24px",
-              overflow: "hidden",
-            }}
+            className="mx-auto mb-6 h-[3px] overflow-hidden rounded-full bg-[image:var(--gradient-brand)]"
           />
-          <p style={{
-            fontFamily: "'Assistant', Arial, sans-serif",
-            fontSize: "17px",
-            color: "rgba(255,255,255,0.55)",
-            lineHeight: 1.8,
-          }}>
+          <p className="font-body text-[17px] leading-[1.8] text-white/55">
             ספר לנו על הפרויקט שלך ונחזור אליך תוך 48 שעות עם הצעה מותאמת.
           </p>
         </motion.div>
 
-        {/* Form */}
-        <motion.div
+        <motion.form
+          onSubmit={handleSubmit}
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
-          style={{ display: "flex", flexDirection: "column", gap: "24px" }}
+          className="flex flex-col gap-6"
         >
-          {/* Name */}
           <div>
-            <label style={{
-              display: "block",
-              fontFamily: "'GoogleSans', Arial, sans-serif",
-              fontSize: "14px",
-              color: "rgba(255,255,255,0.6)",
-              marginBottom: "8px",
-            }}>
-              השם שלך *
-            </label>
-            <input
+            <Label htmlFor="from_name">השם שלך *</Label>
+            <Input
+              id="from_name"
               type="text"
               placeholder="ישראל ישראלי"
               value={form.from_name}
               onChange={(e) => setForm({ ...form, from_name: e.target.value })}
-              style={{
-                width: "100%",
-                padding: "14px 16px",
-                backgroundColor: "#111111",
-                border: "1px solid #1e1e1e",
-                borderRadius: "10px",
-                color: "white",
-                fontSize: "15px",
-                fontFamily: "'Assistant', Arial, sans-serif",
-                outline: "none",
-                direction: "rtl",
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = "#2a33f3"; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = "#1e1e1e"; }}
+              required
             />
           </div>
 
-          {/* Project Type */}
           <div>
-            <label style={{
-              display: "block",
-              fontFamily: "'GoogleSans', Arial, sans-serif",
-              fontSize: "14px",
-              color: "rgba(255,255,255,0.6)",
-              marginBottom: "8px",
-            }}>
-              מה אתה מחפש? *
-            </label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+            <Label>מה אתה מחפש? *</Label>
+            <div className="flex flex-wrap gap-2.5">
               {projectTypes.map((type) => (
                 <button
                   key={type}
+                  type="button"
                   onClick={() => setForm({ ...form, project_type: type })}
-                  style={{
-                    padding: "10px 18px",
-                    borderRadius: "8px",
-                    border: `1px solid ${form.project_type === type ? "#2a33f3" : "#1e1e1e"}`,
-                    backgroundColor: form.project_type === type ? "rgba(42,51,243,0.15)" : "#111111",
-                    color: form.project_type === type ? "#6B8FF8" : "rgba(255,255,255,0.55)",
-                    fontSize: "14px",
-                    fontFamily: "'GoogleSans', Arial, sans-serif",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
+                  className={cn(
+                    "rounded-lg border px-[18px] py-2.5 font-display text-sm transition-colors",
+                    form.project_type === type
+                      ? "border-primary bg-primary/15 text-primary-light"
+                      : "border-white/10 bg-surface text-white/55 hover:border-white/25"
+                  )}
                 >
                   {type}
                 </button>
@@ -287,144 +167,58 @@ export default function ContactPage() {
             </div>
           </div>
 
-          {/* Business Description */}
           <div>
-            <label style={{
-              display: "block",
-              fontFamily: "'GoogleSans', Arial, sans-serif",
-              fontSize: "14px",
-              color: "rgba(255,255,255,0.6)",
-              marginBottom: "8px",
-            }}>
-              ספר לנו על העסק שלך *
-            </label>
-            <textarea
+            <Label htmlFor="business_description">ספר לנו על העסק שלך *</Label>
+            <Textarea
+              id="business_description"
               placeholder="מה העסק עושה? מה המטרה של הפרויקט?"
+              rows={4}
               value={form.business_description}
               onChange={(e) => setForm({ ...form, business_description: e.target.value })}
-              rows={4}
-              style={{
-                width: "100%",
-                padding: "14px 16px",
-                backgroundColor: "#111111",
-                border: "1px solid #1e1e1e",
-                borderRadius: "10px",
-                color: "white",
-                fontSize: "15px",
-                fontFamily: "'Assistant', Arial, sans-serif",
-                outline: "none",
-                direction: "rtl",
-                resize: "vertical",
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = "#2a33f3"; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = "#1e1e1e"; }}
+              required
             />
           </div>
 
-          {/* Timeline */}
           <div>
-            <label style={{
-              display: "block",
-              fontFamily: "'GoogleSans', Arial, sans-serif",
-              fontSize: "14px",
-              color: "rgba(255,255,255,0.6)",
-              marginBottom: "8px",
-            }}>
-              מתי אתה רוצה להשיק?
-            </label>
-            <input
+            <Label htmlFor="timeline">מתי אתה רוצה להשיק?</Label>
+            <Input
+              id="timeline"
               type="text"
               placeholder="לדוגמה: בעוד חודשיים, עד סוף השנה..."
               value={form.timeline}
               onChange={(e) => setForm({ ...form, timeline: e.target.value })}
-              style={{
-                width: "100%",
-                padding: "14px 16px",
-                backgroundColor: "#111111",
-                border: "1px solid #1e1e1e",
-                borderRadius: "10px",
-                color: "white",
-                fontSize: "15px",
-                fontFamily: "'Assistant', Arial, sans-serif",
-                outline: "none",
-                direction: "rtl",
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = "#2a33f3"; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = "#1e1e1e"; }}
             />
           </div>
 
-          {/* Email */}
           <div>
-            <label style={{
-              display: "block",
-              fontFamily: "'GoogleSans', Arial, sans-serif",
-              fontSize: "14px",
-              color: "rgba(255,255,255,0.6)",
-              marginBottom: "8px",
-            }}>
-              האימייל שלך *
-            </label>
-            <input
+            <Label htmlFor="reply_to">האימייל שלך *</Label>
+            <Input
+              id="reply_to"
               type="email"
               placeholder="israel@example.com"
+              dir="ltr"
+              className="text-right"
               value={form.reply_to}
               onChange={(e) => setForm({ ...form, reply_to: e.target.value })}
-              style={{
-                width: "100%",
-                padding: "14px 16px",
-                backgroundColor: "#111111",
-                border: "1px solid #1e1e1e",
-                borderRadius: "10px",
-                color: "white",
-                fontSize: "15px",
-                fontFamily: "'Assistant', Arial, sans-serif",
-                outline: "none",
-                direction: "ltr",
-                textAlign: "right",
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = "#2a33f3"; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = "#1e1e1e"; }}
+              required
             />
           </div>
 
-          {/* Submit */}
-          <button
-            onClick={handleSubmit}
+          <Button
+            type="submit"
             disabled={status === "sending"}
-            style={{
-              width: "100%",
-              padding: "16px",
-              background: "linear-gradient(160deg, #6B8FF8 0%, #2a33f3 50%, #1e28d4 100%)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15)",
-              borderRadius: "10px",
-              color: "white",
-              fontSize: "16px",
-              fontFamily: "'GoogleSans', Arial, sans-serif",
-              fontWeight: 600,
-              cursor: status === "sending" ? "wait" : "pointer",
-              marginTop: "8px",
-              transition: "transform 0.2s",
-              opacity: status === "sending" ? 0.7 : 1,
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.02)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+            showArrow={false}
+            className="mt-2 w-full justify-center py-4 text-base"
           >
             {status === "sending" ? "שולח..." : "שלח ונתחיל לדבר ↗"}
-          </button>
+          </Button>
 
           {status === "error" && (
-            <p style={{
-              textAlign: "center",
-              color: "#ff5f57",
-              fontFamily: "'Assistant', Arial, sans-serif",
-              fontSize: "14px",
-            }}>
+            <p className="text-center font-body text-sm text-[#ff5f57]">
               משהו השתבש. נסה שוב או צור קשר ישירות ב-WhatsApp.
             </p>
           )}
-        </motion.div>
+        </motion.form>
       </div>
       <Footer />
     </main>
