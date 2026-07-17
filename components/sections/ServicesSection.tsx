@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import { motion } from "framer-motion";
-import { ShoppingCart, Rocket, Monitor, LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Monitor, Rocket, ShoppingCart } from "lucide-react";
 import ServiceCard from "@/components/ui/ServiceCard";
+import SectionHeading from "@/components/ui/SectionHeading";
 
 const services = [
   {
@@ -33,48 +34,11 @@ const services = [
 
 export default function ServicesSection() {
   return (
-    <section id="services" style={{ backgroundColor: "transparent", padding: "20px 24px 50px", marginTop: "20px", scrollMarginTop: "160px" }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto", direction: "rtl" }}>
-        {/* Title */}
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          style={{
-            fontFamily: "'GoogleSans', Arial, sans-serif",
-            fontWeight: 700,
-            fontSize: "34px",
-            color: "white",
-            textAlign: "center",
-            marginBottom: "16px",
-            lineHeight: 1.2,
-            letterSpacing: "-0.01em",
-          }}
-        >
-          מה אנחנו עושים?
-        </motion.h2>
-        <motion.div
-          initial={{ width: 0 }}
-          whileInView={{ width: "80px" }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-          style={{
-            height: "3px",
-            background: "linear-gradient(90deg, #2a33f3, #6B8FF8)",
-            borderRadius: "2px",
-            margin: "0 auto 40px",
-            overflow: "hidden",
-          }}
-        />
+    <section id="services" className="px-6 py-16 md:py-20">
+      <div className="mx-auto max-w-[1200px]">
+        <SectionHeading title="מה אנחנו עושים?" className="mb-10 md:mb-14" />
 
-        {/* Grid */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "20px",
-          direction: "rtl",
-        }}>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {services.map((service, i) => (
             <motion.div
               key={service.title}
@@ -83,12 +47,7 @@ export default function ServicesSection() {
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.6, ease: "easeOut", delay: i * 0.1 }}
             >
-              <ServiceCard
-                icon={service.icon}
-                title={service.title}
-                description={service.description}
-                href={service.href}
-              />
+              <ServiceCard {...service} />
             </motion.div>
           ))}
         </div>
