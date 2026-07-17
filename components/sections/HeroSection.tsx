@@ -45,7 +45,7 @@ export default function HeroSection() {
         )}
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-[960px] flex-col items-center px-6 pt-[180px] pb-[60px] text-center">
+      <div className="relative z-10 mx-auto flex w-full max-w-[960px] flex-col items-center px-6 pt-[156px] pb-[60px] text-center">
         <motion.h1
           initial="hidden"
           animate="visible"

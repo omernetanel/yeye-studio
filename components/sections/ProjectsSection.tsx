@@ -37,7 +37,7 @@ export default function ProjectsSection() {
         </motion.div>
 
         {/* Mobile: one swipe carousel — real projects, then "coming soon" slots */}
-        <SwipeCarousel className="mb-10" slideWidth="82%">
+        <SwipeCarousel className="mb-10 sm:hidden" slideWidth="82%">
           {[
             ...projects.map((project) => (
               <ProjectCard
