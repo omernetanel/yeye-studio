@@ -87,6 +87,12 @@ function PinnedSteps() {
   const pinRef = useRef<HTMLDivElement>(null);
   const panelRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [activeStep, setActiveStep] = useState(0);
+  // The pin section mounts wherever it sits in the page — often far below the
+  // fold — so activeStep's default (0) would otherwise mark step 1 "active"
+  // and play its illustration immediately on page load, long before the user
+  // scrolls down to see it. Gate all illustration playback on the section
+  // having actually entered the viewport at least once.
+  const hasEnteredView = useInView(pinRef, { once: true, amount: 0.4 });
 
   useEffect(() => {
     if (!pinRef.current) return;
@@ -104,6 +110,15 @@ function PinnedSteps() {
           end: `+=${(steps.length - 1) * 100}%`,
           scrub: 1,
           pin: true,
+          // Without snapping, the smoothed scrub can settle mid-transition
+          // when the user stops scrolling — leaving two panels' text
+          // partially visible and overlapping. Snapping always finishes the
+          // crossfade to a single resting step.
+          snap: {
+            snapTo: 1 / (steps.length - 1),
+            duration: { min: 0.25, max: 0.6 },
+            ease: "power1.inOut",
+          },
           onUpdate: (self) => {
             const index = Math.min(steps.length - 1, Math.round(self.progress * (steps.length - 1)));
             setActiveStep((current) => (current === index ? current : index));
@@ -136,7 +151,7 @@ function PinnedSteps() {
           }}
           className="absolute inset-0 flex items-center"
         >
-          <StepContent step={step} active={activeStep === i} />
+          <StepContent step={step} active={hasEnteredView && activeStep === i} />
         </div>
       ))}
     </div>
