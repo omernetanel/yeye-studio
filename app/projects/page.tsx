@@ -1,44 +1,27 @@
+import type { Metadata } from "next";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 import { projects } from "@/lib/projects";
 import ProjectCard from "@/components/ui/ProjectCard";
 
+export const metadata: Metadata = {
+  title: "כל הפרויקטים | YEYE LABS",
+  description: "עבודות נבחרות שבנינו עבור לקוחות ועסקים מובילים.",
+};
+
 export default function ProjectsPage() {
   return (
-    <main style={{ minHeight: "100vh", backgroundColor: "#0a0a0a" }}>
+    <main className="min-h-screen bg-background">
       <ScrollToTop />
       <Navbar />
-      <div style={{
-        maxWidth: "1200px",
-        margin: "0 auto",
-        padding: "140px 24px 80px",
-        direction: "rtl",
-      }}>
-        <h1 style={{
-          fontFamily: "'GoogleSans', Arial, sans-serif",
-          fontWeight: 700,
-          fontSize: "48px",
-          color: "white",
-          marginBottom: "16px",
-          letterSpacing: "-0.02em",
-        }}>
+      <div className="mx-auto max-w-[1200px] px-6 pt-[140px] pb-20">
+        <h1 className="mb-4 font-display text-4xl font-bold tracking-tight text-white md:text-5xl">
           כל הפרויקטים
         </h1>
-        <p style={{
-          fontFamily: "'Assistant', Arial, sans-serif",
-          fontSize: "17px",
-          color: "rgba(255,255,255,0.5)",
-          marginBottom: "64px",
-        }}>
-          עבודות נבחרות שבנינו עבור לקוחות ועסקים מובילים.
-        </p>
+        <p className="mb-16 font-body text-[17px] text-white/50">עבודות נבחרות שבנינו עבור לקוחות ועסקים מובילים.</p>
 
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "24px",
-        }}>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
             <ProjectCard
               key={project.slug}
