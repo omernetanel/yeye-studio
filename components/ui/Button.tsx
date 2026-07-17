@@ -12,6 +12,8 @@ interface ButtonProps {
   className?: string;
   /** Renders as a Link when set, otherwise as a native <button>. */
   href?: string;
+  /** For external hrefs — opens in a new tab with rel="noopener noreferrer". */
+  external?: boolean;
   type?: "button" | "submit";
   onClick?: MouseEventHandler;
   disabled?: boolean;
@@ -33,6 +35,7 @@ export default function Button({
   showArrow = true,
   className,
   href,
+  external,
   type = "button",
   onClick,
   disabled,
@@ -41,7 +44,11 @@ export default function Button({
 
   if (href) {
     return (
-      <Link href={href} className={classes}>
+      <Link
+        href={href}
+        className={classes}
+        {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      >
         <span>{children}</span>
         {showArrow && <ArrowIcon />}
       </Link>
