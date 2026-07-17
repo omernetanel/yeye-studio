@@ -1,9 +1,12 @@
-﻿"use client";
+"use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import ShimmerButton from "@/components/ui/ShimmerButton";
+import { motion, AnimatePresence } from "framer-motion";
+import { Menu, X } from "lucide-react";
+import Button from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
 
 const navLinks = [
   { label: "עבודות", href: "/#projects" },
@@ -12,103 +15,88 @@ const navLinks = [
 ];
 
 export default function Navbar() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <motion.header
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 50,
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-        backgroundColor: "rgba(10,10,10,0.85)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-      }}
+      className="fixed inset-x-0 top-0 z-50 border-b border-white/6 bg-background/85 backdrop-blur-md"
     >
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "0 24px",
-          height: "68px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          position: "relative",
-          direction: "rtl",
-        }}
-      >
-        {/* Logo — left */}
-        <div style={{ position: "absolute", left: "24px", top: "50%", transform: "translateY(-50%)" }}>
-          <Link href="/" style={{ display: "flex", alignItems: "center" }}>
-            <Image
-              src="/images/logo.png"
-              alt="YEYE Studio"
-              width={80}
-              height={26}
-              style={{ height: "24px", width: "auto", aspectRatio: "80 / 26", objectFit: "contain", filter: "brightness(10)" }}
-              priority
-            />
-          </Link>
-        </div>
+      <div className="relative mx-auto flex h-[68px] max-w-[1200px] items-center justify-between px-6">
+        {/* Logo — pinned to the visual left, brand-convention regardless of RTL */}
+        <Link href="/" className="absolute left-6 top-1/2 flex -translate-y-1/2 items-center">
+          <Image
+            src="/images/logo.png"
+            alt="YEYE Labs"
+            width={80}
+            height={26}
+            className="h-6 w-auto object-contain brightness-[10]"
+            priority
+          />
+        </Link>
 
-        {/* Nav links — perfectly centered */}
-        <nav style={{
-          position: "absolute",
-          left: "50%",
-          top: "50%",
-          transform: "translate(-50%, -50%)",
-          display: "flex",
-          alignItems: "center",
-          gap: "36px",
-        }}>
+        {/* Nav links — centered, desktop only */}
+        <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-9 md:flex">
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href}
-              style={{
-                fontSize: "15px",
-                fontFamily: "'GoogleSans', Arial, sans-serif",
-                fontWeight: 500,
-                color: "rgba(255,255,255,0.62)",
-                textDecoration: "none",
-                transition: "color 0.2s",
-                position: "relative",
-                paddingBottom: "4px",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "#2a33f3";
-                const line = e.currentTarget.querySelector(".nav-underline") as HTMLElement;
-                if (line) line.style.width = "100%";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "rgba(255,255,255,0.62)";
-                const line = e.currentTarget.querySelector(".nav-underline") as HTMLElement;
-                if (line) line.style.width = "0%";
-              }}
+            <Link
+              key={link.href}
+              href={link.href}
+              className="group relative pb-1 font-display text-[15px] font-medium text-white/62 transition-colors hover:text-primary-light"
             >
               {link.label}
-              <span className="nav-underline" style={{
-                position: "absolute",
-                bottom: "-24px",
-                left: 0,
-                width: "0%",
-                height: "2px",
-                background: "linear-gradient(90deg, #2a33f3, #6B8FF8)",
-                borderRadius: "2px",
-                transition: "width 0.25s ease",
-              }} />
+              <span className="absolute inset-x-0 -bottom-1.5 h-0.5 origin-center scale-x-0 rounded-full bg-[image:var(--gradient-brand)] transition-transform duration-300 ease-out group-hover:scale-x-100" />
             </Link>
           ))}
         </nav>
 
-        {/* CTA Button — right */}
-        <div style={{ position: "absolute", right: "24px", top: "50%", transform: "translateY(-50%)" }}>
-          <ShimmerButton href="/contact" variant="primary" style={{ fontSize: "13px", padding: "8px 16px" }}>התחל פרויקט</ShimmerButton>
+        {/* CTA — desktop only, pinned right */}
+        <div className="absolute right-6 top-1/2 hidden -translate-y-1/2 md:block">
+          <Button href="/contact" variant="primary" className="px-4 py-2 text-[13px]">
+            התחל פרויקט
+          </Button>
         </div>
+
+        {/* Mobile menu toggle */}
+        <button
+          type="button"
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-label={menuOpen ? "סגור תפריט" : "פתח תפריט"}
+          aria-expanded={menuOpen}
+          className="absolute right-6 top-1/2 -translate-y-1/2 text-white/80 md:hidden"
+        >
+          {menuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </div>
+
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.nav
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className={cn("overflow-hidden border-t border-white/6 bg-background/95 backdrop-blur-md md:hidden")}
+          >
+            <div className="flex flex-col gap-1 px-6 py-4">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMenuOpen(false)}
+                  className="rounded-lg px-2 py-3 font-display text-base font-medium text-white/75 transition-colors hover:bg-white/5 hover:text-primary-light"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <Button href="/contact" variant="primary" showArrow={false} className="mt-2 justify-center">
+                התחל פרויקט
+              </Button>
+            </div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
     </motion.header>
   );
 }
