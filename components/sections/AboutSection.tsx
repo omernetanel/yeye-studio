@@ -60,49 +60,48 @@ function ValueCard({ value, index }: { value: Value; index: number }) {
 
 export default function AboutSection() {
   return (
-    <section id="about" className="px-6 py-12 md:py-16">
+    <section id="about" className="px-6 py-16 md:py-20">
       <div className="mx-auto max-w-[1200px]">
-        <SectionHeading title="מי אנחנו?" className="mb-12 md:mb-14" />
+        <SectionHeading title="מי אנחנו?" className="mb-12 md:mb-16" />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
-          className="flex flex-col items-stretch gap-10 md:flex-row md:gap-14"
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mb-14 flex flex-col items-stretch gap-10 md:mb-20 md:flex-row md:gap-14"
         >
           {/* Photo placeholder — real photo pending */}
-          <div className="flex aspect-[4/3] shrink-0 items-center justify-center rounded-2xl border border-white/6 bg-[#0f0f14] md:aspect-auto md:w-[360px]">
+          <div className="flex aspect-[4/3] shrink-0 items-center justify-center rounded-2xl border border-white/6 bg-[#0f0f14] md:aspect-auto md:w-[320px]">
             <span className="font-display text-[13px] tracking-wide text-white/15">תמונה בקרוב</span>
           </div>
 
-          {/* Text + value cards */}
-          <div className="flex flex-1 flex-col justify-between gap-8">
-            <div className="flex flex-col gap-5">
-              <p className="font-body text-[19px] leading-[1.85] text-white/88">
-                YEYE LABS נולד מתוך אובססיה לפרטים קטנים ואמונה עמוקה שכל עסק — גדול או קטן — ראוי לנוכחות דיגיטלית{" "}
-                <strong className="text-white">ברמה הגבוהה ביותר</strong>.
-              </p>
-              <p className="font-body text-[19px] leading-[1.85] text-white/88">
-                אנחנו מעצבים ומפתחים מגיל צעיר, עם ניסיון של שנים בבניית חוויות דיגיטליות{" "}
-                <strong className="text-white">שלא רק נראות טוב — אלא עובדות</strong>. כל פרויקט מקבל את מלוא
-                הקשב, הדיוק והאנרגיה שלנו.
-              </p>
-            </div>
-
-            <SwipeCarousel className="sm:hidden" slideWidth="80%">
-              {values.map((value) => (
-                <ValueCardContent key={value.title} value={value} />
-              ))}
-            </SwipeCarousel>
-
-            <div className="hidden gap-5 sm:grid sm:grid-cols-3">
-              {values.map((value, i) => (
-                <ValueCard key={value.title} value={value} index={i} />
-              ))}
-            </div>
+          <div className="flex flex-1 flex-col justify-center gap-5">
+            <p className="font-body text-[19px] leading-[1.85] text-white/88">
+              YEYE LABS נולד מתוך אובססיה לפרטים קטנים ואמונה עמוקה שכל עסק — גדול או קטן — ראוי לנוכחות דיגיטלית{" "}
+              <strong className="text-white">ברמה הגבוהה ביותר</strong>.
+            </p>
+            <p className="font-body text-[19px] leading-[1.85] text-white/88">
+              אנחנו מעצבים ומפתחים מגיל צעיר, עם ניסיון של שנים בבניית חוויות דיגיטליות{" "}
+              <strong className="text-white">שלא רק נראות טוב — אלא עובדות</strong>. כל פרויקט מקבל את מלוא
+              הקשב, הדיוק והאנרגיה שלנו.
+            </p>
           </div>
         </motion.div>
+
+        {/* Value cards get the full section width — squeezing them into the
+            narrower text column left them cramped. */}
+        <SwipeCarousel className="sm:hidden" slideWidth="80%">
+          {values.map((value) => (
+            <ValueCardContent key={value.title} value={value} />
+          ))}
+        </SwipeCarousel>
+
+        <div className="hidden gap-6 sm:grid sm:grid-cols-3 lg:gap-8">
+          {values.map((value, i) => (
+            <ValueCard key={value.title} value={value} index={i} />
+          ))}
+        </div>
       </div>
     </section>
   );

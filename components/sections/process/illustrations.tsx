@@ -34,18 +34,37 @@ export function DiscoveryIllustration({ active }: IllustrationProps) {
     return () => ctx.revert();
   }, [active]);
 
+  // Three spokes at exactly 120° apart, same length — a clean, symmetric
+  // "scan/radar" mark instead of scattered lines at random angles/lengths.
+  const CENTER = 110;
+  const SPOKE_R = 100;
+  const spokes = [-90, 30, 150].map((deg) => {
+    const rad = (deg * Math.PI) / 180;
+    return { x: CENTER + SPOKE_R * Math.cos(rad), y: CENTER + SPOKE_R * Math.sin(rad) };
+  });
+
   return (
     <svg ref={svgRef} width="380" height="380" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle data-draw cx="110" cy="110" r="95" stroke={STROKE_DIM} strokeWidth="1" />
       <circle data-draw cx="110" cy="110" r="65" stroke={STROKE_DIM} strokeWidth="1" />
       <circle data-draw cx="110" cy="110" r="35" stroke={STROKE_BRIGHT} strokeWidth="1.5" />
       <circle cx="110" cy="110" r="6" fill="#2a33f3" style={{ filter: "drop-shadow(0 0 10px rgba(42,51,243,0.8))" }} />
-      <line data-draw x1="110" y1="110" x2="146" y2="82" stroke={STROKE_BRIGHT} strokeWidth="1.5" strokeLinecap="round" />
-      <circle data-dot cx="146" cy="82" r="4" fill={STROKE_BRIGHT} />
-      <line data-draw x1="110" y1="110" x2="72" y2="152" stroke={STROKE_BRIGHT} strokeWidth="1.5" strokeLinecap="round" />
-      <circle data-dot cx="72" cy="152" r="4" fill={STROKE_BRIGHT} opacity="0.8" />
-      <line data-draw x1="110" y1="110" x2="45" y2="70" stroke={STROKE_DIM} strokeWidth="1.5" strokeLinecap="round" />
-      <circle data-dot cx="45" cy="70" r="4" fill={STROKE_BRIGHT} opacity="0.6" />
+      {spokes.map((p, i) => (
+        <line
+          key={i}
+          data-draw
+          x1={CENTER}
+          y1={CENTER}
+          x2={p.x}
+          y2={p.y}
+          stroke={STROKE_BRIGHT}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+      ))}
+      {spokes.map((p, i) => (
+        <circle key={i} data-dot cx={p.x} cy={p.y} r="4" fill={STROKE_BRIGHT} />
+      ))}
     </svg>
   );
 }
@@ -165,13 +184,13 @@ export function CodeIllustration({ active }: IllustrationProps) {
   ];
 
   return (
-    <div ref={containerRef} className="h-[300px] w-[390px] overflow-hidden rounded-xl border border-primary-light/30 bg-black/80" dir="ltr">
-      <div className="flex h-11 items-center gap-2 bg-primary/15 px-4">
+    <div ref={containerRef} className="h-[340px] w-[420px] overflow-hidden rounded-xl border border-primary-light/30 bg-black/80" dir="ltr">
+      <div className="flex h-12 items-center gap-2 bg-primary/15 px-5">
         <div className="h-3.5 w-3.5 rounded-full bg-[#ff5f57]/70" />
         <div className="h-3.5 w-3.5 rounded-full bg-[#febc2e]/70" />
         <div className="h-3.5 w-3.5 rounded-full bg-[#28c840]/70" />
       </div>
-      <div className="flex flex-col gap-3 p-6 font-mono text-[16px] leading-[1.8]">
+      <div className="flex flex-col gap-4 p-7 font-mono text-[17px] leading-[1.8]">
         {codeLines.map((line, i) => (
           <div key={i} data-line className="overflow-hidden whitespace-nowrap">
             <span style={{ color: line.color }}>{line.text}</span>
@@ -196,7 +215,28 @@ export function LaunchIllustration({ active }: IllustrationProps) {
       gsap
         .timeline()
         .to(body, { strokeDashoffset: 0, duration: 0.9, stagger: 0.1, ease: "power2.out" })
-        .to("[data-flame]", { scaleY: 1.15, opacity: 0.9, duration: 0.35, ease: "sine.inOut", repeat: -1, yoyo: true, transformOrigin: "center top" }, "-=0.2")
+        .to(
+          "[data-flame-outer]",
+          { scaleY: 1.18, opacity: 0.7, duration: 0.4, ease: "sine.inOut", repeat: -1, yoyo: true, transformOrigin: "center top" },
+          "-=0.2"
+        )
+        .to(
+          "[data-flame-inner]",
+          { scaleY: 1.3, opacity: 1, duration: 0.26, ease: "sine.inOut", repeat: -1, yoyo: true, transformOrigin: "center top" },
+          "<0.05"
+        )
+        .to(
+          "[data-spark]",
+          {
+            keyframes: { opacity: [0, 1, 0], y: [0, -12, -26] },
+            duration: 1.2,
+            ease: "power1.out",
+            repeat: -1,
+            repeatDelay: 0.25,
+            stagger: 0.45,
+          },
+          "-=0.3"
+        )
         .to(svg, { y: -8, duration: 2, ease: "sine.inOut", repeat: -1, yoyo: true }, "-=0.9");
     }, svg);
 
@@ -216,11 +256,22 @@ export function LaunchIllustration({ active }: IllustrationProps) {
       <path data-draw d="M72 116 L48 144 L72 139 Z" stroke={STROKE_DIM} strokeWidth="1.5" fill="rgba(42,51,243,0.05)" />
       <path data-draw d="M128 116 L152 144 L128 139 Z" stroke={STROKE_DIM} strokeWidth="1.5" fill="rgba(42,51,243,0.05)" />
       <path
-        data-flame
-        d="M85 139 C85 139 90 168 100 178 C110 168 115 139 115 139 Z"
-        fill="rgba(42,51,243,0.45)"
-        style={{ filter: "drop-shadow(0 0 12px rgba(42,51,243,0.7))" }}
+        data-flame-outer
+        d="M85 139 C85 139 90 172 100 184 C110 172 115 139 115 139 Z"
+        fill="#6b5cf6"
+        opacity="0.55"
+        style={{ filter: "drop-shadow(0 0 14px rgba(107,92,246,0.65))" }}
       />
+      <path
+        data-flame-inner
+        d="M92 139 C92 139 95 162 100 172 C105 162 108 139 108 139 Z"
+        fill="#ffb020"
+        opacity="0.9"
+        style={{ filter: "drop-shadow(0 0 8px rgba(255,176,32,0.7))" }}
+      />
+      <circle data-spark cx="93" cy="148" r="1.6" fill="#ffb020" opacity="0" />
+      <circle data-spark cx="107" cy="151" r="1.3" fill="#ff8a3d" opacity="0" />
+      <circle data-spark cx="100" cy="155" r="1.4" fill="#ffd27a" opacity="0" />
     </svg>
   );
 }
