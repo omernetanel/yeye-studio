@@ -35,7 +35,7 @@ export function DiscoveryIllustration({ active }: IllustrationProps) {
   }, [active]);
 
   return (
-    <svg ref={svgRef} width="300" height="300" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg ref={svgRef} width="380" height="380" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle data-draw cx="110" cy="110" r="95" stroke={STROKE_DIM} strokeWidth="1" />
       <circle data-draw cx="110" cy="110" r="65" stroke={STROKE_DIM} strokeWidth="1" />
       <circle data-draw cx="110" cy="110" r="35" stroke={STROKE_BRIGHT} strokeWidth="1.5" />
@@ -51,9 +51,9 @@ export function DiscoveryIllustration({ active }: IllustrationProps) {
 }
 
 const DESIGN_LINES = [
-  { x: 45, y: 95, width: 100 },
-  { x: 45, y: 121, width: 130 },
-  { x: 45, y: 147, width: 80 },
+  { x: 45, y: 92, width: 100 },
+  { x: 45, y: 118, width: 130 },
+  { x: 45, y: 144, width: 80 },
 ];
 
 export function DesignIllustration({ active }: IllustrationProps) {
@@ -84,14 +84,18 @@ export function DesignIllustration({ active }: IllustrationProps) {
             .to(`[data-line="${i}"]`, { attr: { width: line.width }, duration: 0.5, ease: "power1.inOut" }, "<");
         });
 
-        timeline.to(pencil, { opacity: 0, duration: 0.3, delay: 0.15 });
+        // Rest the pencil where it finished — a gentle, indefinite float in
+        // place, rather than fading it out. It reads as "still there,"
+        // instead of disappearing right after it's done writing.
+        timeline.addLabel("done");
+        timeline.to(pencil, { y: "+=5", duration: 1.1, ease: "sine.inOut", repeat: -1, yoyo: true }, "done+=0.1");
       }
 
       timeline.fromTo(
         "[data-cta]",
         { scale: 0, opacity: 0 },
         { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(2.2)", transformOrigin: "center" },
-        pencil ? "-=0.1" : "-=0.3"
+        pencil ? "done+=0.1" : "-=0.3"
       );
     }, svg);
 
@@ -99,8 +103,8 @@ export function DesignIllustration({ active }: IllustrationProps) {
   }, [active]);
 
   return (
-    <svg ref={svgRef} width="300" height="300" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect data-draw x="25" y="40" width="170" height="140" rx="14" stroke={STROKE_BRIGHT} strokeWidth="1.5" fill="rgba(42,51,243,0.04)" />
+    <svg ref={svgRef} width="380" height="380" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect data-draw x="25" y="40" width="170" height="150" rx="14" stroke={STROKE_BRIGHT} strokeWidth="1.5" fill="rgba(42,51,243,0.04)" />
       <rect x="25" y="40" width="170" height="28" rx="14" fill="rgba(42,51,243,0.1)" />
       <circle cx="43" cy="54" r="3.5" fill="#ff5f57" opacity="0.7" />
       <circle cx="56" cy="54" r="3.5" fill="#febc2e" opacity="0.7" />
@@ -117,7 +121,7 @@ export function DesignIllustration({ active }: IllustrationProps) {
           fill={i === 0 ? STROKE_BRIGHT : "rgba(255,255,255,0.14)"}
         />
       ))}
-      <rect data-cta x="130" y="158" width="55" height="20" rx="6" fill="rgba(42,51,243,0.55)" style={{ filter: "drop-shadow(0 0 8px rgba(42,51,243,0.5))" }} />
+      <rect data-cta x="130" y="164" width="55" height="20" rx="6" fill="rgba(42,51,243,0.55)" style={{ filter: "drop-shadow(0 0 8px rgba(42,51,243,0.5))" }} />
       <g data-pencil style={{ opacity: 0 }}>
         <g transform="rotate(-35)">
           <path d="M-3 -6 L3 -6 L0 0 Z" fill="#3a2a1a" />
@@ -161,13 +165,13 @@ export function CodeIllustration({ active }: IllustrationProps) {
   ];
 
   return (
-    <div ref={containerRef} className="h-[272px] w-[354px] overflow-hidden rounded-xl border border-primary-light/30 bg-black/80" dir="ltr">
-      <div className="flex h-10 items-center gap-2 bg-primary/15 px-4">
-        <div className="h-3 w-3 rounded-full bg-[#ff5f57]/70" />
-        <div className="h-3 w-3 rounded-full bg-[#febc2e]/70" />
-        <div className="h-3 w-3 rounded-full bg-[#28c840]/70" />
+    <div ref={containerRef} className="h-[300px] w-[390px] overflow-hidden rounded-xl border border-primary-light/30 bg-black/80" dir="ltr">
+      <div className="flex h-11 items-center gap-2 bg-primary/15 px-4">
+        <div className="h-3.5 w-3.5 rounded-full bg-[#ff5f57]/70" />
+        <div className="h-3.5 w-3.5 rounded-full bg-[#febc2e]/70" />
+        <div className="h-3.5 w-3.5 rounded-full bg-[#28c840]/70" />
       </div>
-      <div className="flex flex-col gap-2.5 p-5 font-mono text-[14px] leading-[1.8]">
+      <div className="flex flex-col gap-3 p-6 font-mono text-[16px] leading-[1.8]">
         {codeLines.map((line, i) => (
           <div key={i} data-line className="overflow-hidden whitespace-nowrap">
             <span style={{ color: line.color }}>{line.text}</span>
@@ -200,7 +204,7 @@ export function LaunchIllustration({ active }: IllustrationProps) {
   }, [active]);
 
   return (
-    <svg ref={svgRef} width="273" height="300" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg ref={svgRef} width="345" height="380" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
         data-draw
         d="M100 30 C100 30 72 68 72 116 L100 134 L128 116 C128 68 100 30 100 30Z"
