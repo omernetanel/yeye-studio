@@ -48,10 +48,10 @@ body {
 
 @keyframes shimmer-sweep {
   0% {
-    transform: translateX(150%) rotate(45deg);
+    transform: translateX(-250%) rotate(45deg);
   }
   100% {
-    transform: translateX(-150%) rotate(45deg);
+    transform: translateX(400%) rotate(45deg);
   }
 }
 
@@ -68,7 +68,11 @@ body {
   width: 30%;
   height: 200%;
   background: linear-gradient(to right, transparent, rgb(255 255 255 / 18%), transparent);
-  transform: translateX(150%) rotate(45deg);
+  /* Parked well outside the button at rest — the diagonal rotation makes the
+     bar's bounding box wider than its own dimensions, so a modest offset
+     left it partially visible even without hovering. */
+  transform: translateX(-250%) rotate(45deg);
+  pointer-events: none;
 }
 
 .btn-shimmer:hover::after {
