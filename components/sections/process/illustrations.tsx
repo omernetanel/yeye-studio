@@ -81,7 +81,7 @@ export function DesignIllustration({ active }: IllustrationProps) {
               { x: line.x + line.width, y: line.y + 4, duration: 0.5, ease: "power1.inOut" },
               i === 0 ? undefined : "-=0.1"
             )
-            .to(`[data-line="${i}"]`, { scaleX: 1, duration: 0.5, ease: "power1.inOut" }, "<");
+            .to(`[data-line="${i}"]`, { attr: { width: line.width }, duration: 0.5, ease: "power1.inOut" }, "<");
         });
 
         timeline.to(pencil, { opacity: 0, duration: 0.3, delay: 0.15 });
@@ -111,11 +111,10 @@ export function DesignIllustration({ active }: IllustrationProps) {
           data-line={i}
           x={line.x}
           y={line.y}
-          width={line.width}
+          width={0}
           height="8"
           rx="4"
           fill={i === 0 ? STROKE_BRIGHT : "rgba(255,255,255,0.14)"}
-          style={{ transformOrigin: `${line.x}px center`, transform: "scaleX(0)" }}
         />
       ))}
       <rect data-cta x="130" y="158" width="55" height="20" rx="6" fill="rgba(42,51,243,0.55)" style={{ filter: "drop-shadow(0 0 8px rgba(42,51,243,0.5))" }} />
