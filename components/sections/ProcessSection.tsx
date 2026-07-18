@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, type ComponentType } from "react";
-import { motion, useInView } from "framer-motion";
-import { gsap } from "@/lib/motion/gsap";
+import { AnimatePresence, motion, useInView } from "framer-motion";
+import { gsap, ScrollTrigger } from "@/lib/motion/gsap";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
 import { cn } from "@/lib/utils";
@@ -85,7 +85,6 @@ function StepContent({ step, active, showDots = true }: { step: StepDef; active:
 
 function PinnedSteps() {
   const pinRef = useRef<HTMLDivElement>(null);
-  const panelRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [activeStep, setActiveStep] = useState(0);
   // The pin section mounts wherever it sits in the page — often far below the
   // fold — so activeStep's default (0) would otherwise mark step 1 "active"
@@ -96,46 +95,34 @@ function PinnedSteps() {
 
   useEffect(() => {
     if (!pinRef.current) return;
-    const panels = panelRefs.current.filter((el): el is HTMLDivElement => el !== null);
-    if (panels.length !== steps.length) return;
 
+    // The pin/scroll mechanics stay in GSAP (per the project's scroll-driven
+    // convention), but the actual step transition is handled by Framer
+    // Motion below as a discrete, sequential crossfade — not a continuous
+    // scrub of overlapping panels. A scrub-linked opacity blend can rest at
+    // any in-between value, which meant two steps' text could sit on top of
+    // each other, half-visible, whenever the user paused mid-scroll (snap
+    // only resolved this once scrolling stopped, not during it). Driving the
+    // step index off of scroll progress and letting Framer Motion's
+    // mode="wait" fully exit one step before mounting the next removes the
+    // possibility of overlap altogether, regardless of scroll speed.
     const ctx = gsap.context(() => {
-      gsap.set(panels.slice(1), { autoAlpha: 0, y: 40 });
-      gsap.set(panels[0], { autoAlpha: 1, y: 0 });
-
-      const timeline = gsap.timeline({
-        scrollTrigger: {
-          trigger: pinRef.current,
-          start: "top top",
-          end: `+=${(steps.length - 1) * 100}%`,
-          scrub: 1,
-          pin: true,
-          // Without snapping, the smoothed scrub can settle mid-transition
-          // when the user stops scrolling — leaving two panels' text
-          // partially visible and overlapping. Snapping always finishes the
-          // crossfade to a single resting step.
-          snap: {
-            snapTo: 1 / (steps.length - 1),
-            duration: { min: 0.25, max: 0.6 },
-            ease: "power1.inOut",
-          },
-          onUpdate: (self) => {
-            const index = Math.min(steps.length - 1, Math.round(self.progress * (steps.length - 1)));
-            setActiveStep((current) => (current === index ? current : index));
-          },
+      ScrollTrigger.create({
+        trigger: pinRef.current,
+        start: "top top",
+        end: `+=${(steps.length - 1) * 100}%`,
+        scrub: 1,
+        pin: true,
+        snap: {
+          snapTo: 1 / (steps.length - 1),
+          duration: { min: 0.25, max: 0.6 },
+          ease: "power1.inOut",
+        },
+        onUpdate: (self) => {
+          const index = Math.min(steps.length - 1, Math.round(self.progress * (steps.length - 1)));
+          setActiveStep((current) => (current === index ? current : index));
         },
       });
-
-      for (let i = 0; i < panels.length - 1; i++) {
-        timeline
-          .to(panels[i], { autoAlpha: 0, y: -40, duration: 1, ease: "power1.inOut" })
-          .fromTo(
-            panels[i + 1],
-            { autoAlpha: 0, y: 40 },
-            { autoAlpha: 1, y: 0, duration: 1, ease: "power1.inOut" },
-            "<"
-          );
-      }
     }, pinRef);
 
     return () => ctx.revert();
@@ -143,17 +130,18 @@ function PinnedSteps() {
 
   return (
     <div ref={pinRef} className="relative h-screen overflow-hidden">
-      {steps.map((step, i) => (
-        <div
-          key={step.number}
-          ref={(el) => {
-            panelRefs.current[i] = el;
-          }}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={steps[activeStep].number}
+          initial={{ opacity: 0, y: 28 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -28 }}
+          transition={{ duration: 0.4, ease: [0.65, 0, 0.35, 1] }}
           className="absolute inset-0 flex items-center"
         >
-          <StepContent step={step} active={hasEnteredView && activeStep === i} />
-        </div>
-      ))}
+          <StepContent step={steps[activeStep]} active={hasEnteredView} />
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
