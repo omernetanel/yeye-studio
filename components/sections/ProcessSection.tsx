@@ -109,7 +109,7 @@ function StackedStep({ step }: { step: StepDef }) {
  */
 function StackedSteps() {
   return (
-    <div className="mx-auto flex max-w-[1100px] flex-col gap-20 px-6">
+    <div className="mx-auto flex max-w-[1100px] flex-col gap-32 px-6 md:gap-40">
       {steps.map((step) => (
         <StackedStep key={step.number} step={step} />
       ))}
