@@ -41,12 +41,12 @@ export default function ServiceCard({ icon: Icon, title, description, href }: Se
         <Card className="flex h-full flex-col items-center gap-4 text-center">
           <div
             style={{ transform: "translateZ(20px)" }}
-            className="flex h-16 w-16 items-center justify-center rounded-full border border-primary-light/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-primary)_35%,transparent)_0%,rgba(20,20,30,0.4)_75%)]"
+            className="flex h-14 w-14 items-center justify-center rounded-full border border-primary-light/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-primary)_35%,transparent)_0%,rgba(20,20,30,0.4)_75%)]"
           >
-            <Icon size={30} strokeWidth={1.5} className="text-primary-light drop-shadow-[0_0_6px_rgba(42,51,243,0.7)]" />
+            <Icon size={26} strokeWidth={1.5} className="text-primary-light drop-shadow-[0_0_6px_rgba(42,51,243,0.7)]" />
           </div>
 
-          <h3 style={{ transform: "translateZ(20px)" }} className="font-display text-xl font-bold text-white">
+          <h3 style={{ transform: "translateZ(20px)" }} className="font-display text-lg font-bold text-white">
             {title}
           </h3>
 
