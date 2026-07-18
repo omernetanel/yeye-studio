@@ -11,17 +11,19 @@ export interface IllustrationProps {
 const STROKE_DIM = "rgba(107,143,248,0.35)";
 const STROKE_BRIGHT = "#6b8ff8";
 
+// Three spokes, each ending exactly on one of the three rings (so the dot
+// visibly sits on that ring's edge, not floating past all of them), at
+// 120° apart for a clean, symmetric starting position.
+const DISCOVERY_CENTER = 110;
+const DISCOVERY_RING_RADII = [95, 65, 35];
+const DISCOVERY_START_ANGLES = [-90, 30, 150];
+
 export function DiscoveryIllustration({ active }: IllustrationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
-
-  // Three spokes, each ending exactly on one of the three rings (so the dot
-  // visibly sits on that ring's edge, not floating past all of them), at
-  // 120° apart for a clean, symmetric starting position.
-  const CENTER = 110;
-  const RING_RADII = [95, 65, 35];
-  const spokes = [-90, 30, 150].map((deg, i) => {
+  const CENTER = DISCOVERY_CENTER;
+  const spokes = DISCOVERY_START_ANGLES.map((deg, i) => {
     const rad = (deg * Math.PI) / 180;
-    const r = RING_RADII[i];
+    const r = DISCOVERY_RING_RADII[i];
     return { x: CENTER + r * Math.cos(rad), y: CENTER + r * Math.sin(rad) };
   });
 
@@ -43,12 +45,35 @@ export function DiscoveryIllustration({ active }: IllustrationProps) {
         );
 
       // Once drawn in, each spoke keeps orbiting its own ring indefinitely —
-      // like satellites at different distances, moving at different speeds —
-      // instead of sitting static.
-      [6, 9, 13].forEach((duration, i) => {
+      // like satellites at different distances, moving at different speeds.
+      // Driven by recomputing x/y from a plain angle value every frame
+      // (rather than an SVG/CSS rotation transform) so the radius is
+      // mathematically pinned to the ring and can never drift over time.
+      const durations = [6, 9, 13];
+      DISCOVERY_START_ANGLES.forEach((startDeg, i) => {
+        const r = DISCOVERY_RING_RADII[i];
+        const line = svg.querySelector<SVGLineElement>(`[data-orbit="${i}"] line`);
+        const dot = svg.querySelector<SVGCircleElement>(`[data-orbit="${i}"] circle`);
+        if (!line || !dot) return;
+        const state = { angle: startDeg };
+        const direction = i % 2 === 0 ? 1 : -1;
         timeline.to(
-          `[data-orbit="${i}"]`,
-          { rotation: i % 2 === 0 ? 360 : -360, duration, ease: "none", repeat: -1, svgOrigin: `${CENTER} ${CENTER}` },
+          state,
+          {
+            angle: startDeg + direction * 360,
+            duration: durations[i],
+            ease: "none",
+            repeat: -1,
+            onUpdate: () => {
+              const rad = (state.angle * Math.PI) / 180;
+              const x = DISCOVERY_CENTER + r * Math.cos(rad);
+              const y = DISCOVERY_CENTER + r * Math.sin(rad);
+              line.setAttribute("x2", String(x));
+              line.setAttribute("y2", String(y));
+              dot.setAttribute("cx", String(x));
+              dot.setAttribute("cy", String(y));
+            },
+          },
           "-=0.2"
         );
       });
@@ -87,6 +112,7 @@ const DESIGN_LINES = [
   { x: 45, y: 118, width: 130 },
   { x: 45, y: 144, width: 80 },
 ];
+const DESIGN_CTA = { x: 140, y: 164, width: 50, height: 20 };
 
 export function DesignIllustration({ active }: IllustrationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -116,18 +142,24 @@ export function DesignIllustration({ active }: IllustrationProps) {
             .to(`[data-line="${i}"]`, { attr: { width: line.width }, duration: 0.5, ease: "power1.inOut" }, "<");
         });
 
-        // Rest the pencil where it finished — a gentle, indefinite float in
-        // place, rather than fading it out. It reads as "still there,"
-        // instead of disappearing right after it's done writing.
-        timeline.addLabel("done");
-        timeline.to(pencil, { y: "+=5", duration: 1.1, ease: "sine.inOut", repeat: -1, yoyo: true }, "done+=0.1");
+        // Once done writing, the pencil moves to rest beside the button
+        // instead of hovering over the text it just wrote — reads as
+        // "and here's the result," with the two connected, rather than
+        // floating disconnected over the last line.
+        timeline.addLabel("linesDone");
+        timeline.to(
+          pencil,
+          { x: DESIGN_CTA.x - 10, y: DESIGN_CTA.y + DESIGN_CTA.height / 2, duration: 0.5, ease: "power1.inOut" },
+          "linesDone"
+        );
+        timeline.to(pencil, { y: "+=5", duration: 1.1, ease: "sine.inOut", repeat: -1, yoyo: true }, "linesDone+=0.6");
       }
 
       timeline.fromTo(
         "[data-cta]",
         { scale: 0, opacity: 0 },
         { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(2.2)", transformOrigin: "center" },
-        pencil ? "done+=0.1" : "-=0.3"
+        pencil ? "linesDone+=0.2" : "-=0.3"
       );
     }, svg);
 
@@ -153,7 +185,16 @@ export function DesignIllustration({ active }: IllustrationProps) {
           fill={i === 0 ? STROKE_BRIGHT : "rgba(255,255,255,0.14)"}
         />
       ))}
-      <rect data-cta x="130" y="164" width="55" height="20" rx="6" fill="rgba(42,51,243,0.55)" style={{ filter: "drop-shadow(0 0 8px rgba(42,51,243,0.5))" }} />
+      <rect
+        data-cta
+        x={DESIGN_CTA.x}
+        y={DESIGN_CTA.y}
+        width={DESIGN_CTA.width}
+        height={DESIGN_CTA.height}
+        rx="6"
+        fill="rgba(42,51,243,0.55)"
+        style={{ filter: "drop-shadow(0 0 8px rgba(42,51,243,0.5))" }}
+      />
       <g data-pencil style={{ opacity: 0 }}>
         <g transform="rotate(-35)">
           <path d="M-3 -6 L3 -6 L0 0 Z" fill="#3a2a1a" />
