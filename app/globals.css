@@ -46,42 +46,28 @@ body {
   background: color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
-@keyframes shimmer-sweep {
-  0% {
-    transform: translateX(-250%) rotate(45deg);
-  }
-  100% {
-    transform: translateX(60%) rotate(45deg);
-  }
-}
-
 .btn-shimmer {
   position: relative;
   overflow: hidden;
 }
 
+/* A diagonal highlight baked directly into the gradient's angle — no
+   transform/rotation math, so there's nothing to mis-position. It's a plain
+   opacity fade, the most reliable transition CSS has: invisible at rest,
+   fades in on hover and stays for as long as the button is hovered, fades
+   back out on mouse-leave. */
 .btn-shimmer::after {
   content: "";
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 30%;
-  height: 200%;
-  background: linear-gradient(to right, transparent, rgb(255 255 255 / 18%), transparent);
-  /* Parked well outside the button at rest — the diagonal rotation makes the
-     bar's bounding box wider than its own dimensions, so a modest offset
-     left it partially visible even without hovering. */
-  transform: translateX(-250%) rotate(45deg);
-  transition: transform 0.35s ease;
+  inset: -20%;
+  background: linear-gradient(115deg, transparent 42%, rgb(255 255 255 / 25%) 50%, transparent 58%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
   pointer-events: none;
 }
 
 .btn-shimmer:hover::after {
-  /* Sweeps in once and settles mid-button — a repeating loop kept resetting
-     to hidden between passes, so the shine never actually stayed on the
-     button while hovering. The transition above handles the fade back out
-     on mouse-leave (the animation only runs forward, on entry). */
-  animation: shimmer-sweep 0.5s ease-out forwards;
+  opacity: 1;
 }
 
 .no-scrollbar {
