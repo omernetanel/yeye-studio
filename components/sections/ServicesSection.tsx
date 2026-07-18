@@ -37,7 +37,7 @@ export default function ServicesSection() {
   return (
     <section id="services" className="px-6 py-16 md:py-20">
       <div className="mx-auto max-w-[1200px]">
-        <SectionHeading title="מה אנחנו עושים?" className="mb-10 md:mb-14" />
+        <SectionHeading title="מה אנחנו עושים?" className="mb-10 md:mb-12" />
 
         {/* Mobile: touch-native swipe carousel, one card at a time */}
         <SwipeCarousel className="sm:hidden">
@@ -47,7 +47,7 @@ export default function ServicesSection() {
         </SwipeCarousel>
 
         {/* Tablet/desktop: grid */}
-        <div className="hidden gap-5 sm:grid sm:grid-cols-2 lg:grid-cols-4">
+        <div className="hidden gap-6 sm:grid sm:grid-cols-2 lg:grid-cols-4">
           {services.map((service, i) => (
             <motion.div
               key={service.title}

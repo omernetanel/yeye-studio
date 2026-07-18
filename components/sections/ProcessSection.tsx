@@ -84,7 +84,13 @@ function StepContent({ step, active, showDots = true }: { step: StepDef; active:
 
 function StackedStep({ step }: { step: StepDef }) {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
+  // The default threshold fires as soon as a single pixel of the block is
+  // visible, so the illustration's multi-second draw-in animation used to
+  // start (and finish) while most of it was still below the fold — by the
+  // time the user actually scrolled it into view, there was nothing left to
+  // watch. Requiring 45% visibility first means the animation only starts
+  // once there's real screen time left to see it play out.
+  const inView = useInView(ref, { once: true, amount: 0.45 });
 
   return (
     <motion.div
