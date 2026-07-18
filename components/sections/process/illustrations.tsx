@@ -14,14 +14,26 @@ const STROKE_BRIGHT = "#6b8ff8";
 export function DiscoveryIllustration({ active }: IllustrationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
 
+  // Three spokes, each ending exactly on one of the three rings (so the dot
+  // visibly sits on that ring's edge, not floating past all of them), at
+  // 120° apart for a clean, symmetric starting position.
+  const CENTER = 110;
+  const RING_RADII = [95, 65, 35];
+  const spokes = [-90, 30, 150].map((deg, i) => {
+    const rad = (deg * Math.PI) / 180;
+    const r = RING_RADII[i];
+    return { x: CENTER + r * Math.cos(rad), y: CENTER + r * Math.sin(rad) };
+  });
+
   useEffect(() => {
     if (!active || !svgRef.current) return;
     const svg = svgRef.current;
 
     const ctx = gsap.context(() => {
       const rings = prepareDrawPaths(svg);
-      gsap
-        .timeline()
+      const timeline = gsap.timeline();
+
+      timeline
         .to(rings, { strokeDashoffset: 0, duration: 1.1, stagger: 0.18, ease: "power2.out" })
         .fromTo(
           "[data-dot]",
@@ -29,19 +41,21 @@ export function DiscoveryIllustration({ active }: IllustrationProps) {
           { scale: 1, opacity: 1, duration: 0.4, stagger: 0.15, ease: "back.out(2.5)", transformOrigin: "center" },
           "-=0.5"
         );
+
+      // Once drawn in, each spoke keeps orbiting its own ring indefinitely —
+      // like satellites at different distances, moving at different speeds —
+      // instead of sitting static.
+      [6, 9, 13].forEach((duration, i) => {
+        timeline.to(
+          `[data-orbit="${i}"]`,
+          { rotation: i % 2 === 0 ? 360 : -360, duration, ease: "none", repeat: -1, svgOrigin: `${CENTER} ${CENTER}` },
+          "-=0.2"
+        );
+      });
     }, svg);
 
     return () => ctx.revert();
   }, [active]);
-
-  // Three spokes at exactly 120° apart, same length — a clean, symmetric
-  // "scan/radar" mark instead of scattered lines at random angles/lengths.
-  const CENTER = 110;
-  const SPOKE_R = 100;
-  const spokes = [-90, 30, 150].map((deg) => {
-    const rad = (deg * Math.PI) / 180;
-    return { x: CENTER + SPOKE_R * Math.cos(rad), y: CENTER + SPOKE_R * Math.sin(rad) };
-  });
 
   return (
     <svg ref={svgRef} width="380" height="380" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -50,20 +64,19 @@ export function DiscoveryIllustration({ active }: IllustrationProps) {
       <circle data-draw cx="110" cy="110" r="35" stroke={STROKE_BRIGHT} strokeWidth="1.5" />
       <circle cx="110" cy="110" r="6" fill="#2a33f3" style={{ filter: "drop-shadow(0 0 10px rgba(42,51,243,0.8))" }} />
       {spokes.map((p, i) => (
-        <line
-          key={i}
-          data-draw
-          x1={CENTER}
-          y1={CENTER}
-          x2={p.x}
-          y2={p.y}
-          stroke={STROKE_BRIGHT}
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-      ))}
-      {spokes.map((p, i) => (
-        <circle key={i} data-dot cx={p.x} cy={p.y} r="4" fill={STROKE_BRIGHT} />
+        <g key={i} data-orbit={i}>
+          <line
+            data-draw
+            x1={CENTER}
+            y1={CENTER}
+            x2={p.x}
+            y2={p.y}
+            stroke={STROKE_BRIGHT}
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <circle data-dot cx={p.x} cy={p.y} r="4" fill={STROKE_BRIGHT} />
+        </g>
       ))}
     </svg>
   );

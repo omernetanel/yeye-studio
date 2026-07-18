@@ -47,13 +47,11 @@ body {
 }
 
 @keyframes shimmer-sweep {
-  0%,
-  15% {
+  0% {
     transform: translateX(-250%) rotate(45deg);
   }
-  45%,
   100% {
-    transform: translateX(400%) rotate(45deg);
+    transform: translateX(60%) rotate(45deg);
   }
 }
 
@@ -74,14 +72,16 @@ body {
      bar's bounding box wider than its own dimensions, so a modest offset
      left it partially visible even without hovering. */
   transform: translateX(-250%) rotate(45deg);
+  transition: transform 0.35s ease;
   pointer-events: none;
 }
 
 .btn-shimmer:hover::after {
-  /* Loops for as long as the button is hovered — a single 0.6s pass was
-     easy to miss entirely if the cursor lingered past that window, which
-     read as "no shimmer at all" rather than "already happened." */
-  animation: shimmer-sweep 2s ease-in-out infinite;
+  /* Sweeps in once and settles mid-button — a repeating loop kept resetting
+     to hidden between passes, so the shine never actually stayed on the
+     button while hovering. The transition above handles the fade back out
+     on mouse-leave (the animation only runs forward, on entry). */
+  animation: shimmer-sweep 0.5s ease-out forwards;
 }
 
 .no-scrollbar {
