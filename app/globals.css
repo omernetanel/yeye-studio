@@ -80,7 +80,10 @@ body {
 }
 
 .btn-shimmer:hover::after {
-  animation: shimmer-sweep 0.9s ease-in-out forwards;
+  /* ease-out starts fast, unlike ease-in-out's slow ramp-up — the sweep
+     needs to visibly react the instant the cursor lands, not ease into
+     motion. */
+  animation: shimmer-sweep 0.35s ease-out forwards;
 }
 
 .no-scrollbar {
