@@ -51,11 +51,17 @@ const steps: StepDef[] = [
   },
 ];
 
+// Steps 2 and 4 mirror the illustration to the right of the text (and the
+// text to the left), alternating with steps 1 and 3, instead of every step
+// putting the illustration on the same side.
+const REVERSED_STEP_NUMBERS = ["02", "04"];
+
 function StepContent({ step, active, showDots = true }: { step: StepDef; active: boolean; showDots?: boolean }) {
   const Illustration = step.Illustration;
+  const reverse = REVERSED_STEP_NUMBERS.includes(step.number);
   return (
     <div className="mx-auto grid w-full max-w-[1100px] grid-cols-1 items-center gap-12 px-6 md:grid-cols-2 md:gap-20">
-      <div className="flex flex-col gap-5">
+      <div className={cn("flex flex-col gap-5", reverse && "md:order-2")}>
         <span className="font-display text-6xl leading-none font-extrabold tracking-tight text-primary/20 md:text-7xl">
           {step.number}
         </span>
@@ -75,7 +81,7 @@ function StepContent({ step, active, showDots = true }: { step: StepDef; active:
           </div>
         )}
       </div>
-      <div className="flex items-center justify-center">
+      <div className={cn("flex items-center justify-center", reverse && "md:order-1")}>
         <Illustration active={active} />
       </div>
     </div>
