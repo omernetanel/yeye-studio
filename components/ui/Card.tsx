@@ -9,14 +9,18 @@ interface CardProps {
 /** Shared "glass panel" chrome for cards across the site — background, border, blur, corner glow. */
 export default function Card({ children, className }: CardProps) {
   return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-2xl border border-primary-light/10 bg-surface/80 p-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] backdrop-blur-xl",
-        className
-      )}
-    >
+    <div className="relative h-full overflow-hidden rounded-2xl border border-primary-light/10 bg-surface/80 p-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] backdrop-blur-xl">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_100%_100%,color-mix(in_srgb,var(--color-primary-light)_13%,transparent)_0%,transparent_70%)]" />
-      <div className="relative z-10">{children}</div>
+      {/*
+        Callers pass layout classes (flex, items-center, gap, text-align)
+        expecting them to govern the actual card content — they need to land
+        here, on the wrapper around {children}, not on the outer chrome div
+        above. Applied there, they only ever centered/spaced this wrapper
+        itself (the outer div's one real child), not the icon/title/text
+        nested inside it, which is why icons and content sat flush to one
+        side instead of centered across every card on the site.
+      */}
+      <div className={cn("relative z-10", className)}>{children}</div>
     </div>
   );
 }
