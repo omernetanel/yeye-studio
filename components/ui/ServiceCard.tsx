@@ -37,30 +37,28 @@ export default function ServiceCard({ icon: Icon, title, description, href }: Se
       onMouseLeave={handleMouseLeave}
       className="group block h-full [perspective:1000px]"
     >
-      <motion.div style={{ rotateX, rotateY, transformStyle: "preserve-3d" }} className="h-full">
+      {/*
+        A single tilt on the whole card, not per-element translateZ depth
+        layering — the latter only projects correctly if every element
+        between here and the icon has transform-style: preserve-3d, which
+        Card's own wrapper doesn't set. Under that broken chain, perspective
+        projection shifted each translateZ'd child sideways by an amount
+        that varied with the card's content height, so icons landed
+        off-center by a different amount on every card.
+      */}
+      <motion.div style={{ rotateX, rotateY }} className="h-full">
         <Card className="flex h-full flex-col items-center gap-4 text-center">
-          <div
-            style={{ transform: "translateZ(20px)" }}
-            className="flex h-14 w-14 items-center justify-center rounded-full border border-primary-light/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-primary)_35%,transparent)_0%,rgba(20,20,30,0.4)_75%)]"
-          >
+          <div className="flex h-14 w-14 items-center justify-center rounded-full border border-primary-light/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-primary)_35%,transparent)_0%,rgba(20,20,30,0.4)_75%)]">
             <Icon size={26} strokeWidth={1.5} className="text-primary-light drop-shadow-[0_0_6px_rgba(42,51,243,0.7)]" />
           </div>
 
-          <h3 style={{ transform: "translateZ(20px)" }} className="font-display text-lg font-bold text-white">
-            {title}
-          </h3>
+          <h3 className="font-display text-lg font-bold text-white">{title}</h3>
 
-          <p
-            style={{ transform: "translateZ(15px)" }}
-            className="flex-1 whitespace-pre-line font-body text-[14.5px] leading-[1.75] text-white/50"
-          >
+          <p className="flex-1 whitespace-pre-line font-body text-[13.5px] leading-[1.75] text-white/50">
             {description}
           </p>
 
-          <span
-            style={{ transform: "translateZ(15px)" }}
-            className="flex items-center justify-center gap-1.5 font-display text-sm text-primary-light transition-transform duration-200 group-hover:scale-105"
-          >
+          <span className="mt-1.5 flex items-center justify-center gap-1.5 font-display text-sm text-primary-light transition-transform duration-200 group-hover:scale-105">
             <span aria-hidden>←</span>
             לפרטים נוספים
           </span>
