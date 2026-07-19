@@ -46,28 +46,41 @@ body {
   background: color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
+@keyframes shimmer-sweep {
+  from {
+    transform: translateX(-180%);
+  }
+  to {
+    transform: translateX(280%);
+  }
+}
+
 .btn-shimmer {
   position: relative;
   overflow: hidden;
 }
 
-/* A diagonal highlight baked directly into the gradient's angle — no
-   transform/rotation math, so there's nothing to mis-position. It's a plain
-   opacity fade, the most reliable transition CSS has: invisible at rest,
-   fades in on hover and stays for as long as the button is hovered, fades
-   back out on mouse-leave. */
+/* The diagonal look comes only from the gradient's angle — the element
+   itself is never rotated, so translateX direction is completely
+   unambiguous (positive = right, negative = left), unlike every earlier
+   attempt here that rotated the element and fought its bounding-box math.
+   Parked off-screen left at rest; on hover it slides once across the
+   button, left to right, and ends parked off-screen right — a single
+   clean sweep, not a loop. */
 .btn-shimmer::after {
   content: "";
   position: absolute;
-  inset: -20%;
-  background: linear-gradient(115deg, transparent 42%, rgb(255 255 255 / 25%) 50%, transparent 58%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  top: -50%;
+  left: -30%;
+  width: 55%;
+  height: 200%;
+  background: linear-gradient(115deg, transparent 15%, rgb(255 255 255 / 45%) 50%, transparent 85%);
+  transform: translateX(-180%);
   pointer-events: none;
 }
 
 .btn-shimmer:hover::after {
-  opacity: 1;
+  animation: shimmer-sweep 0.9s ease-in-out forwards;
 }
 
 .no-scrollbar {
