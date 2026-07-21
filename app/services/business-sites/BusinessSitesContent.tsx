@@ -29,10 +29,10 @@ const siteTypes = [
 ];
 
 const processSteps = [
-  { number: "01", icon: MessageSquare, title: "היכרות ואפיון", description: "לומדים את העסק, הקהל, המתחרים והיעדים. מגדירים את המסר הנכון לפני שמתחילים לעצב." },
-  { number: "02", icon: Paintbrush, title: "עיצוב ויזואלי", description: "בונים זהות ויזואלית שמשקפת את העסק: צבעים, טיפוגרפיה, פריסה. כל החלטה עם סיבה." },
+  { number: "01", icon: MessageSquare, title: "היכרות ואפיון", description: "אני לומד את העסק, הקהל, המתחרים והיעדים. מגדיר את המסר הנכון לפני שמתחילים לעצב." },
+  { number: "02", icon: Paintbrush, title: "עיצוב ויזואלי", description: "אני בונה זהות ויזואלית שמשקפת את העסק: צבעים, טיפוגרפיה, פריסה. כל החלטה עם סיבה." },
   { number: "03", icon: Code2, title: "פיתוח ואופטימיזציה", description: "קוד נקי, טעינה מהירה, SEO בסיסי, ומובייל מושלם. בנוי לטווח הארוך." },
-  { number: "04", icon: Rocket, title: "השקה וליווי", description: "עולים לאוויר עם בדיקות מלאות. מלמדים אותך לנהל ועדכן תכנים בצורה עצמאית." },
+  { number: "04", icon: Rocket, title: "השקה וליווי", description: "עולים לאוויר עם בדיקות מלאות. אני מלמד אותך לנהל ולעדכן תכנים בצורה עצמאית." },
 ];
 
 const stats = [
@@ -43,12 +43,12 @@ const stats = [
 
 const whatYouGetRows = [
   [
-    { number: "01", title: "הדרכת ניהול תוכן", description: "מלמדים אותך לעדכן טקסטים, תמונות ועמודים בעצמך, בלי צורך לפנות אלינו על כל שינוי קטן." },
+    { number: "01", title: "הדרכת ניהול תוכן", description: "אני מלמד אותך לעדכן טקסטים, תמונות ועמודים בעצמך, בלי צורך לפנות אליי על כל שינוי קטן." },
     { number: "02", title: "זמינות אמיתית", description: "עולה שאלה או צריך לעדכן משהו? תמיד תדע בדיוק עם מי אתה מדבר ומי אחראי על הפרויקט שלך." },
   ],
   [
-    { number: "03", title: "ליווי טכני מקצה לקצה", description: "דומיין, אחסון ו-SSL, את הכל אנחנו מסדרים. אין צורך להבין טכנולוגיה כדי להשיק אתר מקצועי." },
-    { number: "04", title: "תמיכה לאחר ההשקה", description: "חודש תמיכה מלאה אחרי ההשקה, ללא עלות נוספת. אנחנו כאן לכל תיקון, עדכון או שאלה." },
+    { number: "03", title: "ליווי טכני מקצה לקצה", description: "דומיין, אחסון ו-SSL, את הכל אני מסדר. אין צורך להבין טכנולוגיה כדי להשיק אתר מקצועי." },
+    { number: "04", title: "תמיכה לאחר ההשקה", description: "חודש תמיכה מלאה אחרי ההשקה, ללא עלות נוספת. אני כאן לכל תיקון, עדכון או שאלה." },
   ],
 ];
 
@@ -73,9 +73,9 @@ export default function BusinessSitesContent() {
         <StatsSection title="למה אתר תדמית הוא חובה" stats={stats} />
         <TypesGrid title="איזה סוג אתר מתאים לך?" items={siteTypes} />
         <ProcessTimeline title="איך זה עובד?" steps={processSteps} />
-        <PrinciplesGrid title="העקרונות שלנו" items={principles} />
+        <PrinciplesGrid title="העקרונות שלי" items={principles} />
         <WhatYouGet title="וזה לא הכל" subtitle="כל פרויקט מגיע עם שכבת שירות שמעטים מציעים" rows={whatYouGetRows} />
-        <ExamplesPlaceholder title="דוגמאות מהעבודה שלנו" labelPrefix="אתר תדמית" />
+        <ExamplesPlaceholder title="דוגמאות מהעבודה שלי" labelPrefix="אתר תדמית" />
         <ServiceFinalCTA title="רוצה אתר שגורם ללקוחות לסמוך עליך?" />
       </div>
 

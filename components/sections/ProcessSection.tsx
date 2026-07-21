@@ -27,26 +27,26 @@ const steps: StepDef[] = [
     number: "01",
     title: "היכרות והבנה",
     description:
-      "לפני שאנחנו כותבים שורת קוד אחת, אנחנו לומדים את העסק שלך לעומק. המטרות, הקהל, המתחרים. רק ככה אפשר לבנות משהו שבאמת עובד.",
+      "לפני שאני כותב שורת קוד אחת, אני לומד את העסק שלך לעומק. המטרות, הקהל, המתחרים. רק ככה אפשר לבנות משהו שבאמת עובד.",
     Illustration: DiscoveryIllustration,
   },
   {
     number: "02",
     title: "עיצוב ואפיון",
     description:
-      "מגבשים את הרעיונות לחזון ויזואלי מדויק. כל אלמנט, כל צבע, כל מרחק נבחר בכוונה. לא אסתטיקה בשביל אסתטיקה, אלא UX שמוביל לפעולה.",
+      "אני מגבש את הרעיונות לחזון ויזואלי מדויק. כל אלמנט, כל צבע, כל מרחק נבחר בכוונה. לא אסתטיקה בשביל אסתטיקה, אלא UX שמוביל לפעולה.",
     Illustration: DesignIllustration,
   },
   {
     number: "03",
     title: "פיתוח",
-    description: "קוד נקי, מהיר ומדויק. Next.js, TypeScript, ביצועים מעולים, נגישות מלאה. בונים לטווח הארוך, לא רק להשקה.",
+    description: "קוד נקי, מהיר ומדויק. Next.js, TypeScript, ביצועים מעולים, נגישות מלאה. אני בונה לטווח הארוך, לא רק להשקה.",
     Illustration: CodeIllustration,
   },
   {
     number: "04",
     title: "השקה ותמיכה",
-    description: "ביום ההשקה אנחנו שם, ואחרי ההשקה גם. ליווי מלא, תיקונים מהירים, ומערכת שגדלה איתך.",
+    description: "ביום ההשקה אני שם, ואחרי ההשקה גם. ליווי מלא, תיקונים מהירים, ומערכת שגדלה איתך.",
     Illustration: LaunchIllustration,
   },
 ];
@@ -159,7 +159,7 @@ export default function ProcessSection() {
   return (
     <section id="process" className="relative py-16 md:py-20">
       <div className="mx-auto max-w-[1200px] px-6">
-        <SectionHeading title="איך אנחנו עובדים?" className="mb-12 md:mb-16" />
+        <SectionHeading title="איך אני עובד?" className="mb-12 md:mb-16" />
       </div>
       {useSwipe ? <SwipeSteps /> : <StackedSteps />}
     </section>
