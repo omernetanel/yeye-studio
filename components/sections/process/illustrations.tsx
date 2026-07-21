@@ -39,8 +39,12 @@ export function DiscoveryIllustration({ active }: IllustrationProps) {
         .to(rings, { strokeDashoffset: 0, duration: 1.1, stagger: 0.18, ease: "power2.out" })
         .fromTo(
           "[data-dot]",
-          { scale: 0, opacity: 0 },
-          { scale: 1, opacity: 1, duration: 0.4, stagger: 0.15, ease: "back.out(2.5)", transformOrigin: "center" },
+          // Animating the radius attribute directly (instead of a CSS `scale`
+          // transform) means the dot never gets a baked-in transform matrix —
+          // its position stays driven purely by cx/cy, exactly like the line,
+          // so the two can never drift apart once the orbit loop takes over.
+          { attr: { r: 0 }, opacity: 0 },
+          { attr: { r: 4 }, opacity: 1, duration: 0.4, stagger: 0.15, ease: "back.out(2.5)" },
           "-=0.5"
         );
 
