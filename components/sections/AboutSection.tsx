@@ -78,12 +78,12 @@ export default function AboutSection() {
 
           <div className="flex flex-1 flex-col justify-center gap-5">
             <p className="font-body text-[19px] leading-[1.85] text-white/88">
-              YEYE LABS נולד מתוך אובססיה לפרטים קטנים ואמונה עמוקה שכל עסק — גדול או קטן — ראוי לנוכחות דיגיטלית{" "}
+              YEYE LABS נולד מתוך אובססיה לפרטים קטנים ואמונה עמוקה שכל עסק, גדול או קטן, ראוי לנוכחות דיגיטלית{" "}
               <strong className="text-white">ברמה הגבוהה ביותר</strong>.
             </p>
             <p className="font-body text-[19px] leading-[1.85] text-white/88">
               אנחנו מעצבים ומפתחים מגיל צעיר, עם ניסיון של שנים בבניית חוויות דיגיטליות{" "}
-              <strong className="text-white">שלא רק נראות טוב — אלא עובדות</strong>. כל פרויקט מקבל את מלוא
+              <strong className="text-white">שלא רק נראות טוב, אלא עובדות</strong>. כל פרויקט מקבל את מלוא
               הקשב, הדיוק והאנרגיה שלנו.
             </p>
           </div>
