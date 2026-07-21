@@ -290,8 +290,7 @@ export function LaunchIllustration({ active }: IllustrationProps) {
             stagger: 0.45,
           },
           "-=0.3"
-        )
-        .to(svg, { y: -8, duration: 2, ease: "sine.inOut", repeat: -1, yoyo: true }, "-=0.9");
+        );
     }, svg);
 
     return () => ctx.revert();
