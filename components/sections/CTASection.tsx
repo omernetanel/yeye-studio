@@ -62,7 +62,7 @@ export default function CTASection() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-10 font-body text-lg text-white/45"
         >
-          ייעוץ ראשוני ללא עלות. נשמח לשמוע על הפרויקט שלך.
+          ייעוץ ראשוני ללא עלות. אשמח לשמוע על הפרויקט שלך.
         </motion.p>
 
         <motion.div

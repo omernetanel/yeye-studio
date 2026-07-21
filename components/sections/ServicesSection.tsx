@@ -37,7 +37,7 @@ export default function ServicesSection() {
   return (
     <section id="services" className="px-6 py-16 md:py-20">
       <div className="mx-auto max-w-[1200px]">
-        <SectionHeading title="מה אנחנו עושים?" className="mb-12 md:mb-16" />
+        <SectionHeading title="מה אני עושה?" className="mb-12 md:mb-16" />
 
         {/* Mobile: touch-native swipe carousel, one card at a time */}
         <SwipeCarousel className="sm:hidden">
