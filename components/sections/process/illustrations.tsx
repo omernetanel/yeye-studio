@@ -244,7 +244,7 @@ export function CodeIllustration({ active }: IllustrationProps) {
         <div className="h-3.5 w-3.5 rounded-full bg-[#febc2e]/70" />
         <div className="h-3.5 w-3.5 rounded-full bg-[#28c840]/70" />
       </div>
-      <div className="flex flex-col gap-4 p-7 font-mono text-[17px] leading-[1.8]">
+      <div className="flex flex-col gap-2 p-7 font-mono text-[17px] leading-[1.3]">
         {codeLines.map((line, i) => (
           <div key={i} data-line className="overflow-hidden whitespace-nowrap">
             <span style={{ color: line.color }}>{line.text}</span>
