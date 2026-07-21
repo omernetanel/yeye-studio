@@ -16,17 +16,17 @@ const values: Value[] = [
   {
     icon: Target,
     title: "Results-Driven",
-    description: "אתר יפה זה לא מספיק. אנחנו בונים כלי מכירה שמייצרים תוצאות אמיתיות.",
+    description: "אתר יפה זה לא מספיק. אני בונה כלי מכירה שמייצרים תוצאות אמיתיות.",
   },
   {
     icon: Code2,
     title: "Code Quality",
-    description: "קוד נקי, מהיר וניתן להרחבה. בונים לטווח הארוך, לא רק להשקה.",
+    description: "קוד נקי, מהיר וניתן להרחבה. אני בונה לטווח הארוך, לא רק להשקה.",
   },
   {
     icon: Paintbrush,
     title: "Design-First",
-    description: "כל פרויקט מתחיל מעיצוב מדויק. אנחנו לא כותבים שורת קוד לפני שהחזון ברור.",
+    description: "כל פרויקט מתחיל מעיצוב מדויק. אני לא כותב שורת קוד לפני שהחזון ברור.",
   },
 ];
 
@@ -62,7 +62,7 @@ export default function AboutSection() {
   return (
     <section id="about" className="px-6 py-16 md:py-20">
       <div className="mx-auto max-w-[1200px]">
-        <SectionHeading title="מי אנחנו?" className="mb-12 md:mb-16" />
+        <SectionHeading title="מי אני?" className="mb-12 md:mb-16" />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -82,9 +82,9 @@ export default function AboutSection() {
               <strong className="text-white">ברמה הגבוהה ביותר</strong>.
             </p>
             <p className="font-body text-[19px] leading-[1.85] text-white/88">
-              אנחנו מעצבים ומפתחים מגיל צעיר, עם ניסיון של שנים בבניית חוויות דיגיטליות{" "}
+              אני מעצב ומפתח מגיל צעיר, עם ניסיון של שנים בבניית חוויות דיגיטליות{" "}
               <strong className="text-white">שלא רק נראות טוב, אלא עובדות</strong>. כל פרויקט מקבל את מלוא
-              הקשב, הדיוק והאנרגיה שלנו.
+              הקשב, הדיוק והאנרגיה שלי.
             </p>
           </div>
         </motion.div>

@@ -14,7 +14,7 @@ const HeroScene = dynamic(() => import("@/components/three/HeroScene"), {
   loading: () => null,
 });
 
-const headline = ["אנחנו בונים אתרים", "ומערכות שמייצרות", "לקוחות לעסקים."];
+const headline = ["אני בונה אתרים", "ומערכות שמייצרות", "לקוחות לעסקים."];
 
 export default function HeroSection() {
   const prefersReducedMotion = usePrefersReducedMotion();

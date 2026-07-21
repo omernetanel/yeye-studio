@@ -68,9 +68,9 @@ export default function ContactPage() {
             className="max-w-[480px] text-center"
           >
             <div className="mb-6 text-5xl">✅</div>
-            <h1 className="mb-4 font-display text-4xl font-bold text-white">קיבלנו את הפנייה שלך!</h1>
+            <h1 className="mb-4 font-display text-4xl font-bold text-white">קיבלתי את הפנייה שלך!</h1>
             <p className="font-body text-[17px] leading-[1.8] text-white/55">
-              ניצור איתך קשר תוך 48 שעות. בינתיים, פתחנו לך שיחת WhatsApp כדי שנוכל להתחיל לדבר.
+              אצור איתך קשר תוך 48 שעות. בינתיים, פתחתי לך שיחת WhatsApp כדי שנוכל להתחיל לדבר.
             </p>
           </motion.div>
         </div>
@@ -123,7 +123,7 @@ export default function ContactPage() {
             className="mx-auto mb-6 h-[3px] overflow-hidden rounded-full bg-[image:var(--gradient-brand)]"
           />
           <p className="font-body text-[17px] leading-[1.8] text-white/55">
-            ספר לנו על הפרויקט שלך ונחזור אליך תוך 48 שעות עם הצעה מותאמת.
+            ספר לי על הפרויקט שלך ואחזור אליך תוך 48 שעות עם הצעה מותאמת.
           </p>
         </motion.div>
 
@@ -168,7 +168,7 @@ export default function ContactPage() {
           </div>
 
           <div>
-            <Label htmlFor="business_description">ספר לנו על העסק שלך *</Label>
+            <Label htmlFor="business_description">ספר לי על העסק שלך *</Label>
             <Textarea
               id="business_description"
               placeholder="מה העסק עושה? מה המטרה של הפרויקט?"

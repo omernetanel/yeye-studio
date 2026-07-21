@@ -19,7 +19,7 @@ const principles = [
   { icon: ShoppingCart, title: "חוויית קנייה חלקה", description: "מהמוצר לתשלום, בלי חיכוך ובלי בלבול. כל שלב בתהליך נבנה כדי להמיר." },
   { icon: CreditCard, title: "תשלומים מאובטחים", description: "אינטגרציה עם Stripe, PayPal וסליקה ישראלית. אבטחה ברמת הבנקים." },
   { icon: BarChart3, title: "ניהול קל", description: "לוח בקרה פשוט לניהול מוצרים, מלאי והזמנות, בלי צורך בידע טכני." },
-  { icon: Smartphone, title: "מובייל קודם", description: "מעל 70% מהרכישות מתבצעות מהטלפון. אנחנו בונים לזה מההתחלה." },
+  { icon: Smartphone, title: "מובייל קודם", description: "מעל 70% מהרכישות מתבצעות מהטלפון. אני בונה לזה מההתחלה." },
 ];
 
 const storeTypes = [
@@ -29,7 +29,7 @@ const storeTypes = [
 ];
 
 const processSteps = [
-  { number: "01", icon: MessageSquare, title: "הבנת העסק והמוצרים", description: "לומדים את הקטגוריות, קהל היעד, ומה מייחד אותך מהמתחרים. בונים אסטרטגיית מכירה לפני שנוגעים בעיצוב." },
+  { number: "01", icon: MessageSquare, title: "הבנת העסק והמוצרים", description: "אני לומד את הקטגוריות, קהל היעד, ומה מייחד אותך מהמתחרים. בונה אסטרטגיית מכירה לפני שנוגעים בעיצוב." },
   { number: "02", icon: Paintbrush, title: "עיצוב חוויית קנייה", description: "עיצוב ממוקד המרה: דף מוצר שמוכר, עגלה שלא מאבדת לקוחות, ותהליך תשלום שמסיים עסקאות." },
   { number: "03", icon: Code2, title: "פיתוח ואינטגרציות", description: "בניית החנות עם מערכת ניהול, חיבור לסליקה, משלוחים ומלאי. הכל עובד מהרגע הראשון." },
   { number: "04", icon: Rocket, title: "השקה וליווי", description: "השקה מבוקרת עם בדיקות מלאות. חודש תמיכה אחרי ההשקה לוודא שהכל רץ חלק." },
@@ -43,12 +43,12 @@ const stats = [
 
 const whatYouGetRows = [
   [
-    { number: "01", title: "הדרכת ניהול מלאה", description: "לא מעבירים לך אתר ונעלמים. מלמדים אותך לנהל הזמנות, מוצרים ולקוחות, עד שאתה מרגיש בנוח לגמרי." },
+    { number: "01", title: "הדרכת ניהול מלאה", description: "לא מעביר לך אתר ונעלם. מלמד אותך לנהל הזמנות, מוצרים ולקוחות, עד שאתה מרגיש בנוח לגמרי." },
     { number: "02", title: "זמינות אמיתית", description: "יש שאלה, בעיה, או עדכון קטן? אתה תמיד יודע עם מי אתה מדבר ומי אחראי על הפרויקט שלך." },
   ],
   [
-    { number: "03", title: "ליווי טכני מקצה לקצה", description: "דומיין, אחסון, SSL, חיבור לסליקה: את הכל אנחנו מסדרים. אין צורך להבין טכנולוגיה כדי לפתוח חנות מקצועית." },
-    { number: "04", title: "תמיכה לאחר ההשקה", description: "חודש תמיכה מלאה אחרי ההשקה, ללא עלות נוספת. אנחנו כאן לתיקונים, עדכונים וכל שאלה שתעלה." },
+    { number: "03", title: "ליווי טכני מקצה לקצה", description: "דומיין, אחסון, SSL, חיבור לסליקה: את הכל אני מסדר. אין צורך להבין טכנולוגיה כדי לפתוח חנות מקצועית." },
+    { number: "04", title: "תמיכה לאחר ההשקה", description: "חודש תמיכה מלאה אחרי ההשקה, ללא עלות נוספת. אני כאן לתיקונים, עדכונים וכל שאלה שתעלה." },
   ],
 ];
 
@@ -73,9 +73,9 @@ export default function OnlineStoresContent() {
         <StatsSection title="למה חנות אונליין היא חובה" stats={stats} />
         <TypesGrid title="איזה סוג חנות מתאים לך?" items={storeTypes} />
         <ProcessTimeline title="איך זה עובד?" steps={processSteps} />
-        <PrinciplesGrid title="העקרונות שלנו" items={principles} />
+        <PrinciplesGrid title="העקרונות שלי" items={principles} />
         <WhatYouGet title="וזה לא הכל" subtitle="כל פרויקט מגיע עם שכבת שירות שמעטים מציעים" rows={whatYouGetRows} />
-        <ExamplesPlaceholder title="דוגמאות מהעבודה שלנו" labelPrefix="חנות אונליין" />
+        <ExamplesPlaceholder title="דוגמאות מהעבודה שלי" labelPrefix="חנות אונליין" />
         <ServiceFinalCTA title="רוצה חנות שבאמת מוכרת?" />
       </div>
 
