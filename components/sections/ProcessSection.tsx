@@ -81,7 +81,7 @@ function StepContent({ step, active, showDots = true }: { step: StepDef; active:
           </div>
         )}
       </div>
-      <div className={cn("flex items-center justify-center", reverse && "md:order-1")}>
+      <div className={cn("illustration-float flex items-center justify-center", reverse && "md:order-1")}>
         <Illustration active={active} />
       </div>
     </div>
