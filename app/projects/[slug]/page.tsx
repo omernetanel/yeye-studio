@@ -22,6 +22,11 @@ export async function generateMetadata({
   return {
     title: `${project.title} | YEYE LABS`,
     description: project.description,
+    openGraph: {
+      title: `${project.title} | YEYE LABS`,
+      description: project.description,
+      images: [project.image],
+    },
   };
 }
 

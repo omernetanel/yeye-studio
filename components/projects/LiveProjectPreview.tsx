@@ -23,7 +23,10 @@ type View = "desktop" | "mobile";
  */
 export default function LiveProjectPreview({ url, title, fallbackImage }: LiveProjectPreviewProps) {
   const [view, setView] = useState<View>("desktop");
-  const hasUrl = url.trim().length > 0;
+  // Only ever hand an http(s) URL to the iframe src or the "open in a new
+  // tab" link — guards against a stray javascript: or data: scheme ending up
+  // somewhere it could execute, in case a future project entry gets a typo.
+  const hasUrl = /^https?:\/\//i.test(url.trim());
 
   return (
     <div className="flex w-full flex-col items-center gap-5">
@@ -32,6 +35,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
           <button
             type="button"
             onClick={() => setView("desktop")}
+            aria-pressed={view === "desktop"}
             className={cn(
               "flex items-center gap-2 rounded-full px-4 py-2 font-display text-sm transition-colors",
               view === "desktop" ? "bg-primary text-white" : "text-white/50 hover:text-white/80"
@@ -42,6 +46,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
           <button
             type="button"
             onClick={() => setView("mobile")}
+            aria-pressed={view === "mobile"}
             className={cn(
               "flex items-center gap-2 rounded-full px-4 py-2 font-display text-sm transition-colors",
               view === "mobile" ? "bg-primary text-white" : "text-white/50 hover:text-white/80"
@@ -75,7 +80,10 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
 
         <div className="relative min-h-0 flex-1">
           {hasUrl ? (
-            <iframe src={url} title={title} className="h-full w-full border-0" loading="lazy" />
+            // Eager, not lazy: this iframe is the page's primary content and
+            // sits in the initial viewport, so deferring it would just mean
+            // staring at a blank panel on load.
+            <iframe src={url} title={title} className="h-full w-full border-0" loading="eager" referrerPolicy="no-referrer" />
           ) : (
             <Image
               src={fallbackImage}
