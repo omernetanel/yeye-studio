@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -15,6 +15,17 @@ interface LiveProjectPreviewProps {
 
 type View = "desktop" | "mobile";
 
+// A real laptop-width viewport, not just "whatever room our layout happens
+// to leave." The desktop preview box is rarely 1440px wide on screen (it
+// shares the page with the info panel), so without this the iframe would
+// render at its cramped on-screen width and the embedded site's own
+// responsive breakpoints would collapse into a mobile/tablet layout —
+// sidebars hidden behind a hamburger, columns stacked — even on the
+// "desktop" tab. Rendering it at a true 1440px and scaling the result down
+// to fit keeps the embedded site honestly showing its real desktop UI.
+const DESKTOP_VIEWPORT_WIDTH = 1440;
+const DESKTOP_VIEWPORT_HEIGHT = 900;
+
 /**
  * The project stays embedded live, in-page — no need to leave YEYE LABS
  * to see it work. The mobile toggle doesn't fake a phone screenshot: it
@@ -23,10 +34,22 @@ type View = "desktop" | "mobile";
  */
 export default function LiveProjectPreview({ url, title, fallbackImage }: LiveProjectPreviewProps) {
   const [view, setView] = useState<View>("desktop");
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [desktopScale, setDesktopScale] = useState(1);
   // Only ever hand an http(s) URL to the iframe src or the "open in a new
   // tab" link — guards against a stray javascript: or data: scheme ending up
   // somewhere it could execute, in case a future project entry gets a typo.
   const hasUrl = /^https?:\/\//i.test(url.trim());
+
+  useLayoutEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setDesktopScale(entry.contentRect.width / DESKTOP_VIEWPORT_WIDTH);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="flex w-full flex-col items-center gap-5">
@@ -78,12 +101,25 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
           </div>
         )}
 
-        <div className="relative min-h-0 flex-1">
+        <div ref={contentRef} className="relative min-h-0 flex-1 overflow-hidden">
           {hasUrl ? (
-            // Eager, not lazy: this iframe is the page's primary content and
-            // sits in the initial viewport, so deferring it would just mean
-            // staring at a blank panel on load.
-            <iframe src={url} title={title} className="h-full w-full border-0" loading="eager" referrerPolicy="no-referrer" />
+            view === "desktop" ? (
+              <div
+                style={{
+                  width: DESKTOP_VIEWPORT_WIDTH,
+                  height: DESKTOP_VIEWPORT_HEIGHT,
+                  transform: `scale(${desktopScale})`,
+                  transformOrigin: "top left",
+                }}
+              >
+                {/* Eager, not lazy: this iframe is the page's primary content
+                    and sits in the initial viewport, so deferring it would
+                    just mean staring at a blank panel on load. */}
+                <iframe src={url} title={title} className="h-full w-full border-0" loading="eager" referrerPolicy="no-referrer" />
+              </div>
+            ) : (
+              <iframe src={url} title={title} className="h-full w-full border-0" loading="eager" referrerPolicy="no-referrer" />
+            )
           ) : (
             <Image
               src={fallbackImage}
