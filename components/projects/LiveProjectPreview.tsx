@@ -115,10 +115,24 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
                 {/* Eager, not lazy: this iframe is the page's primary content
                     and sits in the initial viewport, so deferring it would
                     just mean staring at a blank panel on load. */}
-                <iframe src={url} title={title} className="h-full w-full border-0" loading="eager" referrerPolicy="strict-origin-when-cross-origin" />
+                <iframe
+                  src={url}
+                  title={title}
+                  className="h-full w-full border-0"
+                  loading="eager"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allow="autoplay; fullscreen"
+                />
               </div>
             ) : (
-              <iframe src={url} title={title} className="h-full w-full border-0" loading="eager" referrerPolicy="strict-origin-when-cross-origin" />
+              <iframe
+                src={url}
+                title={title}
+                className="h-full w-full border-0"
+                loading="eager"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allow="autoplay; fullscreen"
+              />
             )
           ) : (
             <Image
