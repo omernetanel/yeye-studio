@@ -7,7 +7,7 @@ import ProjectCard from "@/components/ui/ProjectCard";
 
 export const metadata: Metadata = {
   title: "כל הפרויקטים | YEYE LABS",
-  description: "עבודות נבחרות שבנינו עבור לקוחות ועסקים מובילים.",
+  description: "עבודות נבחרות שבניתי עבור לקוחות ועסקים מובילים.",
 };
 
 export default function ProjectsPage() {
@@ -19,7 +19,7 @@ export default function ProjectsPage() {
         <h1 className="mb-4 font-display text-4xl font-bold tracking-tight text-white md:text-5xl">
           כל הפרויקטים
         </h1>
-        <p className="mb-16 font-body text-[17px] text-white/50">עבודות נבחרות שבנינו עבור לקוחות ועסקים מובילים.</p>
+        <p className="mb-16 font-body text-[17px] text-white/50">עבודות נבחרות שבניתי עבור לקוחות ועסקים מובילים.</p>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
