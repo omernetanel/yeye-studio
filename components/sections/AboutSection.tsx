@@ -33,13 +33,13 @@ const values: Value[] = [
 function ValueCardContent({ value }: { value: Value }) {
   const Icon = value.icon;
   return (
-    <Card className="flex h-full flex-col items-end gap-3.5">
-      <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-primary-light/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-primary)_35%,transparent)_0%,rgba(20,20,30,0.4)_75%)]">
-        <Icon size={24} strokeWidth={1.5} className="text-primary-light drop-shadow-[0_0_6px_rgba(42,51,243,0.7)]" />
+    <Card light className="flex h-full flex-col items-end gap-3.5">
+      <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-accent/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-accent)_35%,transparent)_0%,rgba(255,255,255,0.4)_75%)]">
+        <Icon size={24} strokeWidth={1.5} className="text-accent drop-shadow-[0_0_6px_rgba(242,118,15,0.35)]" />
       </div>
-      <span className="font-display text-[17px] font-bold text-white">{value.title}</span>
-      <div className="h-px w-5 bg-primary-light/50" />
-      <p className="font-body text-[13.5px] leading-[1.7] text-white/45">{value.description}</p>
+      <span className="font-display text-[17px] font-bold text-black">{value.title}</span>
+      <div className="h-px w-5 bg-accent/50" />
+      <p className="font-body text-[13.5px] leading-[1.7] text-black/50">{value.description}</p>
     </Card>
   );
 }
@@ -60,9 +60,21 @@ function ValueCard({ value, index }: { value: Value; index: number }) {
 
 export default function AboutSection() {
   return (
-    <section id="about" className="px-6 py-16 md:py-20">
-      <div className="mx-auto max-w-[1200px]">
-        <SectionHeading title="מי אני?" className="mb-12 md:mb-16" />
+    <section id="about" className="relative overflow-hidden bg-white px-6 py-16 md:py-20">
+      <div
+        className="pointer-events-none absolute inset-0 z-0 bg-[size:60px_60px]"
+        style={{
+          backgroundImage: `
+            linear-gradient(color-mix(in srgb, var(--color-accent) 10%, transparent) 1px, transparent 1px),
+            linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 10%, transparent) 1px, transparent 1px)
+          `,
+          WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, black 0%, transparent 75%)",
+          maskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, black 0%, transparent 75%)",
+        }}
+      />
+
+      <div className="relative z-10 mx-auto max-w-[1200px]">
+        <SectionHeading title="מי אני?" className="mb-12 md:mb-16" light />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -72,18 +84,18 @@ export default function AboutSection() {
           className="mb-14 flex flex-col items-stretch gap-10 md:mb-20 md:flex-row md:gap-14"
         >
           {/* Photo placeholder — real photo pending */}
-          <div className="flex aspect-[4/3] shrink-0 items-center justify-center rounded-2xl border border-white/6 bg-[#0f0f14] md:aspect-auto md:w-[320px]">
-            <span className="font-display text-[13px] tracking-wide text-white/15">תמונה בקרוב</span>
+          <div className="flex aspect-[4/3] shrink-0 items-center justify-center rounded-2xl border border-black/8 bg-black/[0.03] md:aspect-auto md:w-[320px]">
+            <span className="font-display text-[13px] tracking-wide text-black/30">תמונה בקרוב</span>
           </div>
 
           <div className="flex flex-1 flex-col justify-center gap-5">
-            <p className="font-body text-[19px] leading-[1.85] text-white/88">
+            <p className="font-body text-[19px] leading-[1.85] text-black/75">
               YEYE LABS נולד מתוך אובססיה לפרטים קטנים ואמונה עמוקה שכל עסק, גדול או קטן, ראוי לנוכחות דיגיטלית{" "}
-              <strong className="text-white">ברמה הגבוהה ביותר</strong>.
+              <strong className="text-black">ברמה הגבוהה ביותר</strong>.
             </p>
-            <p className="font-body text-[19px] leading-[1.85] text-white/88">
+            <p className="font-body text-[19px] leading-[1.85] text-black/75">
               אני מעצב ומפתח מגיל צעיר, עם ניסיון של שנים בבניית חוויות דיגיטליות{" "}
-              <strong className="text-white">שלא רק נראות טוב, אלא עובדות</strong>. כל פרויקט מקבל את מלוא
+              <strong className="text-black">שלא רק נראות טוב, אלא עובדות</strong>. כל פרויקט מקבל את מלוא
               הקשב, הדיוק והאנרגיה שלי.
             </p>
           </div>

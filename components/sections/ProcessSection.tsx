@@ -62,19 +62,19 @@ function StepContent({ step, active, showDots = true }: { step: StepDef; active:
   return (
     <div className="mx-auto grid w-full max-w-[1100px] grid-cols-1 items-center gap-12 px-6 md:grid-cols-2 md:gap-20">
       <div className={cn("flex flex-col gap-5", reverse && "md:order-2")}>
-        <span className="font-display text-6xl leading-none font-extrabold tracking-tight text-primary/20 md:text-7xl">
+        <span className="font-display text-6xl leading-none font-extrabold tracking-tight text-accent/20 md:text-7xl">
           {step.number}
         </span>
-        <h3 className="font-display text-3xl leading-tight font-bold text-white md:text-4xl">{step.title}</h3>
-        <p className="max-w-[420px] font-body text-lg leading-[1.85] text-white/55">{step.description}</p>
+        <h3 className="font-display text-3xl leading-tight font-bold text-black md:text-4xl">{step.title}</h3>
+        <p className="max-w-[420px] font-body text-lg leading-[1.85] text-black/55">{step.description}</p>
         {showDots && (
           <div className="mt-2 flex gap-2">
             {steps.map((s) => (
               <div
                 key={s.number}
                 className={cn(
-                  "h-1.5 rounded-full bg-primary transition-all duration-300",
-                  s.number === step.number ? "w-6" : "w-1.5 bg-white/15"
+                  "h-1.5 rounded-full bg-accent transition-all duration-300",
+                  s.number === step.number ? "w-6" : "w-1.5 bg-black/15"
                 )}
               />
             ))}
@@ -157,11 +157,22 @@ export default function ProcessSection() {
   const useSwipe = !prefersReducedMotion && isMobile;
 
   return (
-    <section id="process" className="relative py-16 md:py-20">
-      <div className="mx-auto max-w-[1200px] px-6">
-        <SectionHeading title="איך אני עובד?" className="mb-12 md:mb-16" />
+    <section id="process" className="relative overflow-hidden bg-white py-16 md:py-20">
+      <div
+        className="pointer-events-none absolute inset-0 z-0 bg-[size:60px_60px]"
+        style={{
+          backgroundImage: `
+            linear-gradient(color-mix(in srgb, var(--color-accent) 10%, transparent) 1px, transparent 1px),
+            linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 10%, transparent) 1px, transparent 1px)
+          `,
+          WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, black 0%, transparent 75%)",
+          maskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, black 0%, transparent 75%)",
+        }}
+      />
+      <div className="relative z-10 mx-auto max-w-[1200px] px-6">
+        <SectionHeading title="איך אני עובד?" className="mb-12 md:mb-16" light />
       </div>
-      {useSwipe ? <SwipeSteps /> : <StackedSteps />}
+      <div className="relative z-10">{useSwipe ? <SwipeSteps /> : <StackedSteps />}</div>
     </section>
   );
 }
