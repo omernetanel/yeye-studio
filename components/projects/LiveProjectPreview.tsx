@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ExternalLink, Monitor, Smartphone } from "lucide-react";
+import { ExternalLink, Monitor, Play, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LiveProjectPreviewProps {
@@ -23,6 +23,12 @@ type View = "desktop" | "mobile";
  */
 export default function LiveProjectPreview({ url, title, fallbackImage }: LiveProjectPreviewProps) {
   const [view, setView] = useState<View>("desktop");
+  // The iframe only mounts after an explicit click. Loading it eagerly meant
+  // a visitor scrolling the page with their cursor over the panel would get
+  // their scroll captured by the embedded site instead of the page — a
+  // click-to-load gate keeps the page scrollable until they actually mean
+  // to interact with the embedded site.
+  const [loaded, setLoaded] = useState(false);
   // Only ever hand an http(s) URL to the iframe src or the "open in a new
   // tab" link — guards against a stray javascript: or data: scheme ending up
   // somewhere it could execute, in case a future project entry gets a typo.
@@ -79,22 +85,37 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
         )}
 
         <div className="relative min-h-0 flex-1">
-          {hasUrl ? (
-            // Eager, not lazy: this iframe is the page's primary content and
-            // sits in the initial viewport, so deferring it would just mean
-            // staring at a blank panel on load.
+          {hasUrl && loaded && (
             <iframe src={url} title={title} className="h-full w-full border-0" loading="eager" referrerPolicy="no-referrer" />
-          ) : (
+          )}
+
+          {(!hasUrl || !loaded) && (
             <Image
               src={fallbackImage}
               alt={title}
               fill
               sizes="(max-width: 1100px) 100vw, 1100px"
-              className="object-cover object-top"
+              className={cn("object-cover object-top", hasUrl && "opacity-30")}
             />
           )}
 
-          {view === "mobile" && hasUrl && (
+          {hasUrl && !loaded && (
+            <button
+              type="button"
+              onClick={() => setLoaded(true)}
+              className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/40 text-center transition-colors hover:bg-black/25"
+            >
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-[0_0_30px_rgba(42,51,243,0.5)]">
+                <Play size={22} fill="currentColor" className="mr-[-2px]" />
+              </span>
+              <span className="font-display text-sm font-semibold text-white">זהו אתר חי ומגיב</span>
+              <span className="max-w-[240px] font-body text-xs leading-[1.6] text-white/60">
+                לחצו כדי לטעון אותו ולגלול בתוכו בחופשיות
+              </span>
+            </button>
+          )}
+
+          {view === "mobile" && hasUrl && loaded && (
             <>
               <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-center pt-2">
                 <div className="h-6 w-24 rounded-full bg-[#1a1a1a]" />
