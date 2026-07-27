@@ -155,15 +155,27 @@ export default function ProjectPageClient({ project }: Props) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.6 }}
-            className="mt-24 text-center"
+            className="relative mt-24 overflow-hidden rounded-3xl border border-primary-light/20 bg-surface/60 px-6 py-16 text-center shadow-[0_20px_60px_rgba(0,0,0,0.4)] backdrop-blur-xl md:py-20"
           >
-            <h2 className="mb-4 font-display text-[clamp(24px,3.5vw,34px)] font-extrabold text-white">
-              {story.ctaTitle}
-            </h2>
-            <p className="mx-auto mb-8 max-w-[560px] font-body text-[16px] leading-[1.8] text-white/50">
-              {story.ctaText}
-            </p>
-            <Button href="/contact">בוא נדבר</Button>
+            <motion.div
+              animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.45, 0.25] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="pointer-events-none absolute top-1/2 left-1/2 h-[300px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[60px]"
+              style={{ background: "radial-gradient(ellipse, rgba(42,51,243,0.4) 0%, transparent 70%)" }}
+            />
+
+            <div className="relative z-10">
+              <span className="mb-4 inline-block font-display text-sm font-medium tracking-[0.08em] text-primary-light uppercase">
+                השלב הבא
+              </span>
+              <h2 className="mb-4 font-display text-[clamp(28px,4vw,44px)] leading-[1.15] font-extrabold text-white">
+                {story.ctaTitle}
+              </h2>
+              <p className="mx-auto mb-8 max-w-[560px] font-body text-[16px] leading-[1.8] text-white/55">
+                {story.ctaText}
+              </p>
+              <Button href="/contact">בוא נדבר</Button>
+            </div>
           </motion.div>
         </div>
       )}
