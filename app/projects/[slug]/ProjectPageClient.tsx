@@ -48,7 +48,7 @@ export default function ProjectPageClient({ project }: Props) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
-          className="mt-1 max-w-[560px] font-body text-[16px] leading-[1.85] text-white/55"
+          className="mt-1 max-w-[560px] font-body text-[16px] leading-[1.85] whitespace-pre-line text-white/55"
         >
           {project.description}
         </motion.p>

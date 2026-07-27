@@ -31,39 +31,29 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
   return (
     <div className="flex w-full flex-col items-center gap-5">
       {hasUrl && (
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <div className="inline-flex rounded-full border border-white/10 bg-surface p-1">
-            <button
-              type="button"
-              onClick={() => setView("desktop")}
-              aria-pressed={view === "desktop"}
-              className={cn(
-                "flex items-center gap-2 rounded-full px-4 py-2 font-display text-sm transition-colors",
-                view === "desktop" ? "bg-primary text-white" : "text-white/50 hover:text-white/80"
-              )}
-            >
-              <Monitor size={16} /> מחשב
-            </button>
-            <button
-              type="button"
-              onClick={() => setView("mobile")}
-              aria-pressed={view === "mobile"}
-              className={cn(
-                "flex items-center gap-2 rounded-full px-4 py-2 font-display text-sm transition-colors",
-                view === "mobile" ? "bg-primary text-white" : "text-white/50 hover:text-white/80"
-              )}
-            >
-              <Smartphone size={16} /> מובייל
-            </button>
-          </div>
-
-          <span className="inline-flex items-center gap-1.5 font-display text-xs text-white/40">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-            </span>
-            תצוגה חיה של המערכת האמיתית
-          </span>
+        <div className="inline-flex rounded-full border border-white/10 bg-surface p-1">
+          <button
+            type="button"
+            onClick={() => setView("desktop")}
+            aria-pressed={view === "desktop"}
+            className={cn(
+              "flex items-center gap-2 rounded-full px-4 py-2 font-display text-sm transition-colors",
+              view === "desktop" ? "bg-primary text-white" : "text-white/50 hover:text-white/80"
+            )}
+          >
+            <Monitor size={16} /> מחשב
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("mobile")}
+            aria-pressed={view === "mobile"}
+            className={cn(
+              "flex items-center gap-2 rounded-full px-4 py-2 font-display text-sm transition-colors",
+              view === "mobile" ? "bg-primary text-white" : "text-white/50 hover:text-white/80"
+            )}
+          >
+            <Smartphone size={16} /> מובייל
+          </button>
         </div>
       )}
 
