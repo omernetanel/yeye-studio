@@ -4,10 +4,10 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
 const MAX_IMPULSES = 24;
-const SIGMA_PX = 130;
-const FORCE_SCALE = 2.2;
+const SIGMA_PX = 120;
+const FORCE_SCALE = 1.3;
 const MAX_STEP_DELTA = 40;
-const MAX_STRENGTH = 70;
+const MAX_STRENGTH = 46;
 const DECAY = 0.9;
 const REST_EPSILON = 0.25;
 
@@ -51,10 +51,10 @@ const FRAGMENT_SHADER = `
     vec2 rawDir = mag > 0.001 ? dispPixels / mag : vec2(1.0, 0.0);
     vec2 dir = normalize(vec2(rawDir.x, rawDir.y * 0.18) + vec2(0.0001, 0.0));
 
-    float bandHeight = 1.7;
+    float bandHeight = 2.0;
     float bandIndex = floor(pixelPos.y / bandHeight);
     float bandRand = hash(bandIndex * 0.1373 + 4.1);
-    float streakLen = mag * 2.6 * mix(0.0, 1.9, bandRand);
+    float streakLen = mag * 1.35 * mix(0.2, 1.0, bandRand);
 
     float baseAlpha = texture2D(map, vUv).a;
     float streakAlpha = 0.0;
@@ -62,11 +62,11 @@ const FRAGMENT_SHADER = `
       float t = float(i) / float(${TAPS} - 1);
       vec2 offsetUv = dir * (streakLen * t) / resolution;
       vec2 sUv = clamp(vUv - offsetUv, 0.0, 1.0);
-      float a = texture2D(map, sUv).a * pow(1.0 - t, 0.35);
+      float a = texture2D(map, sUv).a * pow(1.0 - t, 0.65) * 0.75;
       streakAlpha = max(streakAlpha, a);
     }
 
-    float envelope = smoothstep(0.0, 16.0, mag);
+    float envelope = smoothstep(5.0, 22.0, mag);
     float alpha = max(baseAlpha, streakAlpha * envelope);
 
     gl_FragColor = vec4(0.0, 0.0, 0.0, alpha);

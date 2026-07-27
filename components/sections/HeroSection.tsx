@@ -4,7 +4,6 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Mail } from "lucide-react";
 import Link from "next/link";
-import Button from "@/components/ui/Button";
 import LogoSmearCanvas from "@/components/sections/hero/LogoSmearCanvas";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
@@ -18,44 +17,41 @@ export default function HeroSection() {
 
   return (
     <section id="hero" className="relative flex min-h-screen flex-col justify-between overflow-hidden bg-white pt-[100px] pb-8">
-      <div className="mx-auto w-full max-w-[1400px] px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut", delay: 0.15 }}
-          className="flex flex-col items-end gap-4 text-right"
-        >
-          <p className="font-display text-lg leading-snug font-semibold text-black md:text-xl">
-            אני לא בונה אתרים יפים.
-            <br />
-            אני בונה אתרים שעובדים.
-          </p>
-          <Button href="/contact" variant="ghost" className="!border-black !bg-black !text-white hover:!scale-[1.03]">
-            קבעו שיחה
-          </Button>
-        </motion.div>
-      </div>
+      <div>
+        <div className="mx-auto w-full max-w-[1400px] px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut", delay: 0.15 }}
+            className="flex flex-col items-start text-right"
+          >
+            <p className="font-display text-2xl leading-snug font-semibold text-black md:text-4xl">
+              בואו נבנה לכם אתר שעובד ומוכר באמת.
+            </p>
+          </motion.div>
+        </div>
 
-      <div className="relative mx-auto w-full max-w-[1600px] px-6 select-none">
-        <motion.div
-          initial={wipeInitial}
-          animate={{ clipPath: "inset(0 0 0 0%)" }}
-          transition={{ duration: 1.1, ease: [0.65, 0, 0.35, 1], delay: 0.35 }}
-          className="relative mx-auto aspect-[8042/2511] w-full"
-        >
-          <Image
-            src="/images/logo.png"
-            alt="YEYE"
-            fill
-            priority
-            draggable={false}
-            onDragStart={(e) => e.preventDefault()}
-            sizes="100vw"
-            className="pointer-events-none object-contain"
-            style={{ filter: "brightness(0)" }}
-          />
-          <LogoSmearCanvas src="/images/logo.png" className="absolute inset-0 h-full w-full touch-none" />
-        </motion.div>
+        <div className="relative mt-4 w-full select-none px-4 sm:px-6 md:mt-8">
+          <motion.div
+            initial={wipeInitial}
+            animate={{ clipPath: "inset(0 0 0 0%)" }}
+            transition={{ duration: 1.1, ease: [0.65, 0, 0.35, 1], delay: 0.35 }}
+            className="relative mx-auto aspect-[8042/2511] w-full"
+          >
+            <Image
+              src="/images/logo.png"
+              alt="YEYE"
+              fill
+              priority
+              draggable={false}
+              onDragStart={(e) => e.preventDefault()}
+              sizes="100vw"
+              className="pointer-events-none object-contain"
+              style={{ filter: "brightness(0)" }}
+            />
+            <LogoSmearCanvas src="/images/logo.png" className="absolute inset-0 h-full w-full touch-none" />
+          </motion.div>
+        </div>
       </div>
 
       <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between px-6">
