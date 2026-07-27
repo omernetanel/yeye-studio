@@ -10,14 +10,14 @@ import { gsap } from "@/lib/motion/gsap";
 // than a generic particle blob.
 const SAMPLE_WIDTH = 220;
 const BRIGHTNESS_THRESHOLD = 120;
-const WORLD_WIDTH = 1.8;
-const GROUP_X = -2.15;
-const GROUP_Y = 0.6;
+const WORLD_WIDTH = 3.6;
+const GROUP_X = -2.7;
+const GROUP_Y = 0.9;
 
 // How strongly, and from how close, particles get pulled toward the cursor —
 // a small, localized nudge only for dots the cursor is actually near, not a
 // whole-shape reaction.
-const INFLUENCE_RADIUS = 0.55;
+const INFLUENCE_RADIUS = 1.05;
 const PULL_STRENGTH = 0.3;
 const EASE = 0.12;
 // A finite "nowhere near anything" sentinel for when the pointer ray misses
@@ -169,7 +169,7 @@ export default function HeroScene() {
           <bufferGeometry />
           <pointsMaterial
             color="#6b8ff8"
-            size={0.024}
+            size={0.045}
             sizeAttenuation
             transparent
             opacity={0.9}
