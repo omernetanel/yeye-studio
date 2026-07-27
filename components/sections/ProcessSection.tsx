@@ -121,7 +121,7 @@ function StackedStep({ step }: { step: StepDef }) {
  */
 function StackedSteps() {
   return (
-    <div className="mx-auto flex max-w-[1100px] flex-col gap-32 px-6 md:gap-40">
+    <div className="mx-auto flex max-w-[1100px] flex-col gap-44 px-6 md:gap-64">
       {steps.map((step) => (
         <StackedStep key={step.number} step={step} />
       ))}
@@ -169,6 +169,7 @@ export default function ProcessSection() {
           maskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, black 0%, transparent 75%)",
         }}
       />
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-40 bg-gradient-to-b from-white to-transparent md:h-56" />
       <div className="relative z-10 mx-auto max-w-[1200px] px-6">
         <SectionHeading title="איך אני עובד?" className="mb-12 md:mb-16" light />
       </div>

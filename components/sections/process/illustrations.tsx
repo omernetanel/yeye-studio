@@ -146,17 +146,16 @@ export function DesignIllustration({ active }: IllustrationProps) {
             .to(`[data-line="${i}"]`, { attr: { width: line.width }, duration: 0.5, ease: "power1.inOut" }, "<");
         });
 
-        // Once done writing, the pencil moves to rest beside the button
-        // instead of hovering over the text it just wrote — reads as
-        // "and here's the result," with the two connected, rather than
-        // floating disconnected over the last line.
+        // Once done writing, the pencil exits off-canvas to the right
+        // instead of hovering in place — reads as "done, out of the way,"
+        // rather than lingering disconnected over the last line.
         timeline.addLabel("linesDone");
+        const lastLine = DESIGN_LINES[DESIGN_LINES.length - 1];
         timeline.to(
           pencil,
-          { x: DESIGN_CTA.x - 10, y: DESIGN_CTA.y + DESIGN_CTA.height / 2, duration: 0.5, ease: "power1.inOut" },
+          { x: 270, y: lastLine.y - 10, opacity: 0, duration: 0.6, ease: "power1.in" },
           "linesDone"
         );
-        timeline.to(pencil, { y: "+=5", duration: 1.1, ease: "sine.inOut", repeat: -1, yoyo: true }, "linesDone+=0.6");
       }
 
       timeline.fromTo(
@@ -222,7 +221,7 @@ export function CodeIllustration({ active }: IllustrationProps) {
       lines.forEach((line) => {
         line.style.width = "0px";
       });
-      const timeline = gsap.timeline();
+      const timeline = gsap.timeline({ delay: 0.7 });
       lines.forEach((line, i) => {
         const target = line.scrollWidth;
         timeline.to(line, { width: target, duration: 0.5, ease: "steps(12)" }, i === 0 ? undefined : "-=0.1");

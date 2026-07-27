@@ -30,13 +30,13 @@ export default function SectionHeading({ title, eyebrow, align = "center", class
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className={cn("font-display text-section-title font-bold tracking-tight", light ? "text-black" : "text-white")}
+        className={`font-display text-section-title font-bold tracking-tight ${light ? "text-black" : "text-white"}`}
       >
         {title}
       </motion.h2>
       <motion.div
         initial={{ width: 0 }}
-        whileInView={{ width: "80px" }}
+        whileInView={{ width: "140px" }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
         className={cn("mt-4 h-[3px] overflow-hidden rounded-full", light ? "bg-[image:var(--gradient-accent)]" : "bg-[image:var(--gradient-brand)]")}
