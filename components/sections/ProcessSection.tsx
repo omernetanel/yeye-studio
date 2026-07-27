@@ -157,19 +157,7 @@ export default function ProcessSection() {
   const useSwipe = !prefersReducedMotion && isMobile;
 
   return (
-    <section id="process" className="relative overflow-hidden bg-white py-16 md:py-20">
-      <div
-        className="pointer-events-none absolute inset-0 z-0 bg-[size:60px_60px]"
-        style={{
-          backgroundImage: `
-            linear-gradient(color-mix(in srgb, var(--color-accent) 10%, transparent) 1px, transparent 1px),
-            linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 10%, transparent) 1px, transparent 1px)
-          `,
-          WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, black 0%, transparent 75%)",
-          maskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, black 0%, transparent 75%)",
-        }}
-      />
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-40 bg-gradient-to-b from-white to-transparent md:h-56" />
+    <section id="process" className="relative py-16 md:py-20">
       <div className="relative z-10 mx-auto max-w-[1200px] px-6">
         <SectionHeading title="איך אני עובד?" className="mb-12 md:mb-16" light />
       </div>

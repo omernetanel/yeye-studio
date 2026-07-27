@@ -35,22 +35,7 @@ const services = [
 
 export default function ServicesSection() {
   return (
-    <section id="services" className="relative overflow-hidden bg-white px-6 py-16 md:py-20">
-      {/* Section-local echo of the homepage's fixed ambient grid — that layer is
-          tuned for the dark theme and sits behind every section, so a white
-          section painted opaque over it would otherwise just hide it entirely. */}
-      <div
-        className="pointer-events-none absolute inset-0 z-0 bg-[size:60px_60px]"
-        style={{
-          backgroundImage: `
-            linear-gradient(color-mix(in srgb, var(--color-accent) 10%, transparent) 1px, transparent 1px),
-            linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 10%, transparent) 1px, transparent 1px)
-          `,
-          WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, black 0%, transparent 75%)",
-          maskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, black 0%, transparent 75%)",
-        }}
-      />
-
+    <section id="services" className="relative px-6 py-16 md:py-20">
       <div className="relative z-10 mx-auto max-w-[1200px]">
         <SectionHeading title="מה אני עושה?" className="mb-12 md:mb-16" light />
 
