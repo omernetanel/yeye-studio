@@ -13,12 +13,12 @@ const CONTACT_EMAIL = "hello@yeyelabs.com";
 export default function HeroSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
 
-  const wipeInitial = prefersReducedMotion ? { clipPath: "inset(0 0 0 0%)" } : { clipPath: "inset(0 0 0 100%)" };
+  const wipeInitial = prefersReducedMotion ? { clipPath: "inset(0 0% 0 0)" } : { clipPath: "inset(0 100% 0 0)" };
 
   return (
     <section id="hero" className="relative flex min-h-screen flex-col justify-between overflow-hidden bg-white pt-[100px] pb-8">
       <div>
-        <div className="mx-auto w-full max-w-[1400px] px-6">
+        <div className="mx-auto mt-8 -mb-8 w-full max-w-[1400px] px-6">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -34,7 +34,7 @@ export default function HeroSection() {
         <div className="relative mt-4 w-full select-none px-4 sm:px-6 md:mt-8">
           <motion.div
             initial={wipeInitial}
-            animate={{ clipPath: "inset(0 0 0 0%)" }}
+            animate={{ clipPath: "inset(0 0% 0 0)" }}
             transition={{ duration: 1.1, ease: [0.65, 0, 0.35, 1], delay: 0.35 }}
             className="relative mx-auto aspect-[8042/2511] w-full"
           >

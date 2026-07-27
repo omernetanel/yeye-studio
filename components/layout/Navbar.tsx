@@ -68,8 +68,8 @@ export default function Navbar() {
 
         {/* CTA — desktop only, pinned right */}
         <div className="absolute right-6 top-1/2 hidden -translate-y-1/2 md:block">
-          <Button href="/contact" variant="primary" className="px-4 py-2 text-[13px]">
-            התחל פרויקט
+          <Button href="/contact" variant="primary" className="!border-black !bg-none !bg-black px-4 py-2 text-[13px]">
+            צרו קשר
           </Button>
         </div>
 
@@ -126,8 +126,13 @@ export default function Navbar() {
                     {link.label}
                   </Link>
                 ))}
-                <Button href="/contact" variant="primary" showArrow={false} className="mt-3 justify-center py-3.5 text-base">
-                  התחל פרויקט
+                <Button
+                  href="/contact"
+                  variant="primary"
+                  showArrow={false}
+                  className="!border-black !bg-none !bg-black mt-3 justify-center py-3.5 text-base"
+                >
+                  צרו קשר
                 </Button>
               </div>
             </motion.nav>
