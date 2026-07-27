@@ -1,24 +1,61 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import * as THREE from "three";
 
-const CELL_SIZE = 16;
-const MIN_COLS = 24;
-const MAX_COLS = 90;
-const FORCE_RADIUS = 120;
-const FORCE_SCALE = 1.4;
-const SPRING_K = 0.014;
-const DAMPING = 0.93;
-const MAX_OFFSET = 64;
-const REST_EPSILON = 0.05;
+const MAX_IMPULSES = 24;
+const SIGMA_PX = 130;
+const FORCE_SCALE = 2.2;
+const MAX_STEP_DELTA = 40;
+const MAX_STRENGTH = 70;
+const DECAY = 0.9;
+const REST_EPSILON = 0.25;
 
-interface GridPoint {
-  baseX: number;
-  baseY: number;
-  offsetX: number;
-  offsetY: number;
-  vx: number;
-  vy: number;
+const VERTEX_SHADER = `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = vec4(position.xy, 0.0, 1.0);
+  }
+`;
+
+const FRAGMENT_SHADER = `
+  precision highp float;
+  uniform sampler2D map;
+  uniform vec2 resolution;
+  uniform vec2 impulsePos[${MAX_IMPULSES}];
+  uniform vec2 impulseDir[${MAX_IMPULSES}];
+  uniform int impulseCount;
+  uniform float sigma;
+  varying vec2 vUv;
+
+  void main() {
+    vec2 pixelPos = vUv * resolution;
+    vec2 dispPixels = vec2(0.0);
+
+    for (int i = 0; i < ${MAX_IMPULSES}; i++) {
+      if (i >= impulseCount) break;
+      vec2 d = pixelPos - impulsePos[i];
+      float dist2 = dot(d, d);
+      float falloff = exp(-dist2 / (2.0 * sigma * sigma));
+      dispPixels += impulseDir[i] * falloff;
+    }
+
+    vec2 sampleUv = clamp(vUv - dispPixels / resolution, 0.0, 1.0);
+    vec4 tex = texture2D(map, sampleUv);
+
+    float warpMag = length(dispPixels);
+    float fade = 1.0 - smoothstep(0.0, 60.0, warpMag) * 0.82;
+
+    gl_FragColor = vec4(0.0, 0.0, 0.0, tex.a * fade);
+  }
+`;
+
+interface Impulse {
+  x: number;
+  y: number;
+  dx: number;
+  dy: number;
 }
 
 interface Pointer {
@@ -36,111 +73,99 @@ export default function LogoSmearCanvas({ src, className }: { src: string; class
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
 
     let disposed = false;
     let rafId: number | null = null;
-    let dpr = 1;
-    let cellW = 0;
-    let cellH = 0;
-    let points: GridPoint[] = [];
-    let buffer: HTMLCanvasElement | null = null;
+    let impulses: Impulse[] = [];
 
     const pointer: Pointer = { x: -9999, y: -9999, lastX: -9999, lastY: -9999, active: false, initialized: false };
 
-    const img = new Image();
-    img.src = src;
+    const impulsePosUniform = Array.from({ length: MAX_IMPULSES }, () => new THREE.Vector2());
+    const impulseDirUniform = Array.from({ length: MAX_IMPULSES }, () => new THREE.Vector2());
 
-    const buildGrid = (width: number, height: number) => {
-      const cols = Math.min(MAX_COLS, Math.max(MIN_COLS, Math.round(width / CELL_SIZE)));
-      cellW = width / cols;
-      const rows = Math.max(1, Math.round(height / cellW));
-      cellH = height / rows;
-      const next: GridPoint[] = [];
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          next.push({ baseX: c * cellW, baseY: r * cellH, offsetX: 0, offsetY: 0, vx: 0, vy: 0 });
-        }
-      }
-      points = next;
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: "low-power" });
+    renderer.setClearColor(0x000000, 0);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+    const geometry = new THREE.PlaneGeometry(2, 2);
+    const material = new THREE.ShaderMaterial({
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+      uniforms: {
+        map: { value: null },
+        resolution: { value: new THREE.Vector2(1, 1) },
+        impulsePos: { value: impulsePosUniform },
+        impulseDir: { value: impulseDirUniform },
+        impulseCount: { value: 0 },
+        sigma: { value: SIGMA_PX },
+      },
+      vertexShader: VERTEX_SHADER,
+      fragmentShader: FRAGMENT_SHADER,
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    let ready = false;
+
+    const render = () => {
+      renderer.render(scene, camera);
     };
 
-    const renderOffscreen = (width: number, height: number) => {
-      if (!img.complete || img.naturalWidth === 0) return;
-      const b = document.createElement("canvas");
-      b.width = Math.round(width * dpr);
-      b.height = Math.round(height * dpr);
-      const bctx = b.getContext("2d");
-      if (!bctx) return;
-      bctx.filter = "brightness(0)";
-      bctx.drawImage(img, 0, 0, b.width, b.height);
-      buffer = b;
-    };
-
-    const draw = () => {
-      if (!buffer) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const pad = 1.5;
-      for (const p of points) {
-        const sx = p.baseX * dpr;
-        const sy = p.baseY * dpr;
-        const sw = cellW * dpr;
-        const sh = cellH * dpr;
-        const dx = (p.baseX + p.offsetX - pad) * dpr;
-        const dy = (p.baseY + p.offsetY - pad) * dpr;
-        const dw = (cellW + pad * 2) * dpr;
-        const dh = (cellH + pad * 2) * dpr;
-        ctx.drawImage(buffer, sx, sy, sw, sh, dx, dy, dw, dh);
-      }
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      renderer.setPixelRatio(dpr);
+      renderer.setSize(rect.width, rect.height, false);
+      material.uniforms.resolution.value.set(rect.width, rect.height);
+      impulses = [];
+      if (ready) render();
     };
 
     const step = () => {
-      const dxPointer = pointer.x - pointer.lastX;
-      const dyPointer = pointer.y - pointer.lastY;
-      let anyActive = false;
+      if (pointer.active) {
+        const dx = pointer.x - pointer.lastX;
+        const dy = pointer.y - pointer.lastY;
+        const speed = Math.hypot(dx, dy);
+        if (speed > 0.4) {
+          const cdx = Math.max(-MAX_STEP_DELTA, Math.min(MAX_STEP_DELTA, dx)) * FORCE_SCALE;
+          const cdy = Math.max(-MAX_STEP_DELTA, Math.min(MAX_STEP_DELTA, dy)) * FORCE_SCALE;
+          impulses.push({ x: pointer.x, y: pointer.y, dx: cdx, dy: cdy });
+          if (impulses.length > MAX_IMPULSES) impulses.shift();
+        }
+        pointer.lastX = pointer.x;
+        pointer.lastY = pointer.y;
+      }
 
-      for (const p of points) {
-        if (pointer.active) {
-          const cx = p.baseX + p.offsetX;
-          const cy = p.baseY + p.offsetY;
-          const dist = Math.hypot(cx - pointer.x, cy - pointer.y);
-          if (dist < FORCE_RADIUS) {
-            const influence = (1 - dist / FORCE_RADIUS) ** 2;
-            p.vx += dxPointer * influence * FORCE_SCALE;
-            p.vy += dyPointer * influence * FORCE_SCALE;
+      for (let i = impulses.length - 1; i >= 0; i--) {
+        const imp = impulses[i];
+        imp.dx *= DECAY;
+        imp.dy *= DECAY;
+        if (Math.abs(imp.dx) < REST_EPSILON && Math.abs(imp.dy) < REST_EPSILON) {
+          impulses.splice(i, 1);
+        } else {
+          const mag = Math.hypot(imp.dx, imp.dy);
+          if (mag > MAX_STRENGTH) {
+            const scale = MAX_STRENGTH / mag;
+            imp.dx *= scale;
+            imp.dy *= scale;
           }
-        }
-        p.vx += -p.offsetX * SPRING_K;
-        p.vy += -p.offsetY * SPRING_K;
-        p.vx *= DAMPING;
-        p.vy *= DAMPING;
-        p.offsetX += p.vx;
-        p.offsetY += p.vy;
-
-        const mag = Math.hypot(p.offsetX, p.offsetY);
-        if (mag > MAX_OFFSET) {
-          const scale = MAX_OFFSET / mag;
-          p.offsetX *= scale;
-          p.offsetY *= scale;
-        }
-
-        if (
-          Math.abs(p.vx) > REST_EPSILON ||
-          Math.abs(p.vy) > REST_EPSILON ||
-          Math.abs(p.offsetX) > REST_EPSILON ||
-          Math.abs(p.offsetY) > REST_EPSILON
-        ) {
-          anyActive = true;
         }
       }
 
-      pointer.lastX = pointer.x;
-      pointer.lastY = pointer.y;
+      const count = Math.min(impulses.length, MAX_IMPULSES);
+      for (let i = 0; i < count; i++) {
+        impulsePosUniform[i].set(impulses[i].x, impulses[i].y);
+        impulseDirUniform[i].set(impulses[i].dx, impulses[i].dy);
+      }
+      material.uniforms.impulseCount.value = count;
 
-      draw();
+      render();
 
-      if (anyActive || pointer.active) {
+      if (count > 0 || pointer.active) {
         rafId = requestAnimationFrame(step);
       } else {
         rafId = null;
@@ -153,21 +178,15 @@ export default function LogoSmearCanvas({ src, className }: { src: string; class
       }
     };
 
-    const resize = () => {
+    const toLocal = (clientX: number, clientY: number) => {
       const rect = canvas.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return;
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.round(rect.width * dpr);
-      canvas.height = Math.round(rect.height * dpr);
-      buildGrid(rect.width, rect.height);
-      renderOffscreen(rect.width, rect.height);
-      draw();
+      const x = clientX - rect.left;
+      const y = rect.height - (clientY - rect.top);
+      return { x, y };
     };
 
     const handlePointerMove = (e: PointerEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const { x, y } = toLocal(e.clientX, e.clientY);
       if (!pointer.initialized) {
         pointer.lastX = x;
         pointer.lastY = y;
@@ -184,11 +203,18 @@ export default function LogoSmearCanvas({ src, className }: { src: string; class
       ensureLoop();
     };
 
-    img.onload = () => {
+    const loader = new THREE.TextureLoader();
+    loader.load(src, (texture) => {
       if (disposed) return;
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.generateMipmaps = false;
+      texture.wrapS = THREE.ClampToEdgeWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+      material.uniforms.map.value = texture;
+      ready = true;
       resize();
-    };
-    if (img.complete && img.naturalWidth > 0) resize();
+    });
 
     const ro = new ResizeObserver(() => resize());
     ro.observe(canvas);
@@ -204,6 +230,10 @@ export default function LogoSmearCanvas({ src, className }: { src: string; class
       canvas.removeEventListener("pointerleave", handlePointerLeave);
       canvas.removeEventListener("pointercancel", handlePointerLeave);
       if (rafId !== null) cancelAnimationFrame(rafId);
+      geometry.dispose();
+      material.dispose();
+      material.uniforms.map.value?.dispose();
+      renderer.dispose();
     };
   }, [src]);
 
