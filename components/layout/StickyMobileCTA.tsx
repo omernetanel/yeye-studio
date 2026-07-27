@@ -33,7 +33,12 @@ export default function StickyMobileCTA() {
       transition={{ type: "spring", damping: 28, stiffness: 300 }}
       className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md md:hidden"
     >
-      <Button href="/contact" variant="primary" showArrow={false} className="w-full justify-center py-3 text-[15px]">
+      <Button
+        href="/contact"
+        variant="primary"
+        showArrow={false}
+        className="!border-black !bg-none !bg-black !shadow-none w-full justify-center py-3 text-[15px]"
+      >
         בוא נתחיל פרויקט
       </Button>
     </motion.div>

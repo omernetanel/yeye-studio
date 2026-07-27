@@ -12,6 +12,8 @@
   --color-surface-hover: #15151c;
   --color-primary: #2a33f3;
   --color-primary-light: #6b8ff8;
+  --color-accent: #f2760f;
+  --color-accent-light: #fb923c;
 
   --font-display: var(--font-google-sans), Arial, sans-serif;
   --font-body: var(--font-assistant), Arial, sans-serif;
@@ -25,6 +27,7 @@
 :root {
   --gradient-brand: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   --gradient-brand-diagonal: linear-gradient(160deg, var(--color-primary-light) 0%, var(--color-primary) 50%, #1e28d4 100%);
+  --gradient-accent: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-light) 100%);
 }
 
 * {

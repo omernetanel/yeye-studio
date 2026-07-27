@@ -5,7 +5,7 @@ import Button from "@/components/ui/Button";
 
 const particles = [...Array(16)].map((_, i) => ({
   size: i % 3 === 0 ? 3 : 2,
-  color: i % 2 === 0 ? "#2a33f3" : "#6B8FF8",
+  color: i % 2 === 0 ? "#f2760f" : "#fb923c",
   left: `${8 + ((i * 7.5) % 84)}%`,
   top: `${15 + ((i * 13) % 70)}%`,
   duration: 3 + (i % 4),
@@ -14,7 +14,7 @@ const particles = [...Array(16)].map((_, i) => ({
 
 export default function CTASection() {
   return (
-    <section id="contact" className="relative overflow-hidden px-6 py-24 text-center md:py-32">
+    <section id="contact" className="relative overflow-hidden bg-white px-6 py-24 text-center md:py-32">
       {particles.map((p, i) => (
         <motion.div
           key={i}
@@ -29,7 +29,7 @@ export default function CTASection() {
         animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.45, 0.25] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         className="pointer-events-none absolute top-1/2 left-1/2 h-[350px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[40px]"
-        style={{ background: "radial-gradient(ellipse, rgba(42,51,243,0.35) 0%, transparent 70%)" }}
+        style={{ background: "radial-gradient(ellipse, rgba(242,118,15,0.3) 0%, transparent 70%)" }}
       />
 
       <div className="relative z-10">
@@ -38,7 +38,7 @@ export default function CTASection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.5 }}
-          className="mb-6 font-display text-sm font-medium tracking-[0.08em] text-primary-light uppercase"
+          className="mb-6 font-display text-sm font-medium tracking-[0.08em] text-accent uppercase"
         >
           מוכנים להתחיל?
         </motion.p>
@@ -48,11 +48,11 @@ export default function CTASection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="mb-6 font-display text-[clamp(40px,5vw,72px)] leading-[1.1] font-extrabold tracking-tight text-white"
+          className="mb-6 font-display text-[clamp(40px,5vw,72px)] leading-[1.1] font-extrabold tracking-tight text-black"
         >
           בוא נבנה משהו
           <br />
-          <span className="bg-[image:var(--gradient-brand)] bg-clip-text text-transparent">שבאמת עובד.</span>
+          <span className="bg-[image:var(--gradient-accent)] bg-clip-text text-transparent">שבאמת עובד.</span>
         </motion.h2>
 
         <motion.p
@@ -60,7 +60,7 @@ export default function CTASection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-10 font-body text-lg text-white/45"
+          className="mb-10 font-body text-lg text-black/45"
         >
           ייעוץ ראשוני ללא עלות. אשמח לשמוע על הפרויקט שלך.
         </motion.p>
@@ -71,7 +71,7 @@ export default function CTASection() {
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <Button href="/contact" variant="primary">
+          <Button href="/contact" variant="primary" className="!border-black !bg-none !bg-black !shadow-none">
             בוא נתחיל ביחד
           </Button>
         </motion.div>

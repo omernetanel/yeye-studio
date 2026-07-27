@@ -4,13 +4,29 @@ import { cn } from "@/lib/utils";
 interface CardProps {
   children: ReactNode;
   className?: string;
+  /** Renders a light glass panel (for white-background sections) instead of the default dark theme. */
+  light?: boolean;
 }
 
 /** Shared "glass panel" chrome for cards across the site — background, border, blur, corner glow. */
-export default function Card({ children, className }: CardProps) {
+export default function Card({ children, className, light = false }: CardProps) {
   return (
-    <div className="relative h-full overflow-hidden rounded-2xl border border-primary-light/10 bg-surface/80 p-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] backdrop-blur-xl">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_100%_100%,color-mix(in_srgb,var(--color-primary-light)_13%,transparent)_0%,transparent_70%)]" />
+    <div
+      className={cn(
+        "relative h-full overflow-hidden rounded-2xl p-7 backdrop-blur-xl",
+        light
+          ? "border border-black/10 bg-black/[0.03] shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]"
+          : "border border-primary-light/10 bg-surface/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]"
+      )}
+    >
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-0",
+          light
+            ? "bg-[radial-gradient(ellipse_at_100%_100%,color-mix(in_srgb,var(--color-accent)_13%,transparent)_0%,transparent_70%)]"
+            : "bg-[radial-gradient(ellipse_at_100%_100%,color-mix(in_srgb,var(--color-primary-light)_13%,transparent)_0%,transparent_70%)]"
+        )}
+      />
       {/*
         Callers pass layout classes (flex, items-center, gap, text-align)
         expecting them to govern the actual card content — they need to land
