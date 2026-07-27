@@ -36,7 +36,7 @@ export const projects: Project[] = [
     description:
       "מערכת ניהול לעסקי שירות שבניתי בעברית מהיסוד, לא תרגמתי אליה תבנית באנגלית.\nיומן, לקוחות, דוחות והתראות, בממשק RTL אמיתי.",
     url: "https://lynko-liard.vercel.app/",
-    image: "/images/placeholder3.png",
+    image: "/images/lynkolayout.png",
     tags: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion", "RTL קודם"],
     story: {
       storyTitle: "למה בניתי את זה ככה",
