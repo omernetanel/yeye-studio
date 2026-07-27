@@ -33,13 +33,13 @@ const values: Value[] = [
 function ValueCardContent({ value }: { value: Value }) {
   const Icon = value.icon;
   return (
-    <Card light className="flex h-full flex-col items-end gap-3.5">
-      <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-accent/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-accent)_35%,transparent)_0%,rgba(255,255,255,0.4)_75%)]">
-        <Icon size={24} strokeWidth={1.5} className="text-accent drop-shadow-[0_0_6px_rgba(242,118,15,0.35)]" />
+    <Card light className="!p-5 flex h-full flex-col items-end gap-2.5">
+      <div className="flex h-11 w-11 items-center justify-center rounded-full border border-accent/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-accent)_35%,transparent)_0%,rgba(255,255,255,0.4)_75%)]">
+        <Icon size={20} strokeWidth={1.5} className="text-accent drop-shadow-[0_0_6px_rgba(242,118,15,0.35)]" />
       </div>
-      <span className="font-display text-[17px] font-bold text-black">{value.title}</span>
+      <span className="font-display text-[15px] font-bold text-black">{value.title}</span>
       <div className="h-px w-5 bg-accent/50" />
-      <p className="font-body text-[13.5px] leading-[1.7] text-black/50">{value.description}</p>
+      <p className="font-body text-[13px] leading-[1.65] text-black/50">{value.description}</p>
     </Card>
   );
 }
@@ -76,43 +76,50 @@ export default function AboutSection() {
       <div className="relative z-10 mx-auto max-w-[1200px]">
         <SectionHeading title="מי אני?" className="mb-12 md:mb-16" light />
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="mb-14 flex flex-col items-stretch gap-10 md:mb-20 md:flex-row md:gap-14"
-        >
-          {/* Photo placeholder — real photo pending */}
-          <div className="flex aspect-[4/3] shrink-0 items-center justify-center rounded-2xl border border-black/8 bg-black/[0.03] md:aspect-auto md:w-[320px]">
+        <div className="flex flex-col items-stretch gap-10 md:flex-row md:gap-14">
+          {/* Photo placeholder — real photo pending. Stretches to match the
+              text+cards column's full height via items-stretch. */}
+          <motion.div
+            initial={{ opacity: 0, x: 60 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="flex aspect-[4/3] shrink-0 items-center justify-center rounded-2xl border border-black/8 bg-black/[0.03] md:aspect-auto md:w-[420px]"
+          >
             <span className="font-display text-[13px] tracking-wide text-black/30">תמונה בקרוב</span>
-          </div>
+          </motion.div>
 
-          <div className="flex flex-1 flex-col justify-center gap-5">
-            <p className="font-body text-[19px] leading-[1.85] text-black/75">
-              YEYE LABS נולד מתוך אובססיה לפרטים קטנים ואמונה עמוקה שכל עסק, גדול או קטן, ראוי לנוכחות דיגיטלית{" "}
-              <strong className="text-black">ברמה הגבוהה ביותר</strong>.
-            </p>
-            <p className="font-body text-[19px] leading-[1.85] text-black/75">
-              אני מעצב ומפתח מגיל צעיר, עם ניסיון של שנים בבניית חוויות דיגיטליות{" "}
-              <strong className="text-black">שלא רק נראות טוב, אלא עובדות</strong>. כל פרויקט מקבל את מלוא
-              הקשב, הדיוק והאנרגיה שלי.
-            </p>
-          </div>
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="flex flex-1 flex-col justify-center gap-10"
+          >
+            <div className="flex flex-col gap-5">
+              <p className="font-body text-[16px] leading-[1.8] text-black/75">
+                YEYE LABS נולד מתוך אובססיה לפרטים קטנים ואמונה עמוקה שכל עסק, גדול או קטן, ראוי לנוכחות דיגיטלית{" "}
+                <strong className="text-black">ברמה הגבוהה ביותר</strong>.
+              </p>
+              <p className="font-body text-[16px] leading-[1.8] text-black/75">
+                אני מעצב ומפתח מגיל צעיר, עם ניסיון של שנים בבניית חוויות דיגיטליות{" "}
+                <strong className="text-black">שלא רק נראות טוב, אלא עובדות</strong>. כל פרויקט מקבל את מלוא
+                הקשב, הדיוק והאנרגיה שלי.
+              </p>
+            </div>
 
-        {/* Value cards get the full section width — squeezing them into the
-            narrower text column left them cramped. */}
-        <SwipeCarousel className="sm:hidden" slideWidth="80%">
-          {values.map((value) => (
-            <ValueCardContent key={value.title} value={value} />
-          ))}
-        </SwipeCarousel>
+            <SwipeCarousel className="sm:hidden" slideWidth="80%">
+              {values.map((value) => (
+                <ValueCardContent key={value.title} value={value} />
+              ))}
+            </SwipeCarousel>
 
-        <div className="hidden gap-6 sm:grid sm:grid-cols-3 lg:gap-8">
-          {values.map((value, i) => (
-            <ValueCard key={value.title} value={value} index={i} />
-          ))}
+            <div className="hidden gap-5 sm:grid sm:grid-cols-3">
+              {values.map((value, i) => (
+                <ValueCard key={value.title} value={value} index={i} />
+              ))}
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>
