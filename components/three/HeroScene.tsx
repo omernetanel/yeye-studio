@@ -10,14 +10,21 @@ import { gsap } from "@/lib/motion/gsap";
 // than a generic particle blob.
 const SAMPLE_WIDTH = 220;
 const BRIGHTNESS_THRESHOLD = 120;
-const WORLD_WIDTH = 2.5;
-const GROUP_X = -1.6;
+const WORLD_WIDTH = 1.8;
+const GROUP_X = -2.15;
+const GROUP_Y = 0.6;
 
-// How strongly, and from how far, particles get pulled toward the cursor —
-// a soft local gravity well rather than a hard snap.
-const INFLUENCE_RADIUS = 0.9;
-const PULL_STRENGTH = 0.55;
+// How strongly, and from how close, particles get pulled toward the cursor —
+// a small, localized nudge only for dots the cursor is actually near, not a
+// whole-shape reaction.
+const INFLUENCE_RADIUS = 0.55;
+const PULL_STRENGTH = 0.3;
 const EASE = 0.12;
+// A finite "nowhere near anything" sentinel for when the pointer ray misses
+// the tracking plane. Infinity would work arithmetically for the influence
+// falloff, but Infinity * 0 is NaN in JS, which permanently corrupts a
+// particle's position the moment that happens — this sidesteps it entirely.
+const NO_HIT_SENTINEL = 999;
 
 async function sampleLogoPoints(): Promise<Float32Array> {
   const img = new Image();
@@ -59,9 +66,8 @@ async function sampleLogoPoints(): Promise<Float32Array> {
 
 /**
  * The YEYE mark, rendered as a dense particle cloud sampled straight from
- * the real logo file. Particles drift gently on their own and get pulled
- * toward the cursor like a soft local gravity well — an idle, floating
- * field of dots that visitors can nudge, not a static shape.
+ * the real logo file. It sits still — always fully readable — and only the
+ * dots near the cursor nudge slightly, like a soft local gravity well.
  *
  * The mutable "live" positions never pass through React state or JSX —
  * they're mutated in place every frame, the standard R3F escape hatch for
@@ -111,16 +117,12 @@ export default function HeroScene() {
 
     raycaster.setFromCamera(state.pointer, state.camera);
     const hit = raycaster.ray.intersectPlane(plane, intersection);
-    const mouseX = hit ? intersection.x - groupRef.current.position.x : Infinity;
-    const mouseY = hit ? intersection.y - groupRef.current.position.y : Infinity;
-
-    const t = state.clock.elapsedTime;
+    const mouseX = hit ? intersection.x - groupRef.current.position.x : NO_HIT_SENTINEL;
+    const mouseY = hit ? intersection.y - groupRef.current.position.y : NO_HIT_SENTINEL;
 
     for (let i = 0; i < base.length; i += 3) {
       const bx = base[i];
       const by = base[i + 1];
-
-      const drift = Math.sin(t * 0.5 + bx * 4 + by * 3) * 0.035;
 
       const dx = mouseX - bx;
       const dy = mouseY - by;
@@ -129,14 +131,13 @@ export default function HeroScene() {
       const pull = influence * influence * PULL_STRENGTH;
 
       const targetX = bx + dx * pull;
-      const targetY = by + dy * pull + drift;
+      const targetY = by + dy * pull;
 
       live[i] += (targetX - live[i]) * EASE;
       live[i + 1] += (targetY - live[i + 1]) * EASE;
     }
 
     (geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true;
-    groupRef.current.rotation.y = t * 0.025;
   });
 
   useEffect(() => {
@@ -150,7 +151,7 @@ export default function HeroScene() {
         scrollTrigger: { trigger: "#hero", start: "top top", end: "bottom top", scrub: true },
       });
       gsap.to(groupRef.current!.position, {
-        y: -1.0,
+        y: GROUP_Y - 1.1,
         ease: "none",
         scrollTrigger: { trigger: "#hero", start: "top top", end: "bottom top", scrub: true },
       });
@@ -163,7 +164,7 @@ export default function HeroScene() {
       <ambientLight intensity={0.3} />
       <pointLight position={[4, 3, 5]} intensity={35} color="#6b8ff8" />
 
-      <group ref={groupRef} position={[GROUP_X, 0.1, 0]}>
+      <group ref={groupRef} position={[GROUP_X, GROUP_Y, 0]}>
         <points ref={pointsRef} visible={ready}>
           <bufferGeometry />
           <pointsMaterial

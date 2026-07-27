@@ -43,7 +43,7 @@ export default function HeroSection() {
       </div>
 
       <div className="relative z-10 mx-auto w-full max-w-[1400px] px-6 pt-[100px]">
-        <div className="flex w-full max-w-[480px] flex-col text-right">
+        <div className="flex w-full max-w-[620px] flex-col text-right">
           <motion.h1
             initial="hidden"
             animate="visible"
@@ -55,7 +55,7 @@ export default function HeroSection() {
                 variants={{ hidden: { opacity: 0, y: 28 }, visible: { opacity: 1, y: 0 } }}
                 transition={{ duration: 0.75, ease: "easeOut", delay: 0.3 + i * 0.12 }}
                 className={cn(
-                  "block",
+                  "block whitespace-nowrap",
                   i === 1 && "bg-[image:var(--gradient-brand)] bg-clip-text text-transparent"
                 )}
               >
