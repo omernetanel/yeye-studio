@@ -25,7 +25,7 @@ export default function ProjectPageClient({ project }: Props) {
 
   return (
     <>
-      <div className="mx-auto flex max-w-[720px] flex-col items-center gap-3 px-6 pt-[140px] pb-12 text-center">
+      <div className="mx-auto flex max-w-[720px] flex-col items-center gap-4 px-6 pt-[140px] pb-16 text-center">
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -39,7 +39,7 @@ export default function ProjectPageClient({ project }: Props) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
-          className="font-display text-[15px] font-semibold text-primary-light"
+          className="rounded-full border border-primary-light/25 bg-primary-light/10 px-4 py-1.5 font-display text-[13px] font-semibold text-primary-light"
         >
           {project.category}
         </motion.span>
@@ -48,7 +48,7 @@ export default function ProjectPageClient({ project }: Props) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
-          className="mt-2 max-w-[560px] font-body text-[15px] leading-[1.8] text-white/55"
+          className="mt-1 max-w-[560px] font-body text-[16px] leading-[1.85] text-white/55"
         >
           {project.description}
         </motion.p>
@@ -58,7 +58,7 @@ export default function ProjectPageClient({ project }: Props) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
-            className="mt-3 flex flex-wrap justify-center gap-2"
+            className="mt-2 flex flex-wrap justify-center gap-2"
           >
             {project.tags.map((tag) => (
               <span
@@ -70,23 +70,6 @@ export default function ProjectPageClient({ project }: Props) {
             ))}
           </motion.div>
         )}
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
-          className="mt-4"
-        >
-          {story ? (
-            <Button href="/contact">בוא נדבר</Button>
-          ) : (
-            project.url && (
-              <Button href={project.url} external>
-                צפה באתר
-              </Button>
-            )
-          )}
-        </motion.div>
       </div>
 
       {/* Live preview */}

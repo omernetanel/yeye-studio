@@ -31,29 +31,39 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
   return (
     <div className="flex w-full flex-col items-center gap-5">
       {hasUrl && (
-        <div className="inline-flex rounded-full border border-white/10 bg-surface p-1">
-          <button
-            type="button"
-            onClick={() => setView("desktop")}
-            aria-pressed={view === "desktop"}
-            className={cn(
-              "flex items-center gap-2 rounded-full px-4 py-2 font-display text-sm transition-colors",
-              view === "desktop" ? "bg-primary text-white" : "text-white/50 hover:text-white/80"
-            )}
-          >
-            <Monitor size={16} /> מחשב
-          </button>
-          <button
-            type="button"
-            onClick={() => setView("mobile")}
-            aria-pressed={view === "mobile"}
-            className={cn(
-              "flex items-center gap-2 rounded-full px-4 py-2 font-display text-sm transition-colors",
-              view === "mobile" ? "bg-primary text-white" : "text-white/50 hover:text-white/80"
-            )}
-          >
-            <Smartphone size={16} /> מובייל
-          </button>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="inline-flex rounded-full border border-white/10 bg-surface p-1">
+            <button
+              type="button"
+              onClick={() => setView("desktop")}
+              aria-pressed={view === "desktop"}
+              className={cn(
+                "flex items-center gap-2 rounded-full px-4 py-2 font-display text-sm transition-colors",
+                view === "desktop" ? "bg-primary text-white" : "text-white/50 hover:text-white/80"
+              )}
+            >
+              <Monitor size={16} /> מחשב
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("mobile")}
+              aria-pressed={view === "mobile"}
+              className={cn(
+                "flex items-center gap-2 rounded-full px-4 py-2 font-display text-sm transition-colors",
+                view === "mobile" ? "bg-primary text-white" : "text-white/50 hover:text-white/80"
+              )}
+            >
+              <Smartphone size={16} /> מובייל
+            </button>
+          </div>
+
+          <span className="inline-flex items-center gap-1.5 font-display text-xs text-white/40">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+            </span>
+            תצוגה חיה של המערכת האמיתית
+          </span>
         </div>
       )}
 
@@ -63,7 +73,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
         className={cn(
           "relative flex flex-col overflow-hidden bg-black shadow-[0_20px_60px_rgba(0,0,0,0.5)]",
           view === "desktop" || !hasUrl
-            ? "aspect-[16/10] w-full max-w-[900px] rounded-2xl border border-white/10"
+            ? "aspect-[16/10] w-full max-w-[1100px] rounded-2xl border border-white/10"
             : "aspect-[9/19.5] w-[300px] rounded-[2.75rem] border-[10px] border-[#1a1a1a]"
         )}
       >
@@ -89,7 +99,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
               src={fallbackImage}
               alt={title}
               fill
-              sizes="(max-width: 900px) 100vw, 900px"
+              sizes="(max-width: 1100px) 100vw, 1100px"
               className="object-cover object-top"
             />
           )}
