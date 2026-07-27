@@ -33,7 +33,8 @@ export const projects: Project[] = [
     slug: "lynko",
     title: "Lynko",
     category: "מערכת ניהול תורים",
-    description: "מערכת ניהול תורים שבניתי בעברית מהיסוד, לא תרגמתי אליה תבנית באנגלית. יומן, לקוחות, דוחות והתראות, בממשק RTL אמיתי.",
+    description:
+      "מערכת ניהול תורים שבניתי בעברית מהיסוד, לא תרגמתי אליה תבנית באנגלית.\nיומן, לקוחות, דוחות והתראות, בממשק RTL אמיתי.",
     url: "https://lynko-liard.vercel.app/",
     image: "/images/placeholder3.png",
     tags: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion", "RTL קודם"],
