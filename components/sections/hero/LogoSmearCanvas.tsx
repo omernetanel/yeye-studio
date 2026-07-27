@@ -19,6 +19,8 @@ const VERTEX_SHADER = `
   }
 `;
 
+const TAPS = 20;
+
 const FRAGMENT_SHADER = `
   precision highp float;
   uniform sampler2D map;
@@ -28,6 +30,10 @@ const FRAGMENT_SHADER = `
   uniform int impulseCount;
   uniform float sigma;
   varying vec2 vUv;
+
+  float hash(float n) {
+    return fract(sin(n) * 43758.5453123);
+  }
 
   void main() {
     vec2 pixelPos = vUv * resolution;
@@ -41,13 +47,29 @@ const FRAGMENT_SHADER = `
       dispPixels += impulseDir[i] * falloff;
     }
 
-    vec2 sampleUv = clamp(vUv - dispPixels / resolution, 0.0, 1.0);
-    vec4 tex = texture2D(map, sampleUv);
+    float mag = length(dispPixels);
+    vec2 rawDir = mag > 0.001 ? dispPixels / mag : vec2(1.0, 0.0);
+    vec2 dir = normalize(vec2(rawDir.x, rawDir.y * 0.18) + vec2(0.0001, 0.0));
 
-    float warpMag = length(dispPixels);
-    float fade = 1.0 - smoothstep(0.0, 60.0, warpMag) * 0.82;
+    float bandHeight = 1.7;
+    float bandIndex = floor(pixelPos.y / bandHeight);
+    float bandRand = hash(bandIndex * 0.1373 + 4.1);
+    float streakLen = mag * 2.6 * mix(0.0, 1.9, bandRand);
 
-    gl_FragColor = vec4(0.0, 0.0, 0.0, tex.a * fade);
+    float baseAlpha = texture2D(map, vUv).a;
+    float streakAlpha = 0.0;
+    for (int i = 1; i < ${TAPS}; i++) {
+      float t = float(i) / float(${TAPS} - 1);
+      vec2 offsetUv = dir * (streakLen * t) / resolution;
+      vec2 sUv = clamp(vUv - offsetUv, 0.0, 1.0);
+      float a = texture2D(map, sUv).a * pow(1.0 - t, 0.35);
+      streakAlpha = max(streakAlpha, a);
+    }
+
+    float envelope = smoothstep(0.0, 16.0, mag);
+    float alpha = max(baseAlpha, streakAlpha * envelope);
+
+    gl_FragColor = vec4(0.0, 0.0, 0.0, alpha);
   }
 `;
 
