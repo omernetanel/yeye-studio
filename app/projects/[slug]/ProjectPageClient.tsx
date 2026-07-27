@@ -165,9 +165,6 @@ export default function ProjectPageClient({ project }: Props) {
             />
 
             <div className="relative z-10">
-              <span className="mb-4 inline-block font-display text-sm font-medium tracking-[0.08em] text-primary-light uppercase">
-                השלב הבא
-              </span>
               <h2 className="mb-4 font-display text-[clamp(28px,4vw,44px)] leading-[1.15] font-extrabold text-white">
                 {story.ctaTitle}
               </h2>
