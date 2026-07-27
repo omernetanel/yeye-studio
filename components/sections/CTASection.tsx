@@ -14,7 +14,7 @@ const particles = [...Array(16)].map((_, i) => ({
 
 export default function CTASection() {
   return (
-    <section id="contact" className="relative overflow-hidden bg-white px-6 py-24 text-center md:py-32">
+    <section id="contact" className="relative overflow-hidden px-6 py-24 text-center md:py-32">
       {particles.map((p, i) => (
         <motion.div
           key={i}
