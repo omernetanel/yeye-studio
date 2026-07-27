@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Mail } from "lucide-react";
 import Link from "next/link";
@@ -9,28 +9,11 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
 const WHATSAPP_NUMBER = "972552434775";
 const CONTACT_EMAIL = "hello@yeyelabs.com";
-const SPOTLIGHT_RADIUS = 260;
 
 export default function HeroSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const wordmarkRef = useRef<HTMLDivElement>(null);
-  const glowRef = useRef<HTMLHeadingElement>(null);
 
   const wipeInitial = prefersReducedMotion ? { clipPath: "inset(0 0 0 0%)" } : { clipPath: "inset(0 0 0 100%)" };
-
-  // Direct DOM mutation instead of React state — this fires on every
-  // pointermove, and re-rendering the component that often would be wasted
-  // work for something that's purely a paint-time visual (the mask position).
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const rect = wordmarkRef.current?.getBoundingClientRect();
-    const glow = glowRef.current;
-    if (!rect || !glow) return;
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const mask = `radial-gradient(circle ${SPOTLIGHT_RADIUS}px at ${x}px ${y}px, black 0%, transparent 100%)`;
-    glow.style.maskImage = mask;
-    glow.style.webkitMaskImage = mask;
-  };
 
   return (
     <section id="hero" className="relative flex min-h-screen flex-col justify-between overflow-hidden bg-white pt-[100px] pb-8">
@@ -52,41 +35,23 @@ export default function HeroSection() {
         </motion.div>
       </div>
 
-      <div
-        ref={wordmarkRef}
-        onPointerMove={handlePointerMove}
-        className="group relative mx-auto w-full px-2 text-center select-none"
-      >
-        <motion.h1
+      <div className="relative mx-auto w-full max-w-[1600px] px-6 select-none">
+        <motion.div
           initial={wipeInitial}
           animate={{ clipPath: "inset(0 0 0 0%)" }}
           transition={{ duration: 1.1, ease: [0.65, 0, 0.35, 1], delay: 0.35 }}
-          className="font-display leading-none font-black tracking-tight whitespace-nowrap text-black"
-          style={{ fontSize: "clamp(6rem, 30vw, 24rem)" }}
+          className="relative mx-auto aspect-[8042/2511] w-full"
         >
-          YEYE
-        </motion.h1>
-
-        {/* Gradient fill clipped to the exact glyph shapes via
-            background-clip: text, then further masked to a soft circle that
-            tracks the cursor (radial-gradient mask, position updated on
-            pointermove) — a cursor-following spotlight reveal, YEYE's own
-            colors and a from-scratch implementation of the general pattern. */}
-        <h1
-          ref={glowRef}
-          aria-hidden
-          className="pointer-events-none absolute inset-0 leading-none font-black tracking-tight whitespace-nowrap text-transparent opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100"
-          style={{
-            fontSize: "clamp(6rem, 30vw, 24rem)",
-            backgroundImage: "var(--gradient-brand-diagonal)",
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            maskImage: "radial-gradient(circle 0px at 50% 50%, black 0%, transparent 100%)",
-            WebkitMaskImage: "radial-gradient(circle 0px at 50% 50%, black 0%, transparent 100%)",
-          }}
-        >
-          YEYE
-        </h1>
+          <Image
+            src="/images/logo.png"
+            alt="YEYE"
+            fill
+            priority
+            sizes="100vw"
+            className="object-contain"
+            style={{ filter: "brightness(0)" }}
+          />
+        </motion.div>
       </div>
 
       <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between px-6">
