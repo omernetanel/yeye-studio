@@ -30,22 +30,6 @@ export interface Project {
 
 export const projects: Project[] = [
   {
-    slug: "fashion-store",
-    title: "Fashion Store",
-    category: "חנות אונליין",
-    description: "חנות אופנה פרמיום עם חווית קנייה מתקדמת, עיצוב מינימליסטי ומערכת ניהול מוצרים מלאה.",
-    url: "",
-    image: "/images/placeholder1.png",
-  },
-  {
-    slug: "buildpro",
-    title: "BuildPro",
-    category: "אתר תדמית",
-    description: "אתר תדמית לחברת בנייה עם עיצוב חזק ומקצועי, גלריית פרויקטים ומערכת יצירת קשר.",
-    url: "",
-    image: "/images/placeholder2.png",
-  },
-  {
     slug: "lynko",
     title: "Lynko",
     category: "מערכת ניהול תורים",
