@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Mail } from "lucide-react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
+import LogoSmearCanvas from "@/components/sections/hero/LogoSmearCanvas";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
 const WHATSAPP_NUMBER = "972552434775";
@@ -47,10 +48,13 @@ export default function HeroSection() {
             alt="YEYE"
             fill
             priority
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
             sizes="100vw"
-            className="object-contain"
+            className="pointer-events-none object-contain"
             style={{ filter: "brightness(0)" }}
           />
+          <LogoSmearCanvas src="/images/logo.png" className="absolute inset-0 h-full w-full touch-none" />
         </motion.div>
       </div>
 
