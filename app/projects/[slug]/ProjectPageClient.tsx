@@ -25,82 +25,79 @@ export default function ProjectPageClient({ project }: Props) {
 
   return (
     <>
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-10 px-6 pt-[140px] pb-20 md:flex-row md:items-start md:gap-12">
-        {/* Info panel */}
-        <div className="flex shrink-0 flex-col gap-2 md:mt-14 md:w-[380px]">
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="font-display text-4xl leading-[1.05] font-extrabold tracking-tight text-white md:text-5xl"
-          >
-            {project.title}
-          </motion.h1>
+      <div className="mx-auto flex max-w-[720px] flex-col items-center gap-3 px-6 pt-[140px] pb-12 text-center">
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="font-display text-4xl leading-[1.05] font-extrabold tracking-tight text-white md:text-5xl"
+        >
+          {project.title}
+        </motion.h1>
 
-          <motion.span
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
-            className="font-display text-[15px] font-semibold text-primary-light"
-          >
-            {project.category}
-          </motion.span>
+        <motion.span
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
+          className="font-display text-[15px] font-semibold text-primary-light"
+        >
+          {project.category}
+        </motion.span>
 
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
-            className="mt-2 font-body text-[15px] leading-[1.8] text-white/55"
-          >
-            {project.description}
-          </motion.p>
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+          className="mt-2 max-w-[560px] font-body text-[15px] leading-[1.8] text-white/55"
+        >
+          {project.description}
+        </motion.p>
 
-          {project.tags && project.tags.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
-              className="mt-3 flex flex-wrap gap-2"
-            >
-              {project.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-[11px] text-white/50"
-                >
-                  {tag}
-                </span>
-              ))}
-            </motion.div>
-          )}
-
+        {project.tags && project.tags.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
-            className="mt-3 w-fit"
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+            className="mt-3 flex flex-wrap justify-center gap-2"
           >
-            {story ? (
-              <Button href="/contact">בוא נדבר</Button>
-            ) : (
-              project.url && (
-                <Button href={project.url} external>
-                  צפה באתר
-                </Button>
-              )
-            )}
+            {project.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-[11px] text-white/50"
+              >
+                {tag}
+              </span>
+            ))}
           </motion.div>
-        </div>
+        )}
 
-        {/* Live preview */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
-          className="flex-1"
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
+          className="mt-4"
         >
-          <LiveProjectPreview url={project.url} title={project.title} fallbackImage={project.image} />
+          {story ? (
+            <Button href="/contact">בוא נדבר</Button>
+          ) : (
+            project.url && (
+              <Button href={project.url} external>
+                צפה באתר
+              </Button>
+            )
+          )}
         </motion.div>
       </div>
+
+      {/* Live preview */}
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
+        className="mx-auto max-w-[1100px] px-6 pb-20"
+      >
+        <LiveProjectPreview url={project.url} title={project.title} fallbackImage={project.image} />
+      </motion.div>
 
       {story && (
         <div className="mx-auto max-w-[1100px] px-6 pb-24">
