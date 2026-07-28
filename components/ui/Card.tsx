@@ -15,7 +15,7 @@ export default function Card({ children, className, light = false }: CardProps) 
       className={cn(
         "relative h-full overflow-hidden rounded-2xl p-7",
         light
-          ? "border border-black/10 bg-white/70 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]"
+          ? "border border-black/10 bg-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]"
           : "border border-primary-light/10 bg-surface/80 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]"
       )}
     >
