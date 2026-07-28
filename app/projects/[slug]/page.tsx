@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import AmbientBackground from "@/components/layout/AmbientBackground";
-import ScrollToTop from "@/components/ui/ScrollToTop";
 import { projects } from "@/lib/projects";
 import ProjectPageClient from "./ProjectPageClient";
 
@@ -39,7 +38,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   return (
     <main className="relative min-h-screen bg-white">
       <AmbientBackground />
-      <ScrollToTop />
       <div className="relative z-10">
         <Navbar />
         <ProjectPageClient project={project} />

@@ -3,7 +3,6 @@
 import { BarChart3, Code2, CreditCard, MessageSquare, Paintbrush, Rocket, ShoppingCart, Smartphone } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import ScrollToTop from "@/components/ui/ScrollToTop";
 import ServiceAmbientBackground from "@/components/services/ServiceAmbientBackground";
 import ServiceHero from "@/components/services/ServiceHero";
 import WhatIsIt from "@/components/services/WhatIsIt";
@@ -55,7 +54,6 @@ const whatYouGetRows = [
 export default function OnlineStoresContent() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-white">
-      <ScrollToTop />
       <ServiceAmbientBackground />
       <Navbar />
 
