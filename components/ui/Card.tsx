@@ -15,18 +15,19 @@ export default function Card({ children, className, light = false }: CardProps) 
       className={cn(
         "relative h-full overflow-hidden rounded-2xl p-7",
         light
-          ? "border border-black/10 bg-black/[0.02] backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]"
+          ? "border border-black/10 bg-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]"
           : "border border-primary-light/10 bg-surface/80 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]"
       )}
     >
-      <div
-        className={cn(
-          "pointer-events-none absolute inset-0",
-          light
-            ? "bg-[radial-gradient(ellipse_at_100%_100%,color-mix(in_srgb,var(--color-accent)_13%,transparent)_0%,transparent_70%)]"
-            : "bg-[radial-gradient(ellipse_at_100%_100%,color-mix(in_srgb,var(--color-primary-light)_13%,transparent)_0%,transparent_70%)]"
-        )}
-      />
+      {/* The corner glow washed most of a light card's small surface area
+          with visible tint even at low opacity (unlike the dark variant,
+          where it reads as a subtle depth cue against near-black) — so it's
+          dark-theme only, keeping the light card genuinely see-through. */}
+      {!light && (
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_100%_100%,color-mix(in_srgb,var(--color-primary-light)_13%,transparent)_0%,transparent_70%)]"
+        />
+      )}
       {/*
         Callers pass layout classes (flex, items-center, gap, text-align)
         expecting them to govern the actual card content — they need to land
