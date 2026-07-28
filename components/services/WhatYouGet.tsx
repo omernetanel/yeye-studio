@@ -25,8 +25,8 @@ export default function WhatYouGet({ title, subtitle, rows }: WhatYouGetProps) {
           transition={{ duration: 0.6 }}
           className="mb-14 text-center"
         >
-          <h2 className="mb-3 font-display text-3xl font-bold text-white">{title}</h2>
-          <p className="font-body text-base text-white/45">{subtitle}</p>
+          <h2 className="mb-3 font-display text-3xl font-bold text-black">{title}</h2>
+          <p className="font-body text-base text-black/50">{subtitle}</p>
         </motion.div>
 
         <div className="flex flex-col gap-12">
@@ -41,12 +41,12 @@ export default function WhatYouGet({ title, subtitle, rows }: WhatYouGetProps) {
             >
               {row.map((item) => (
                 <div key={item.number} className="flex items-start gap-5">
-                  <span className="mt-0.5 shrink-0 font-display text-4xl leading-none font-extrabold text-primary/20">
+                  <span className="mt-0.5 shrink-0 font-display text-4xl leading-none font-extrabold text-accent/20">
                     {item.number}
                   </span>
                   <div className="flex-1">
-                    <h3 className="mb-2.5 font-display text-xl font-bold text-white">{item.title}</h3>
-                    <p className="font-body text-[15px] leading-[1.85] text-white/50">{item.description}</p>
+                    <h3 className="mb-2.5 font-display text-xl font-bold text-black">{item.title}</h3>
+                    <p className="font-body text-[15px] leading-[1.85] text-black/55">{item.description}</p>
                   </div>
                 </div>
               ))}

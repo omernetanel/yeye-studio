@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import AmbientBackground from "@/components/layout/AmbientBackground";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 import Label from "@/components/ui/Label";
 import Input from "@/components/ui/Input";
@@ -12,15 +13,6 @@ import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
 const projectTypes = ["חנות אונליין", "דף נחיתה", "אתר תדמית", "מערכת ניהול", "אחר"];
-
-const particles = [...Array(20)].map((_, i) => ({
-  size: i % 3 === 0 ? 3 : 2,
-  color: i % 2 === 0 ? "#2a33f3" : "#6B8FF8",
-  left: `${5 + ((i * 4.8) % 90)}%`,
-  top: `${10 + ((i * 11) % 80)}%`,
-  duration: 3 + (i % 4),
-  delay: i * 0.35,
-}));
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -57,55 +49,35 @@ export default function ContactPage() {
 
   if (status === "success") {
     return (
-      <main className="min-h-screen bg-background">
+      <main className="relative min-h-screen bg-white">
+        <AmbientBackground />
         <ScrollToTop />
-        <Navbar />
-        <div className="flex min-h-screen items-center justify-center px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="max-w-[480px] text-center"
-          >
-            <div className="mb-6 text-5xl">✅</div>
-            <h1 className="mb-4 font-display text-4xl font-bold text-white">קיבלתי את הפנייה שלך!</h1>
-            <p className="font-body text-[17px] leading-[1.8] text-white/55">
-              אצור איתך קשר תוך 48 שעות. בינתיים, פתחתי לך שיחת WhatsApp כדי שנוכל להתחיל לדבר.
-            </p>
-          </motion.div>
+        <div className="relative z-10">
+          <Navbar />
+          <div className="flex min-h-screen items-center justify-center px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="max-w-[480px] text-center"
+            >
+              <div className="mb-6 text-5xl">✅</div>
+              <h1 className="mb-4 font-display text-4xl font-bold text-black">קיבלתי את הפנייה שלך!</h1>
+              <p className="font-body text-[17px] leading-[1.8] text-black/55">
+                אצור איתך קשר תוך 48 שעות. בינתיים, פתחתי לך שיחת WhatsApp כדי שנוכל להתחיל לדבר.
+              </p>
+            </motion.div>
+          </div>
+          <Footer light />
         </div>
-        <Footer />
       </main>
     );
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-background">
+    <main className="relative min-h-screen overflow-hidden bg-white">
+      <AmbientBackground />
       <ScrollToTop />
-
-      <div
-        className="pointer-events-none fixed top-[-300px] left-1/2 z-0 h-[600px] w-[800px] -translate-x-1/2 rounded-full blur-[60px]"
-        style={{
-          background: "radial-gradient(ellipse, color-mix(in srgb, var(--color-primary) 35%, transparent) 0%, transparent 70%)",
-        }}
-      />
-      <motion.div
-        animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.35, 0.2] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        className="pointer-events-none fixed top-[30%] left-1/2 z-0 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[60px]"
-        style={{
-          background: "radial-gradient(ellipse, color-mix(in srgb, var(--color-primary) 25%, transparent) 0%, transparent 70%)",
-        }}
-      />
-      {particles.map((p, i) => (
-        <motion.div
-          key={i}
-          animate={{ y: [0, -24, 0], opacity: [0.15, 0.5, 0.15] }}
-          transition={{ duration: p.duration, repeat: Infinity, ease: "easeInOut", delay: p.delay }}
-          className="pointer-events-none fixed z-0 rounded-full"
-          style={{ width: p.size, height: p.size, backgroundColor: p.color, left: p.left, top: p.top }}
-        />
-      ))}
 
       <Navbar />
       <div className="relative z-10 mx-auto max-w-[680px] px-6 pt-[140px] pb-20">
@@ -115,14 +87,14 @@ export default function ContactPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="mb-14 text-center"
         >
-          <h1 className="mb-4 font-display text-5xl font-bold tracking-tight text-white">בוא נבנה משהו גדול</h1>
+          <h1 className="mb-4 font-display text-5xl font-bold tracking-tight text-black">בוא נבנה משהו גדול</h1>
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: "80px" }}
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
-            className="mx-auto mb-6 h-[3px] overflow-hidden rounded-full bg-[image:var(--gradient-brand)]"
+            className="mx-auto mb-6 h-[3px] overflow-hidden rounded-full bg-[image:var(--gradient-accent)]"
           />
-          <p className="font-body text-[17px] leading-[1.8] text-white/55">
+          <p className="font-body text-[17px] leading-[1.8] text-black/55">
             ספר לי על הפרויקט שלך ואחזור אליך תוך 48 שעות עם הצעה מותאמת.
           </p>
         </motion.div>
@@ -157,8 +129,8 @@ export default function ContactPage() {
                   className={cn(
                     "rounded-lg border px-[18px] py-2.5 font-display text-sm transition-colors",
                     form.project_type === type
-                      ? "border-primary bg-primary/15 text-primary-light"
-                      : "border-white/10 bg-surface text-white/55 hover:border-white/25"
+                      ? "border-accent bg-accent/10 text-accent"
+                      : "border-black/10 bg-black/[0.02] text-black/55 hover:border-black/25"
                   )}
                 >
                   {type}
@@ -220,7 +192,7 @@ export default function ContactPage() {
           )}
         </motion.form>
       </div>
-      <Footer />
+      <Footer light />
     </main>
   );
 }
