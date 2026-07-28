@@ -5,7 +5,7 @@ import Button from "@/components/ui/Button";
 
 const particles = [...Array(16)].map((_, i) => ({
   size: i % 3 === 0 ? 3 : 2,
-  color: i % 2 === 0 ? "#f2760f" : "#fb923c",
+  color: i % 2 === 0 ? "#2a33f3" : "#6b8ff8",
   left: `${8 + ((i * 7.5) % 84)}%`,
   top: `${15 + ((i * 13) % 70)}%`,
   duration: 3 + (i % 4),
@@ -29,7 +29,7 @@ export default function CTASection() {
         animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.45, 0.25] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         className="pointer-events-none absolute top-1/2 left-1/2 h-[350px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[40px]"
-        style={{ background: "radial-gradient(ellipse, rgba(242,118,15,0.3) 0%, transparent 70%)" }}
+        style={{ background: "radial-gradient(ellipse, rgba(42,51,243,0.3) 0%, transparent 70%)" }}
       />
 
       <div className="relative z-10">

@@ -9,8 +9,8 @@ export interface IllustrationProps {
   active: boolean;
 }
 
-const STROKE_DIM = "rgba(251,146,60,0.35)";
-const STROKE_BRIGHT = "#fb923c";
+const STROKE_DIM = "rgba(107,143,248,0.35)";
+const STROKE_BRIGHT = "#6b8ff8";
 
 // Four facts the studio learns about a business before writing any code.
 // Real CSS 3D (perspective + rotateY, not a simulated flip) turns each one
@@ -162,7 +162,7 @@ export function DiscoveryIllustration({ active }: IllustrationProps) {
                 {/* Front face: a blank card, nothing learned yet */}
                 <div
                   style={{ backfaceVisibility: "hidden" }}
-                  className="absolute inset-0 rounded-xl border border-accent/25 bg-[radial-gradient(circle_at_30%_20%,rgba(242,118,15,0.08)_0%,transparent_70%)] shadow-[0_14px_28px_rgba(0,0,0,0.1)]"
+                  className="absolute inset-0 rounded-xl border border-accent/25 bg-[radial-gradient(circle_at_30%_20%,rgba(42,51,243,0.08)_0%,transparent_70%)] shadow-[0_14px_28px_rgba(0,0,0,0.1)]"
                 >
                   <div className="absolute inset-3 rounded-md border border-dashed border-accent/20" />
                 </div>
@@ -243,8 +243,8 @@ export function DesignIllustration({ active }: IllustrationProps) {
 
   return (
     <svg ref={svgRef} width="380" height="380" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect data-draw x="25" y="40" width="170" height="150" rx="14" stroke={STROKE_BRIGHT} strokeWidth="1.5" fill="rgba(242,118,15,0.04)" />
-      <rect x="25" y="40" width="170" height="28" rx="14" fill="rgba(242,118,15,0.1)" />
+      <rect data-draw x="25" y="40" width="170" height="150" rx="14" stroke={STROKE_BRIGHT} strokeWidth="1.5" fill="rgba(42,51,243,0.04)" />
+      <rect x="25" y="40" width="170" height="28" rx="14" fill="rgba(42,51,243,0.1)" />
       <circle cx="43" cy="54" r="3.5" fill="#ff5f57" opacity="0.7" />
       <circle cx="56" cy="54" r="3.5" fill="#febc2e" opacity="0.7" />
       <circle cx="69" cy="54" r="3.5" fill="#28c840" opacity="0.7" />
@@ -267,8 +267,8 @@ export function DesignIllustration({ active }: IllustrationProps) {
         width={DESIGN_CTA.width}
         height={DESIGN_CTA.height}
         rx="6"
-        fill="rgba(242,118,15,0.55)"
-        style={{ filter: "drop-shadow(0 0 8px rgba(242,118,15,0.5))" }}
+        fill="rgba(42,51,243,0.55)"
+        style={{ filter: "drop-shadow(0 0 8px rgba(42,51,243,0.5))" }}
       />
       <g data-pencil style={{ opacity: 0 }}>
         <g transform="rotate(-35)">
@@ -305,11 +305,11 @@ export function CodeIllustration({ active }: IllustrationProps) {
   }, [active]);
 
   const codeLines = [
-    { text: "const", color: "rgba(251,146,60,0.9)", suffix: " studio = {" },
+    { text: "const", color: "rgba(107,143,248,0.9)", suffix: " studio = {" },
     { text: "  name:", color: "rgba(255,255,255,0.4)", suffix: ' "YEYE LABS"', suffixColor: "rgba(107,243,143,0.85)" },
     { text: "  quality:", color: "rgba(255,255,255,0.4)", suffix: " 100", suffixColor: "rgba(107,243,143,0.85)" },
     { text: "  deliver:", color: "rgba(255,255,255,0.4)", suffix: " true", suffixColor: "rgba(107,243,143,0.85)" },
-    { text: "}", color: "rgba(251,146,60,0.9)", suffix: "" },
+    { text: "}", color: "rgba(107,143,248,0.9)", suffix: "" },
   ];
 
   return (
@@ -378,11 +378,11 @@ export function LaunchIllustration({ active }: IllustrationProps) {
         d="M100 30 C100 30 72 68 72 116 L100 134 L128 116 C128 68 100 30 100 30Z"
         stroke={STROKE_BRIGHT}
         strokeWidth="1.5"
-        fill="rgba(242,118,15,0.08)"
+        fill="rgba(42,51,243,0.08)"
       />
-      <circle data-draw cx="100" cy="88" r="13" stroke={STROKE_BRIGHT} strokeWidth="1.5" fill="rgba(242,118,15,0.2)" />
-      <path data-draw d="M72 116 L48 144 L72 139 Z" stroke={STROKE_DIM} strokeWidth="1.5" fill="rgba(242,118,15,0.05)" />
-      <path data-draw d="M128 116 L152 144 L128 139 Z" stroke={STROKE_DIM} strokeWidth="1.5" fill="rgba(242,118,15,0.05)" />
+      <circle data-draw cx="100" cy="88" r="13" stroke={STROKE_BRIGHT} strokeWidth="1.5" fill="rgba(42,51,243,0.2)" />
+      <path data-draw d="M72 116 L48 144 L72 139 Z" stroke={STROKE_DIM} strokeWidth="1.5" fill="rgba(42,51,243,0.05)" />
+      <path data-draw d="M128 116 L152 144 L128 139 Z" stroke={STROKE_DIM} strokeWidth="1.5" fill="rgba(42,51,243,0.05)" />
       <path
         data-flame-outer
         d="M85 139 C85 139 90 172 100 184 C110 172 115 139 115 139 Z"

@@ -12,8 +12,8 @@
   --color-surface-hover: #15151c;
   --color-primary: #2a33f3;
   --color-primary-light: #6b8ff8;
-  --color-accent: #f2760f;
-  --color-accent-light: #fb923c;
+  --color-accent: #2a33f3;
+  --color-accent-light: #6b8ff8;
 
   --font-display: var(--font-google-sans), Arial, sans-serif;
   --font-body: var(--font-assistant), Arial, sans-serif;
