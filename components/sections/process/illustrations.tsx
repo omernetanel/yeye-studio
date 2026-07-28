@@ -332,96 +332,74 @@ export function CodeIllustration({ active }: IllustrationProps) {
   );
 }
 
-// A true infinity symbol (∞): two tangent loops sharing one crossing
-// point, built so the tangent direction matches at both the crossing and
-// the point where one full lap ends and the next begins — the rocket can
-// fly this on an endless repeat with no snap at the seam. No visible
-// trail is drawn; only the rocket itself moves.
-const LAUNCH_FLIGHT_PATH =
-  "M170,150 C170,17 10,17 10,150 C10,283 170,283 170,150 C170,17 330,17 330,150 C330,283 170,283 170,150";
-const LAUNCH_START = { x: 170, y: 150 };
-
 export function LaunchIllustration({ active }: IllustrationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     if (!active || !svgRef.current) return;
     const svg = svgRef.current;
-    const rocket = svg.querySelector<SVGGElement>("[data-rocket]");
 
     const ctx = gsap.context(() => {
       const body = prepareDrawPaths(svg);
-
-      const timeline = gsap.timeline();
-      timeline.to(body, { strokeDashoffset: 0, duration: 0.9, stagger: 0.1, ease: "power2.out" });
-      timeline.addLabel("liftoff", 1.3);
-
-      timeline.to(
-        "[data-flame-outer]",
-        { scaleY: 1.18, opacity: 0.7, duration: 0.4, ease: "sine.inOut", repeat: -1, yoyo: true, transformOrigin: "center top" },
-        "-=0.2"
-      );
-      timeline.to(
-        "[data-flame-inner]",
-        { scaleY: 1.3, opacity: 1, duration: 0.26, ease: "sine.inOut", repeat: -1, yoyo: true, transformOrigin: "center top" },
-        "<0.05"
-      );
-      timeline.to(
-        "[data-spark]",
-        {
-          keyframes: { opacity: [0, 1, 0], y: [0, -12, -26] },
-          duration: 1.2,
-          ease: "power1.out",
-          repeat: -1,
-          repeatDelay: 0.25,
-          stagger: 0.45,
-        },
-        "-=0.3"
-      );
-
-      if (rocket) {
-        timeline.to(
-          rocket,
-          { motionPath: { path: LAUNCH_FLIGHT_PATH, autoRotate: 90 }, duration: 6, ease: "sine.inOut", repeat: -1 },
-          "liftoff"
+      gsap
+        .timeline()
+        .to(body, { strokeDashoffset: 0, duration: 0.9, stagger: 0.1, ease: "power2.out" })
+        .to(
+          "[data-flame-outer]",
+          { scaleY: 1.18, opacity: 0.7, duration: 0.4, ease: "sine.inOut", repeat: -1, yoyo: true, transformOrigin: "center top" },
+          "-=0.2"
+        )
+        .to(
+          "[data-flame-inner]",
+          { scaleY: 1.3, opacity: 1, duration: 0.26, ease: "sine.inOut", repeat: -1, yoyo: true, transformOrigin: "center top" },
+          "<0.05"
+        )
+        .to(
+          "[data-spark]",
+          {
+            keyframes: { opacity: [0, 1, 0], y: [0, -12, -26] },
+            duration: 1.2,
+            ease: "power1.out",
+            repeat: -1,
+            repeatDelay: 0.25,
+            stagger: 0.45,
+          },
+          "-=0.3"
         );
-      }
     }, svg);
 
     return () => ctx.revert();
   }, [active]);
 
   return (
-    <svg ref={svgRef} width="460" height="406" viewBox="0 0 340 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <g data-rocket transform={`translate(${LAUNCH_START.x},${LAUNCH_START.y})`}>
-        <path
-          data-draw
-          d="M0,-58 C0,-58 -28,-20 -28,28 L0,46 L28,28 C28,-20 0,-58 0,-58Z"
-          stroke={STROKE_BRIGHT}
-          strokeWidth="1.5"
-          fill="rgba(242,118,15,0.08)"
-        />
-        <circle data-draw cx="0" cy="0" r="13" stroke={STROKE_BRIGHT} strokeWidth="1.5" fill="rgba(242,118,15,0.2)" />
-        <path data-draw d="M-28,28 L-52,56 L-28,51 Z" stroke={STROKE_DIM} strokeWidth="1.5" fill="rgba(242,118,15,0.05)" />
-        <path data-draw d="M28,28 L52,56 L28,51 Z" stroke={STROKE_DIM} strokeWidth="1.5" fill="rgba(242,118,15,0.05)" />
-        <path
-          data-flame-outer
-          d="M-15,51 C-15,51 -10,84 0,96 C10,84 15,51 15,51 Z"
-          fill="#6b5cf6"
-          opacity="0.55"
-          style={{ filter: "drop-shadow(0 0 14px rgba(107,92,246,0.65))" }}
-        />
-        <path
-          data-flame-inner
-          d="M-8,51 C-8,51 -5,74 0,84 C5,74 8,51 8,51 Z"
-          fill="#ffb020"
-          opacity="0.9"
-          style={{ filter: "drop-shadow(0 0 8px rgba(255,176,32,0.7))" }}
-        />
-        <circle data-spark cx="-7" cy="60" r="1.6" fill="#ffb020" opacity="0" />
-        <circle data-spark cx="7" cy="63" r="1.3" fill="#ff8a3d" opacity="0" />
-        <circle data-spark cx="0" cy="67" r="1.4" fill="#ffd27a" opacity="0" />
-      </g>
+    <svg ref={svgRef} width="345" height="380" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        data-draw
+        d="M100 30 C100 30 72 68 72 116 L100 134 L128 116 C128 68 100 30 100 30Z"
+        stroke={STROKE_BRIGHT}
+        strokeWidth="1.5"
+        fill="rgba(242,118,15,0.08)"
+      />
+      <circle data-draw cx="100" cy="88" r="13" stroke={STROKE_BRIGHT} strokeWidth="1.5" fill="rgba(242,118,15,0.2)" />
+      <path data-draw d="M72 116 L48 144 L72 139 Z" stroke={STROKE_DIM} strokeWidth="1.5" fill="rgba(242,118,15,0.05)" />
+      <path data-draw d="M128 116 L152 144 L128 139 Z" stroke={STROKE_DIM} strokeWidth="1.5" fill="rgba(242,118,15,0.05)" />
+      <path
+        data-flame-outer
+        d="M85 139 C85 139 90 172 100 184 C110 172 115 139 115 139 Z"
+        fill="#6b5cf6"
+        opacity="0.55"
+        style={{ filter: "drop-shadow(0 0 14px rgba(107,92,246,0.65))" }}
+      />
+      <path
+        data-flame-inner
+        d="M92 139 C92 139 95 162 100 172 C105 162 108 139 108 139 Z"
+        fill="#ffb020"
+        opacity="0.9"
+        style={{ filter: "drop-shadow(0 0 8px rgba(255,176,32,0.7))" }}
+      />
+      <circle data-spark cx="93" cy="148" r="1.6" fill="#ffb020" opacity="0" />
+      <circle data-spark cx="107" cy="151" r="1.3" fill="#ff8a3d" opacity="0" />
+      <circle data-spark cx="100" cy="155" r="1.4" fill="#ffd27a" opacity="0" />
     </svg>
   );
 }
