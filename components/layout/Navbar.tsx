@@ -37,7 +37,7 @@ export default function Navbar() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="fixed inset-x-0 top-0 z-50 border-b border-white/6 bg-background/85 backdrop-blur-md"
+        className="fixed inset-x-0 top-0 z-50 border-b border-black/8 bg-white/85 backdrop-blur-md"
       >
       <div className="relative mx-auto flex h-[68px] max-w-[1200px] items-center justify-between px-6">
         {/* Logo — pinned to the visual left, brand-convention regardless of RTL */}
@@ -47,7 +47,7 @@ export default function Navbar() {
             alt="YEYE Labs"
             width={80}
             height={26}
-            className="h-6 w-auto object-contain brightness-[10]"
+            className="h-6 w-auto object-contain brightness-0"
             priority
           />
         </Link>
@@ -58,7 +58,7 @@ export default function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="group relative pb-1 font-display text-[15px] font-medium text-white/62 transition-colors hover:text-primary-light"
+              className="group relative pb-1 font-display text-[15px] font-medium text-black/62 transition-colors hover:text-accent"
             >
               {link.label}
               <span className="absolute inset-x-0 -bottom-1.5 h-0.5 origin-center scale-x-0 rounded-full bg-[image:var(--gradient-brand)] transition-transform duration-300 ease-out group-hover:scale-x-100" />
@@ -79,7 +79,7 @@ export default function Navbar() {
           onClick={() => setMenuOpen((open) => !open)}
           aria-label={menuOpen ? "סגור תפריט" : "פתח תפריט"}
           aria-expanded={menuOpen}
-          className="absolute right-6 top-1/2 -translate-y-1/2 text-white/80 md:hidden"
+          className="absolute right-6 top-1/2 -translate-y-1/2 text-black/80 md:hidden"
         >
           {menuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -112,16 +112,16 @@ export default function Navbar() {
               role="dialog"
               aria-modal="true"
               aria-label="תפריט ניווט"
-              className="fixed inset-x-0 bottom-0 z-40 rounded-t-3xl border-t border-white/10 bg-background pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-[0_-20px_60px_rgba(0,0,0,0.5)] md:hidden"
+              className="fixed inset-x-0 bottom-0 z-40 rounded-t-3xl border-t border-black/10 bg-white pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-[0_-20px_60px_rgba(0,0,0,0.15)] md:hidden"
             >
-              <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-white/20" />
+              <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-black/15" />
               <div className="flex flex-col gap-1 px-6 pt-5">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={() => setMenuOpen(false)}
-                    className="rounded-xl px-3 py-4 font-display text-lg font-medium text-white/80 transition-colors active:bg-white/5"
+                    className="rounded-xl px-3 py-4 font-display text-lg font-medium text-black/80 transition-colors active:bg-black/5"
                   >
                     {link.label}
                   </Link>
