@@ -78,9 +78,6 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
             <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]/70" />
             <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]/70" />
             <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]/70" />
-            <span className="mx-auto rounded-full bg-black/[0.04] px-4 py-1 font-mono text-[11px] text-black/40">
-              {hasUrl ? url.replace(/^https?:\/\//, "") : "coming-soon.yeyelabs.com"}
-            </span>
           </div>
         )}
 
