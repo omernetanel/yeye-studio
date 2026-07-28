@@ -13,10 +13,10 @@ export default function Card({ children, className, light = false }: CardProps) 
   return (
     <div
       className={cn(
-        "relative h-full overflow-hidden rounded-2xl p-7 backdrop-blur-xl",
+        "relative h-full overflow-hidden rounded-2xl p-7",
         light
-          ? "border border-black/10 bg-black/[0.03] shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]"
-          : "border border-primary-light/10 bg-surface/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]"
+          ? "border border-black/10 bg-black/[0.02] backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]"
+          : "border border-primary-light/10 bg-surface/80 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]"
       )}
     >
       <div

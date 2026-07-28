@@ -305,16 +305,20 @@ export function CodeIllustration({ active }: IllustrationProps) {
   }, [active]);
 
   const codeLines = [
-    { text: "const", color: "rgba(107,143,248,0.9)", suffix: " studio = {" },
-    { text: "  name:", color: "rgba(255,255,255,0.4)", suffix: ' "YEYE LABS"', suffixColor: "rgba(107,243,143,0.85)" },
-    { text: "  quality:", color: "rgba(255,255,255,0.4)", suffix: " 100", suffixColor: "rgba(107,243,143,0.85)" },
-    { text: "  deliver:", color: "rgba(255,255,255,0.4)", suffix: " true", suffixColor: "rgba(107,243,143,0.85)" },
-    { text: "}", color: "rgba(107,143,248,0.9)", suffix: "" },
+    { text: "const", color: "rgba(42,51,243,0.85)", suffix: " studio = {" },
+    { text: "  name:", color: "rgba(0,0,0,0.5)", suffix: ' "YEYE LABS"', suffixColor: "rgba(22,163,74,0.85)" },
+    { text: "  quality:", color: "rgba(0,0,0,0.5)", suffix: " 100", suffixColor: "rgba(22,163,74,0.85)" },
+    { text: "  deliver:", color: "rgba(0,0,0,0.5)", suffix: " true", suffixColor: "rgba(22,163,74,0.85)" },
+    { text: "}", color: "rgba(42,51,243,0.85)", suffix: "" },
   ];
 
   return (
-    <div ref={containerRef} className="h-[340px] w-[420px] overflow-hidden rounded-xl border border-accent/30 bg-black/80" dir="ltr">
-      <div className="flex h-12 items-center gap-2 bg-accent/15 px-5">
+    <div
+      ref={containerRef}
+      className="h-[340px] w-[420px] overflow-hidden rounded-xl border border-black/10 bg-white shadow-[0_20px_45px_rgba(0,0,0,0.08)]"
+      dir="ltr"
+    >
+      <div className="flex h-12 items-center gap-2 bg-black/[0.03] px-5">
         <div className="h-3.5 w-3.5 rounded-full bg-[#ff5f57]/70" />
         <div className="h-3.5 w-3.5 rounded-full bg-[#febc2e]/70" />
         <div className="h-3.5 w-3.5 rounded-full bg-[#28c840]/70" />
