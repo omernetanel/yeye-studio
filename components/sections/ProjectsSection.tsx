@@ -41,8 +41,8 @@ export default function ProjectsSection() {
             ...projects.map((project) => (
               <ProjectCard
                 key={project.slug}
-                title={project.title}
-                category={project.category}
+                title={project.cardTitle ?? project.title}
+                category={project.cardCategory ?? project.category}
                 imageSrc={project.image}
                 href={`/projects/${project.slug}`}
               />
@@ -60,7 +60,12 @@ export default function ProjectsSection() {
         >
           {projects.map((project, i) => (
             <motion.div key={project.slug} custom={i} variants={fadeUp}>
-              <ProjectCard title={project.title} category={project.category} imageSrc={project.image} href={`/projects/${project.slug}`} />
+              <ProjectCard
+                title={project.cardTitle ?? project.title}
+                category={project.cardCategory ?? project.category}
+                imageSrc={project.image}
+                href={`/projects/${project.slug}`}
+              />
             </motion.div>
           ))}
           {comingSoonSlots.map((slot, i) => (

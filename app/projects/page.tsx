@@ -23,8 +23,8 @@ export default function ProjectsPage() {
           {projects.map((project) => (
             <ProjectCard
               key={project.slug}
-              title={project.title}
-              category={project.category}
+              title={project.cardTitle ?? project.title}
+              category={project.cardCategory ?? project.category}
               imageSrc={project.image}
               href={`/projects/${project.slug}`}
             />
