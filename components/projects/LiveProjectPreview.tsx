@@ -92,7 +92,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
               alt={title}
               fill
               sizes="(max-width: 1100px) 100vw, 1100px"
-              className="object-cover object-top"
+              className="object-contain"
             />
           )}
 
