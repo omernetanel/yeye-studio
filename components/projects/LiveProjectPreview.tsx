@@ -37,14 +37,14 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
   return (
     <div className="flex w-full flex-col items-center gap-5">
       {hasUrl && (
-        <div className="inline-flex rounded-full border border-white/10 bg-surface p-1">
+        <div className="inline-flex rounded-full border border-black/10 bg-black/[0.02] p-1">
           <button
             type="button"
             onClick={() => setView("desktop")}
             aria-pressed={view === "desktop"}
             className={cn(
               "flex items-center gap-2 rounded-full px-4 py-2 font-display text-sm transition-colors",
-              view === "desktop" ? "bg-primary text-white" : "text-white/50 hover:text-white/80"
+              view === "desktop" ? "bg-accent text-white" : "text-black/50 hover:text-black/80"
             )}
           >
             <Monitor size={16} /> מחשב
@@ -55,7 +55,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
             aria-pressed={view === "mobile"}
             className={cn(
               "flex items-center gap-2 rounded-full px-4 py-2 font-display text-sm transition-colors",
-              view === "mobile" ? "bg-primary text-white" : "text-white/50 hover:text-white/80"
+              view === "mobile" ? "bg-accent text-white" : "text-black/50 hover:text-black/80"
             )}
           >
             <Smartphone size={16} /> מובייל
@@ -67,18 +67,18 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
         layout
         transition={{ type: "spring", stiffness: 260, damping: 30 }}
         className={cn(
-          "relative flex flex-col overflow-hidden bg-black shadow-[0_20px_60px_rgba(0,0,0,0.5)]",
+          "relative flex flex-col overflow-hidden bg-black/[0.04] shadow-[0_20px_50px_rgba(0,0,0,0.12)]",
           view === "desktop" || !hasUrl
-            ? "aspect-[16/10] w-full max-w-[1100px] rounded-2xl border border-white/10"
+            ? "aspect-[16/10] w-full max-w-[1100px] rounded-2xl border border-black/10"
             : "aspect-[9/19.5] w-[300px] rounded-[2.75rem] border-[10px] border-[#1a1a1a]"
         )}
       >
         {(view === "desktop" || !hasUrl) && (
-          <div className="flex h-9 shrink-0 items-center gap-1.5 border-b border-white/10 bg-[#161616] px-4" dir="ltr">
+          <div className="flex h-9 shrink-0 items-center gap-1.5 border-b border-black/10 bg-black/[0.03] px-4" dir="ltr">
             <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]/70" />
             <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]/70" />
             <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]/70" />
-            <span className="mx-auto rounded-full bg-white/5 px-4 py-1 font-mono text-[11px] text-white/30">
+            <span className="mx-auto rounded-full bg-black/[0.04] px-4 py-1 font-mono text-[11px] text-black/40">
               {hasUrl ? url.replace(/^https?:\/\//, "") : "coming-soon.yeyelabs.com"}
             </span>
           </div>
@@ -105,7 +105,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
               onClick={() => setLoaded(true)}
               className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/40 text-center transition-colors hover:bg-black/25"
             >
-              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-[0_0_30px_rgba(42,51,243,0.5)]">
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-[0_0_30px_rgba(42,51,243,0.5)]">
                 <Play size={22} fill="currentColor" className="mr-[-2px]" />
               </span>
               <span className="font-display text-sm font-semibold text-white">זהו אתר חי ומגיב</span>
@@ -133,7 +133,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 font-display text-sm text-white/40 transition-colors hover:text-primary-light"
+          className="flex items-center gap-1.5 font-display text-sm text-black/40 transition-colors hover:text-accent"
         >
           <ExternalLink size={14} />
           פתח את האתר בלשונית חדשה

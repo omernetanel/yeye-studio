@@ -17,18 +17,18 @@ interface ProcessTimelineProps {
 
 function StepCard({ step }: { step: Step }) {
   return (
-    <div className="flex flex-col gap-2.5 rounded-2xl border border-primary-light/15 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-xl">
-      <span className="font-display text-[11px] tracking-[0.08em] text-primary-light">{step.number}</span>
-      <h3 className="font-display text-[15px] font-bold text-white">{step.title}</h3>
-      <p className="font-body text-[13px] leading-[1.7] text-white/45">{step.description}</p>
+    <div className="flex flex-col gap-2.5 rounded-2xl border border-black/10 bg-white/30 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
+      <span className="font-display text-[11px] tracking-[0.08em] text-accent">{step.number}</span>
+      <h3 className="font-display text-[15px] font-bold text-black">{step.title}</h3>
+      <p className="font-body text-[13px] leading-[1.7] text-black/50">{step.description}</p>
     </div>
   );
 }
 
 function StepIcon({ Icon }: { Icon: LucideIcon }) {
   return (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary-light/50 bg-primary/20 shadow-[0_0_12px_rgba(42,51,243,0.3)]">
-      <Icon size={14} strokeWidth={1.5} className="text-primary-light" />
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-accent/50 bg-accent/15 shadow-[0_0_12px_rgba(42,51,243,0.2)]">
+      <Icon size={14} strokeWidth={1.5} className="text-accent" />
     </div>
   );
 }
@@ -42,7 +42,7 @@ export default function ProcessTimeline({ title, steps }: ProcessTimelineProps) 
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6 }}
-          className="mb-14 text-center font-display text-3xl font-bold text-white"
+          className="mb-14 text-center font-display text-3xl font-bold text-black"
         >
           {title}
         </motion.h2>

@@ -17,10 +17,10 @@ interface TypesGridProps {
 
 function TypeCardContent({ item }: { item: TypeItem }) {
   return (
-    <Card className="flex h-full flex-col gap-3">
-      <h3 className="font-display text-lg font-bold text-white">{item.title}</h3>
-      <p className="font-body text-sm leading-[1.7] text-white/50">{item.description}</p>
-      <p className="mt-1 font-display text-[12.5px] text-primary-light">{item.use}</p>
+    <Card light className="flex h-full flex-col gap-3">
+      <h3 className="font-display text-lg font-bold text-black">{item.title}</h3>
+      <p className="font-body text-sm leading-[1.7] text-black/50">{item.description}</p>
+      <p className="mt-1 font-display text-[12.5px] text-accent">{item.use}</p>
     </Card>
   );
 }
@@ -34,7 +34,7 @@ export default function TypesGrid({ title, items }: TypesGridProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6 }}
-          className="mb-12 text-center font-display text-3xl font-bold text-white"
+          className="mb-12 text-center font-display text-3xl font-bold text-black"
         >
           {title}
         </motion.h2>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import AmbientBackground from "@/components/layout/AmbientBackground";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 import { projects } from "@/lib/projects";
 import ProjectPageClient from "./ProjectPageClient";
@@ -36,11 +37,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   if (!project) notFound();
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="relative min-h-screen bg-white">
+      <AmbientBackground />
       <ScrollToTop />
-      <Navbar />
-      <ProjectPageClient project={project} />
-      <Footer />
+      <div className="relative z-10">
+        <Navbar />
+        <ProjectPageClient project={project} />
+        <Footer light />
+      </div>
     </main>
   );
 }

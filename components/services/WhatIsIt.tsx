@@ -16,7 +16,7 @@ export default function WhatIsIt({ title, text }: WhatIsItProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6 }}
-          className="mb-5 font-display text-3xl font-bold text-white"
+          className="mb-5 font-display text-3xl font-bold text-black"
         >
           {title}
         </motion.h2>
@@ -25,7 +25,7 @@ export default function WhatIsIt({ title, text }: WhatIsItProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="font-body text-[17px] leading-[1.9] text-white/50"
+          className="font-body text-[17px] leading-[1.9] text-black/50"
         >
           {text}
         </motion.p>

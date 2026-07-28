@@ -54,7 +54,7 @@ const whatYouGetRows = [
 
 export default function DashboardsContent() {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-background">
+    <main className="relative min-h-screen overflow-hidden bg-white">
       <ScrollToTop />
       <ServiceAmbientBackground />
       <Navbar />
@@ -79,7 +79,7 @@ export default function DashboardsContent() {
         <ServiceFinalCTA title="רוצה מערכת שעובדת בשבילך?" />
       </div>
 
-      <Footer />
+      <Footer light />
     </main>
   );
 }

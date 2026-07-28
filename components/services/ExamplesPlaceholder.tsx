@@ -9,15 +9,15 @@ interface ExamplesPlaceholderProps {
 
 function PlaceholderCard({ label }: { label: string }) {
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-white/6 bg-[#0f0f14] shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
-      <div className="flex h-8 shrink-0 items-center gap-1.5 border-b border-white/5 bg-[#111118] px-3" dir="ltr">
-        <span className="h-2 w-2 rounded-full bg-[#ff5f57]" />
-        <span className="h-2 w-2 rounded-full bg-[#febc2e]" />
-        <span className="h-2 w-2 rounded-full bg-[#28c840]" />
+    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-black/10 bg-white shadow-[0_20px_45px_rgba(0,0,0,0.08)]">
+      <div className="flex h-8 shrink-0 items-center gap-1.5 border-b border-black/[0.06] bg-black/[0.02] px-3" dir="ltr">
+        <span className="h-2 w-2 rounded-full bg-[#ff5f57]/70" />
+        <span className="h-2 w-2 rounded-full bg-[#febc2e]/70" />
+        <span className="h-2 w-2 rounded-full bg-[#28c840]/70" />
       </div>
       <div className="flex flex-1 flex-col items-center justify-center gap-2">
-        <span className="font-display text-xs text-white/15">{label}</span>
-        <span className="font-display text-[11px] text-primary-light/30">בקרוב</span>
+        <span className="font-display text-xs text-black/25">{label}</span>
+        <span className="font-display text-[11px] text-accent/40">בקרוב</span>
       </div>
     </div>
   );
@@ -36,7 +36,7 @@ export default function ExamplesPlaceholder({ title, labelPrefix }: ExamplesPlac
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6 }}
-          className="mb-16 text-center font-display text-3xl font-bold text-white"
+          className="mb-16 text-center font-display text-3xl font-bold text-black"
         >
           {title}
         </motion.h2>
