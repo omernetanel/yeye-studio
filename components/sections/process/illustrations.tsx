@@ -24,19 +24,19 @@ const DISCOVERY_CARDS: { icon: LucideIcon; label: string }[] = [
 ];
 
 const DISCOVERY_LAYOUT = [
-  { x: -117, y: 30, rotate: -9 },
-  { x: -36, y: -33, rotate: -2 },
-  { x: 48, y: -9, rotate: 5 },
-  { x: 123, y: 39, rotate: 11 },
+  { x: -186, y: 34, rotate: -10 },
+  { x: -62, y: -40, rotate: -3 },
+  { x: 62, y: -12, rotate: 6 },
+  { x: 186, y: 44, rotate: 13 },
 ];
 
 // Mid-scroll waypoint: the cards briefly scatter further apart before
 // converging, reading as an actual shuffle rather than a straight slide.
 const DISCOVERY_SHUFFLE = [
-  { x: -46, y: -60, rotate: 16 },
-  { x: 60, y: 44, rotate: -18 },
-  { x: -64, y: 50, rotate: 12 },
-  { x: 34, y: -54, rotate: -10 },
+  { x: -70, y: -70, rotate: 18 },
+  { x: 85, y: 50, rotate: -20 },
+  { x: -90, y: 58, rotate: 14 },
+  { x: 50, y: -64, rotate: -12 },
 ];
 
 // End state: converged into one stacked pile, each card offset by a few
@@ -133,11 +133,11 @@ export function DiscoveryIllustration({ active }: IllustrationProps) {
   }, [active]);
 
   return (
-    <div ref={rootRef} style={{ perspective: 1100 }} className="flex h-[480px] w-[520px] items-center justify-center">
+    <div ref={rootRef} style={{ perspective: 1100 }} className="flex h-[480px] w-[600px] items-center justify-center">
       <div
         ref={stageRef}
         style={{ transformStyle: "preserve-3d", transform: "rotateX(10deg)" }}
-        className="relative h-[210px] w-[330px]"
+        className="relative h-[210px] w-[420px]"
       >
         {DISCOVERY_CARDS.map(({ icon: Icon, label }, i) => {
           const layout = DISCOVERY_LAYOUT[i];
