@@ -4,7 +4,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Mail } from "lucide-react";
 import Link from "next/link";
-import LogoParticleCanvas from "@/components/sections/hero/LogoParticleCanvas";
+import LogoLiquidReveal from "@/components/sections/hero/LogoLiquidReveal";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
 const WHATSAPP_NUMBER = "972552434775";
@@ -38,8 +38,12 @@ export default function HeroSection() {
             transition={{ duration: 1.1, ease: [0.65, 0, 0.35, 1], delay: 0.35 }}
             className="relative mx-auto aspect-[8042/2511] w-full"
           >
-            {/* Kept in the DOM (not deleted) as the pixel source the particle
-                canvas samples from on mount — never actually shown. */}
+            {/* The solid black logo — always the visual baseline. The canvas
+                layered on top (when motion is allowed) overdraws it with an
+                identical black shape, so nothing looks different until the
+                liquid reveal actually activates. Under reduced-motion,
+                LogoLiquidReveal renders nothing and this stays the whole
+                picture, exactly like before this effect existed. */}
             <Image
               src="/images/logo.png"
               alt="YEYE"
@@ -48,9 +52,14 @@ export default function HeroSection() {
               draggable={false}
               onDragStart={(e) => e.preventDefault()}
               sizes="100vw"
-              className="pointer-events-none object-contain opacity-0"
+              className="pointer-events-none object-contain"
+              style={{ filter: "brightness(0)" }}
             />
-            <LogoParticleCanvas src="/images/logo.png" className="absolute inset-0 h-full w-full touch-none" />
+            <LogoLiquidReveal
+              logoSrc="/images/logo.png"
+              videoSrc="/videos/hero-liquid.mp4"
+              className="absolute inset-0 h-full w-full"
+            />
           </motion.div>
         </div>
       </div>
