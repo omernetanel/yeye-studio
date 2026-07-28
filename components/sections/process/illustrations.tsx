@@ -332,12 +332,14 @@ export function CodeIllustration({ active }: IllustrationProps) {
   );
 }
 
-// Loop-the-loop, then a tail flicking off toward the top-right corner —
-// the rocket's whole body travels this path after ignition, instead of
-// sitting still while only the flame animates.
+// A true infinity symbol (∞): two tangent loops sharing one crossing
+// point, built so the tangent direction matches at both the crossing and
+// the point where one full lap ends and the next begins — the rocket can
+// fly this on an endless repeat with no snap at the seam. No visible
+// trail is drawn; only the rocket itself moves.
 const LAUNCH_FLIGHT_PATH =
-  "M110,150 C201,150 201,40 110,40 C19,40 19,150 110,150 C150,178 205,165 230,95";
-const LAUNCH_START = { x: 110, y: 150 };
+  "M170,150 C170,17 10,17 10,150 C10,283 170,283 170,150 C170,17 330,17 330,150 C330,283 170,283 170,150";
+const LAUNCH_START = { x: 170, y: 150 };
 
 export function LaunchIllustration({ active }: IllustrationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -346,20 +348,9 @@ export function LaunchIllustration({ active }: IllustrationProps) {
     if (!active || !svgRef.current) return;
     const svg = svgRef.current;
     const rocket = svg.querySelector<SVGGElement>("[data-rocket]");
-    const flightPath = svg.querySelector<SVGPathElement>("[data-flight-path]");
 
     const ctx = gsap.context(() => {
       const body = prepareDrawPaths(svg);
-
-      // The trail is revealed with the same dasharray/dashoffset trick as
-      // the rest of the line art, but driven manually (not by the initial
-      // body draw-in) so it only appears once the rocket actually flies
-      // over it, in lockstep with its motion-path tween below.
-      if (flightPath) {
-        const length = flightPath.getTotalLength();
-        flightPath.style.strokeDasharray = `${length}`;
-        flightPath.style.strokeDashoffset = `${length}`;
-      }
 
       const timeline = gsap.timeline();
       timeline.to(body, { strokeDashoffset: 0, duration: 0.9, stagger: 0.1, ease: "power2.out" });
@@ -388,13 +379,12 @@ export function LaunchIllustration({ active }: IllustrationProps) {
         "-=0.3"
       );
 
-      if (rocket && flightPath) {
+      if (rocket) {
         timeline.to(
           rocket,
-          { motionPath: { path: flightPath, autoRotate: 90 }, duration: 3.4, ease: "power2.inOut" },
+          { motionPath: { path: LAUNCH_FLIGHT_PATH, autoRotate: 90 }, duration: 6, ease: "sine.inOut", repeat: -1 },
           "liftoff"
         );
-        timeline.to(flightPath, { strokeDashoffset: 0, duration: 3.4, ease: "power2.inOut" }, "liftoff");
       }
     }, svg);
 
@@ -402,15 +392,7 @@ export function LaunchIllustration({ active }: IllustrationProps) {
   }, [active]);
 
   return (
-    <svg ref={svgRef} width="400" height="400" viewBox="0 0 260 260" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        data-flight-path
-        d={LAUNCH_FLIGHT_PATH}
-        stroke={STROKE_DIM}
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        fill="none"
-      />
+    <svg ref={svgRef} width="460" height="406" viewBox="0 0 340 300" fill="none" xmlns="http://www.w3.org/2000/svg">
       <g data-rocket transform={`translate(${LAUNCH_START.x},${LAUNCH_START.y})`}>
         <path
           data-draw
