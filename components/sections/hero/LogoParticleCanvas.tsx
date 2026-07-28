@@ -11,7 +11,7 @@ const SAMPLE_WIDTH = 1400;
 const ALPHA_THRESHOLD = 100;
 // Distance (in sample-space px) between candidate sample points. Larger
 // values = fewer, airier dots.
-const GRID_SPACING = 7;
+const GRID_SPACING = 5;
 // Random offset applied within each grid cell so the result reads as
 // scattered dots, not a visible grid.
 const JITTER = GRID_SPACING * 0.4;
