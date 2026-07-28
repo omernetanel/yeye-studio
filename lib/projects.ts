@@ -31,6 +31,9 @@ export interface ProjectStory {
 export interface Project {
   slug: string;
   title: string;
+  /** Short labels for project cards (listing/teaser grids) - fall back to `title`/`category` when omitted. */
+  cardTitle?: string;
+  cardCategory?: string;
   category: string;
   description: string;
   url: string;
@@ -43,6 +46,7 @@ export const projects: Project[] = [
   {
     slug: "lynko",
     title: "Lynko",
+    cardCategory: "מערכת SaaS",
     category: "מערכת ניהול לעסקי שירות",
     description:
       "מערכת ניהול לעסקי שירות שבניתי בעברית מהיסוד, לא תרגמתי אליה תבנית באנגלית.\nיומן, לקוחות, דוחות והתראות, בממשק RTL אמיתי.",
@@ -103,6 +107,8 @@ export const projects: Project[] = [
   {
     slug: "lynko-landing",
     title: "דף נחיתה ל-LYNKO - עיצוב, תנועה וסיפור מוצר בגלילה",
+    cardTitle: "LYNKO",
+    cardCategory: "דף נחיתה",
     category: "דף נחיתה שיווקי",
     description: "דף שיווקי בעברית מלאה, שבנוי לספר את הסיפור של המוצר תוך כדי גלילה, לא רק לתאר אותו.",
     url: "https://lynko-liard.vercel.app/",
