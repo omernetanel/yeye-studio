@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import ScrollToTop from "@/components/ui/ScrollToTop";
 import { projects } from "@/lib/projects";
 import ProjectCard from "@/components/ui/ProjectCard";
 
@@ -13,7 +12,6 @@ export const metadata: Metadata = {
 export default function ProjectsPage() {
   return (
     <main className="min-h-screen bg-white">
-      <ScrollToTop />
       <Navbar />
       <div className="mx-auto max-w-[1200px] px-6 pt-[140px] pb-20">
         <h1 className="mb-4 font-display text-4xl font-bold tracking-tight text-black md:text-5xl">

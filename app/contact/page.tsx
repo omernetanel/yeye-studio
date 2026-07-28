@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import AmbientBackground from "@/components/layout/AmbientBackground";
-import ScrollToTop from "@/components/ui/ScrollToTop";
 import Label from "@/components/ui/Label";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
@@ -51,7 +50,6 @@ export default function ContactPage() {
     return (
       <main className="relative min-h-screen bg-white">
         <AmbientBackground />
-        <ScrollToTop />
         <div className="relative z-10">
           <Navbar />
           <div className="flex min-h-screen items-center justify-center px-6">
@@ -77,7 +75,6 @@ export default function ContactPage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-white">
       <AmbientBackground />
-      <ScrollToTop />
 
       <Navbar />
       <div className="relative z-10 mx-auto max-w-[680px] px-6 pt-[140px] pb-20">

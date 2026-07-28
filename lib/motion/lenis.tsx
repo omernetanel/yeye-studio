@@ -1,6 +1,7 @@
 "use client";
 
 import Lenis from "lenis";
+import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { gsap, ScrollTrigger } from "@/lib/motion/gsap";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
@@ -15,6 +16,7 @@ export function useLenis() {
 export function SmoothScrollProvider({ children }: { children: ReactNode }) {
   const [lenis, setLenis] = useState<Lenis | null>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
+  const pathname = usePathname();
 
   useEffect(() => {
     // On the transition into reduced-motion, the previous effect's cleanup
@@ -47,6 +49,20 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
       setLenis(null);
     };
   }, [prefersReducedMotion]);
+
+  // A client-side route change unmounts/mounts new page content at whatever
+  // scroll position the previous page was left at — the browser's own
+  // scroll-restoration doesn't help here since Lenis owns the actual scroll
+  // animation loop and would just re-assert its old position on the next
+  // frame. Resetting through Lenis itself (not a raw window.scrollTo) is
+  // what actually sticks.
+  useEffect(() => {
+    if (lenis) {
+      lenis.scrollTo(0, { immediate: true });
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, lenis]);
 
   return <LenisContext.Provider value={lenis}>{children}</LenisContext.Provider>;
 }
