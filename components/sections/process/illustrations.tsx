@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { Compass, Swords, Target, Users, type LucideIcon } from "lucide-react";
 import { gsap } from "@/lib/motion/gsap";
 import { prepareDrawPaths } from "./draw";
 
@@ -11,103 +12,171 @@ export interface IllustrationProps {
 const STROKE_DIM = "rgba(251,146,60,0.35)";
 const STROKE_BRIGHT = "#fb923c";
 
-// Three spokes, each ending exactly on one of the three rings (so the dot
-// visibly sits on that ring's edge, not floating past all of them), at
-// 120° apart for a clean, symmetric starting position.
-const DISCOVERY_CENTER = 110;
-const DISCOVERY_RING_RADII = [95, 65, 35];
-const DISCOVERY_START_ANGLES = [-90, 30, 150];
+// Four facts the studio learns about a business before writing any code.
+// Real CSS 3D (perspective + rotateY, not a simulated flip) turns each one
+// face-down to face-up in sequence — literal cards being examined, rather
+// than an abstract shape with no connection to "getting to know a business."
+const DISCOVERY_CARDS: { icon: LucideIcon; label: string }[] = [
+  { icon: Target, label: "מטרות" },
+  { icon: Users, label: "קהל" },
+  { icon: Swords, label: "מתחרים" },
+  { icon: Compass, label: "כיוון" },
+];
+
+const DISCOVERY_LAYOUT = [
+  { x: -117, y: 30, rotate: -9 },
+  { x: -36, y: -33, rotate: -2 },
+  { x: 48, y: -9, rotate: 5 },
+  { x: 123, y: 39, rotate: 11 },
+];
+
+// Mid-scroll waypoint: the cards briefly scatter further apart before
+// converging, reading as an actual shuffle rather than a straight slide.
+const DISCOVERY_SHUFFLE = [
+  { x: -46, y: -60, rotate: 16 },
+  { x: 60, y: 44, rotate: -18 },
+  { x: -64, y: 50, rotate: 12 },
+  { x: 34, y: -54, rotate: -10 },
+];
+
+// End state: converged into one stacked pile, each card offset by a few
+// px/deg so the stack still reads as distinct layered cards, not one blob.
+const DISCOVERY_STACK = [
+  { x: 0, y: 10, rotate: -6 },
+  { x: 0, y: 3, rotate: 3 },
+  { x: 0, y: -3, rotate: -3 },
+  { x: 0, y: -10, rotate: 6 },
+];
 
 export function DiscoveryIllustration({ active }: IllustrationProps) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const CENTER = DISCOVERY_CENTER;
-  const spokes = DISCOVERY_START_ANGLES.map((deg, i) => {
-    const rad = (deg * Math.PI) / 180;
-    const r = DISCOVERY_RING_RADII[i];
-    return { x: CENTER + r * Math.cos(rad), y: CENTER + r * Math.sin(rad) };
-  });
+  const rootRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!active || !svgRef.current) return;
-    const svg = svgRef.current;
+    if (!active || !stageRef.current || !rootRef.current) return;
+    const stage = stageRef.current;
+    const root = rootRef.current;
+    const cards = Array.from(stage.querySelectorAll<HTMLElement>("[data-card]"));
+    const wraps = Array.from(stage.querySelectorAll<HTMLElement>("[data-card-wrap]"));
 
     const ctx = gsap.context(() => {
-      const rings = prepareDrawPaths(svg);
+      // Hand the wraps' position over to GSAP from the exact spot the inline
+      // style already painted them at, so taking control never causes a jump.
+      gsap.set(wraps, {
+        x: (i: number) => DISCOVERY_LAYOUT[i].x,
+        y: (i: number) => DISCOVERY_LAYOUT[i].y,
+        rotation: (i: number) => DISCOVERY_LAYOUT[i].rotate,
+      });
+      gsap.set(cards, { opacity: 0, y: 22, scale: 0.85, rotateY: 0 });
       const timeline = gsap.timeline();
 
-      timeline
-        .to(rings, { strokeDashoffset: 0, duration: 1.1, stagger: 0.18, ease: "power2.out" })
-        .fromTo(
-          "[data-dot]",
-          // Animating the radius attribute directly (instead of a CSS `scale`
-          // transform) means the dot never gets a baked-in transform matrix —
-          // its position stays driven purely by cx/cy, exactly like the line,
-          // so the two can never drift apart once the orbit loop takes over.
-          { attr: { r: 0 }, opacity: 0 },
-          { attr: { r: 4 }, opacity: 1, duration: 0.4, stagger: 0.15, ease: "back.out(2.5)" },
-          "-=0.5"
-        );
+      timeline.to(cards, { opacity: 1, y: 0, scale: 1, duration: 0.5, stagger: 0.12, ease: "back.out(1.8)" });
 
-      // Once drawn in, each spoke keeps orbiting its own ring indefinitely —
-      // like satellites at different distances, moving at different speeds.
-      // Driven by recomputing x/y from a plain angle value every frame
-      // (rather than an SVG/CSS rotation transform) so the radius is
-      // mathematically pinned to the ring and can never drift over time.
-      const durations = [6, 9, 13];
-      DISCOVERY_START_ANGLES.forEach((startDeg, i) => {
-        const r = DISCOVERY_RING_RADII[i];
-        const line = svg.querySelector<SVGLineElement>(`[data-orbit="${i}"] line`);
-        const dot = svg.querySelector<SVGCircleElement>(`[data-orbit="${i}"] circle`);
-        if (!line || !dot) return;
-        const state = { angle: startDeg };
-        const direction = i % 2 === 0 ? 1 : -1;
-        timeline.to(
-          state,
-          {
-            angle: startDeg + direction * 360,
-            duration: durations[i],
-            ease: "none",
-            repeat: -1,
-            onUpdate: () => {
-              const rad = (state.angle * Math.PI) / 180;
-              const x = DISCOVERY_CENTER + r * Math.cos(rad);
-              const y = DISCOVERY_CENTER + r * Math.sin(rad);
-              line.setAttribute("x2", String(x));
-              line.setAttribute("y2", String(y));
-              dot.setAttribute("cx", String(x));
-              dot.setAttribute("cy", String(y));
-            },
-          },
-          "-=0.2"
-        );
+      cards.forEach((card, i) => {
+        timeline.to(card, { rotateY: 180, duration: 0.65, ease: "power2.inOut" }, i === 0 ? "+=0.25" : "-=0.4");
       });
-    }, svg);
+
+      // Once every card is revealed, the whole stack keeps swaying gently —
+      // a slow, continuous tilt so the 3D depth stays visible at rest
+      // instead of only showing up during the flip.
+      timeline.to(
+        stage,
+        { rotateY: "+=5", rotateX: "-=3", duration: 2.6, ease: "sine.inOut", repeat: -1, yoyo: true },
+        "-=0.15"
+      );
+
+      // Scroll-driven: as the page moves past step 1 toward step 2, the
+      // fanned cards shuffle apart once more, then collapse into a single
+      // stacked pile — everything learned coming together before the next
+      // step (Design) begins.
+      const shuffleTimeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: root,
+          // Both ends anchored to the illustration's own center so the
+          // whole sequence plays out — and settles into the stack — while
+          // it's still on screen, instead of resolving after it has
+          // already scrolled past the top of the viewport.
+          start: "center 60%",
+          end: "center 15%",
+          scrub: 0.6,
+        },
+      });
+
+      wraps.forEach((wrap, i) => {
+        shuffleTimeline
+          .to(
+            wrap,
+            {
+              x: DISCOVERY_SHUFFLE[i].x,
+              y: DISCOVERY_SHUFFLE[i].y,
+              rotation: DISCOVERY_SHUFFLE[i].rotate,
+              duration: 0.4,
+              ease: "power1.inOut",
+            },
+            0
+          )
+          .to(
+            wrap,
+            {
+              x: DISCOVERY_STACK[i].x,
+              y: DISCOVERY_STACK[i].y,
+              rotation: DISCOVERY_STACK[i].rotate,
+              duration: 0.6,
+              ease: "power2.inOut",
+            },
+            0.45
+          );
+      });
+    }, rootRef);
 
     return () => ctx.revert();
   }, [active]);
 
   return (
-    <svg ref={svgRef} width="380" height="380" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle data-draw cx="110" cy="110" r="95" stroke={STROKE_DIM} strokeWidth="1" />
-      <circle data-draw cx="110" cy="110" r="65" stroke={STROKE_DIM} strokeWidth="1" />
-      <circle data-draw cx="110" cy="110" r="35" stroke={STROKE_BRIGHT} strokeWidth="1.5" />
-      <circle cx="110" cy="110" r="6" fill="#f2760f" style={{ filter: "drop-shadow(0 0 10px rgba(242,118,15,0.8))" }} />
-      {spokes.map((p, i) => (
-        <g key={i} data-orbit={i}>
-          <line
-            data-draw
-            x1={CENTER}
-            y1={CENTER}
-            x2={p.x}
-            y2={p.y}
-            stroke={STROKE_BRIGHT}
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-          <circle data-dot cx={p.x} cy={p.y} r="4" fill={STROKE_BRIGHT} />
-        </g>
-      ))}
-    </svg>
+    <div ref={rootRef} style={{ perspective: 1100 }} className="flex h-[480px] w-[520px] items-center justify-center">
+      <div
+        ref={stageRef}
+        style={{ transformStyle: "preserve-3d", transform: "rotateX(10deg)" }}
+        className="relative h-[210px] w-[330px]"
+      >
+        {DISCOVERY_CARDS.map(({ icon: Icon, label }, i) => {
+          const layout = DISCOVERY_LAYOUT[i];
+          return (
+            <div
+              key={label}
+              data-card-wrap
+              style={{
+                transformStyle: "preserve-3d",
+                left: "50%",
+                top: "50%",
+                marginLeft: -78,
+                marginTop: -54,
+                transform: `translate(${layout.x}px, ${layout.y}px) rotate(${layout.rotate}deg)`,
+              }}
+              className="absolute h-[108px] w-[156px]"
+            >
+              <div data-card style={{ transformStyle: "preserve-3d" }} className="relative h-full w-full">
+                {/* Front face: a blank card, nothing learned yet */}
+                <div
+                  style={{ backfaceVisibility: "hidden" }}
+                  className="absolute inset-0 rounded-xl border border-accent/25 bg-[radial-gradient(circle_at_30%_20%,rgba(242,118,15,0.08)_0%,transparent_70%)] shadow-[0_14px_28px_rgba(0,0,0,0.1)]"
+                >
+                  <div className="absolute inset-3 rounded-md border border-dashed border-accent/20" />
+                </div>
+                {/* Back face: revealed once the card flips */}
+                <div
+                  style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 rounded-xl border border-accent/30 bg-white shadow-[0_18px_34px_rgba(0,0,0,0.14)]"
+                >
+                  <Icon size={30} strokeWidth={1.75} className="text-accent" />
+                  <span className="font-display text-[15px] font-semibold text-black/70">{label}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
