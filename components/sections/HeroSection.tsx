@@ -4,7 +4,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Mail } from "lucide-react";
 import Link from "next/link";
-import LogoSmearCanvas from "@/components/sections/hero/LogoSmearCanvas";
+import LogoParticleCanvas from "@/components/sections/hero/LogoParticleCanvas";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
 const WHATSAPP_NUMBER = "972552434775";
@@ -38,6 +38,8 @@ export default function HeroSection() {
             transition={{ duration: 1.1, ease: [0.65, 0, 0.35, 1], delay: 0.35 }}
             className="relative mx-auto aspect-[8042/2511] w-full"
           >
+            {/* Kept in the DOM (not deleted) as the pixel source the particle
+                canvas samples from on mount — never actually shown. */}
             <Image
               src="/images/logo.png"
               alt="YEYE"
@@ -46,10 +48,9 @@ export default function HeroSection() {
               draggable={false}
               onDragStart={(e) => e.preventDefault()}
               sizes="100vw"
-              className="pointer-events-none object-contain"
-              style={{ filter: "brightness(0)" }}
+              className="pointer-events-none object-contain opacity-0"
             />
-            <LogoSmearCanvas src="/images/logo.png" className="absolute inset-0 h-full w-full touch-none" />
+            <LogoParticleCanvas src="/images/logo.png" className="absolute inset-0 h-full w-full touch-none" />
           </motion.div>
         </div>
       </div>
