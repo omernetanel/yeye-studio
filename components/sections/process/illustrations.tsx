@@ -23,20 +23,23 @@ const DISCOVERY_CARDS: { icon: LucideIcon; label: string }[] = [
   { icon: Compass, label: "כיוון" },
 ];
 
+// A zigzag, not a flat arc: alternating y keeps each card's bounding box
+// clear of its neighbors even where their x ranges come close, so all
+// four stay individually readable instead of tucking behind each other.
 const DISCOVERY_LAYOUT = [
-  { x: -186, y: 34, rotate: -10 },
-  { x: -62, y: -40, rotate: -3 },
-  { x: 62, y: -12, rotate: 6 },
-  { x: 186, y: 44, rotate: 13 },
+  { x: -140, y: 80, rotate: -9 },
+  { x: -45, y: -85, rotate: -3 },
+  { x: 55, y: 85, rotate: 6 },
+  { x: 150, y: -80, rotate: 12 },
 ];
 
 // Mid-scroll waypoint: the cards briefly scatter further apart before
 // converging, reading as an actual shuffle rather than a straight slide.
 const DISCOVERY_SHUFFLE = [
-  { x: -70, y: -70, rotate: 18 },
-  { x: 85, y: 50, rotate: -20 },
-  { x: -90, y: 58, rotate: 14 },
-  { x: 50, y: -64, rotate: -12 },
+  { x: -80, y: -75, rotate: 18 },
+  { x: 95, y: 55, rotate: -20 },
+  { x: -100, y: 62, rotate: 14 },
+  { x: 60, y: -70, rotate: -12 },
 ];
 
 // End state: converged into one stacked pile, each card offset by a few
