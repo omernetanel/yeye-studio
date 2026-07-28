@@ -102,7 +102,7 @@ export const projects: Project[] = [
   },
   {
     slug: "lynko-landing",
-    title: "דף נחיתה ל-LYNKO — עיצוב, תנועה וסיפור מוצר בגלילה",
+    title: "דף נחיתה ל-LYNKO - עיצוב, תנועה וסיפור מוצר בגלילה",
     category: "דף נחיתה שיווקי",
     description: "דף שיווקי בעברית מלאה, שבנוי לספר את הסיפור של המוצר תוך כדי גלילה, לא רק לתאר אותו.",
     url: "https://lynko-liard.vercel.app/",
