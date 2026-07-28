@@ -1,4 +1,15 @@
-export type ProjectFeatureIcon = "calendar" | "users" | "chart" | "bell" | "compass" | "smartphone";
+export type ProjectFeatureIcon =
+  | "calendar"
+  | "users"
+  | "chart"
+  | "bell"
+  | "compass"
+  | "smartphone"
+  | "sparkles"
+  | "layers"
+  | "palette"
+  | "languages"
+  | "gauge";
 
 export interface ProjectFeature {
   icon: ProjectFeatureIcon;
@@ -35,7 +46,7 @@ export const projects: Project[] = [
     category: "מערכת ניהול לעסקי שירות",
     description:
       "מערכת ניהול לעסקי שירות שבניתי בעברית מהיסוד, לא תרגמתי אליה תבנית באנגלית.\nיומן, לקוחות, דוחות והתראות, בממשק RTL אמיתי.",
-    url: "https://lynko-liard.vercel.app/",
+    url: "https://lynko-liard.vercel.app/demo",
     image: "/images/lynkolayout.png",
     tags: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion", "RTL קודם"],
     story: {
@@ -80,13 +91,68 @@ export const projects: Project[] = [
       techNotesTitle: "הצצה טכנית",
       techNotes: [
         "מערכת עיצוב מרכזית - צבע, רדיוס וצל מוגדרים במקום אחד, לא מפוזרים hardcoded בתוך קומפוננטות.",
-        "אנימציות עם Framer Motion, כולל scroll-driven storytelling בסגנון שראיתי אצל אפל, בעמוד הנחיתה.",
+        "אנימציות עם Framer Motion לאורך הממשק - כניסות, מעברים ומשוב חזותי, בלי לפגוע בביצועים.",
         "דאטה מדומה עם seeded random - נראית אמיתית, ולא מתאפסת בצורה סותרת בכל רענון.",
         "נגישות נבדקה לעומק: ניגודיות תקנית, פלטה מאומתת לעיוורי צבעים, ו-prefers-reduced-motion מכובד בכל מקום באתר.",
       ],
       ctaTitle: "רוצה מערכת כזאת לעסק שלך?",
       ctaText:
         "לינקו היא גם תבנית בסיס. אני יכול לקחת את מה שראית כאן ולהתאים אותו למותג, לתהליך העבודה ולשירותים הספציפיים של העסק שלך. יש לך עסק שמנהל תורים - קליניקה, מספרה, ייעוץ, סטודיו - ואתה רוצה גרסה אמיתית? בוא נדבר.",
+    },
+  },
+  {
+    slug: "lynko-landing",
+    title: "דף נחיתה ל-LYNKO — עיצוב, תנועה וסיפור מוצר בגלילה",
+    category: "דף נחיתה שיווקי",
+    description: "דף שיווקי בעברית מלאה, שבנוי לספר את הסיפור של המוצר תוך כדי גלילה, לא רק לתאר אותו.",
+    url: "https://lynko-liard.vercel.app/",
+    image: "/images/lynkolayoutage.png",
+    tags: ["Next.js", "Framer Motion", "Tailwind CSS", "RTL קודם"],
+    story: {
+      storyTitle: "פרויקט עצמאי, לא עוד עמוד במערכת",
+      problem:
+        "דף הנחיתה של LYNKO תוכנן ונבנה כפרויקט עיצוב ופיתוח בפני עצמו, לא כעמוד נוסף בתוך המוצר. הוא כולל הירו אנימטיבי, סקשן שמספר את סיפור המוצר תוך כדי גלילה, ומערכת עיצוב עקבית שנגזרת מהמוצר עצמו, לא הומצאה בנפרד.",
+      featuresTitle: "מה יש בפנים",
+      features: [
+        {
+          icon: "sparkles",
+          title: "הירו שמרגיש חי",
+          description:
+            "כותרת שנכנסת מילה אחרי מילה, ספוטלייט שעוקב אחרי תנועת העכבר, ומוקאפ מוצר עם הטיה תלת-ממדית עדינה בהובר. הרושם הראשון כבר קובע את הטון של כל הדף.",
+        },
+        {
+          icon: "layers",
+          title: "סיפור שנגלל",
+          description:
+            "סקשן מוצמד שבו ארבעה 'מסכים' של המוצר מתחלפים בזום ובקרוספייד תוך כדי גלילה, עם מסלול נפרד ומותאם למובייל במקום חוויה שבורה.",
+        },
+        {
+          icon: "palette",
+          title: "שפה עיצובית אחת",
+          description:
+            "כל צבע, טיפוגרפיה ורדיוס נגזרים מטוקנים מוגדרים מראש, כך שהמוצר ודף הנחיתה שלו מרגישים כמו אותה חוויה, לא שני אתרים שהודבקו יחד.",
+        },
+        {
+          icon: "languages",
+          title: "RTL מקצה לקצה",
+          description:
+            "לא רק יישור טקסט לימין. כולל טיפול בבעיות bidi עדינות, כמו מספרים וסימנים בתוך משפט עברי, שבהן הרבה אתרים 'מתורגמים' נשברים.",
+        },
+        {
+          icon: "gauge",
+          title: "מהיר, ונעים לכולם",
+          description:
+            "כל אנימציה מכבדת prefers-reduced-motion, ובלי אפקטים מוגזמים על כפתורים. תנועה שמשרתת את התוכן, לא מסיטה ממנו.",
+        },
+      ],
+      techNotesTitle: "הצצה טכנית",
+      techNotes: [
+        "Next.js, Tailwind CSS ו-Framer Motion, על אותה מערכת עיצוב כמו המוצר עצמו.",
+        "אנימציות מונעות-גלילה עם useScroll ו-useTransform - כולל ניפוי של תקלה אמיתית ב-Framer Motion, קלאמפינג שלא התנהג נכון בסצנה הראשונה, ותוקן ידנית אחרי חקירה.",
+      ],
+      ctaTitle: "רוצים דף נחיתה כזה למוצר שלכם?",
+      ctaText:
+        "אם יש לכם מוצר טוב שהעמוד השיווקי שלו עדיין לא עושה לו צדק, אשמח לדבר. אני בונה דפי נחיתה שמספרים סיפור, לא רק מפרטים רשימת פיצ'רים.",
     },
   },
 ];

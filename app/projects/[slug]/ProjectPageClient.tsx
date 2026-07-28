@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { BarChart3, Bell, Calendar, Compass, Smartphone, Users } from "lucide-react";
+import { BarChart3, Bell, Calendar, Compass, Gauge, Languages, Layers, Palette, Smartphone, Sparkles, Users } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import LiveProjectPreview from "@/components/projects/LiveProjectPreview";
@@ -14,6 +14,11 @@ const FEATURE_ICONS: Record<ProjectFeatureIcon, typeof Calendar> = {
   bell: Bell,
   compass: Compass,
   smartphone: Smartphone,
+  sparkles: Sparkles,
+  layers: Layers,
+  palette: Palette,
+  languages: Languages,
+  gauge: Gauge,
 };
 
 interface Props {
