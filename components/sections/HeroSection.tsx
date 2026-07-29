@@ -253,7 +253,7 @@ export default function HeroSection() {
           <LogoLiquidReveal
             ref={liquidRef}
             logoSrc="/images/logo.png"
-            videoSrc="/videos/hero-liquid.mp4"
+            videoSrc="/videos/herovideo.mp4"
             className="absolute inset-0 h-full w-full"
           />
         </motion.div>
