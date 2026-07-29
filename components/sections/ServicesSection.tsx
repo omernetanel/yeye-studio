@@ -219,6 +219,13 @@ export default function ServicesSection() {
   const pinEndScrollYRef = useRef(0);
   const videoDurationRef = useRef(VIDEO_DURATION_FALLBACK);
   const videoReadyRef = useRef(false);
+  // Cached alongside the pin range in measurePinRange (only recomputed on
+  // resize) — reading panel.offsetHeight from inside update() itself,
+  // which runs on every scroll tick, forces a synchronous layout
+  // recalculation right before the same call writes several other
+  // elements' styles, thrashing layout and reading as janky/non-smooth
+  // scroll instead of a clean, cheap style write.
+  const panelHeightRef = useRef(0);
 
   const { scrollY } = useScroll();
 
@@ -268,14 +275,11 @@ export default function ServicesSection() {
     // comes from. 0 at the very start of the scrub (the flat-lay reveal
     // stays exactly as composed), ramping to its full value by scrubT=1
     // and staying there through the hold phase.
-    if (panelRef.current) {
-      const panelHeight = panelRef.current.offsetHeight;
-      const visibleSliceHeight = window.innerHeight - NAVBAR_CLEARANCE_PX;
-      const ballPanelLocalY = BALL_CENTER_Y_FRACTION * panelHeight;
-      const targetTranslateY = visibleSliceHeight / 2 - ballPanelLocalY;
-      const riseT = smoothstep(scrubT);
-      video.style.transform = `translateY(${lerp(0, targetTranslateY, riseT)}px)`;
-    }
+    const visibleSliceHeight = window.innerHeight - NAVBAR_CLEARANCE_PX;
+    const ballPanelLocalY = BALL_CENTER_Y_FRACTION * panelHeightRef.current;
+    const targetTranslateY = visibleSliceHeight / 2 - ballPanelLocalY;
+    const riseT = smoothstep(scrubT);
+    video.style.transform = `translateY(${lerp(0, targetTranslateY, riseT)}px)`;
 
     const textGoneT = smoothstep(mapRange(targetTime, 0, TEXT_GONE_AT_SECONDS, 0, 1));
     const shrinkT = progress <= READ_END ? 0 : textGoneT;
@@ -294,8 +298,9 @@ export default function ServicesSection() {
     // viewports, by design (see the panel's own className below), so the
     // standard "wrapperHeight minus viewport height" pin-duration formula
     // has to subtract the panel's actual measured height instead.
+    panelHeightRef.current = panel.offsetHeight;
     pinStartScrollYRef.current = wrapperTop - NAVBAR_CLEARANCE_PX;
-    pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - panel.offsetHeight - NAVBAR_CLEARANCE_PX;
+    pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - panelHeightRef.current - NAVBAR_CLEARANCE_PX;
   };
 
   useLayoutEffect(() => {
