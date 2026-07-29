@@ -14,9 +14,12 @@ interface ServiceCardProps {
   href: string;
   /** Renders for a white-background section (dark text) instead of the default dark theme (white text). */
   light?: boolean;
+  /** See Card's `tone` — "neutral" drops the brand-blue accent (icon circle, icon glow, link color)
+   *  in favor of black/gray, for sections where blue would clash with the backdrop. */
+  tone?: "accent" | "neutral";
 }
 
-export default function ServiceCard({ icon: Icon, title, description, href, light = true }: ServiceCardProps) {
+export default function ServiceCard({ icon: Icon, title, description, href, light = true, tone = "accent" }: ServiceCardProps) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotateX = useSpring(useTransform(y, [-60, 60], [10, -10]), { stiffness: 200, damping: 20 });
@@ -50,9 +53,20 @@ export default function ServiceCard({ icon: Icon, title, description, href, ligh
         off-center by a different amount on every card.
       */}
       <motion.div style={{ rotateX, rotateY }} className="h-full">
-        <Card light={light} className="flex h-full flex-col items-center gap-4 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full border border-accent/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-accent)_35%,transparent)_0%,rgba(255,255,255,0.4)_75%)]">
-            <Icon size={26} strokeWidth={1.5} className="text-accent drop-shadow-[0_0_6px_rgba(42,51,243,0.35)]" />
+        <Card light={light} tone={tone} className="flex h-full flex-col items-center gap-4 text-center">
+          <div
+            className={cn(
+              "flex h-14 w-14 items-center justify-center rounded-full border",
+              tone === "neutral"
+                ? "border-black/10 bg-[radial-gradient(circle_at_30%_30%,rgba(0,0,0,0.08)_0%,rgba(255,255,255,0.4)_75%)]"
+                : "border-accent/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-accent)_35%,transparent)_0%,rgba(255,255,255,0.4)_75%)]"
+            )}
+          >
+            <Icon
+              size={26}
+              strokeWidth={1.5}
+              className={tone === "neutral" ? "text-black/70" : "text-accent drop-shadow-[0_0_6px_rgba(42,51,243,0.35)]"}
+            />
           </div>
 
           <h3 className={cn("font-display text-lg font-bold", light ? "text-black" : "text-white")}>{title}</h3>
@@ -61,7 +75,12 @@ export default function ServiceCard({ icon: Icon, title, description, href, ligh
             {description}
           </p>
 
-          <span className="mt-1.5 flex items-center justify-center gap-1.5 font-display text-sm text-accent transition-transform duration-200 group-hover:scale-105">
+          <span
+            className={cn(
+              "mt-1.5 flex items-center justify-center gap-1.5 font-display text-sm transition-transform duration-200 group-hover:scale-105",
+              tone === "neutral" ? "text-black/70" : "text-accent"
+            )}
+          >
             <span aria-hidden>←</span>
             לפרטים נוספים
           </span>

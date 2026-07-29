@@ -6,16 +6,20 @@ interface CardProps {
   className?: string;
   /** Renders a light glass panel (for white-background sections) instead of the default dark theme. */
   light?: boolean;
+  /** Only matters when `light` — the panel's fill and corner-glow color. "neutral" is a solid
+   *  white with a soft black glow, for sections (like Services, sitting over video/imagery) where
+   *  a pop of brand blue would clash with the background instead of just accenting the card. */
+  tone?: "accent" | "neutral";
 }
 
 /** Shared "glass panel" chrome for cards across the site — background, border, blur, corner glow. */
-export default function Card({ children, className, light = false }: CardProps) {
+export default function Card({ children, className, light = false, tone = "accent" }: CardProps) {
   return (
     <div
       className={cn(
         "relative h-full overflow-hidden rounded-2xl p-7",
         light
-          ? "border border-black/10 bg-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]"
+          ? cn("border border-black/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]", tone === "neutral" ? "bg-white" : "bg-white/30")
           : "border border-primary-light/10 bg-surface/80 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]"
       )}
     >
@@ -23,7 +27,9 @@ export default function Card({ children, className, light = false }: CardProps) 
         className={cn(
           "pointer-events-none absolute inset-0",
           light
-            ? "bg-[radial-gradient(ellipse_at_100%_100%,color-mix(in_srgb,var(--color-accent)_13%,transparent)_0%,transparent_70%)]"
+            ? tone === "neutral"
+              ? "bg-[radial-gradient(ellipse_at_100%_100%,rgba(0,0,0,0.05)_0%,transparent_70%)]"
+              : "bg-[radial-gradient(ellipse_at_100%_100%,color-mix(in_srgb,var(--color-accent)_13%,transparent)_0%,transparent_70%)]"
             : "bg-[radial-gradient(ellipse_at_100%_100%,color-mix(in_srgb,var(--color-primary-light)_13%,transparent)_0%,transparent_70%)]"
         )}
       />

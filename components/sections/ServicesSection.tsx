@@ -250,14 +250,14 @@ export default function ServicesSection() {
           <div className="mb-12 flex flex-col items-center md:mb-16">
             <TitleBlock />
           </div>
-          <div className="hidden gap-6 sm:grid sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mx-auto hidden max-w-[760px] gap-6 sm:grid sm:grid-cols-2">
             {services.map((service) => (
-              <ServiceCard key={service.title} {...service} light />
+              <ServiceCard key={service.title} {...service} light tone="neutral" />
             ))}
           </div>
           <SwipeCarousel className="sm:hidden">
             {services.map((service) => (
-              <ServiceCard key={service.title} {...service} light />
+              <ServiceCard key={service.title} {...service} light tone="neutral" />
             ))}
           </SwipeCarousel>
         </div>
@@ -273,7 +273,7 @@ export default function ServicesSection() {
     // scroll-into-view fade, same as the rest of the site's mobile sections.
     return (
       <section id="services" className="relative overflow-hidden bg-white px-6 py-16">
-        <BackgroundVideo autoPlay className="absolute inset-0 h-full w-full object-cover" />
+        <BackgroundVideo autoPlay className="absolute inset-0 h-full w-full object-contain" />
         <div className="absolute inset-0 bg-white/55" />
 
         <div className="relative z-10 mx-auto max-w-[1200px]">
@@ -295,7 +295,7 @@ export default function ServicesSection() {
           >
             <SwipeCarousel>
               {services.map((service) => (
-                <ServiceCard key={service.title} {...service} light />
+                <ServiceCard key={service.title} {...service} light tone="neutral" />
               ))}
             </SwipeCarousel>
           </motion.div>
@@ -307,7 +307,14 @@ export default function ServicesSection() {
   return (
     <section ref={wrapperRef} id="services" className="relative h-[500vh] bg-white">
       <div className="sticky top-0 h-screen overflow-hidden bg-white">
-        <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-cover" />
+        {/* object-contain, not object-cover — the clip was shot with a
+            white background and deliberate margins specifically so it
+            blends into this section's own white bg with nothing cropped;
+            cover would zoom past those margins and cut the mockups off at
+            the edges on any viewport whose aspect ratio isn't the clip's
+            own 16:9. Whatever's outside the clip's own frame just shows
+            the (equally white) section background instead — seamless. */}
+        <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-contain" />
 
         <div
           ref={contentRef}
@@ -317,7 +324,7 @@ export default function ServicesSection() {
             <TitleBlock />
           </div>
 
-          <div className="mx-auto mt-10 grid w-full max-w-[1200px] grid-cols-2 gap-6 lg:grid-cols-4">
+          <div className="mx-auto mt-10 grid w-full max-w-[760px] grid-cols-2 gap-6">
             {services.map((service, i) => (
               <div
                 key={service.title}
@@ -326,7 +333,7 @@ export default function ServicesSection() {
                 }}
                 style={{ opacity: 0, transform: "translateY(28px)" }}
               >
-                <ServiceCard {...service} light />
+                <ServiceCard {...service} light tone="neutral" />
               </div>
             ))}
           </div>
