@@ -316,9 +316,14 @@ export default function ServicesSection() {
             the (equally white) section background instead — seamless. */}
         <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-contain" />
 
+        {/* pt-[100px] — matches the Navbar's own fixed height plus
+            breathing room (same convention as the Hero's sticky panel).
+            Without it, centering this content within the full h-screen
+            box ignored the fact that the fixed header covers its own
+            top slice, so tall content pushed the title up underneath it. */}
         <div
           ref={contentRef}
-          className="relative z-10 flex h-full flex-col items-center justify-center px-6"
+          className="relative z-10 flex h-full flex-col items-center justify-center px-6 pt-[100px]"
         >
           <div ref={titleRef} style={{ opacity: 0 }}>
             <TitleBlock />
