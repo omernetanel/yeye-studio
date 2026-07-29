@@ -4,7 +4,7 @@ import Image from "next/image";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { Mail } from "lucide-react";
 import Link from "next/link";
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Button from "@/components/ui/Button";
 import LogoLiquidReveal, { type LogoLiquidRevealHandle } from "@/components/sections/hero/LogoLiquidReveal";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
@@ -45,6 +45,15 @@ const POST_RELEASE_FADE_PX = 220;
 // than an immediate swap right as everything else starts moving again.
 const DOCK_DELAY_PX = 120;
 
+// Past the pin's release, the CTA is ordinary in-flow content — it keeps
+// scrolling up with the rest of the page and would otherwise scroll right
+// under the fixed Navbar. Fading it out over this range, timed off its own
+// live position (not scroll progress) so it's fully gone CTA_NAVBAR_GAP_PX
+// before its top edge would actually reach the Navbar's bottom edge.
+const NAVBAR_HEIGHT_PX = 68;
+const CTA_NAVBAR_GAP_PX = 15;
+const CTA_NAVBAR_FADE_RANGE_PX = 120;
+
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
 }
@@ -63,8 +72,30 @@ function smoothstep(t: number) {
   return c * c * (3 - 2 * c);
 }
 
+const TAGLINE_TEXT = "בואו נבנה לכם אתר שעובד ומוכר באמת.";
+const TYPEWRITER_START_DELAY_MS = 500;
+const TYPEWRITER_CHAR_MS = 45;
+
+// Reveals `text` one character at a time, in plain logical (string) order.
+// The page is globally dir="rtl" (see app/layout.tsx), so the browser's own
+// bidi rendering already grows Hebrew text from the right edge toward the
+// left as characters are appended — no manual reversal needed here.
+function useTypewriter(text: string, active: boolean) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!active) return;
+    if (count >= text.length) return;
+    const id = setTimeout(() => setCount((c) => c + 1), count === 0 ? TYPEWRITER_START_DELAY_MS : TYPEWRITER_CHAR_MS);
+    return () => clearTimeout(id);
+  }, [active, count, text.length]);
+
+  return { visible: text.slice(0, count), done: count >= text.length };
+}
+
 export default function HeroSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const { visible: typedTagline, done: taglineTypingDone } = useTypewriter(TAGLINE_TEXT, !prefersReducedMotion);
 
   const wrapperRef = useRef<HTMLElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
@@ -101,7 +132,16 @@ export default function HeroSection() {
     liquidRef.current?.setScrollReveal(Math.min(rise, recede));
 
     if (ctaRef.current) {
-      ctaRef.current.style.opacity = String(smoothstep(mapRange(progress, CTA_FADE_START, 1, 0, 1)));
+      const fadeInT = smoothstep(mapRange(progress, CTA_FADE_START, 1, 0, 1));
+
+      // distance from the CTA's top edge to the point NAVBAR_GAP_PX above
+      // the Navbar's own bottom edge — 0 (or negative) once it's reached
+      // that point, large and positive while it's still far below it.
+      const ctaTop = ctaRef.current.getBoundingClientRect().top;
+      const distanceToNavbar = ctaTop - NAVBAR_HEIGHT_PX - CTA_NAVBAR_GAP_PX;
+      const navbarFadeT = 1 - smoothstep(clamp01(distanceToNavbar / CTA_NAVBAR_FADE_RANGE_PX));
+
+      ctaRef.current.style.opacity = String(Math.min(fadeInT, 1 - navbarFadeT));
     }
 
     // Purely a function of how far past the release point the scroll is —
@@ -230,8 +270,16 @@ export default function HeroSection() {
           transition={{ duration: 0.7, ease: "easeOut", delay: 0.15 }}
           className="flex flex-col items-start text-right"
         >
-          <p className="font-display text-2xl leading-snug font-semibold text-black md:text-4xl">
-            בואו נבנה לכם אתר שעובד ומוכר באמת.
+          <p
+            aria-label={TAGLINE_TEXT}
+            className="font-display text-2xl leading-snug font-semibold text-black md:text-4xl"
+          >
+            <span aria-hidden="true">
+              {prefersReducedMotion ? TAGLINE_TEXT : typedTagline}
+              {!prefersReducedMotion && !taglineTypingDone && (
+                <span className="ml-0.5 inline-block h-[0.85em] w-[2px] -translate-y-[0.05em] animate-pulse bg-black align-middle" />
+              )}
+            </span>
           </p>
         </motion.div>
       </div>
