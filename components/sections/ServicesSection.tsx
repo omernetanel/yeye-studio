@@ -36,8 +36,8 @@ const services = [
   },
 ];
 
-const VIDEO_SRC = "/videos/services-crumple.mp4";
-const POSTER_SRC = "/images/services-crumple-poster.jpg";
+const VIDEO_SRC = "/videos/services-bg.mp4";
+const POSTER_SRC = "/images/services-bg-poster.jpg";
 // The source is ~9s, but the phase math below always reads the real
 // value off the element once its metadata loads (see videoDurationRef) —
 // this is only what renders before that, and a safety fallback if
@@ -355,35 +355,37 @@ export default function ServicesSection() {
   return (
     <section ref={wrapperRef} id="services" className="relative h-[560vh] bg-white">
       <div className="sticky top-0 h-screen overflow-hidden bg-white">
-        {/* object-cover — fills the section edge-to-edge with no white
-            pillarboxing on wide viewports, the way this background is
-            meant to read. The clip's own generous white margins around
-            the mockups (deliberately shot that way to blend into this
-            section's white bg) mean cover's crop mostly eats into that
-            margin rather than the mockups themselves. top-[100px], full
-            h-full (not a shorter calc()'d box) — the box stays exactly
-            the size the clip was composed for, just shifted down so its
-            top clears the fixed Navbar; shrinking the box instead would
-            scale the whole composition down with it. The bit that now
-            overflows past the panel's own bottom edge is simply clipped
-            by overflow-hidden above, same as being off-screen either way.
-            A `video` is a replaced element with its own intrinsic aspect
-            ratio — leaving height as `auto` (relying on top+bottom alone)
-            makes the browser size the box from that intrinsic ratio
-            instead of the actual container, so height has to stay
-            explicit. */}
-        <BackgroundVideo ref={videoRef} className="absolute inset-x-0 top-[100px] h-full w-full object-cover" />
+        {/* object-cover object-top — fills the section edge-to-edge with no
+            white pillarboxing on wide viewports, the way this background is
+            meant to read. The box here (viewport width x full screen
+            height) is wider relative to its height than the clip's own
+            native aspect ratio, so cover has to crop vertically to fill it;
+            object-top pins that crop to the bottom instead of the default
+            center, which was eating into the clip's own top margin (built
+            deliberately white/blank to blend into this section's white bg)
+            and made it read as cut off right at the start. top-[76px] —
+            just past the Navbar's own 68px height, full h-full (not a
+            shorter calc()'d box) — the box stays exactly the size the clip
+            was composed for, just shifted down so its top clears the fixed
+            Navbar; shrinking the box instead would scale the whole
+            composition down with it. The bit that now overflows past the
+            panel's own bottom edge is simply clipped by overflow-hidden
+            above, same as being off-screen either way. A `video` is a
+            replaced element with its own intrinsic aspect ratio — leaving
+            height as `auto` (relying on top+bottom alone) makes the
+            browser size the box from that intrinsic ratio instead of the
+            actual container, so height has to stay explicit. */}
+        <BackgroundVideo ref={videoRef} className="absolute inset-x-0 top-[76px] h-full w-full object-cover object-top" />
 
-        {/* pt-[170px] — well past the Navbar's own fixed height, for real
+        {/* pt-[96px] — just past the Navbar's own fixed height, for real
             breathing room above the title (same convention as the Hero's
-            sticky panel, just with more margin on top of it). Without
-            some top padding here at all, centering this content within
-            the full h-screen box ignored the fact that the fixed header
-            covers its own top slice, so tall content pushed the title up
-            underneath it. */}
+            sticky panel). Without some top padding here at all, centering
+            this content within the full h-screen box ignored the fact
+            that the fixed header covers its own top slice, so tall
+            content pushed the title up underneath it. */}
         <div
           ref={contentRef}
-          className="relative z-10 flex h-full flex-col items-center justify-center px-6 pt-[170px]"
+          className="relative z-10 flex h-full flex-col items-center justify-center px-6 pt-[96px]"
         >
           <div ref={titleRef} style={{ opacity: 0 }}>
             <TitleBlock />

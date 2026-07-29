@@ -11,7 +11,6 @@ import TypesGrid from "@/components/services/TypesGrid";
 import ProcessTimeline from "@/components/services/ProcessTimeline";
 import PrinciplesGrid from "@/components/services/PrinciplesGrid";
 import WhatYouGet from "@/components/services/WhatYouGet";
-import ExamplesPlaceholder from "@/components/services/ExamplesPlaceholder";
 import ServiceFinalCTA from "@/components/services/ServiceFinalCTA";
 
 const principles = [
@@ -73,7 +72,6 @@ export default function BusinessSitesContent() {
         <ProcessTimeline title="איך זה עובד?" steps={processSteps} />
         <PrinciplesGrid title="העקרונות שלי" items={principles} />
         <WhatYouGet title="וזה לא הכל" subtitle="כל פרויקט מגיע עם שכבת שירות שמעטים מציעים" rows={whatYouGetRows} />
-        <ExamplesPlaceholder title="דוגמאות מהעבודה שלי" labelPrefix="אתר תדמית" />
         <ServiceFinalCTA title="רוצה אתר שגורם ללקוחות לסמוך עליך?" />
       </div>
 
