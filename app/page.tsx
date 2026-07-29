@@ -25,18 +25,6 @@ export default function Home() {
         }}
       />
 
-      <div
-        className="pointer-events-none fixed inset-0 z-0 bg-[size:60px_60px]"
-        style={{
-          backgroundImage: `
-            linear-gradient(color-mix(in srgb, black 3%, transparent) 1px, transparent 1px),
-            linear-gradient(90deg, color-mix(in srgb, black 3%, transparent) 1px, transparent 1px)
-          `,
-          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
-          maskImage: "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
-        }}
-      />
-
       <div className="relative z-10">
         <Navbar />
         <HeroSection />

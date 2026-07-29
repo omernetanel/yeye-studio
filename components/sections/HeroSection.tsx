@@ -40,6 +40,11 @@ const CTA_FADE_START = 0.8;
 // is just the button on its own, before it too scrolls away normally.
 const POST_RELEASE_FADE_PX = 220;
 
+// The Navbar's own mark doesn't have to appear the instant the pin lets
+// go — holding off for a bit of extra scroll first reads more deliberate
+// than an immediate swap right as everything else starts moving again.
+const DOCK_DELAY_PX = 120;
+
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
 }
@@ -109,10 +114,11 @@ export default function HeroSection() {
     if (taglineRef.current) taglineRef.current.style.opacity = fadeOpacity;
     if (logoFadeRef.current) logoFadeRef.current.style.opacity = fadeOpacity;
 
-    // The instant the pin lets go, the Navbar's own mark takes over —
-    // nothing to hand off, no size/position to match, just a plain
-    // opacity crossfade on the Navbar's side (see heroDock.ts).
-    setDocked(rawScrollY >= pinEndScrollYRef.current);
+    // A little after the pin lets go — not the same instant — the
+    // Navbar's own mark takes over. Nothing to hand off, no size/position
+    // to match, just a plain opacity crossfade on the Navbar's side (see
+    // heroDock.ts).
+    setDocked(rawScrollY >= pinEndScrollYRef.current + DOCK_DELAY_PX);
   };
 
   const measure = () => {
