@@ -1,11 +1,12 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
-import { useMotionValueEvent, useScroll } from "framer-motion";
+import { forwardRef, useLayoutEffect, useRef } from "react";
+import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { LayoutDashboard, Monitor, Rocket, ShoppingCart } from "lucide-react";
 import ServiceCard from "@/components/ui/ServiceCard";
 import SwipeCarousel from "@/components/ui/SwipeCarousel";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
+import { useIsMobile } from "@/lib/use-mobile";
 
 const services = [
   {
@@ -34,22 +35,42 @@ const services = [
   },
 ];
 
-// Scroll-progress phase boundaries (0..1 across this section's own tall
-// wrapper — see the sticky structure below). A solid black panel rises
-// from the bottom with a hard edge (no color-fade — this is a shape
-// covering white, not a background transitioning), then once it's passed
-// halfway up the viewport the title rises out of the bottom, small, and
-// grows into its resting size at the top as scrolling continues, and the
-// 4 cards open right after.
-// Tuned so the black panel is already fully risen by the time the Hero's
-// logo lands in the Navbar (a fixed ~550px of scroll into this section's
-// own range) — the two sections hand off to each other mid-motion instead
-// of the black screen still visibly climbing after the Hero's already done.
-const RISE_END = 0.22;
-const TITLE_START = RISE_END / 2; // exactly when the black panel has covered half the viewport
-const TITLE_END = 0.82;
-const CARDS_START = 0.8;
-const CARDS_END = 1;
+const VIDEO_SRC = "/videos/services-crumple.mp4";
+const POSTER_SRC = "/images/services-crumple-poster.jpg";
+// The source is ~9s, but the phase math below always reads the real
+// value off the element once its metadata loads (see videoDurationRef) —
+// this is only what renders before that, and a safety fallback if
+// `loadedmetadata` never fires for some reason.
+const VIDEO_DURATION_FALLBACK = 9;
+
+// Phase 1 ("reading"): scroll progress 0 -> READ_END, scoped to this
+// section's own tall wrapper. The clip stays frozen on its first frame —
+// a flat-lay of the mockups, indistinguishable from a plain background
+// image — while the title fades in and then the 4 cards reveal, staggered,
+// on their own schedule (re-scoped 0..1 within this sub-range via p1
+// below). Nothing here touches the video at all; it just isn't playing yet.
+const READ_END = 0.3;
+const TITLE_LOCAL_END = 0.18;
+const CARDS_LOCAL_START = 0.3;
+const CARD_STAGGER = 0.1;
+const CARD_LOCAL_DURATION = 0.35;
+
+// Phase 2 ("scrub"): READ_END -> 1. video.currentTime maps linearly across
+// the rest of this section's scroll budget, from 0 to the clip's real
+// duration — scrolling down plays it forward frame by frame, scrolling
+// back up plays it in reverse, exactly like any other scroll-linked value
+// here (nothing about this is a one-shot trigger). The title+cards block
+// (already fully revealed by the end of phase 1) shrinks toward the
+// screen's center and fades out as ONE unit, finishing exactly when the
+// clip reaches TEXT_GONE_AT_SECONDS — well before the clip's own end,
+// which keeps scrubbing onward (still purely scroll-driven) through the
+// rest of the crumple to the final, fully-balled-up frame. Once the
+// wrapper's own scroll budget runs out, the sticky panel below releases
+// on its own (same passive mechanism as the Hero's pin) and that last
+// frame just sits there as an ordinary paused <video>, scrolling away
+// with the rest of the page like a static image.
+const TEXT_GONE_AT_SECONDS = 3;
+const CONTENT_SHRINK_SCALE = 0.6;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -69,112 +90,245 @@ function smoothstep(t: number) {
   return c * c * (3 - 2 * c);
 }
 
-function ServiceCards() {
-  return (
-    <>
-      {/* Mobile: touch-native swipe carousel, one card at a time */}
-      <SwipeCarousel className="sm:hidden">
-        {services.map((service) => (
-          <ServiceCard key={service.title} {...service} light={false} />
-        ))}
-      </SwipeCarousel>
-
-      {/* Tablet/desktop: grid */}
-      <div className="hidden gap-6 sm:grid sm:grid-cols-2 lg:grid-cols-4">
-        {services.map((service) => (
-          <ServiceCard key={service.title} {...service} light={false} />
-        ))}
-      </div>
-    </>
-  );
-}
-
 function TitleBlock() {
   return (
     <>
-      <h2 className="text-center font-display text-3xl font-bold text-white md:text-5xl">מה אני עושה?</h2>
+      <h2 className="text-center font-display text-3xl font-bold text-black md:text-5xl">מה אני עושה?</h2>
       <div className="mx-auto mt-4 h-[3px] w-[140px] rounded-full bg-[image:var(--gradient-brand)]" />
     </>
   );
 }
 
+const BackgroundVideo = forwardRef<HTMLVideoElement, { className?: string; autoPlay?: boolean }>(
+  function BackgroundVideo({ className, autoPlay = false }, ref) {
+    return (
+      <video
+        ref={ref}
+        aria-hidden="true"
+        tabIndex={-1}
+        muted
+        playsInline
+        loop={autoPlay}
+        autoPlay={autoPlay}
+        preload="auto"
+        poster={POSTER_SRC}
+        disablePictureInPicture
+        className={className}
+      >
+        <source src={VIDEO_SRC} type="video/mp4" />
+      </video>
+    );
+  }
+);
+
 export default function ServicesSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const isMobile = useIsMobile();
+  const skipDesktopMotion = prefersReducedMotion || isMobile;
 
   const wrapperRef = useRef<HTMLElement>(null);
-  const blackRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
-  const cardsRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
 
-  // "start end" (not "start start") — progress begins the instant this
-  // section's top starts entering the viewport from the bottom, not only
-  // once it's fully reached the top. Otherwise there's a dead gap of a
-  // full extra viewport height, right after the Hero's pin releases,
-  // where this section is still plain scrolling white space — the black
-  // rise couldn't possibly "already be under way" during the Hero's own
-  // final leg like that.
-  const { scrollYProgress } = useScroll({ target: wrapperRef, offset: ["start end", "end end"] });
+  // Analytical, not scrollYProgress-derived — same reasoning as the Hero's
+  // own pin: a target-scoped scrollYProgress motion value lags an instant
+  // or fast scroll jump by a frame or two (its target rect is re-measured
+  // on its own schedule), which is exactly the kind of drift that would
+  // throw off a precise video-frame seek. A live rect measurement plus the
+  // raw global scrollY never do that.
+  const pinStartScrollYRef = useRef(0);
+  const pinEndScrollYRef = useRef(0);
+  const videoDurationRef = useRef(VIDEO_DURATION_FALLBACK);
+  const videoReadyRef = useRef(false);
 
-  const applyIntro = (progress: number) => {
-    const black = blackRef.current;
-    const title = titleRef.current;
-    const cards = cardsRef.current;
-    if (!black || !title || !cards) return;
+  const { scrollY } = useScroll();
 
-    const riseT = smoothstep(mapRange(progress, 0, RISE_END, 0, 1));
-    black.style.height = `${riseT * 100}vh`;
+  const update = () => {
+    const wrapper = wrapperRef.current;
+    const video = videoRef.current;
+    const content = contentRef.current;
+    if (!wrapper || !video || !content) return;
 
-    const titleT = smoothstep(mapRange(progress, TITLE_START, TITLE_END, 0, 1));
-    title.style.opacity = String(mapRange(progress, TITLE_START, TITLE_START + 0.05, 0, 1));
-    title.style.transform = `translate(-50%, ${lerp(60, 0, titleT)}vh) scale(${lerp(0.45, 1, titleT)})`;
+    const rawScrollY = scrollY.get();
+    const progress = clamp01(mapRange(rawScrollY, pinStartScrollYRef.current, pinEndScrollYRef.current, 0, 1));
 
-    const cardsT = smoothstep(mapRange(progress, CARDS_START, CARDS_END, 0, 1));
-    cards.style.opacity = String(cardsT);
-    cards.style.transform = `translateY(${lerp(40, 0, cardsT)}px)`;
+    // Phase 1 sub-progress — clamps at 1 once `progress` passes READ_END,
+    // which is exactly what holds the title/cards at their fully-revealed
+    // state (not fading back out) all through phase 2 below.
+    const p1 = clamp01(progress / READ_END);
+
+    if (titleRef.current) {
+      const titleT = smoothstep(mapRange(p1, 0, TITLE_LOCAL_END, 0, 1));
+      titleRef.current.style.opacity = String(titleT);
+    }
+
+    cardRefs.current.forEach((card, i) => {
+      if (!card) return;
+      const start = CARDS_LOCAL_START + i * CARD_STAGGER;
+      const cardT = smoothstep(mapRange(p1, start, start + CARD_LOCAL_DURATION, 0, 1));
+      card.style.opacity = String(cardT);
+      card.style.transform = `translateY(${lerp(28, 0, cardT)}px)`;
+    });
+
+    // Phase 2 — video.currentTime is a pure linear function of scroll
+    // progress across the whole READ_END..1 range, so it's automatically,
+    // exactly reversible on scroll-up; no separate "rewind" logic needed.
+    const scrubT = mapRange(progress, READ_END, 1, 0, 1);
+    const targetTime = scrubT * videoDurationRef.current;
+    if (videoReadyRef.current && Math.abs(video.currentTime - targetTime) > 0.008) {
+      video.currentTime = targetTime;
+    }
+
+    const textGoneT = smoothstep(mapRange(targetTime, 0, TEXT_GONE_AT_SECONDS, 0, 1));
+    const shrinkT = progress <= READ_END ? 0 : textGoneT;
+    content.style.opacity = String(1 - shrinkT);
+    content.style.transform = `scale(${lerp(1, CONTENT_SHRINK_SCALE, shrinkT)})`;
+  };
+
+  const measurePinRange = () => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const wrapperTop = wrapper.getBoundingClientRect().top + window.scrollY;
+    pinStartScrollYRef.current = wrapperTop;
+    pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - window.innerHeight;
   };
 
   useLayoutEffect(() => {
-    if (prefersReducedMotion) return;
-    applyIntro(scrollYProgress.get());
-    // Only needs to run once on mount — applyIntro always reads the live
-    // motion value itself, never a stale closure over `progress`.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefersReducedMotion]);
+    if (skipDesktopMotion) return;
+    const wrapper = wrapperRef.current;
+    const video = videoRef.current;
+    if (!wrapper || !video) return;
 
-  useMotionValueEvent(scrollYProgress, "change", (progress) => {
-    if (prefersReducedMotion) return;
-    applyIntro(progress);
+    // iOS Safari can leave programmatic currentTime seeks doing nothing
+    // visually until the video has been through one real play/pause cycle
+    // — priming it here (safe without a user gesture since it's muted)
+    // is what makes every seek afterward actually paint.
+    const handleLoadedMetadata = () => {
+      if (Number.isFinite(video.duration) && video.duration > 0) {
+        videoDurationRef.current = video.duration;
+      }
+      video.play().then(() => video.pause()).catch(() => {});
+      videoReadyRef.current = true;
+      update();
+    };
+
+    if (video.readyState >= 1) {
+      handleLoadedMetadata();
+    } else {
+      video.addEventListener("loadedmetadata", handleLoadedMetadata, { once: true });
+    }
+
+    measurePinRange();
+    update();
+
+    const handleResize = () => {
+      measurePinRange();
+      update();
+    };
+    window.addEventListener("resize", handleResize);
+    const ro = new ResizeObserver(handleResize);
+    ro.observe(wrapper);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      ro.disconnect();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skipDesktopMotion]);
+
+  useMotionValueEvent(scrollY, "change", () => {
+    if (!skipDesktopMotion) update();
   });
 
   if (prefersReducedMotion) {
     return (
-      <section id="services" className="relative bg-[#0a0a0a] px-6 py-16 md:py-20">
+      <section id="services" className="relative bg-white px-6 py-16 md:py-20">
         <div className="relative z-10 mx-auto max-w-[1200px]">
           <div className="mb-12 flex flex-col items-center md:mb-16">
             <TitleBlock />
           </div>
-          <ServiceCards />
+          <div className="hidden gap-6 sm:grid sm:grid-cols-2 lg:grid-cols-4">
+            {services.map((service) => (
+              <ServiceCard key={service.title} {...service} light />
+            ))}
+          </div>
+          <SwipeCarousel className="sm:hidden">
+            {services.map((service) => (
+              <ServiceCard key={service.title} {...service} light />
+            ))}
+          </SwipeCarousel>
+        </div>
+      </section>
+    );
+  }
+
+  if (isMobile) {
+    // No pin, no scroll-scrub — the clip just autoplays/loops normally as
+    // ambient background texture (cheap: a real-time decode loop, not a
+    // seek on every scroll tick, which is what's actually janky on
+    // touch/Safari), while the title and cards reveal with a plain
+    // scroll-into-view fade, same as the rest of the site's mobile sections.
+    return (
+      <section id="services" className="relative overflow-hidden bg-white px-6 py-16">
+        <BackgroundVideo autoPlay className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-white/55" />
+
+        <div className="relative z-10 mx-auto max-w-[1200px]">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.5 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="mb-10 flex flex-col items-center"
+          >
+            <TitleBlock />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+          >
+            <SwipeCarousel>
+              {services.map((service) => (
+                <ServiceCard key={service.title} {...service} light />
+              ))}
+            </SwipeCarousel>
+          </motion.div>
         </div>
       </section>
     );
   }
 
   return (
-    <section ref={wrapperRef} id="services" className="relative h-[280vh]">
+    <section ref={wrapperRef} id="services" className="relative h-[500vh] bg-white">
       <div className="sticky top-0 h-screen overflow-hidden bg-white">
-        <div ref={blackRef} className="absolute inset-x-0 bottom-0 bg-[#0a0a0a]" style={{ height: 0 }} />
+        <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-cover" />
 
         <div
-          ref={titleRef}
-          className="absolute top-[11%] left-1/2 w-full max-w-[600px] px-6"
-          style={{ transform: "translate(-50%, 60vh) scale(0.45)", opacity: 0 }}
+          ref={contentRef}
+          className="relative z-10 flex h-full flex-col items-center justify-center px-6"
         >
-          <TitleBlock />
-        </div>
+          <div ref={titleRef} style={{ opacity: 0 }}>
+            <TitleBlock />
+          </div>
 
-        <div ref={cardsRef} className="absolute inset-x-0 top-[27%] px-6" style={{ opacity: 0, transform: "translateY(40px)" }}>
-          <div className="relative z-10 mx-auto max-w-[1200px]">
-            <ServiceCards />
+          <div className="mx-auto mt-10 grid w-full max-w-[1200px] grid-cols-2 gap-6 lg:grid-cols-4">
+            {services.map((service, i) => (
+              <div
+                key={service.title}
+                ref={(el) => {
+                  cardRefs.current[i] = el;
+                }}
+                style={{ opacity: 0, transform: "translateY(28px)" }}
+              >
+                <ServiceCard {...service} light />
+              </div>
+            ))}
           </div>
         </div>
       </div>
