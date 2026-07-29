@@ -27,7 +27,7 @@ function StepCard({ step }: { step: Step }) {
 
 function StepIcon({ Icon }: { Icon: LucideIcon }) {
   return (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-accent/50 bg-accent/15 shadow-[0_0_12px_rgba(42,51,243,0.2)]">
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-accent/50 bg-accent/15 shadow-[0_0_12px_rgba(74,74,74,0.2)]">
       <Icon size={14} strokeWidth={1.5} className="text-accent" />
     </div>
   );

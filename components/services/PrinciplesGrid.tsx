@@ -21,7 +21,7 @@ function PrincipleCardContent({ item }: { item: Principle }) {
   return (
     <Card light className="flex h-full flex-col items-center gap-3 text-center">
       <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-accent/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-accent)_35%,transparent)_0%,rgba(255,255,255,0.4)_75%)]">
-        <Icon size={24} strokeWidth={1.5} className="text-accent drop-shadow-[0_0_6px_rgba(42,51,243,0.35)]" />
+        <Icon size={24} strokeWidth={1.5} className="text-accent drop-shadow-[0_0_6px_rgba(74,74,74,0.35)]" />
       </div>
       <h3 className="font-display text-[15px] font-bold text-black">{item.title}</h3>
       <p className="font-body text-[13px] leading-[1.65] text-black/50">{item.description}</p>
