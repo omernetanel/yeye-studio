@@ -170,13 +170,20 @@ const COMPOSE_FRAGMENT_SHADER = `
       scrollField = max(scrollField, circle);
     }
 
-    float reveal = logoAlpha * clamp(max(trailVal, scrollField), 0.0, 1.0);
+    // The scroll-driven fill still only lights up the logo itself (kept
+    // masked by logoAlpha, unchanged) — but the hover trail is no longer
+    // confined to the letter shapes at all: it paints its own opacity
+    // (outAlpha below) as well as its own reveal, so the blob can spill
+    // into the whitespace around and between the glyphs instead of being
+    // clipped the instant it crosses a letter's edge.
+    float reveal = clamp(max(trailVal, scrollField * logoAlpha), 0.0, 1.0);
+    float outAlpha = max(logoAlpha, trailVal);
 
     vec2 videoUv = vec2(vUv.x * videoRepeatX, vUv.y);
     vec3 videoColor = texture2D(videoTex, videoUv).rgb;
     vec3 finalColor = mix(vec3(0.0), videoColor, reveal);
 
-    gl_FragColor = vec4(finalColor, logoAlpha);
+    gl_FragColor = vec4(finalColor, outAlpha);
   }
 `;
 
