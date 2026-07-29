@@ -14,16 +14,18 @@ const WHATSAPP_NUMBER = "972552434775";
 const CONTACT_EMAIL = "hello@yeyelabs.com";
 
 // Pinned (a tall wrapper + `sticky`, not a JS scroll-jack, so it stays
-// smooth under Lenis): the page holds still while video floods the logo
-// bottom-to-top, recedes back to plain black, and the mark shrinks in
-// place — not all the way down to the Navbar mark's own tiny size, just
-// to a modest, still clearly legible one. There's no handoff/travel
-// animation to a precise target anymore, so nothing here needs to match
-// the Navbar's own size or position at all.
-const FILL_END = 0.5;
-const RECEDE_END = 0.78;
-const SHRINK_START = 0.5;
-const RELEASE_WIDTH_PX = 340;
+// smooth under Lenis): the page holds still while the video reveal fires
+// (see REVEAL_TRIGGER_PROGRESS below) at its natural full size — no
+// in-place shrink anymore, that was extra motion for no real benefit.
+// The mark just holds there, playing/holding on its last frame, until the
+// pin releases, at which point it fades out post-release (see
+// postReleaseT below) and the Navbar's own separate, plain black mark
+// crossfades in.
+//
+// A tiny fraction, not 0 — scroll restoration or a stray sub-pixel
+// scroll on mount shouldn't fire the reveal before the user has actually
+// scrolled with intent.
+const REVEAL_TRIGGER_PROGRESS = 0.02;
 
 // The CTA fades in over the tail end of that same pinned phase, so by
 // the moment the pin releases, both it and the now-modest-sized mark are
@@ -63,10 +65,6 @@ function mapRange(value: number, inMin: number, inMax: number, outMin: number, o
   return outMin + t * (outMax - outMin);
 }
 
-function lerp(a: number, b: number, t: number) {
-  return a + (b - a) * t;
-}
-
 function smoothstep(t: number) {
   const c = clamp01(t);
   return c * c * (3 - 2 * c);
@@ -98,38 +96,30 @@ export default function HeroSection() {
   const { visible: typedTagline, done: taglineTypingDone } = useTypewriter(TAGLINE_TEXT, !prefersReducedMotion);
 
   const wrapperRef = useRef<HTMLElement>(null);
-  const spacerRef = useRef<HTMLDivElement>(null);
-  const logoRef = useRef<HTMLDivElement>(null);
   const logoFadeRef = useRef<HTMLDivElement>(null);
   const taglineRef = useRef<HTMLDivElement>(null);
   const liquidRef = useRef<LogoLiquidRevealHandle>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
 
-  const naturalWidthRef = useRef(0);
-  const naturalAspectRef = useRef(8042 / 2297);
   const pinStartScrollYRef = useRef(0);
   const pinEndScrollYRef = useRef(0);
 
   const { scrollY } = useScroll();
 
   const update = () => {
-    const logo = logoRef.current;
-    if (!logo) return;
-
     const rawScrollY = scrollY.get();
     const progress = clamp01(mapRange(rawScrollY, pinStartScrollYRef.current, pinEndScrollYRef.current, 0, 1));
 
-    const sizeT = smoothstep(mapRange(progress, SHRINK_START, 1, 0, 1));
-    const currentWidth = lerp(naturalWidthRef.current || RELEASE_WIDTH_PX, RELEASE_WIDTH_PX, sizeT);
-    logo.style.width = `${currentWidth}px`;
-    logo.style.height = `${currentWidth / naturalAspectRef.current}px`;
-
-    // The water level: rises 0→1 while the page is still held, then
-    // recedes back to 0 while the mark shrinks — draining out, not just
-    // fading, the same mechanism in reverse.
-    const rise = mapRange(progress, 0, FILL_END, 0, 1);
-    const recede = 1 - mapRange(progress, FILL_END, RECEDE_END, 0, 1);
-    liquidRef.current?.setScrollReveal(Math.min(rise, recede));
+    // A one-shot trigger, not a continuous scroll-driven blend: the first
+    // instant scroll moves at all, `trigger()` fires the canvas's own
+    // fast wipe + real video playback, which then run on their own clock
+    // and hold on the video's last frame — never receding back to plain
+    // black — regardless of how much further (or whether back up) the
+    // page scrolls after that. trigger() is idempotent, so calling it
+    // again on every subsequent tick past the threshold is harmless.
+    if (progress > REVEAL_TRIGGER_PROGRESS) {
+      liquidRef.current?.trigger();
+    }
 
     if (ctaRef.current) {
       const fadeInT = smoothstep(mapRange(progress, CTA_FADE_START, 1, 0, 1));
@@ -163,19 +153,11 @@ export default function HeroSection() {
 
   const measure = () => {
     const wrapper = wrapperRef.current;
-    const spacer = spacerRef.current;
-    if (!wrapper || !spacer) return;
+    if (!wrapper) return;
 
     const wrapperTop = wrapper.getBoundingClientRect().top + window.scrollY;
     pinStartScrollYRef.current = wrapperTop;
     pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - window.innerHeight;
-
-    // The spacer is an invisible, absolutely-positioned twin at the
-    // logo's natural (unshrunk) size — reading its width here, rather
-    // than the real logo's own box, is what keeps this accurate across a
-    // responsive resize instead of measuring an element whose width this
-    // same code is actively overwriting.
-    naturalWidthRef.current = spacer.getBoundingClientRect().width;
   };
 
   useLayoutEffect(() => {
@@ -189,7 +171,7 @@ export default function HeroSection() {
     };
     window.addEventListener("resize", handleResize);
     const ro = new ResizeObserver(handleResize);
-    if (spacerRef.current) ro.observe(spacerRef.current);
+    if (wrapperRef.current) ro.observe(wrapperRef.current);
 
     return () => {
       window.removeEventListener("resize", handleResize);
@@ -221,43 +203,35 @@ export default function HeroSection() {
       />
     </div>
   ) : (
-    <div className="relative mx-auto">
-      {/* Invisible natural-size reference, purely for measurement (see
-          measure() above) — absolutely positioned so it reserves no
-          layout space of its own; the actual space here comes from the
-          real logo below, which is the thing that's actually shrinking. */}
-      <div ref={spacerRef} className="invisible absolute inset-x-0 top-0 aspect-[8042/2297] w-full" aria-hidden />
-
-      <div ref={logoRef} className="relative mx-auto aspect-[8042/2297] w-full select-none">
-        <motion.div
-          initial={wipeInitial}
-          animate={{ clipPath: "inset(0 0% 0 0)" }}
-          transition={{ duration: 1.1, ease: [0.65, 0, 0.35, 1], delay: 0.35 }}
-          className="relative h-full w-full"
-        >
-          {/* The solid black logo — always the visual baseline. The canvas
-              layered on top overdraws it with an identical black shape, so
-              nothing looks different until the liquid reveal actually
-              activates (hover, or the scroll-driven full-logo fill). */}
-          <Image
-            src="/images/logo.png"
-            alt="YEYE"
-            fill
-            priority
-            draggable={false}
-            onDragStart={(e) => e.preventDefault()}
-            sizes="100vw"
-            className="pointer-events-none object-cover"
-            style={{ filter: "brightness(0)" }}
-          />
-          <LogoLiquidReveal
-            ref={liquidRef}
-            logoSrc="/images/logo.png"
-            videoSrc="/videos/herovid.mp4"
-            className="absolute inset-0 h-full w-full"
-          />
-        </motion.div>
-      </div>
+    <div className="relative mx-auto aspect-[8042/2297] w-full select-none">
+      <motion.div
+        initial={wipeInitial}
+        animate={{ clipPath: "inset(0 0% 0 0)" }}
+        transition={{ duration: 1.1, ease: [0.65, 0, 0.35, 1], delay: 0.35 }}
+        className="relative h-full w-full"
+      >
+        {/* The solid black logo — always the visual baseline. The canvas
+            layered on top overdraws it with an identical black shape, so
+            nothing looks different until the liquid reveal actually
+            activates (hover, or the scroll-driven full-logo fill). */}
+        <Image
+          src="/images/logo.png"
+          alt="YEYE"
+          fill
+          priority
+          draggable={false}
+          onDragStart={(e) => e.preventDefault()}
+          sizes="100vw"
+          className="pointer-events-none object-cover"
+          style={{ filter: "brightness(0)" }}
+        />
+        <LogoLiquidReveal
+          ref={liquidRef}
+          logoSrc="/images/logo.png"
+          videoSrc="/videos/herovid.mp4"
+          className="absolute inset-0 h-full w-full"
+        />
+      </motion.div>
     </div>
   );
 
@@ -291,7 +265,7 @@ export default function HeroSection() {
           top with a huge dead gap below, instead of sitting centered in
           the space actually available for them. */}
       <div className="flex flex-1 flex-col items-center justify-center px-6">
-        <div ref={logoFadeRef} className="relative w-full select-none px-4 sm:px-6">{logoBlock}</div>
+        <div ref={logoFadeRef} className="relative w-full select-none px-4 pt-8 sm:px-6 sm:pt-10">{logoBlock}</div>
 
         {/* Ordinary in-flow content, right below the logo, in both
             branches — the reduced-motion version just skips the initial
