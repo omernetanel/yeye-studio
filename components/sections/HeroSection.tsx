@@ -33,6 +33,13 @@ const RELEASE_WIDTH_PX = 340;
 // no separate "travel to the Navbar" phase at all.
 const CTA_FADE_START = 0.8;
 
+// Once the pin lets go and the Navbar's own mark has taken over, the
+// Hero's tagline and mark have done their job — continuing to scroll
+// fades them out (the CTA stays put, fully opaque) over this many extra
+// pixels past the release point, so what's left on screen for a moment
+// is just the button on its own, before it too scrolls away normally.
+const POST_RELEASE_FADE_PX = 220;
+
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
 }
@@ -57,6 +64,8 @@ export default function HeroSection() {
   const wrapperRef = useRef<HTMLElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
+  const logoFadeRef = useRef<HTMLDivElement>(null);
+  const taglineRef = useRef<HTMLDivElement>(null);
   const liquidRef = useRef<LogoLiquidRevealHandle>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
 
@@ -89,6 +98,16 @@ export default function HeroSection() {
     if (ctaRef.current) {
       ctaRef.current.style.opacity = String(smoothstep(mapRange(progress, CTA_FADE_START, 1, 0, 1)));
     }
+
+    // Purely a function of how far past the release point the scroll is —
+    // 0 the entire time the pin is held (mapRange/clamp01 keep it pinned
+    // at the "value" input's lower bound until rawScrollY actually passes
+    // pinEnd), so it never interferes with anything above, and it's just
+    // as reversible on scroll-up as everything else here.
+    const postReleaseT = smoothstep(mapRange(rawScrollY, pinEndScrollYRef.current, pinEndScrollYRef.current + POST_RELEASE_FADE_PX, 0, 1));
+    const fadeOpacity = String(1 - postReleaseT);
+    if (taglineRef.current) taglineRef.current.style.opacity = fadeOpacity;
+    if (logoFadeRef.current) logoFadeRef.current.style.opacity = fadeOpacity;
 
     // The instant the pin lets go, the Navbar's own mark takes over —
     // nothing to hand off, no size/position to match, just a plain
@@ -198,7 +217,7 @@ export default function HeroSection() {
 
   const heroInFlowContent = (
     <>
-      <div className="mx-auto mt-8 w-full max-w-[1400px] px-6">
+      <div ref={taglineRef} className="mx-auto mt-8 w-full max-w-[1400px] px-6">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -218,7 +237,7 @@ export default function HeroSection() {
           top with a huge dead gap below, instead of sitting centered in
           the space actually available for them. */}
       <div className="flex flex-1 flex-col items-center justify-center px-6">
-        <div className="relative w-full select-none px-4 sm:px-6">{logoBlock}</div>
+        <div ref={logoFadeRef} className="relative w-full select-none px-4 sm:px-6">{logoBlock}</div>
 
         {/* Ordinary in-flow content, right below the logo, in both
             branches — the reduced-motion version just skips the initial
