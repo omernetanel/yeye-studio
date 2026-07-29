@@ -367,7 +367,12 @@ export default function HeroSection() {
           later sibling, regardless of how high the z-index was set. */}
       <div
         ref={ctaRef}
-        className="fixed inset-x-0 z-[70] flex justify-center px-6"
+        // Below the Navbar's z-50 (not above it, like the floating mark) —
+        // once released, this scrolls up through the header's own on-screen
+        // band on its way off-screen, and needs to duck behind the header
+        // there rather than paint over it. Still above Services' own
+        // (unset/auto) stacking, which is all it ever needed z-index for.
+        className="fixed inset-x-0 z-40 flex justify-center px-6"
         style={{ opacity: 0 }}
       >
         <Button
