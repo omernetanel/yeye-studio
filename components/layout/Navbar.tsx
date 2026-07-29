@@ -55,9 +55,9 @@ export default function Navbar() {
           <span className="inline-block">
             <Image
               src="/images/logo.png"
-              alt="YEYE Labs"
-              width={80}
-              height={26}
+              alt="YEYE"
+              width={8042}
+              height={3300}
               className="h-6 w-auto object-contain brightness-0"
               priority
             />

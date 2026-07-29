@@ -27,13 +27,15 @@ const CONTACT_EMAIL = "hello@yeyelabs.com";
 // scrolled with intent.
 const REVEAL_TRIGGER_PROGRESS = 0.02;
 
-// The CTA fades in over the tail end of that same pinned phase, so by
-// the moment the pin releases, both it and the now-modest-sized mark are
-// already sitting there fully formed, as perfectly ordinary in-flow
-// content — from that instant on they just scroll away with the rest of
-// the page like anything else. No fixed positioning, no z-index games,
-// no separate "travel to the Navbar" phase at all.
-const CTA_FADE_START = 0.8;
+// The CTA fades in early in the pinned phase (shortly after the reveal
+// fires — see REVEAL_TRIGGER_PROGRESS) and is fully shown well before the
+// pin releases, so it isn't a "reward" you have to scroll all the way
+// through a long dead zone to see. This used to start much later (0.8),
+// back when the mark was still shrinking through most of the pin and the
+// CTA's appearance was timed to land right as that finished — now that
+// the shrink is gone, there's no reason to hold it back that long.
+const CTA_FADE_START = 0.15;
+const CTA_FADE_END = 0.45;
 
 // Once the pin lets go and the Navbar's own mark has taken over, the
 // Hero's tagline and mark have done their job — continuing to scroll
@@ -122,7 +124,7 @@ export default function HeroSection() {
     }
 
     if (ctaRef.current) {
-      const fadeInT = smoothstep(mapRange(progress, CTA_FADE_START, 1, 0, 1));
+      const fadeInT = smoothstep(mapRange(progress, CTA_FADE_START, CTA_FADE_END, 0, 1));
 
       // distance from the CTA's top edge to the point NAVBAR_GAP_PX above
       // the Navbar's own bottom edge — 0 (or negative) once it's reached
@@ -333,7 +335,7 @@ export default function HeroSection() {
   }
 
   return (
-    <section ref={wrapperRef} id="hero" className="relative h-[170vh]">
+    <section ref={wrapperRef} id="hero" className="relative h-[135vh]">
       <div className="sticky top-0 flex h-screen flex-col overflow-hidden bg-white pt-[100px] pb-8">
         {heroInFlowContent}
       </div>

@@ -43,23 +43,20 @@ export default function Footer({ light = false }: FooterProps) {
           </Link>
         </div>
 
-        {/* Logo + wordmark — center */}
+        {/* Logo — center */}
         <div className="flex flex-col items-center gap-1">
           <Image
             src="/images/logo.png"
-            alt="YEYE Labs"
-            width={56}
-            height={20}
+            alt="YEYE"
+            width={8042}
+            height={3300}
             className={cn("h-5 w-auto brightness-0", light ? "opacity-40" : "invert-[0.35]")}
           />
-          <span className={cn("font-display text-[10px] font-normal tracking-[0.2em] uppercase", light ? "text-black/35" : "text-white/35")}>
-            LABS
-          </span>
         </div>
 
         {/* Copyright */}
         <div className={cn("font-display text-[13px]", light ? "text-black/35" : "text-white/35")}>
-          © 2026 YEYE LABS. כל הזכויות שמורות.
+          © 2026 YEYE. כל הזכויות שמורות.
         </div>
       </div>
     </footer>
