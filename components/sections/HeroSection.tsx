@@ -250,11 +250,11 @@ export default function HeroSection() {
             opacity:0 so it's visible immediately, no separate markup. */}
         <div
           ref={ctaRef}
-          className="mt-10 flex justify-center md:mt-14"
+          className="mt-14 flex justify-center md:mt-20"
           style={prefersReducedMotion ? undefined : { opacity: 0 }}
         >
           <Button
-            href="/projects"
+            href="/#projects"
             variant="primary"
             className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg"
           >
