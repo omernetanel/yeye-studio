@@ -123,20 +123,15 @@ const TRAIL_FRAGMENT_SHADER = `
 
 const COMPOSE_VERTEX_SHADER = TRAIL_VERTEX_SHADER;
 
-// Scroll-driven reveal seeds: several points scattered across the
-// wordmark (roughly two per glyph), each growing its own patch of light
-// on a slightly staggered schedule — reads as several places lighting up
-// independently rather than one flat waterline sweeping across the whole
-// logo at once. Positions are hand-placed in UV space (0,0 = bottom-left).
-const SCROLL_SEED_COUNT = 8;
-const SCROLL_SEED_POS = [
-  [0.11, 0.28], [0.16, 0.74],
-  [0.37, 0.7], [0.41, 0.26],
-  [0.61, 0.27], [0.57, 0.73],
-  [0.88, 0.72], [0.83, 0.29],
-];
-const SCROLL_SEED_DELAY = [0, 0.14, 0.05, 0.22, 0.02, 0.16, 0.09, 0.25];
-const SCROLL_SEED_RADIUS = 0.55;
+// The scroll-driven reveal is a plain top-to-bottom wipe now (not the
+// circular growing-seed pattern this replaced) — WIPE_EDGE_SOFTNESS is
+// how wide the transition band is (in UV units), WIPE_WOBBLE_* give it a
+// slightly irregular, hand-drawn edge instead of a perfectly straight
+// line, consistent with the hover trail's own organic edges elsewhere in
+// this shader.
+const WIPE_EDGE_SOFTNESS = 0.035;
+const WIPE_WOBBLE_AMOUNT = 0.025;
+const WIPE_WOBBLE_FREQ = 4.0;
 
 const COMPOSE_FRAGMENT_SHADER = `
   precision highp float;
@@ -146,8 +141,6 @@ const COMPOSE_FRAGMENT_SHADER = `
   uniform float scrollReveal;
   uniform float time;
   uniform vec2 resolution;
-  uniform vec2 scrollSeedPos[${SCROLL_SEED_COUNT}];
-  uniform float scrollSeedDelay[${SCROLL_SEED_COUNT}];
   varying vec2 vUv;
 
   float hash1(float n) {
@@ -170,41 +163,36 @@ const COMPOSE_FRAGMENT_SHADER = `
     float logoAlpha = texture2D(logoTex, assetUv).a;
     float trailVal = texture2D(trailTex, vUv).r;
 
-    // Aspect-correct so growth reads circular rather than squished on
-    // this very wide canvas.
-    float aspect = resolution.x / max(resolution.y, 1.0);
-
-    float scrollField = 0.0;
-    for (int i = 0; i < ${SCROLL_SEED_COUNT}; i++) {
-      float local = clamp((scrollReveal - scrollSeedDelay[i]) / (1.0 - scrollSeedDelay[i]), 0.0, 1.0);
-      float radius = local * ${SCROLL_SEED_RADIUS.toFixed(3)};
-      vec2 d = vUv - scrollSeedPos[i];
-      d.x *= aspect;
-      float wobble = (waveNoise(d.x * 6.0 + d.y * 6.0 + time * 0.2 + float(i) * 11.0) - 0.5) * 0.05;
-      float dist = length(d) + wobble;
-      float circle = 1.0 - smoothstep(radius - 0.05, radius + 0.05, dist);
-      scrollField = max(scrollField, circle);
-    }
+    // vUv.y = 1 is the top of the canvas (bottom-left-origin UV) — the
+    // wipe line starts there (threshold 1, nothing above it, so nothing
+    // revealed yet) and descends toward 0 as scrollReveal grows toward 1,
+    // revealing the video top-down rather than the old bottom-up "water
+    // filling the letters" motion.
+    float wobble = (waveNoise(vUv.x * ${WIPE_WOBBLE_FREQ.toFixed(1)} + time * 0.15) - 0.5) * ${WIPE_WOBBLE_AMOUNT.toFixed(3)};
+    float wipeThreshold = 1.0 - scrollReveal + wobble;
+    float scrollField = smoothstep(wipeThreshold - ${WIPE_EDGE_SOFTNESS.toFixed(3)}, wipeThreshold + ${WIPE_EDGE_SOFTNESS.toFixed(3)}, vUv.y);
 
     // The clip is built to the logo's own proportions (see the note up
     // top) and carries the same kind of padding, so the same crop applies.
     vec3 videoColor = texture2D(videoTex, assetUv).rgb;
 
-    // Inside the letters, the base really is solid black, so blending
-    // black -> video as the trail/scroll reveal grows is correct: that's
-    // this canvas's whole "liquid fills the mark" premise.
-    float insideReveal = clamp(max(trailVal, scrollField), 0.0, 1.0);
-    vec3 insideColor = mix(vec3(0.0), videoColor, insideReveal);
+    // Neither reveal source (hover trail or scroll wipe) is confined to
+    // the letter shapes — both paint the same way, composited identically
+    // below. Inside the letters the base really is solid black, so
+    // blending black -> video as either grows is correct: that's this
+    // canvas's whole "liquid fills the mark" premise.
+    float revealField = clamp(max(trailVal, scrollField), 0.0, 1.0);
+    vec3 insideColor = mix(vec3(0.0), videoColor, revealField);
 
     // Outside the letters there is no black to blend from at all — mixing
-    // toward black there (the previous formula, applied uniformly) faded
-    // the trail's soft edges through gray on the way to full color, which
-    // then composited against the solid black backing image behind this
-    // canvas as a murky smudge spilling into the whitespace. Outside the
-    // glyphs the trail instead shows the video at full, undiluted color
-    // immediately, fading in purely via alpha — a clean reveal against
-    // the page's own white background, nothing blended toward black.
-    float outsideWeight = (1.0 - logoAlpha) * trailVal;
+    // toward black there (an earlier version, applied only to the hover
+    // trail) faded the reveal's soft edges through gray on the way to
+    // full color, compositing as a murky smudge against the solid black
+    // backing image behind this canvas. Outside the glyphs, either reveal
+    // source instead shows the video at full, undiluted color
+    // immediately, fading in purely via alpha — a clean edge against the
+    // page's own white background, nothing blended toward black.
+    float outsideWeight = (1.0 - logoAlpha) * revealField;
 
     vec3 finalColor = mix(insideColor, videoColor, outsideWeight);
     float outAlpha = max(logoAlpha, outsideWeight);
@@ -344,8 +332,6 @@ const LogoLiquidReveal = forwardRef<LogoLiquidRevealHandle, LogoLiquidRevealProp
         scrollReveal: { value: 0 },
         time: { value: 0 },
         resolution: { value: new THREE.Vector2(1, 1) },
-        scrollSeedPos: { value: SCROLL_SEED_POS.map(([x, y]) => new THREE.Vector2(x, y)) },
-        scrollSeedDelay: { value: new Float32Array(SCROLL_SEED_DELAY) },
       },
       vertexShader: COMPOSE_VERTEX_SHADER,
       fragmentShader: COMPOSE_FRAGMENT_SHADER,
