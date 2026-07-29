@@ -8,7 +8,6 @@ import ServiceCard from "@/components/ui/ServiceCard";
 import SwipeCarousel from "@/components/ui/SwipeCarousel";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
-import { cn } from "@/lib/utils";
 
 const services = [
   {
@@ -76,7 +75,7 @@ const CARD_LOCAL_DURATION = 0.4;
 // on its own (same passive mechanism as the Hero's pin) and that last
 // frame just sits there as an ordinary paused <video>, scrolling away
 // with the rest of the page like a static image.
-const TEXT_GONE_AT_SECONDS = 3;
+const TEXT_GONE_AT_SECONDS = 4.5;
 const CONTENT_SHRINK_SCALE = 0.6;
 
 function clamp01(value: number) {
@@ -101,13 +100,6 @@ function TitleBlock() {
   return <h2 className="text-center font-display text-5xl font-bold text-black md:text-7xl">מה אני עושה?</h2>;
 }
 
-// One card is deliberately bigger than the other three (an asymmetric
-// "bento" grid instead of a rigid uniform one) and every card is real
-// glass — a strong backdrop-blur over a low-opacity fill, not an opaque
-// panel — so the video keeps showing through behind them instead of
-// being fully blocked out, the way the flat white cards were doing.
-const BENTO_SPAN = ["col-span-2 row-span-2", "col-span-2", "col-span-1", "col-span-1"];
-
 interface BentoServiceCardProps {
   service: (typeof services)[number];
   index: number;
@@ -116,45 +108,36 @@ interface BentoServiceCardProps {
 
 function BentoServiceCard({ service, index, cardRef }: BentoServiceCardProps) {
   const Icon = service.icon;
-  const large = index === 0;
 
   return (
     <Link
       ref={cardRef}
       href={service.href}
       style={{ opacity: 0, transform: "translateY(36px) scale(0.92)" }}
-      className={cn(
-        "group relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border border-white/50 bg-white/25 text-center shadow-[0_8px_40px_rgba(0,0,0,0.1)] backdrop-blur-2xl transition-transform duration-200 hover:scale-[1.015]",
-        BENTO_SPAN[index],
-        large ? "gap-5 p-9" : "gap-3 p-7"
-      )}
+      className="group relative flex flex-col items-center justify-center gap-3 overflow-hidden rounded-3xl border border-white/70 bg-white/70 p-7 text-center shadow-[0_8px_32px_rgba(0,0,0,0.12)] backdrop-blur-xl transition-transform duration-200 hover:scale-[1.015]"
     >
       {/* A large, faint watermark numeral — the quiet "premium feature
-          card" flourish (Apple/Stripe-style), not another loud icon. */}
+          card" flourish (Apple/Stripe-style), not another loud icon. A
+          much heavier fill (white/70, not the original white/25) than a
+          typical glass panel — a lighter fill let the busy video behind
+          it bleed through unevenly frame to frame, reading as a smeared,
+          "dirty" pane instead of a clean frosted one; this keeps the
+          material readable as consistently white first, with only a
+          faint hint of motion behind it. */}
       <span
         aria-hidden
-        className={cn(
-          "pointer-events-none absolute -top-3 -left-2 font-display leading-none font-light text-black/[0.07] select-none",
-          large ? "text-[10rem]" : "text-7xl"
-        )}
+        className="pointer-events-none absolute -top-3 -left-2 font-display text-7xl leading-none font-light text-black/[0.07] select-none"
       >
         {String(index + 1).padStart(2, "0")}
       </span>
 
-      <div
-        className={cn(
-          "relative z-10 flex items-center justify-center rounded-full border border-black/10 bg-white/50",
-          large ? "h-16 w-16" : "h-14 w-14"
-        )}
-      >
-        <Icon size={large ? 30 : 26} strokeWidth={1.5} className="text-black/70" />
+      <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-full border border-black/10 bg-white/60">
+        <Icon size={26} strokeWidth={1.5} className="text-black/70" />
       </div>
 
       <div className="relative z-10">
-        <h3 className={cn("font-display font-bold text-black", large ? "text-2xl" : "text-lg")}>{service.title}</h3>
-        <p className={cn("mt-2 whitespace-pre-line font-body text-black/60", large ? "text-[15px] leading-[1.8]" : "text-[13.5px] leading-[1.75]")}>
-          {service.description}
-        </p>
+        <h3 className="font-display text-lg font-bold text-black">{service.title}</h3>
+        <p className="mt-2 whitespace-pre-line font-body text-[13.5px] leading-[1.75] text-black/60">{service.description}</p>
         <span className="mt-3 inline-flex items-center gap-1.5 font-display text-sm text-black/70 transition-transform duration-200 group-hover:scale-105">
           <span aria-hidden>←</span>
           לפרטים נוספים
@@ -391,20 +374,22 @@ export default function ServicesSection() {
             explicit. */}
         <BackgroundVideo ref={videoRef} className="absolute inset-x-0 top-[100px] h-full w-full object-cover" />
 
-        {/* pt-[100px] — matches the Navbar's own fixed height plus
-            breathing room (same convention as the Hero's sticky panel).
-            Without it, centering this content within the full h-screen
-            box ignored the fact that the fixed header covers its own
-            top slice, so tall content pushed the title up underneath it. */}
+        {/* pt-[170px] — well past the Navbar's own fixed height, for real
+            breathing room above the title (same convention as the Hero's
+            sticky panel, just with more margin on top of it). Without
+            some top padding here at all, centering this content within
+            the full h-screen box ignored the fact that the fixed header
+            covers its own top slice, so tall content pushed the title up
+            underneath it. */}
         <div
           ref={contentRef}
-          className="relative z-10 flex h-full flex-col items-center justify-center px-6 pt-[100px]"
+          className="relative z-10 flex h-full flex-col items-center justify-center px-6 pt-[170px]"
         >
           <div ref={titleRef} style={{ opacity: 0 }}>
             <TitleBlock />
           </div>
 
-          <div className="mx-auto mt-10 grid w-full max-w-[900px] grid-cols-4 grid-rows-2 gap-5">
+          <div className="mx-auto mt-10 grid w-full max-w-[1240px] grid-cols-4 gap-5">
             {services.map((service, i) => (
               <BentoServiceCard
                 key={service.title}
