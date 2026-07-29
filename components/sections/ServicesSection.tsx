@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useLayoutEffect, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { LayoutDashboard, Monitor, Rocket, ShoppingCart } from "lucide-react";
@@ -356,63 +357,89 @@ export default function ServicesSection() {
   }
 
   return (
-    <section ref={wrapperRef} id="services" className="relative h-[560vh] bg-white">
-      <div className="sticky top-0 h-screen overflow-hidden bg-white">
-        {/* object-cover, default (center) object-position — fills the
-            section edge-to-edge with no white pillarboxing on wide
-            viewports. The box here (viewport width x visible height below
-            the Navbar) is wider relative to its height than the clip's own
-            16:9 native aspect, so cover has to crop vertically to fill it;
-            splitting that crop evenly top/bottom (the default) keeps the
-            single largest per-side loss as small as it can be — pinning it
-            to one edge (object-top/object-bottom) was tried and made that
-            one edge's loss roughly double, chewing into real content (the
-            crumple ball's own edges) instead of just margin.
-            top-[76px] h-[calc(100%-76px)] — an *explicit* height that's
-            already shrunk by the Navbar clearance, not h-full. h-full here
-            would leave the box exactly panel-height (100vh) and then push
-            it down by top-76, so its own bottom 76px silently hangs past
-            the panel's bottom edge and gets clipped a second time by
-            overflow-hidden on top of the object-cover crop above — an
-            invisible, uncontrollable extra bite out of the bottom that was
-            exactly what made the crumple ball read as cut off. Sizing the
-            box to the actually-visible height up front means the one
-            object-cover crop above is the *only* crop, and it's exactly
-            as calculated. A `video` is a replaced element with its own
-            intrinsic aspect ratio — leaving height as `auto` (relying on
-            top+bottom alone) makes the browser size the box from that
-            intrinsic ratio instead of the actual container, so height has
-            to stay an explicit value either way. */}
-        <BackgroundVideo ref={videoRef} className="absolute inset-x-0 top-[76px] h-[calc(100%-76px)] w-full object-cover" />
+    <>
+      {/* A plain, non-sticky block showing the clip's full, uncropped
+          first frame at its true 16:9 aspect ratio (w-full, height
+          following from that — never viewport-capped). It just scrolls
+          into and out of view normally, like any full-bleed image, so the
+          whole composition (including the top/bottom margins the pinned
+          section below has to crop into) is genuinely seen in full at
+          least once. That natural height is also exactly what puts real
+          breathing room between the Hero above and the interactive pin
+          below, instead of the two butting up against each other. */}
+      <div className="relative w-full overflow-hidden bg-white">
+        <Image
+          src={POSTER_SRC}
+          alt=""
+          aria-hidden="true"
+          width={1920}
+          height={1080}
+          sizes="100vw"
+          className="block h-auto w-full"
+        />
+      </div>
 
-        {/* pt-[96px] — just past the Navbar's own fixed height, for real
-            breathing room above the title (same convention as the Hero's
-            sticky panel). Without some top padding here at all, centering
-            this content within the full h-screen box ignored the fact
-            that the fixed header covers its own top slice, so tall
-            content pushed the title up underneath it. */}
-        <div
-          ref={contentRef}
-          className="relative z-10 flex h-full flex-col items-center justify-center px-6 pt-[96px]"
-        >
-          <div ref={titleRef} style={{ opacity: 0, transform: "translateY(48px) scale(0.82)" }}>
-            <TitleBlock />
-          </div>
+      <section ref={wrapperRef} id="services" className="relative h-[560vh] bg-white">
+        <div className="sticky top-0 h-screen overflow-hidden bg-white">
+          {/* object-cover, default (center) object-position — fills the
+              section edge-to-edge with no white pillarboxing on wide
+              viewports. The box here (viewport width x visible height below
+              the Navbar) is wider relative to its height than the clip's own
+              16:9 native aspect, so cover has to crop vertically to fill it;
+              splitting that crop evenly top/bottom (the default) keeps the
+              single largest per-side loss as small as it can be — pinning it
+              to one edge (object-top/object-bottom) was tried and made that
+              one edge's loss roughly double, chewing into real content (the
+              crumple ball's own edges) instead of just margin. The intro
+              block above already showed the whole frame uncropped once, so
+              this modest, balanced crop during the interactive scrub isn't
+              anyone's first impression of the composition.
+              top-[76px] h-[calc(100%-76px)] — an *explicit* height that's
+              already shrunk by the Navbar clearance, not h-full. h-full here
+              would leave the box exactly panel-height (100vh) and then push
+              it down by top-76, so its own bottom 76px silently hangs past
+              the panel's bottom edge and gets clipped a second time by
+              overflow-hidden on top of the object-cover crop above — an
+              invisible, uncontrollable extra bite out of the bottom that was
+              exactly what made the crumple ball read as cut off. Sizing the
+              box to the actually-visible height up front means the one
+              object-cover crop above is the *only* crop, and it's exactly
+              as calculated. A `video` is a replaced element with its own
+              intrinsic aspect ratio — leaving height as `auto` (relying on
+              top+bottom alone) makes the browser size the box from that
+              intrinsic ratio instead of the actual container, so height has
+              to stay an explicit value either way. */}
+          <BackgroundVideo ref={videoRef} className="absolute inset-x-0 top-[76px] h-[calc(100%-76px)] w-full object-cover" />
 
-          <div className="mx-auto mt-10 grid w-full max-w-[1240px] grid-cols-4 gap-5">
-            {services.map((service, i) => (
-              <BentoServiceCard
-                key={service.title}
-                service={service}
-                index={i}
-                cardRef={(el) => {
-                  cardRefs.current[i] = el;
-                }}
-              />
-            ))}
+          {/* pt-[96px] — just past the Navbar's own fixed height, for real
+              breathing room above the title (same convention as the Hero's
+              sticky panel). Without some top padding here at all, centering
+              this content within the full h-screen box ignored the fact
+              that the fixed header covers its own top slice, so tall
+              content pushed the title up underneath it. */}
+          <div
+            ref={contentRef}
+            className="relative z-10 flex h-full flex-col items-center justify-center px-6 pt-[96px]"
+          >
+            <div ref={titleRef} style={{ opacity: 0, transform: "translateY(48px) scale(0.82)" }}>
+              <TitleBlock />
+            </div>
+
+            <div className="mx-auto mt-10 grid w-full max-w-[1240px] grid-cols-4 gap-5">
+              {services.map((service, i) => (
+                <BentoServiceCard
+                  key={service.title}
+                  service={service}
+                  index={i}
+                  cardRef={(el) => {
+                    cardRefs.current[i] = el;
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
