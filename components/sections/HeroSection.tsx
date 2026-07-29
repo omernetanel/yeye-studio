@@ -106,7 +106,7 @@ export default function HeroSection() {
   const ctaRef = useRef<HTMLDivElement>(null);
 
   const naturalWidthRef = useRef(0);
-  const naturalAspectRef = useRef(8042 / 3300);
+  const naturalAspectRef = useRef(8042 / 2297);
   const pinStartScrollYRef = useRef(0);
   const pinEndScrollYRef = useRef(0);
 
@@ -207,7 +207,7 @@ export default function HeroSection() {
   const wipeInitial = prefersReducedMotion ? { clipPath: "inset(0 0% 0 0)" } : { clipPath: "inset(0 100% 0 0)" };
 
   const logoBlock = prefersReducedMotion ? (
-    <div className="relative mx-auto aspect-[8042/3300] w-full">
+    <div className="relative mx-auto aspect-[8042/2297] w-full">
       <Image
         src="/images/logo.png"
         alt="YEYE"
@@ -216,7 +216,7 @@ export default function HeroSection() {
         draggable={false}
         onDragStart={(e) => e.preventDefault()}
         sizes="100vw"
-        className="pointer-events-none object-contain"
+        className="pointer-events-none object-cover"
         style={{ filter: "brightness(0)" }}
       />
     </div>
@@ -226,9 +226,9 @@ export default function HeroSection() {
           measure() above) — absolutely positioned so it reserves no
           layout space of its own; the actual space here comes from the
           real logo below, which is the thing that's actually shrinking. */}
-      <div ref={spacerRef} className="invisible absolute inset-x-0 top-0 aspect-[8042/3300] w-full" aria-hidden />
+      <div ref={spacerRef} className="invisible absolute inset-x-0 top-0 aspect-[8042/2297] w-full" aria-hidden />
 
-      <div ref={logoRef} className="relative mx-auto aspect-[8042/3300] w-full select-none">
+      <div ref={logoRef} className="relative mx-auto aspect-[8042/2297] w-full select-none">
         <motion.div
           initial={wipeInitial}
           animate={{ clipPath: "inset(0 0% 0 0)" }}
@@ -247,7 +247,7 @@ export default function HeroSection() {
             draggable={false}
             onDragStart={(e) => e.preventDefault()}
             sizes="100vw"
-            className="pointer-events-none object-contain"
+            className="pointer-events-none object-cover"
             style={{ filter: "brightness(0)" }}
           />
           <LogoLiquidReveal
