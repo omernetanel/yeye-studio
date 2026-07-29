@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { registerNavbarLogoEl, useDocked } from "@/lib/motion/heroDock";
+import { useDocked } from "@/lib/motion/heroDock";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -17,13 +17,7 @@ const navLinks = [
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const logoRef = useRef<HTMLSpanElement>(null);
   const docked = useDocked();
-
-  useLayoutEffect(() => {
-    registerNavbarLogoEl(logoRef.current);
-    return () => registerNavbarLogoEl(null);
-  }, []);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -50,16 +44,15 @@ export default function Navbar() {
       >
       <div className="relative mx-auto flex h-[68px] max-w-[1200px] items-center justify-between px-6">
         {/* Logo — pinned to the visual left, brand-convention regardless of RTL.
-            Hidden until the Hero's own logo has scrolled/docked into this exact
-            spot (see lib/motion/heroDock.ts) — there is no separate "navbar
-            logo" animation, this is the same mark landing here. tabIndex keeps
+            Hidden until the Hero's own pin releases (see lib/motion/heroDock.ts),
+            at which point it just crossfades in on its own — tabIndex keeps
             keyboard focus off an invisible link before that happens. */}
         <Link
           href="/"
           tabIndex={docked ? 0 : -1}
           className={cn("absolute left-6 top-1/2 flex -translate-y-1/2 items-center transition-opacity duration-200", docked ? "opacity-100" : "opacity-0")}
         >
-          <span ref={logoRef} className="inline-block">
+          <span className="inline-block">
             <Image
               src="/images/logo.png"
               alt="YEYE Labs"
