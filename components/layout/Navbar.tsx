@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { registerNavbarLogoEl, useDocked } from "@/lib/motion/heroDock";
+import { cn } from "@/lib/utils";
 
 const navLinks = [
   { label: "עבודות", href: "/#projects" },
@@ -15,6 +17,13 @@ const navLinks = [
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const logoRef = useRef<HTMLSpanElement>(null);
+  const docked = useDocked();
+
+  useLayoutEffect(() => {
+    registerNavbarLogoEl(logoRef.current);
+    return () => registerNavbarLogoEl(null);
+  }, []);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -40,16 +49,26 @@ export default function Navbar() {
         className="fixed inset-x-0 top-0 z-50 border-b border-black/8 bg-white/85 backdrop-blur-md"
       >
       <div className="relative mx-auto flex h-[68px] max-w-[1200px] items-center justify-between px-6">
-        {/* Logo — pinned to the visual left, brand-convention regardless of RTL */}
-        <Link href="/" className="absolute left-6 top-1/2 flex -translate-y-1/2 items-center">
-          <Image
-            src="/images/logo.png"
-            alt="YEYE Labs"
-            width={80}
-            height={26}
-            className="h-6 w-auto object-contain brightness-0"
-            priority
-          />
+        {/* Logo — pinned to the visual left, brand-convention regardless of RTL.
+            Hidden until the Hero's own logo has scrolled/docked into this exact
+            spot (see lib/motion/heroDock.ts) — there is no separate "navbar
+            logo" animation, this is the same mark landing here. tabIndex keeps
+            keyboard focus off an invisible link before that happens. */}
+        <Link
+          href="/"
+          tabIndex={docked ? 0 : -1}
+          className={cn("absolute left-6 top-1/2 flex -translate-y-1/2 items-center transition-opacity duration-200", docked ? "opacity-100" : "opacity-0")}
+        >
+          <span ref={logoRef} className="inline-block">
+            <Image
+              src="/images/logo.png"
+              alt="YEYE Labs"
+              width={80}
+              height={26}
+              className="h-6 w-auto object-contain brightness-0"
+              priority
+            />
+          </span>
         </Link>
 
         {/* Nav links — centered, desktop only */}

@@ -5,6 +5,8 @@ import { LayoutDashboard, Monitor, Rocket, ShoppingCart } from "lucide-react";
 import ServiceCard from "@/components/ui/ServiceCard";
 import SectionHeading from "@/components/ui/SectionHeading";
 import SwipeCarousel from "@/components/ui/SwipeCarousel";
+import { useDocked } from "@/lib/motion/heroDock";
+import { cn } from "@/lib/utils";
 
 const services = [
   {
@@ -34,15 +36,24 @@ const services = [
 ];
 
 export default function ServicesSection() {
+  // Turns black the instant the Hero logo docks into the Navbar — the
+  // same beat that ends the scroll-driven logo animation (see
+  // lib/motion/heroDock.ts / HeroSection). Not its own scroll effect,
+  // just a themed reaction to that shared moment.
+  const docked = useDocked();
+
   return (
-    <section id="services" className="relative px-6 py-16 md:py-20">
+    <section
+      id="services"
+      className={cn("relative px-6 py-16 transition-colors duration-700 md:py-20", docked ? "bg-[#0a0a0a]" : "bg-transparent")}
+    >
       <div className="relative z-10 mx-auto max-w-[1200px]">
-        <SectionHeading title="מה אני עושה?" className="mb-12 md:mb-16" light />
+        <SectionHeading title="מה אני עושה?" className="mb-12 md:mb-16" light={!docked} />
 
         {/* Mobile: touch-native swipe carousel, one card at a time */}
         <SwipeCarousel className="sm:hidden">
           {services.map((service) => (
-            <ServiceCard key={service.title} {...service} />
+            <ServiceCard key={service.title} {...service} light={!docked} />
           ))}
         </SwipeCarousel>
 
@@ -56,7 +67,7 @@ export default function ServicesSection() {
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.6, ease: "easeOut", delay: i * 0.1 }}
             >
-              <ServiceCard {...service} />
+              <ServiceCard {...service} light={!docked} />
             </motion.div>
           ))}
         </div>

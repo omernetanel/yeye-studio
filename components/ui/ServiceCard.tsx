@@ -5,15 +5,18 @@ import { type LucideIcon } from "lucide-react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { type MouseEvent } from "react";
 import Card from "./Card";
+import { cn } from "@/lib/utils";
 
 interface ServiceCardProps {
   icon: LucideIcon;
   title: string;
   description: string;
   href: string;
+  /** Renders for a white-background section (dark text) instead of the default dark theme (white text). */
+  light?: boolean;
 }
 
-export default function ServiceCard({ icon: Icon, title, description, href }: ServiceCardProps) {
+export default function ServiceCard({ icon: Icon, title, description, href, light = true }: ServiceCardProps) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotateX = useSpring(useTransform(y, [-60, 60], [10, -10]), { stiffness: 200, damping: 20 });
@@ -47,14 +50,14 @@ export default function ServiceCard({ icon: Icon, title, description, href }: Se
         off-center by a different amount on every card.
       */}
       <motion.div style={{ rotateX, rotateY }} className="h-full">
-        <Card light className="flex h-full flex-col items-center gap-4 text-center">
+        <Card light={light} className="flex h-full flex-col items-center gap-4 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full border border-accent/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-accent)_35%,transparent)_0%,rgba(255,255,255,0.4)_75%)]">
             <Icon size={26} strokeWidth={1.5} className="text-accent drop-shadow-[0_0_6px_rgba(42,51,243,0.35)]" />
           </div>
 
-          <h3 className="font-display text-lg font-bold text-black">{title}</h3>
+          <h3 className={cn("font-display text-lg font-bold", light ? "text-black" : "text-white")}>{title}</h3>
 
-          <p className="flex-1 whitespace-pre-line font-body text-[13.5px] leading-[1.75] text-black/55">
+          <p className={cn("flex-1 whitespace-pre-line font-body text-[13.5px] leading-[1.75]", light ? "text-black/55" : "text-white/55")}>
             {description}
           </p>
 
