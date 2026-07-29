@@ -63,22 +63,48 @@ const CARDS_LOCAL_START = 0.34;
 const CARD_STAGGER = 0.08;
 const CARD_LOCAL_DURATION = 0.4;
 
-// Phase 2 ("scrub"): READ_END -> 1. video.currentTime maps linearly across
-// the rest of this section's scroll budget, from 0 to the clip's real
-// duration — scrolling down plays it forward frame by frame, scrolling
-// back up plays it in reverse, exactly like any other scroll-linked value
-// here (nothing about this is a one-shot trigger). The title+cards block
-// (already fully revealed by the end of phase 1) shrinks toward the
-// screen's center and fades out as ONE unit, finishing exactly when the
-// clip reaches TEXT_GONE_AT_SECONDS — well before the clip's own end,
-// which keeps scrubbing onward (still purely scroll-driven) through the
-// rest of the crumple to the final, fully-balled-up frame. Once the
-// wrapper's own scroll budget runs out, the sticky panel below releases
-// on its own (same passive mechanism as the Hero's pin) and that last
-// frame just sits there as an ordinary paused <video>, scrolling away
-// with the rest of the page like a static image.
+// Phase 2 ("scrub"): READ_END -> SCRUB_END. video.currentTime maps
+// linearly across that sub-range, from 0 to the clip's real duration —
+// scrolling down plays it forward frame by frame, scrolling back up plays
+// it in reverse, exactly like any other scroll-linked value here (nothing
+// about this is a one-shot trigger). The title+cards block (already fully
+// revealed by the end of phase 1) shrinks toward the screen's center and
+// fades out as ONE unit, finishing exactly when the clip reaches
+// TEXT_GONE_AT_SECONDS — well before the clip's own end, which keeps
+// scrubbing onward (still purely scroll-driven) through the rest of the
+// crumple to the final, fully-balled-up frame.
+//
+// Phase 3 ("hold"): SCRUB_END -> 1. The clip has already reached its last
+// frame by SCRUB_END (mapRange clamps there), so this remaining sliver of
+// scroll budget just holds that final frame on screen for a beat before
+// the sticky panel releases on its own (same passive mechanism as the
+// Hero's pin) — instead of releasing the instant the crumple finishes,
+// which read as too abrupt.
+const SCRUB_END = 0.92;
 const TEXT_GONE_AT_SECONDS = 4.5;
 const CONTENT_SHRINK_SCALE = 0.6;
+
+// Measured directly off the clip's own last frame (ffmpeg cropdetect on
+// the negated image): the crumpled ball's bounding box sits at
+// x:774-1146, y:478-722 out of the clip's native 1920x1080 frame — its
+// vertical center is 600/1080 = 55.6% down. The panel only ever shows the
+// *top* slice of the (uncropped, taller-than-viewport) video, so left
+// alone the ball ends up sitting low in that visible slice rather than
+// centered. Rather than translate as soon as the pin starts (which would
+// undo the "show the whole frame uncropped" flat-lay reveal), the video
+// rides up smoothly across the scrub itself, arriving exactly centered
+// right as the clip reaches this last frame — see BALL_CENTER_Y_FRACTION
+// usage in update() below.
+const BALL_CENTER_Y_FRACTION = 600 / 1080;
+
+// The pinned panel sticks NAVBAR_CLEARANCE_PX below the viewport top
+// (matching the Navbar's own ~68px height, plus a hair) instead of at 0,
+// so the video's top edge clears the fixed Navbar instead of sitting
+// behind it. Must stay in sync with the `top-[76px]` on the panel's own
+// className below (a literal Tailwind value, can't reference this
+// constant directly). Kept as a real number here because the pin-range
+// math needs it, not just CSS.
+const NAVBAR_CLEARANCE_PX = 76;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -177,6 +203,7 @@ export default function ServicesSection() {
   const skipDesktopMotion = prefersReducedMotion || isMobile;
 
   const wrapperRef = useRef<HTMLElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
@@ -224,12 +251,30 @@ export default function ServicesSection() {
     });
 
     // Phase 2 — video.currentTime is a pure linear function of scroll
-    // progress across the whole READ_END..1 range, so it's automatically,
+    // progress across the READ_END..SCRUB_END range, so it's automatically,
     // exactly reversible on scroll-up; no separate "rewind" logic needed.
-    const scrubT = mapRange(progress, READ_END, 1, 0, 1);
+    // mapRange clamps at 1 once progress passes SCRUB_END, which is
+    // exactly what holds the clip on its last frame through phase 3.
+    const scrubT = mapRange(progress, READ_END, SCRUB_END, 0, 1);
     const targetTime = scrubT * videoDurationRef.current;
     if (videoReadyRef.current && Math.abs(video.currentTime - targetTime) > 0.008) {
       video.currentTime = targetTime;
+    }
+
+    // Rides the video up over the course of the scrub so the crumpled
+    // ball (whose position within the clip's own frame is fixed) ends up
+    // dead-centered in the visible slice exactly as the clip reaches its
+    // last frame — see BALL_CENTER_Y_FRACTION above for where this number
+    // comes from. 0 at the very start of the scrub (the flat-lay reveal
+    // stays exactly as composed), ramping to its full value by scrubT=1
+    // and staying there through the hold phase.
+    if (panelRef.current) {
+      const panelHeight = panelRef.current.offsetHeight;
+      const visibleSliceHeight = window.innerHeight - NAVBAR_CLEARANCE_PX;
+      const ballPanelLocalY = BALL_CENTER_Y_FRACTION * panelHeight;
+      const targetTranslateY = visibleSliceHeight / 2 - ballPanelLocalY;
+      const riseT = smoothstep(scrubT);
+      video.style.transform = `translateY(${lerp(0, targetTranslateY, riseT)}px)`;
     }
 
     const textGoneT = smoothstep(mapRange(targetTime, 0, TEXT_GONE_AT_SECONDS, 0, 1));
@@ -240,10 +285,17 @@ export default function ServicesSection() {
 
   const measurePinRange = () => {
     const wrapper = wrapperRef.current;
-    if (!wrapper) return;
+    const panel = panelRef.current;
+    if (!wrapper || !panel) return;
     const wrapperTop = wrapper.getBoundingClientRect().top + window.scrollY;
-    pinStartScrollYRef.current = wrapperTop;
-    pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - window.innerHeight;
+    // The panel sticks at NAVBAR_CLEARANCE_PX (not 0), and its own height
+    // now follows the video's real 16:9 aspect ratio instead of being
+    // capped to the viewport — it's taller than one screen on typical wide
+    // viewports, by design (see the panel's own className below), so the
+    // standard "wrapperHeight minus viewport height" pin-duration formula
+    // has to subtract the panel's actual measured height instead.
+    pinStartScrollYRef.current = wrapperTop - NAVBAR_CLEARANCE_PX;
+    pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - panel.offsetHeight - NAVBAR_CLEARANCE_PX;
   };
 
   useLayoutEffect(() => {
@@ -281,6 +333,7 @@ export default function ServicesSection() {
     window.addEventListener("resize", handleResize);
     const ro = new ResizeObserver(handleResize);
     ro.observe(wrapper);
+    if (panelRef.current) ro.observe(panelRef.current);
 
     return () => {
       window.removeEventListener("resize", handleResize);
@@ -364,43 +417,29 @@ export default function ServicesSection() {
       <div className="h-24 bg-white md:h-36" />
 
       <section ref={wrapperRef} id="services" className="relative h-[560vh] bg-white">
-        <div className="sticky top-0 h-screen overflow-hidden bg-white">
-          {/* object-cover, default (center) object-position — fills the
-              section edge-to-edge with no white pillarboxing on wide
-              viewports. The box here (viewport width x visible height below
-              the Navbar) is wider relative to its height than the clip's own
-              16:9 native aspect, so cover has to crop vertically to fill it;
-              splitting that crop evenly top/bottom (the default) keeps the
-              single largest per-side loss as small as it can be — pinning it
-              to one edge (object-top/object-bottom) was tried and made that
-              one edge's loss roughly double, chewing into real content (the
-              crumple ball's own edges) instead of just margin.
-              top-[76px] h-[calc(100%-76px)] — an *explicit* height that's
-              already shrunk by the Navbar clearance, not h-full. h-full here
-              would leave the box exactly panel-height (100vh) and then push
-              it down by top-76, so its own bottom 76px silently hangs past
-              the panel's bottom edge and gets clipped a second time by
-              overflow-hidden on top of the object-cover crop above — an
-              invisible, uncontrollable extra bite out of the bottom that was
-              exactly what made the crumple ball read as cut off. Sizing the
-              box to the actually-visible height up front means the one
-              object-cover crop above is the *only* crop, and it's exactly
-              as calculated. A `video` is a replaced element with its own
-              intrinsic aspect ratio — leaving height as `auto` (relying on
-              top+bottom alone) makes the browser size the box from that
-              intrinsic ratio instead of the actual container, so height has
-              to stay an explicit value either way. */}
-          <BackgroundVideo ref={videoRef} className="absolute inset-x-0 top-[76px] h-[calc(100%-76px)] w-full object-cover" />
+        {/* No h-screen, no object-fit crop at all — the panel's own height
+            now simply follows the video's real 16:9 aspect ratio at 100%
+            width (aspect-video, exactly the clip's own native 1920x1080),
+            so nothing is ever forced to crop or distort. On typical wide
+            viewports that makes the panel taller than one screen, which is
+            fine: it just sticks NAVBAR_CLEARANCE_PX below the viewport top
+            (clearing the fixed Navbar) and whatever doesn't fit in the
+            remaining viewport height simply sits below the fold while
+            pinned, the same as any tall sticky element — not cropped,
+            just not all visible in one glance, exactly like scrolling past
+            a tall image normally would. */}
+        <div ref={panelRef} className="sticky top-[76px] bg-white">
+          <BackgroundVideo ref={videoRef} className="block aspect-video w-full" />
 
-          {/* pt-[96px] — just past the Navbar's own fixed height, for real
-              breathing room above the title (same convention as the Hero's
-              sticky panel). Without some top padding here at all, centering
-              this content within the full h-screen box ignored the fact
-              that the fixed header covers its own top slice, so tall
-              content pushed the title up underneath it. */}
+          {/* absolute, not part of the panel's own (now taller) flow
+              height — sized to the actually-visible viewport slice
+              (100vh - NAVBAR_CLEARANCE_PX) directly, rather than h-full of
+              the panel, so the title/cards stay centered on the visible
+              screen area itself regardless of how tall the panel's own
+              box has grown to fit the full, uncropped video. */}
           <div
             ref={contentRef}
-            className="relative z-10 flex h-full flex-col items-center justify-center px-6 pt-[96px]"
+            className="absolute inset-x-0 top-0 z-10 flex h-[calc(100vh-76px)] flex-col items-center justify-center px-6"
           >
             <div ref={titleRef} style={{ opacity: 0, transform: "translateY(48px) scale(0.82)" }}>
               <TitleBlock />
