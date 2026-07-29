@@ -40,10 +40,12 @@ const TRAIL_DECAY_HALF_LIFE = 0.4; // seconds
 // that reads as liquid rather than a sharp procedural mask.
 const TRAIL_MAX_WIDTH = 720;
 
-// The logo is ~3.2:1 (very wide); the source video is 16:9. Tiling the
-// video horizontally instead of stretching it into the logo's aspect
-// keeps its own proportions intact.
-const VIDEO_REPEAT_X = 2;
+// The hero video is itself footage of a "YEYE" wordmark (dripping-paint
+// balloon letters), built to the same proportions/margins as logo.png
+// (both ~2.44:1 — 3518x1440 and 8042x3300 respectively), so its UV maps
+// straight onto the canvas 1:1, no repeat/tiling and no per-asset
+// bounding-box remap needed the way the previous, differently-proportioned
+// video required.
 
 const TRAIL_VERTEX_SHADER = `
   varying vec2 vUv;
@@ -131,7 +133,6 @@ const COMPOSE_FRAGMENT_SHADER = `
   uniform sampler2D videoTex;
   uniform sampler2D trailTex;
   uniform float scrollReveal;
-  uniform float videoRepeatX;
   uniform float time;
   uniform vec2 resolution;
   uniform vec2 scrollSeedPos[${SCROLL_SEED_COUNT}];
@@ -179,8 +180,10 @@ const COMPOSE_FRAGMENT_SHADER = `
     float reveal = clamp(max(trailVal, scrollField * logoAlpha), 0.0, 1.0);
     float outAlpha = max(logoAlpha, trailVal);
 
-    vec2 videoUv = vec2(vUv.x * videoRepeatX, vUv.y);
-    vec3 videoColor = texture2D(videoTex, videoUv).rgb;
+    // The clip is built to the logo's own proportions (see the note up
+    // top), so this is a direct 1:1 sample — no repeat, no per-asset
+    // remap.
+    vec3 videoColor = texture2D(videoTex, vUv).rgb;
     vec3 finalColor = mix(vec3(0.0), videoColor, reveal);
 
     gl_FragColor = vec4(finalColor, outAlpha);
@@ -316,7 +319,6 @@ const LogoLiquidReveal = forwardRef<LogoLiquidRevealHandle, LogoLiquidRevealProp
         videoTex: { value: videoTexture },
         trailTex: { value: null },
         scrollReveal: { value: 0 },
-        videoRepeatX: { value: VIDEO_REPEAT_X },
         time: { value: 0 },
         resolution: { value: new THREE.Vector2(1, 1) },
         scrollSeedPos: { value: SCROLL_SEED_POS.map(([x, y]) => new THREE.Vector2(x, y)) },
