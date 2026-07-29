@@ -84,19 +84,6 @@ const SCRUB_END = 0.92;
 const TEXT_GONE_AT_SECONDS = 4.5;
 const CONTENT_SHRINK_SCALE = 0.6;
 
-// Measured directly off the clip's own last frame (ffmpeg cropdetect on
-// the negated image): the crumpled ball's bounding box sits at
-// x:774-1146, y:478-722 out of the clip's native 1920x1080 frame — its
-// vertical center is 600/1080 = 55.6% down. The panel only ever shows the
-// *top* slice of the (uncropped, taller-than-viewport) video, so left
-// alone the ball ends up sitting low in that visible slice rather than
-// centered. Rather than translate as soon as the pin starts (which would
-// undo the "show the whole frame uncropped" flat-lay reveal), the video
-// rides up smoothly across the scrub itself, arriving exactly centered
-// right as the clip reaches this last frame — see BALL_CENTER_Y_FRACTION
-// usage in update() below.
-const BALL_CENTER_Y_FRACTION = 600 / 1080;
-
 // The pinned panel sticks NAVBAR_CLEARANCE_PX below the viewport top
 // (matching the Navbar's own ~68px height, plus a hair) instead of at 0,
 // so the video's top edge clears the fixed Navbar instead of sitting
@@ -219,13 +206,6 @@ export default function ServicesSection() {
   const pinEndScrollYRef = useRef(0);
   const videoDurationRef = useRef(VIDEO_DURATION_FALLBACK);
   const videoReadyRef = useRef(false);
-  // Cached alongside the pin range in measurePinRange (only recomputed on
-  // resize) — reading panel.offsetHeight from inside update() itself,
-  // which runs on every scroll tick, forces a synchronous layout
-  // recalculation right before the same call writes several other
-  // elements' styles, thrashing layout and reading as janky/non-smooth
-  // scroll instead of a clean, cheap style write.
-  const panelHeightRef = useRef(0);
 
   const { scrollY } = useScroll();
 
@@ -268,19 +248,6 @@ export default function ServicesSection() {
       video.currentTime = targetTime;
     }
 
-    // Rides the video up over the course of the scrub so the crumpled
-    // ball (whose position within the clip's own frame is fixed) ends up
-    // dead-centered in the visible slice exactly as the clip reaches its
-    // last frame — see BALL_CENTER_Y_FRACTION above for where this number
-    // comes from. 0 at the very start of the scrub (the flat-lay reveal
-    // stays exactly as composed), ramping to its full value by scrubT=1
-    // and staying there through the hold phase.
-    const visibleSliceHeight = window.innerHeight - NAVBAR_CLEARANCE_PX;
-    const ballPanelLocalY = BALL_CENTER_Y_FRACTION * panelHeightRef.current;
-    const targetTranslateY = visibleSliceHeight / 2 - ballPanelLocalY;
-    const riseT = smoothstep(scrubT);
-    video.style.transform = `translateY(${lerp(0, targetTranslateY, riseT)}px)`;
-
     const textGoneT = smoothstep(mapRange(targetTime, 0, TEXT_GONE_AT_SECONDS, 0, 1));
     const shrinkT = progress <= READ_END ? 0 : textGoneT;
     content.style.opacity = String(1 - shrinkT);
@@ -289,18 +256,17 @@ export default function ServicesSection() {
 
   const measurePinRange = () => {
     const wrapper = wrapperRef.current;
-    const panel = panelRef.current;
-    if (!wrapper || !panel) return;
+    if (!wrapper) return;
     const wrapperTop = wrapper.getBoundingClientRect().top + window.scrollY;
-    // The panel sticks at NAVBAR_CLEARANCE_PX (not 0), and its own height
-    // now follows the video's real 16:9 aspect ratio instead of being
-    // capped to the viewport — it's taller than one screen on typical wide
-    // viewports, by design (see the panel's own className below), so the
-    // standard "wrapperHeight minus viewport height" pin-duration formula
-    // has to subtract the panel's actual measured height instead.
-    panelHeightRef.current = panel.offsetHeight;
+    // The panel sticks at NAVBAR_CLEARANCE_PX (not 0) and its own height is
+    // exactly the visible slice (100vh - NAVBAR_CLEARANCE_PX), so the pin
+    // visually locks in NAVBAR_CLEARANCE_PX of scroll earlier than the
+    // wrapper's own top, and releases exactly window.innerHeight of scroll
+    // later than that — the two NAVBAR_CLEARANCE_PX terms cancel out in
+    // pinEnd, leaving the same "wrapperHeight minus one viewport" duration
+    // as an ordinary full-height pin.
     pinStartScrollYRef.current = wrapperTop - NAVBAR_CLEARANCE_PX;
-    pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - panelHeightRef.current - NAVBAR_CLEARANCE_PX;
+    pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - window.innerHeight;
   };
 
   useLayoutEffect(() => {
@@ -338,7 +304,6 @@ export default function ServicesSection() {
     window.addEventListener("resize", handleResize);
     const ro = new ResizeObserver(handleResize);
     ro.observe(wrapper);
-    if (panelRef.current) ro.observe(panelRef.current);
 
     return () => {
       window.removeEventListener("resize", handleResize);
@@ -422,29 +387,26 @@ export default function ServicesSection() {
       <div className="h-24 bg-white md:h-36" />
 
       <section ref={wrapperRef} id="services" className="relative h-[560vh] bg-white">
-        {/* No h-screen, no object-fit crop at all — the panel's own height
-            now simply follows the video's real 16:9 aspect ratio at 100%
-            width (aspect-video, exactly the clip's own native 1920x1080),
-            so nothing is ever forced to crop or distort. On typical wide
-            viewports that makes the panel taller than one screen, which is
-            fine: it just sticks NAVBAR_CLEARANCE_PX below the viewport top
-            (clearing the fixed Navbar) and whatever doesn't fit in the
-            remaining viewport height simply sits below the fold while
-            pinned, the same as any tall sticky element — not cropped,
-            just not all visible in one glance, exactly like scrolling past
-            a tall image normally would. */}
-        <div ref={panelRef} className="sticky top-[76px] bg-white">
-          <BackgroundVideo ref={videoRef} className="block aspect-video w-full" />
+        {/* Capped to exactly the visible slice (100vh - NAVBAR_CLEARANCE_PX)
+            and stuck there for the whole pin — a static box, nothing here
+            ever moves or resizes on its own mid-scroll. object-cover has to
+            crop *something* vertically to fill a box this much wider than
+            the clip's own 16:9 aspect; object-[50%_70%] biases that crop
+            toward the top (70% of the loss taken off the top, 30% off the
+            bottom) instead of an even split. That's deliberate: the
+            crumpled ball's own position within the clip's frame (measured
+            via ffmpeg cropdetect: x:774-1146 y:478-722 of 1920x1080, well
+            below center) means an even split still leaves it sitting low:
+            biasing further toward the top brings it close to dead-center
+            by the final held frame, without touching the fixed content
+            margins measured off the flat-lay and mid-crumple frames (both
+            comfortably wider than what a 70% bias ever removes). */}
+        <div ref={panelRef} className="sticky top-[76px] h-[calc(100vh-76px)] overflow-hidden bg-white">
+          <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-cover object-[50%_70%]" />
 
-          {/* absolute, not part of the panel's own (now taller) flow
-              height — sized to the actually-visible viewport slice
-              (100vh - NAVBAR_CLEARANCE_PX) directly, rather than h-full of
-              the panel, so the title/cards stay centered on the visible
-              screen area itself regardless of how tall the panel's own
-              box has grown to fit the full, uncropped video. */}
           <div
             ref={contentRef}
-            className="absolute inset-x-0 top-0 z-10 flex h-[calc(100vh-76px)] flex-col items-center justify-center px-6"
+            className="relative z-10 flex h-full flex-col items-center justify-center px-6"
           >
             <div ref={titleRef} style={{ opacity: 0, transform: "translateY(48px) scale(0.82)" }}>
               <TitleBlock />
