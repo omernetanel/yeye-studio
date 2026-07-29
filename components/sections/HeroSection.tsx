@@ -115,6 +115,7 @@ export default function HeroSection() {
       floating.style.left = `${settled.x - currentWidth / 2}px`;
       floating.style.top = `${settled.y - currentHeight / 2}px`;
       floating.style.opacity = "1";
+      floating.style.pointerEvents = "auto";
 
       // The water level: rises 0→1 while the page is still held, then
       // recedes back to 0 while the mark shrinks — draining out, not just
@@ -147,7 +148,11 @@ export default function HeroSection() {
       floating.style.height = `${settled.height}px`;
       floating.style.left = `${centerX - settled.width / 2}px`;
       floating.style.top = `${centerY - settled.height / 2}px`;
-      floating.style.opacity = String(1 - smoothstep(mapRange(travelT, LOGO_FADE_START, LOGO_FADE_END, 0, 1)));
+      const logoOpacity = 1 - smoothstep(mapRange(travelT, LOGO_FADE_START, LOGO_FADE_END, 0, 1));
+      floating.style.opacity = String(logoOpacity);
+      // Once it's dissolved away, stop absorbing hover so it can't shadow
+      // whatever's now on top of it (the CTA, or the page beneath).
+      floating.style.pointerEvents = logoOpacity > 0 ? "auto" : "none";
 
       liquidRef.current?.setScrollReveal(0);
 
@@ -376,7 +381,7 @@ export default function HeroSection() {
 
       <div
         ref={floatingRef}
-        className="fixed z-[60] pointer-events-none select-none"
+        className="fixed z-[60] select-none"
         style={{ visibility: "hidden" }}
       >
         <motion.div
