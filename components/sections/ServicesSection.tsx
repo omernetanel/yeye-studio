@@ -256,17 +256,18 @@ export default function ServicesSection() {
 
   const measurePinRange = () => {
     const wrapper = wrapperRef.current;
-    if (!wrapper) return;
+    const panel = panelRef.current;
+    if (!wrapper || !panel) return;
     const wrapperTop = wrapper.getBoundingClientRect().top + window.scrollY;
-    // The panel sticks at NAVBAR_CLEARANCE_PX (not 0) and its own height is
-    // exactly the visible slice (100vh - NAVBAR_CLEARANCE_PX), so the pin
-    // visually locks in NAVBAR_CLEARANCE_PX of scroll earlier than the
-    // wrapper's own top, and releases exactly window.innerHeight of scroll
-    // later than that — the two NAVBAR_CLEARANCE_PX terms cancel out in
-    // pinEnd, leaving the same "wrapperHeight minus one viewport" duration
-    // as an ordinary full-height pin.
+    // The panel sticks at NAVBAR_CLEARANCE_PX (not 0). Its own height is
+    // no longer capped to one viewport (see the panel's own aspect-video
+    // sizing above), so the old "the two NAVBAR_CLEARANCE_PX terms cancel
+    // out" shortcut (which relied on panelHeight === innerHeight - T) no
+    // longer holds — a sticky element with `top: T` releases once
+    // scrollY >= wrapperTop + wrapperHeight - panelHeight - T, so T has
+    // to be subtracted explicitly here now.
     pinStartScrollYRef.current = wrapperTop - NAVBAR_CLEARANCE_PX;
-    pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - window.innerHeight;
+    pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - panel.offsetHeight - NAVBAR_CLEARANCE_PX;
   };
 
   useLayoutEffect(() => {
@@ -304,6 +305,7 @@ export default function ServicesSection() {
     window.addEventListener("resize", handleResize);
     const ro = new ResizeObserver(handleResize);
     ro.observe(wrapper);
+    if (panelRef.current) ro.observe(panelRef.current);
 
     return () => {
       window.removeEventListener("resize", handleResize);
@@ -387,21 +389,29 @@ export default function ServicesSection() {
       <div className="h-24 bg-white md:h-36" />
 
       <section ref={wrapperRef} id="services" className="relative h-[560vh] bg-white">
-        {/* Capped to exactly the visible slice (100vh - NAVBAR_CLEARANCE_PX)
-            and stuck there for the whole pin — a static box, nothing here
-            ever moves or resizes on its own mid-scroll. object-contain (not
-            object-cover) so the clip is never cropped — 100% of every frame
-            stays visible, always. The box is wider than the clip's own
-            16:9 aspect, so the clip fills the box's full height and is
-            pillarboxed left/right; those bars are the same white as the
-            section background, so they read as plain page margin rather
-            than letterboxing. */}
-        <div ref={panelRef} className="sticky top-[76px] h-[calc(100vh-76px)] overflow-hidden bg-white">
+        {/* Sized to the clip's own exact 16:9 aspect (not capped to one
+            viewport tall) so it fills edge to edge — width and height —
+            with zero cropping and zero pillarbox/letterbox bars, matching
+            object-contain's math exactly (no gap left over to fill with
+            bars). On a wide-but-short viewport this box is taller than
+            100vh, which means part of it sits below the fold while the
+            panel is stuck at top-[76px] — you see the rest as you keep
+            scrolling through the pin, not all at once. Deliberate
+            trade-off (confirmed): the alternative is capping the box to
+            one screen, which forces either a crop or bars — see
+            measurePinRange below for how the pin's release point accounts
+            for a panel taller than the viewport. */}
+        <div ref={panelRef} className="sticky top-[76px] aspect-video w-full overflow-hidden bg-white">
           <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-contain" />
 
+          {/* Title + cards are their own layer, sized to the actually-visible
+              slice (100vh - NAVBAR_CLEARANCE_PX) and pinned to the panel's
+              own top — not centered within the full aspect-video box above,
+              which on a wide-but-short viewport can be much taller than one
+              screen and would center this content below the fold. */}
           <div
             ref={contentRef}
-            className="relative z-10 flex h-full flex-col items-center justify-center px-6"
+            className="absolute inset-x-0 top-0 z-10 flex h-[calc(100vh-76px)] flex-col items-center justify-center px-6"
           >
             <div ref={titleRef} style={{ opacity: 0, transform: "translateY(48px) scale(0.82)" }}>
               <TitleBlock />
