@@ -1,12 +1,14 @@
 "use client";
 
 import { forwardRef, useLayoutEffect, useRef } from "react";
+import Link from "next/link";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { LayoutDashboard, Monitor, Rocket, ShoppingCart } from "lucide-react";
 import ServiceCard from "@/components/ui/ServiceCard";
 import SwipeCarousel from "@/components/ui/SwipeCarousel";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
+import { cn } from "@/lib/utils";
 
 const services = [
   {
@@ -49,11 +51,16 @@ const VIDEO_DURATION_FALLBACK = 9;
 // image — while the title fades in and then the 4 cards reveal, staggered,
 // on their own schedule (re-scoped 0..1 within this sub-range via p1
 // below). Nothing here touches the video at all; it just isn't playing yet.
-const READ_END = 0.3;
-const TITLE_LOCAL_END = 0.18;
-const CARDS_LOCAL_START = 0.3;
-const CARD_STAGGER = 0.1;
-const CARD_LOCAL_DURATION = 0.35;
+// Widened (0.3 -> 0.38, wrapper height bumped to match) so the cards'
+// own entrance has real room to breathe before the video starts moving —
+// the wrapper's total height grew by the same proportion, so the video
+// scrub phase that follows keeps its original pacing instead of getting
+// rushed into a smaller remaining share.
+const READ_END = 0.38;
+const TITLE_LOCAL_END = 0.14;
+const CARDS_LOCAL_START = 0.24;
+const CARD_STAGGER = 0.09;
+const CARD_LOCAL_DURATION = 0.4;
 
 // Phase 2 ("scrub"): READ_END -> 1. video.currentTime maps linearly across
 // the rest of this section's scroll budget, from 0 to the clip's real
@@ -91,11 +98,69 @@ function smoothstep(t: number) {
 }
 
 function TitleBlock() {
+  return <h2 className="text-center font-display text-5xl font-bold text-black md:text-7xl">מה אני עושה?</h2>;
+}
+
+// One card is deliberately bigger than the other three (an asymmetric
+// "bento" grid instead of a rigid uniform one) and every card is real
+// glass — a strong backdrop-blur over a low-opacity fill, not an opaque
+// panel — so the video keeps showing through behind them instead of
+// being fully blocked out, the way the flat white cards were doing.
+const BENTO_SPAN = ["col-span-2 row-span-2", "col-span-2", "col-span-1", "col-span-1"];
+
+interface BentoServiceCardProps {
+  service: (typeof services)[number];
+  index: number;
+  cardRef: (el: HTMLAnchorElement | null) => void;
+}
+
+function BentoServiceCard({ service, index, cardRef }: BentoServiceCardProps) {
+  const Icon = service.icon;
+  const large = index === 0;
+
   return (
-    <>
-      <h2 className="text-center font-display text-3xl font-bold text-black md:text-5xl">מה אני עושה?</h2>
-      <div className="mx-auto mt-4 h-[3px] w-[140px] rounded-full bg-[image:var(--gradient-brand)]" />
-    </>
+    <Link
+      ref={cardRef}
+      href={service.href}
+      style={{ opacity: 0, transform: "translateY(36px) scale(0.92)" }}
+      className={cn(
+        "group relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border border-white/50 bg-white/25 text-center shadow-[0_8px_40px_rgba(0,0,0,0.1)] backdrop-blur-2xl transition-transform duration-200 hover:scale-[1.015]",
+        BENTO_SPAN[index],
+        large ? "gap-5 p-9" : "gap-3 p-7"
+      )}
+    >
+      {/* A large, faint watermark numeral — the quiet "premium feature
+          card" flourish (Apple/Stripe-style), not another loud icon. */}
+      <span
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute -top-3 -left-2 font-display leading-none font-light text-black/[0.07] select-none",
+          large ? "text-[10rem]" : "text-7xl"
+        )}
+      >
+        {String(index + 1).padStart(2, "0")}
+      </span>
+
+      <div
+        className={cn(
+          "relative z-10 flex items-center justify-center rounded-full border border-black/10 bg-white/50",
+          large ? "h-16 w-16" : "h-14 w-14"
+        )}
+      >
+        <Icon size={large ? 30 : 26} strokeWidth={1.5} className="text-black/70" />
+      </div>
+
+      <div className="relative z-10">
+        <h3 className={cn("font-display font-bold text-black", large ? "text-2xl" : "text-lg")}>{service.title}</h3>
+        <p className={cn("mt-2 whitespace-pre-line font-body text-black/60", large ? "text-[15px] leading-[1.8]" : "text-[13.5px] leading-[1.75]")}>
+          {service.description}
+        </p>
+        <span className="mt-3 inline-flex items-center gap-1.5 font-display text-sm text-black/70 transition-transform duration-200 group-hover:scale-105">
+          <span aria-hidden>←</span>
+          לפרטים נוספים
+        </span>
+      </div>
+    </Link>
   );
 }
 
@@ -130,7 +195,7 @@ export default function ServicesSection() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const cardRefs = useRef<Array<HTMLAnchorElement | null>>([]);
 
   // Analytical, not scrollYProgress-derived — same reasoning as the Hero's
   // own pin: a target-scoped scrollYProgress motion value lags an instant
@@ -169,7 +234,7 @@ export default function ServicesSection() {
       const start = CARDS_LOCAL_START + i * CARD_STAGGER;
       const cardT = smoothstep(mapRange(p1, start, start + CARD_LOCAL_DURATION, 0, 1));
       card.style.opacity = String(cardT);
-      card.style.transform = `translateY(${lerp(28, 0, cardT)}px)`;
+      card.style.transform = `translateY(${lerp(36, 0, cardT)}px) scale(${lerp(0.92, 1, cardT)})`;
     });
 
     // Phase 2 — video.currentTime is a pure linear function of scroll
@@ -305,7 +370,7 @@ export default function ServicesSection() {
   }
 
   return (
-    <section ref={wrapperRef} id="services" className="relative h-[500vh] bg-white">
+    <section ref={wrapperRef} id="services" className="relative h-[560vh] bg-white">
       <div className="sticky top-0 h-screen overflow-hidden bg-white">
         {/* object-cover — fills the section edge-to-edge with no white
             pillarboxing on wide viewports, the way this background is
@@ -339,17 +404,16 @@ export default function ServicesSection() {
             <TitleBlock />
           </div>
 
-          <div className="mx-auto mt-10 grid w-full max-w-[760px] grid-cols-2 gap-6">
+          <div className="mx-auto mt-10 grid w-full max-w-[900px] grid-cols-4 grid-rows-2 gap-5">
             {services.map((service, i) => (
-              <div
+              <BentoServiceCard
                 key={service.title}
-                ref={(el) => {
+                service={service}
+                index={i}
+                cardRef={(el) => {
                   cardRefs.current[i] = el;
                 }}
-                style={{ opacity: 0, transform: "translateY(28px)" }}
-              >
-                <ServiceCard {...service} light tone="neutral" />
-              </div>
+              />
             ))}
           </div>
         </div>
