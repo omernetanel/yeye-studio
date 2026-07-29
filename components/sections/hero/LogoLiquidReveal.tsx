@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import * as THREE from "three";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
@@ -17,15 +17,29 @@ const BREATHE_SPEED = [0.5, 0.7, 0.42];
 
 const FOLLOW_SPRING_K = 0.045;
 const FOLLOW_DAMPING = 0.86;
-const FADE_IN_SPEED = 2.2; // strength units per second
-const FADE_OUT_SPEED = 0.55;
+
+// How fast the blob "commits ink" to the trail once the pointer is active,
+// and how fast it stops once it isn't — independent of how slowly that
+// ink then fades, which is TRAIL_DECAY_HALF_LIFE below.
+const PAINT_ATTACK_RATE = 10;
+
+// The actual "flowing liquid" feel: once painted, a point in the trail
+// keeps glowing and decays on its own, so a moving pointer leaves behind a
+// slowly-dissolving streak instead of a single dot that just teleports.
+const TRAIL_DECAY_HALF_LIFE = 1.1; // seconds
+
+// The trail buffer is deliberately lower-resolution than the display
+// canvas — both for performance (it's a ping-ponged full-screen pass every
+// frame) and because the bilinear upsampling softens it into something
+// that reads as liquid rather than a sharp procedural mask.
+const TRAIL_MAX_WIDTH = 720;
 
 // The logo is ~3.2:1 (very wide); the source video is 16:9. Tiling the
 // video horizontally instead of stretching it into the logo's aspect
 // keeps its own proportions intact.
 const VIDEO_REPEAT_X = 2;
 
-const VERTEX_SHADER = `
+const TRAIL_VERTEX_SHADER = `
   varying vec2 vUv;
   void main() {
     vUv = uv;
@@ -33,16 +47,15 @@ const VERTEX_SHADER = `
   }
 `;
 
-const FRAGMENT_SHADER = `
+const TRAIL_FRAGMENT_SHADER = `
   precision highp float;
-  uniform sampler2D logoTex;
-  uniform sampler2D videoTex;
+  uniform sampler2D prevTrail;
   uniform vec2 resolution;
   uniform vec2 blobPos[${BLOB_COUNT}];
   uniform float blobRadius[${BLOB_COUNT}];
   uniform float time;
-  uniform float globalStrength;
-  uniform float videoRepeatX;
+  uniform float paintStrength;
+  uniform float decayFactor;
   varying vec2 vUv;
 
   float hash(vec2 p) {
@@ -62,7 +75,6 @@ const FRAGMENT_SHADER = `
 
   void main() {
     vec2 pixelPos = vUv * resolution;
-    float logoAlpha = texture2D(logoTex, vUv).a;
 
     // Slow domain warp so the blob's edges wobble organically instead of
     // tracing perfect circular arcs.
@@ -79,8 +91,29 @@ const FRAGMENT_SHADER = `
       field += (blobRadius[i] * blobRadius[i]) / max(d2, 1.0);
     }
 
-    float blobMask = smoothstep(0.85, 1.25, field) * globalStrength;
-    float reveal = logoAlpha * clamp(blobMask, 0.0, 1.0);
+    float blobMask = smoothstep(0.85, 1.25, field) * paintStrength;
+    float prev = texture2D(prevTrail, vUv).r;
+    float next = max(prev * decayFactor, blobMask);
+
+    gl_FragColor = vec4(next, next, next, 1.0);
+  }
+`;
+
+const COMPOSE_VERTEX_SHADER = TRAIL_VERTEX_SHADER;
+
+const COMPOSE_FRAGMENT_SHADER = `
+  precision highp float;
+  uniform sampler2D logoTex;
+  uniform sampler2D videoTex;
+  uniform sampler2D trailTex;
+  uniform float scrollReveal;
+  uniform float videoRepeatX;
+  varying vec2 vUv;
+
+  void main() {
+    float logoAlpha = texture2D(logoTex, vUv).a;
+    float trailVal = texture2D(trailTex, vUv).r;
+    float reveal = logoAlpha * clamp(max(trailVal, scrollReveal), 0.0, 1.0);
 
     vec2 videoUv = vec2(vUv.x * videoRepeatX, vUv.y);
     vec3 videoColor = texture2D(videoTex, videoUv).rgb;
@@ -104,9 +137,30 @@ interface Pointer {
   everActive: boolean;
 }
 
-export default function LogoLiquidReveal({ logoSrc, videoSrc, className }: { logoSrc: string; videoSrc: string; className?: string }) {
+export interface LogoLiquidRevealHandle {
+  /** Uniformly light up the whole logo regardless of pointer position — driven by scroll, not hover. 0..1. */
+  setScrollReveal: (value: number) => void;
+}
+
+interface LogoLiquidRevealProps {
+  logoSrc: string;
+  videoSrc: string;
+  className?: string;
+}
+
+const LogoLiquidReveal = forwardRef<LogoLiquidRevealHandle, LogoLiquidRevealProps>(function LogoLiquidReveal(
+  { logoSrc, videoSrc, className },
+  ref
+) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const scrollRevealRef = useRef(0);
   const prefersReducedMotion = usePrefersReducedMotion();
+
+  useImperativeHandle(ref, () => ({
+    setScrollReveal: (value: number) => {
+      scrollRevealRef.current = value;
+    },
+  }));
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -115,7 +169,7 @@ export default function LogoLiquidReveal({ logoSrc, videoSrc, className }: { log
     let disposed = false;
     let rafId: number | null = null;
     let started = false;
-    let strength = 0;
+    let paintStrength = 0;
 
     const pointer: Pointer = { x: -9999, y: -9999, active: false, everActive: false };
     const blobs: Blob[] = Array.from({ length: BLOB_COUNT }, () => ({ x: -9999, y: -9999, vx: 0, vy: 0 }));
@@ -125,6 +179,7 @@ export default function LogoLiquidReveal({ logoSrc, videoSrc, className }: { log
 
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: "low-power" });
     renderer.setClearColor(0x000000, 0);
+    renderer.autoClear = false;
 
     // Must be attached to the DOM (even if invisible) — a detached
     // <video> never reliably decodes frames, which left the texture
@@ -150,6 +205,41 @@ export default function LogoLiquidReveal({ logoSrc, videoSrc, className }: { log
     videoTexture.wrapS = THREE.RepeatWrapping;
     videoTexture.wrapT = THREE.ClampToEdgeWrapping;
 
+    // Ping-ponged trail buffer: each frame renders "decay(prev) blended
+    // with fresh blob ink" into one target, then that becomes next frame's
+    // "prev". This is what turns the blob from a dot that follows the
+    // pointer into a streak that lingers and dissolves behind it.
+    const trailCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const trailScene = new THREE.Scene();
+    const trailGeometry = new THREE.PlaneGeometry(2, 2);
+    const trailMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        prevTrail: { value: null },
+        resolution: { value: new THREE.Vector2(1, 1) },
+        blobPos: { value: blobPosUniform },
+        blobRadius: { value: blobRadiusUniform },
+        time: { value: 0 },
+        paintStrength: { value: 0 },
+        decayFactor: { value: 1 },
+      },
+      vertexShader: TRAIL_VERTEX_SHADER,
+      fragmentShader: TRAIL_FRAGMENT_SHADER,
+    });
+    trailScene.add(new THREE.Mesh(trailGeometry, trailMaterial));
+
+    const rtOptions = {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      wrapS: THREE.ClampToEdgeWrapping,
+      wrapT: THREE.ClampToEdgeWrapping,
+      depthBuffer: false,
+      stencilBuffer: false,
+    };
+    const trailA = new THREE.WebGLRenderTarget(1, 1, rtOptions);
+    const trailB = new THREE.WebGLRenderTarget(1, 1, rtOptions);
+    let trailRead = trailA;
+    let trailWrite = trailB;
+
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     const geometry = new THREE.PlaneGeometry(2, 2);
@@ -160,22 +250,25 @@ export default function LogoLiquidReveal({ logoSrc, videoSrc, className }: { log
       uniforms: {
         logoTex: { value: null },
         videoTex: { value: videoTexture },
-        resolution: { value: new THREE.Vector2(1, 1) },
-        blobPos: { value: blobPosUniform },
-        blobRadius: { value: blobRadiusUniform },
-        time: { value: 0 },
-        globalStrength: { value: 0 },
+        trailTex: { value: null },
+        scrollReveal: { value: 0 },
         videoRepeatX: { value: VIDEO_REPEAT_X },
       },
-      vertexShader: VERTEX_SHADER,
-      fragmentShader: FRAGMENT_SHADER,
+      vertexShader: COMPOSE_VERTEX_SHADER,
+      fragmentShader: COMPOSE_FRAGMENT_SHADER,
     });
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
 
     let ready = false;
 
-    const render = () => renderer.render(scene, camera);
+    const clearTrails = () => {
+      renderer.setRenderTarget(trailA);
+      renderer.clear();
+      renderer.setRenderTarget(trailB);
+      renderer.clear();
+      renderer.setRenderTarget(null);
+    };
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -183,8 +276,18 @@ export default function LogoLiquidReveal({ logoSrc, videoSrc, className }: { log
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       renderer.setPixelRatio(dpr);
       renderer.setSize(rect.width, rect.height, false);
-      material.uniforms.resolution.value.set(rect.width, rect.height);
-      if (ready) render();
+      trailMaterial.uniforms.resolution.value.set(rect.width, rect.height);
+
+      const trailWidth = Math.round(Math.min(TRAIL_MAX_WIDTH, rect.width));
+      const trailHeight = Math.round(trailWidth * (rect.height / rect.width));
+      trailA.setSize(trailWidth, trailHeight);
+      trailB.setSize(trailWidth, trailHeight);
+      clearTrails();
+
+      if (ready) {
+        renderer.setRenderTarget(null);
+        renderer.render(scene, camera);
+      }
     };
 
     const toLocal = (clientX: number, clientY: number) => {
@@ -203,8 +306,8 @@ export default function LogoLiquidReveal({ logoSrc, videoSrc, className }: { log
       lastTime = now;
       const t = now * 0.001;
 
-      strength += (pointer.active ? FADE_IN_SPEED : -FADE_OUT_SPEED) * dt;
-      strength = Math.max(0, Math.min(1, strength));
+      const targetPaint = pointer.active ? 1 : 0;
+      paintStrength += (targetPaint - paintStrength) * (1 - Math.exp(-PAINT_ATTACK_RATE * dt));
 
       const main = blobs[0];
       const targetX = pointer.everActive ? pointer.x : main.x;
@@ -224,10 +327,24 @@ export default function LogoLiquidReveal({ logoSrc, videoSrc, className }: { log
         blobRadiusUniform[i] = BASE_RADIUS[i] + Math.sin(t * BREATHE_SPEED[i] + i * 2.1) * BREATHE_AMOUNT[i];
       }
 
-      material.uniforms.time.value = t;
-      material.uniforms.globalStrength.value = strength;
+      // Pass 1: paint this frame's blob ink onto the decayed previous trail.
+      trailMaterial.uniforms.prevTrail.value = trailRead.texture;
+      trailMaterial.uniforms.time.value = t;
+      trailMaterial.uniforms.paintStrength.value = paintStrength;
+      trailMaterial.uniforms.decayFactor.value = Math.pow(0.5, dt / TRAIL_DECAY_HALF_LIFE);
+      renderer.setRenderTarget(trailWrite);
+      renderer.render(trailScene, trailCamera);
+      const swap = trailRead;
+      trailRead = trailWrite;
+      trailWrite = swap;
 
-      render();
+      // Pass 2: composite logo + video through the trail (plus the
+      // scroll-driven full-logo reveal) onto the visible canvas.
+      material.uniforms.trailTex.value = trailRead.texture;
+      material.uniforms.scrollReveal.value = scrollRevealRef.current;
+      renderer.setRenderTarget(null);
+      renderer.render(scene, camera);
+
       rafId = requestAnimationFrame(step);
     };
 
@@ -275,6 +392,12 @@ export default function LogoLiquidReveal({ logoSrc, videoSrc, className }: { log
     canvas.addEventListener("pointerleave", handlePointerLeave);
     canvas.addEventListener("pointercancel", handlePointerLeave);
 
+    // The scroll-driven reveal has no pointer involvement at all, so the
+    // render loop needs to be running independently of hover — otherwise
+    // scrolling past the Hero before ever touching it would show nothing.
+    startLoop();
+    started = true;
+
     return () => {
       disposed = true;
       ro.disconnect();
@@ -290,6 +413,10 @@ export default function LogoLiquidReveal({ logoSrc, videoSrc, className }: { log
       material.dispose();
       material.uniforms.logoTex.value?.dispose();
       videoTexture.dispose();
+      trailGeometry.dispose();
+      trailMaterial.dispose();
+      trailA.dispose();
+      trailB.dispose();
       renderer.dispose();
     };
   }, [logoSrc, videoSrc, prefersReducedMotion]);
@@ -297,4 +424,6 @@ export default function LogoLiquidReveal({ logoSrc, videoSrc, className }: { log
   if (prefersReducedMotion) return null;
 
   return <canvas ref={canvasRef} aria-hidden="true" className={className} style={{ touchAction: "pan-y" }} />;
-}
+});
+
+export default LogoLiquidReveal;
