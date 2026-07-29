@@ -41,7 +41,11 @@ const services = [
 // halfway up the viewport the title rises out of the bottom, small, and
 // grows into its resting size at the top as scrolling continues, and the
 // 4 cards open right after.
-const RISE_END = 0.55;
+// Tuned so the black panel is already fully risen by the time the Hero's
+// logo lands in the Navbar (a fixed ~550px of scroll into this section's
+// own range) — the two sections hand off to each other mid-motion instead
+// of the black screen still visibly climbing after the Hero's already done.
+const RISE_END = 0.22;
 const TITLE_START = RISE_END / 2; // exactly when the black panel has covered half the viewport
 const TITLE_END = 0.82;
 const CARDS_START = 0.8;
@@ -102,7 +106,14 @@ export default function ServicesSection() {
   const titleRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
 
-  const { scrollYProgress } = useScroll({ target: wrapperRef, offset: ["start start", "end end"] });
+  // "start end" (not "start start") — progress begins the instant this
+  // section's top starts entering the viewport from the bottom, not only
+  // once it's fully reached the top. Otherwise there's a dead gap of a
+  // full extra viewport height, right after the Hero's pin releases,
+  // where this section is still plain scrolling white space — the black
+  // rise couldn't possibly "already be under way" during the Hero's own
+  // final leg like that.
+  const { scrollYProgress } = useScroll({ target: wrapperRef, offset: ["start end", "end end"] });
 
   const applyIntro = (progress: number) => {
     const black = blackRef.current;

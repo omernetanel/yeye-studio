@@ -29,9 +29,15 @@ const SHRINK_START = 0.5;
 // to fully finish). The now-small mark glides the rest of the way into
 // the Navbar over a fixed scroll distance measured from the moment the
 // pin let go, and once it lands it just scrolls up with everything else.
-const TRAVEL_DISTANCE_PX = 420;
-const CTA_FADE_TRAVEL_END = 0.35;
+const TRAVEL_DISTANCE_PX = 550;
+const CTA_FADE_TRAVEL_END = 0.25;
 const DOCK_TRAVEL_THRESHOLD = 0.96;
+// Dead center of the viewport, not tied to the Hero's own layout — the
+// button holds perfectly still there (a fixed element, ignoring scroll
+// entirely) for the whole of the mark's travel, only letting go —
+// scrolling away normally with everything else — once the mark has
+// actually landed in the Navbar.
+const CTA_CENTER_VH = 50;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -72,6 +78,7 @@ export default function HeroSection() {
   const settledRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
   const pinStartScrollYRef = useRef(0);
   const pinEndScrollYRef = useRef(0);
+  const ctaReleaseScrollYRef = useRef<number | null>(null);
 
   const { scrollY } = useScroll();
 
@@ -109,12 +116,14 @@ export default function HeroSection() {
       liquidRef.current?.setScrollReveal(Math.min(rise, recede));
 
       if (ctaRef.current) ctaRef.current.style.opacity = "0";
+      ctaReleaseScrollYRef.current = null;
       setDocked(false);
     } else {
       // Phase B: unpinned, scrolling normally.
       const traveled = rawScrollY - pinEndScrollYRef.current;
       const travelT = clamp01(traveled / TRAVEL_DISTANCE_PX);
       const eased = smoothstep(travelT);
+      const isDocked = travelT >= DOCK_TRAVEL_THRESHOLD;
 
       const navRect = getNavbarLogoRect();
       const settled = settledRef.current;
@@ -133,9 +142,24 @@ export default function HeroSection() {
       if (ctaRef.current) {
         const ctaT = smoothstep(mapRange(travelT, 0, CTA_FADE_TRAVEL_END, 0, 1));
         ctaRef.current.style.opacity = String(ctaT);
+
+        // Holds dead still (screen-center, ignoring scroll) for the whole
+        // trip, then — the instant the mark lands — starts scrolling away
+        // normally: its on-screen position keeps decreasing 1:1 with
+        // further scroll from that exact point, rather than snapping back
+        // into document flow.
+        const fixedTopPx = window.innerHeight * (CTA_CENTER_VH / 100);
+        if (!isDocked) {
+          ctaReleaseScrollYRef.current = null;
+          ctaRef.current.style.top = `${fixedTopPx}px`;
+        } else {
+          if (ctaReleaseScrollYRef.current === null) ctaReleaseScrollYRef.current = rawScrollY;
+          const scrolledSinceRelease = rawScrollY - ctaReleaseScrollYRef.current;
+          ctaRef.current.style.top = `${fixedTopPx - scrolledSinceRelease}px`;
+        }
       }
 
-      setDocked(travelT >= DOCK_TRAVEL_THRESHOLD);
+      setDocked(isDocked);
     }
   };
 
@@ -201,7 +225,9 @@ export default function HeroSection() {
 
   const wipeInitial = prefersReducedMotion ? { clipPath: "inset(0 0% 0 0)" } : { clipPath: "inset(0 100% 0 0)" };
 
-  const heroContent = (
+  // Stays inside the Hero's sticky inner panel — normal in-flow visual
+  // furniture (tagline, the logo's layout-reserving slot, the bottom row).
+  const heroInFlowContent = (
     <>
       <div>
         <div className="mx-auto mt-8 -mb-8 w-full max-w-[1400px] px-6">
@@ -241,11 +267,12 @@ export default function HeroSection() {
           )}
         </div>
 
-        {/* Used to be its own section below the Hero — folded in here so it
-            can fade in exactly when the logo has finished shrinking, then
-            scroll away normally with everything else once Phase B starts. */}
-        <div className="mt-8 flex justify-center px-6 md:mt-10">
-          <div ref={ctaRef} style={{ opacity: prefersReducedMotion ? 1 : 0 }}>
+        {/* Reduced motion only — the non-reduced-motion version lives
+            outside the sticky panel entirely (see below), so it can hold
+            still through the mark's whole travel to the Navbar without
+            getting trapped in this panel's own stacking context. */}
+        {prefersReducedMotion && (
+          <div className="mt-8 flex justify-center px-6 md:mt-10">
             <Button
               href="/projects"
               variant="primary"
@@ -254,48 +281,8 @@ export default function HeroSection() {
               צפו בעבודות שלי
             </Button>
           </div>
-        </div>
+        )}
       </div>
-
-      {!prefersReducedMotion && (
-        <div
-          ref={floatingRef}
-          className={cn(
-            "fixed z-[60] select-none transition-opacity duration-200",
-            docked ? "pointer-events-none opacity-0" : "opacity-100"
-          )}
-          style={{ visibility: "hidden" }}
-        >
-          <motion.div
-            initial={wipeInitial}
-            animate={{ clipPath: "inset(0 0% 0 0)" }}
-            transition={{ duration: 1.1, ease: [0.65, 0, 0.35, 1], delay: 0.35 }}
-            className="relative h-full w-full"
-          >
-            {/* The solid black logo — always the visual baseline. The canvas
-                layered on top overdraws it with an identical black shape, so
-                nothing looks different until the liquid reveal actually
-                activates (hover, or the scroll-driven full-logo fill). */}
-            <Image
-              src="/images/logo.png"
-              alt="YEYE"
-              fill
-              priority
-              draggable={false}
-              onDragStart={(e) => e.preventDefault()}
-              sizes="100vw"
-              className="pointer-events-none object-contain"
-              style={{ filter: "brightness(0)" }}
-            />
-            <LogoLiquidReveal
-              ref={liquidRef}
-              logoSrc="/images/logo.png"
-              videoSrc="/videos/hero-liquid.mp4"
-              className="absolute inset-0 h-full w-full"
-            />
-          </motion.div>
-        </div>
-      )}
 
       <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between px-6">
         <motion.span
@@ -339,7 +326,7 @@ export default function HeroSection() {
   if (prefersReducedMotion) {
     return (
       <section id="hero" className="relative flex min-h-screen flex-col justify-between overflow-hidden bg-white pt-[100px] pb-8">
-        {heroContent}
+        {heroInFlowContent}
       </section>
     );
   }
@@ -347,7 +334,66 @@ export default function HeroSection() {
   return (
     <section ref={wrapperRef} id="hero" className="relative h-[170vh]">
       <div className="sticky top-0 flex h-screen flex-col justify-between overflow-hidden bg-white pt-[100px] pb-8">
-        {heroContent}
+        {heroInFlowContent}
+      </div>
+
+      {/* Rendered as direct children of the Hero's own outer section — not
+          nested inside the sticky panel above — because that panel's
+          `sticky` + inset establishes its own stacking context, which
+          would trap these fixed, high-z-index elements inside it. Trapped
+          there, no z-index could ever lift them above the Services
+          section's own sticky panel once it starts painting on top as a
+          later sibling, regardless of how high the z-index was set. */}
+      <div
+        ref={ctaRef}
+        className="fixed inset-x-0 z-[70] flex justify-center px-6"
+        style={{ opacity: 0 }}
+      >
+        <Button
+          href="/projects"
+          variant="primary"
+          className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg"
+        >
+          צפו בעבודות שלי
+        </Button>
+      </div>
+
+      <div
+        ref={floatingRef}
+        className={cn(
+          "fixed z-[60] select-none transition-opacity duration-200",
+          docked ? "pointer-events-none opacity-0" : "opacity-100"
+        )}
+        style={{ visibility: "hidden" }}
+      >
+        <motion.div
+          initial={wipeInitial}
+          animate={{ clipPath: "inset(0 0% 0 0)" }}
+          transition={{ duration: 1.1, ease: [0.65, 0, 0.35, 1], delay: 0.35 }}
+          className="relative h-full w-full"
+        >
+          {/* The solid black logo — always the visual baseline. The canvas
+              layered on top overdraws it with an identical black shape, so
+              nothing looks different until the liquid reveal actually
+              activates (hover, or the scroll-driven full-logo fill). */}
+          <Image
+            src="/images/logo.png"
+            alt="YEYE"
+            fill
+            priority
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
+            sizes="100vw"
+            className="pointer-events-none object-contain"
+            style={{ filter: "brightness(0)" }}
+          />
+          <LogoLiquidReveal
+            ref={liquidRef}
+            logoSrc="/images/logo.png"
+            videoSrc="/videos/hero-liquid.mp4"
+            className="absolute inset-0 h-full w-full"
+          />
+        </motion.div>
       </div>
     </section>
   );
