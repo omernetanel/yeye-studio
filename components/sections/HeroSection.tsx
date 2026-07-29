@@ -23,9 +23,9 @@ const RECEDE_END = 0.78;
 const SHRINK_START = 0.5;
 
 // Phase B — the pin has released, so the page is scrolling normally again
-// (whatever comes next — the Services section's own black rise — can
-// already be under way at the same time, instead of waiting for the Hero
-// to fully finish). The now-small mark glides the rest of the way into
+// (whatever comes next can already be under way at the same time, instead
+// of waiting for the Hero to fully finish). The now-small mark glides the
+// rest of the way into
 // the Navbar over a fixed scroll distance measured from the moment the
 // pin let go, and once it lands it just scrolls up with everything else.
 const TRAVEL_DISTANCE_PX = 550;
