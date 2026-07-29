@@ -198,28 +198,34 @@ export default function HeroSection() {
 
   const heroInFlowContent = (
     <>
-      <div>
-        <div className="mx-auto mt-8 -mb-8 w-full max-w-[1400px] px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: "easeOut", delay: 0.15 }}
-            className="flex flex-col items-start text-right"
-          >
-            <p className="font-display text-2xl leading-snug font-semibold text-black md:text-4xl">
-              בואו נבנה לכם אתר שעובד ומוכר באמת.
-            </p>
-          </motion.div>
-        </div>
+      <div className="mx-auto mt-8 w-full max-w-[1400px] px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: "easeOut", delay: 0.15 }}
+          className="flex flex-col items-start text-right"
+        >
+          <p className="font-display text-2xl leading-snug font-semibold text-black md:text-4xl">
+            בואו נבנה לכם אתר שעובד ומוכר באמת.
+          </p>
+        </motion.div>
+      </div>
 
-        <div className="relative mt-4 w-full select-none px-4 sm:px-6 md:mt-8">{logoBlock}</div>
+      {/* Its own centered flex region between the tagline and the bottom
+          row, not just packed up against the tagline — once the mark
+          shrinks down to its modest in-flow size, `justify-between` on
+          the outer panel alone left it (and the CTA) stranded up near the
+          top with a huge dead gap below, instead of sitting centered in
+          the space actually available for them. */}
+      <div className="flex flex-1 flex-col items-center justify-center px-6">
+        <div className="relative w-full select-none px-4 sm:px-6">{logoBlock}</div>
 
         {/* Ordinary in-flow content, right below the logo, in both
             branches — the reduced-motion version just skips the initial
             opacity:0 so it's visible immediately, no separate markup. */}
         <div
           ref={ctaRef}
-          className="mt-8 flex justify-center px-6 md:mt-10"
+          className="mt-10 flex justify-center md:mt-14"
           style={prefersReducedMotion ? undefined : { opacity: 0 }}
         >
           <Button
@@ -273,7 +279,7 @@ export default function HeroSection() {
 
   if (prefersReducedMotion) {
     return (
-      <section id="hero" className="relative flex min-h-screen flex-col justify-between overflow-hidden bg-white pt-[100px] pb-8">
+      <section id="hero" className="relative flex min-h-screen flex-col overflow-hidden bg-white pt-[100px] pb-8">
         {heroInFlowContent}
       </section>
     );
@@ -281,7 +287,7 @@ export default function HeroSection() {
 
   return (
     <section ref={wrapperRef} id="hero" className="relative h-[170vh]">
-      <div className="sticky top-0 flex h-screen flex-col justify-between overflow-hidden bg-white pt-[100px] pb-8">
+      <div className="sticky top-0 flex h-screen flex-col overflow-hidden bg-white pt-[100px] pb-8">
         {heroInFlowContent}
       </div>
     </section>
