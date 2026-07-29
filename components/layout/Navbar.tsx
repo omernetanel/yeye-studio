@@ -40,7 +40,7 @@ export default function Navbar() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="fixed inset-x-0 top-0 z-50 border-b border-black/8 bg-white/85 backdrop-blur-md"
+        className="fixed inset-x-0 top-0 z-50 border-b border-black/8 bg-white"
       >
       <div className="relative mx-auto flex h-[68px] max-w-[1200px] items-center justify-between px-6">
         {/* Logo — pinned to the visual left, brand-convention regardless of RTL.
