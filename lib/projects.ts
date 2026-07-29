@@ -173,4 +173,18 @@ export const projects: Project[] = [
     image: "/images/sorozinchefpweb.png",
     external: true,
   },
+  {
+    slug: "lby-studio",
+    title: "LBY STUDIO",
+    cardCategory: "אפליקציית תורים",
+    category: "אפליקציית תורים למספרה",
+    description: "אפליקציית תורים למספרה שבניתי ל-LBY STUDIO.",
+    // No detail page yet — external:true routes the card straight to
+    // /projects/lby-studio, which the [slug] page's own notFound() call
+    // (for any external project) turns into a genuine 404. Swap this to
+    // external:false and add a `story` once the real project page exists.
+    url: "/projects/lby-studio",
+    image: "/images/lbysreenweb.png",
+    external: true,
+  },
 ];
