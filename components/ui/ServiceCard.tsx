@@ -65,7 +65,7 @@ export default function ServiceCard({ icon: Icon, title, description, href, ligh
             <Icon
               size={26}
               strokeWidth={1.5}
-              className={tone === "neutral" ? "text-black/70" : "text-accent drop-shadow-[0_0_6px_rgba(42,51,243,0.35)]"}
+              className={tone === "neutral" ? "text-black/70" : "text-accent drop-shadow-[0_0_6px_rgba(74,74,74,0.35)]"}
             />
           </div>
 

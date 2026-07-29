@@ -102,7 +102,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
               onClick={() => setLoaded(true)}
               className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/40 text-center transition-colors hover:bg-black/25"
             >
-              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-[0_0_30px_rgba(42,51,243,0.5)]">
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-[0_0_30px_rgba(74,74,74,0.5)]">
                 <Play size={22} fill="currentColor" className="mr-[-2px]" />
               </span>
               <span className="font-display text-sm font-semibold text-white">זהו אתר חי ומגיב</span>
