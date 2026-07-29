@@ -314,17 +314,19 @@ export default function ServicesSection() {
             the edges on any viewport whose aspect ratio isn't the clip's
             own 16:9. Whatever's outside the clip's own frame just shows
             the (equally white) section background instead — seamless.
-            top-[100px] + an explicit h-[calc(...)], not inset-0 — same
-            reason as the content's own pt-[100px] below: with contain
-            scaling the clip to fill the box's full height on wide
-            viewports (no letterboxing), its own top edge would otherwise
-            land at y=0 and run right under the fixed Navbar. A `video`
+            top-[100px], full h-full (not a shorter calc()'d box) — the
+            box needs to stay exactly the size the clip was actually
+            composed for, just shifted down so its top clears the fixed
+            Navbar; shrinking the box instead scales the whole composition
+            down with it via object-contain, which isn't what "move it
+            down" was supposed to do. The bit that now overflows past the
+            panel's own bottom edge is simply clipped by overflow-hidden
+            above, same as it would be off-screen either way. A `video`
             is a replaced element with its own intrinsic aspect ratio —
             leaving height as `auto` (relying on top+bottom alone) makes
             the browser size the box from that intrinsic ratio instead of
-            the actual container, silently ignoring `bottom-0` entirely;
-            an explicit height is what actually constrains it. */}
-        <BackgroundVideo ref={videoRef} className="absolute inset-x-0 top-[100px] h-[calc(100%-100px)] w-full object-contain" />
+            the actual container, so the height has to stay explicit. */}
+        <BackgroundVideo ref={videoRef} className="absolute inset-x-0 top-[100px] h-full w-full object-contain" />
 
         {/* pt-[100px] — matches the Navbar's own fixed height plus
             breathing room (same convention as the Hero's sticky panel).
