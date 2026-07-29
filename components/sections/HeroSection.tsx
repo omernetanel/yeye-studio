@@ -8,8 +8,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import Button from "@/components/ui/Button";
 import LogoLiquidReveal, { type LogoLiquidRevealHandle } from "@/components/sections/hero/LogoLiquidReveal";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
-import { getNavbarLogoRect, setDocked, useDocked } from "@/lib/motion/heroDock";
-import { cn } from "@/lib/utils";
+import { getNavbarLogoRect, setDocked } from "@/lib/motion/heroDock";
 
 const WHATSAPP_NUMBER = "972552434775";
 const CONTACT_EMAIL = "hello@yeyelabs.com";
@@ -31,6 +30,15 @@ const SHRINK_START = 0.5;
 // pin let go, and once it lands it just scrolls up with everything else.
 const TRAVEL_DISTANCE_PX = 550;
 const CTA_FADE_TRAVEL_END = 0.25;
+// The traveling mark dissolves away over this short window, finishing
+// right as the CTA finishes fading in — starting half of the CTA's own
+// fade-in window earlier, the "half a second before" feel — so by the
+// moment the button is fully shown, the mark has already gone rather than
+// still visibly sliding across the screen. The Navbar's own mark then
+// appears at that same instant, together with the button, well before the
+// physical travel or the CTA's screen-center hold actually end.
+const LOGO_FADE_START = CTA_FADE_TRAVEL_END / 2;
+const LOGO_FADE_END = CTA_FADE_TRAVEL_END;
 const DOCK_TRAVEL_THRESHOLD = 0.96;
 // Dead center of the viewport, not tied to the Hero's own layout — the
 // button holds perfectly still there (a fixed element, ignoring scroll
@@ -59,7 +67,6 @@ function smoothstep(t: number) {
 
 export default function HeroSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const docked = useDocked();
 
   const wrapperRef = useRef<HTMLElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
@@ -107,6 +114,7 @@ export default function HeroSection() {
       floating.style.height = `${currentHeight}px`;
       floating.style.left = `${settled.x - currentWidth / 2}px`;
       floating.style.top = `${settled.y - currentHeight / 2}px`;
+      floating.style.opacity = "1";
 
       // The water level: rises 0→1 while the page is still held, then
       // recedes back to 0 while the mark shrinks — draining out, not just
@@ -123,7 +131,10 @@ export default function HeroSection() {
       const traveled = rawScrollY - pinEndScrollYRef.current;
       const travelT = clamp01(traveled / TRAVEL_DISTANCE_PX);
       const eased = smoothstep(travelT);
-      const isDocked = travelT >= DOCK_TRAVEL_THRESHOLD;
+      // Separate from the mark's own dissolve/Navbar-reveal timing below —
+      // this one is purely about when the CTA lets go of its screen-center
+      // hold and starts scrolling away with everything else. Unchanged.
+      const ctaReleased = travelT >= DOCK_TRAVEL_THRESHOLD;
 
       const navRect = getNavbarLogoRect();
       const settled = settledRef.current;
@@ -136,6 +147,7 @@ export default function HeroSection() {
       floating.style.height = `${settled.height}px`;
       floating.style.left = `${centerX - settled.width / 2}px`;
       floating.style.top = `${centerY - settled.height / 2}px`;
+      floating.style.opacity = String(1 - smoothstep(mapRange(travelT, LOGO_FADE_START, LOGO_FADE_END, 0, 1)));
 
       liquidRef.current?.setScrollReveal(0);
 
@@ -149,7 +161,7 @@ export default function HeroSection() {
         // further scroll from that exact point, rather than snapping back
         // into document flow.
         const fixedTopPx = window.innerHeight * (CTA_CENTER_VH / 100);
-        if (!isDocked) {
+        if (!ctaReleased) {
           ctaReleaseScrollYRef.current = null;
           ctaRef.current.style.top = `${fixedTopPx}px`;
         } else {
@@ -159,7 +171,11 @@ export default function HeroSection() {
         }
       }
 
-      setDocked(isDocked);
+      // The Navbar's own mark reveal rides on the same instant the CTA
+      // finishes fading in (LOGO_FADE_END === CTA_FADE_TRAVEL_END), not on
+      // the traveling mark's physical arrival or the CTA's release above —
+      // by this point the traveling mark has already dissolved away.
+      setDocked(travelT >= LOGO_FADE_END);
     }
   };
 
@@ -360,10 +376,7 @@ export default function HeroSection() {
 
       <div
         ref={floatingRef}
-        className={cn(
-          "fixed z-[60] select-none transition-opacity duration-200",
-          docked ? "pointer-events-none opacity-0" : "opacity-100"
-        )}
+        className="fixed z-[60] pointer-events-none select-none"
         style={{ visibility: "hidden" }}
       >
         <motion.div
