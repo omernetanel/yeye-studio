@@ -14,29 +14,24 @@ import { cn } from "@/lib/utils";
 const WHATSAPP_NUMBER = "972552434775";
 const CONTACT_EMAIL = "hello@yeyelabs.com";
 
-// The Hero itself is pinned (via a tall wrapper + `sticky`, not a JS
-// scroll-jack — see the useScroll offset below) for this whole sequence,
-// so it reads as "the page freezes" even though the user is still
-// physically scrolling through the wrapper's extra height. Progress is
-// scoped 0..1 across that wrapper:
-//   0        → FILL_END   : the page holds still; video floods the logo
-//                            bottom-to-top like rising water.
-//   FILL_END → 1           : now scrolling actually moves things — the
-//                            water recedes back to plain black while the
-//                            mark shrinks and glides into the Navbar slot,
-//                            landing exactly as it looks there today.
-const FILL_END = 0.45;
-const RECEDE_END = 0.7;
-const DOCK_START_AT = FILL_END;
-const DOCK_DONE_AT = 1;
-// The "view my work" CTA used to live in its own section below the Hero;
-// now it fades in right in the Hero itself, timed to when the logo has
-// already finished shrinking to its small, final size (dockProgress 0.5)
-// but is still gliding the rest of the way into the Navbar — so there's
-// already something to look at instead of empty space during that leg.
-const CTA_FADE_START = 0.42;
-const CTA_FADE_END = 0.58;
-const DOCKED_THRESHOLD = 0.995;
+// Phase A — pinned (a tall wrapper + `sticky`, not a JS scroll-jack, so it
+// stays smooth under Lenis): the page genuinely holds still while video
+// floods the logo bottom-to-top, then recedes back to plain black while
+// the mark shrinks in place to its small, final size. Scoped 0..1 across
+// the wrapper's own height.
+const FILL_END = 0.5;
+const RECEDE_END = 0.78;
+const SHRINK_START = 0.5;
+
+// Phase B — the pin has released, so the page is scrolling normally again
+// (whatever comes next — the Services section's own black rise — can
+// already be under way at the same time, instead of waiting for the Hero
+// to fully finish). The now-small mark glides the rest of the way into
+// the Navbar over a fixed scroll distance measured from the moment the
+// pin let go, and once it lands it just scrolls up with everything else.
+const TRAVEL_DISTANCE_PX = 420;
+const CTA_FADE_TRAVEL_END = 0.35;
+const DOCK_TRAVEL_THRESHOLD = 0.96;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -66,79 +61,127 @@ export default function HeroSection() {
   const liquidRef = useRef<LogoLiquidRevealHandle>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
 
-  const { scrollYProgress } = useScroll({ target: wrapperRef, offset: ["start start", "end end"] });
+  // Where Phase A left the mark (viewport-pixel center), and the exact
+  // scrollY range the pin covers — computed analytically from the
+  // wrapper's own geometry, rather than derived from Framer's
+  // target-scoped scrollYProgress. That motion value lags a frame or two
+  // behind an instant/fast scroll jump (its target rect gets re-measured
+  // on its own schedule), while a live getBoundingClientRect() and the
+  // raw global scrollY never do — so the phase boundary is decided from
+  // those instead, with scrollYProgress dropped entirely.
+  const settledRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
+  const pinStartScrollYRef = useRef(0);
+  const pinEndScrollYRef = useRef(0);
 
-  const applyDockTransform = (progress: number) => {
+  const { scrollY } = useScroll();
+
+  const update = () => {
     const spacer = spacerRef.current;
     const floating = floatingRef.current;
     if (!spacer || !floating) return;
 
-    const naturalRect = spacer.getBoundingClientRect();
-    const navRect = getNavbarLogoRect();
-    const dockProgress = mapRange(progress, DOCK_START_AT, DOCK_DONE_AT, 0, 1);
+    const rawScrollY = scrollY.get();
+    const progressA = mapRange(rawScrollY, pinStartScrollYRef.current, pinEndScrollYRef.current, 0, 1);
 
-    if (!navRect || dockProgress <= 0) {
-      floating.style.top = `${naturalRect.top}px`;
-      floating.style.left = `${naturalRect.left}px`;
-      floating.style.width = `${naturalRect.width}px`;
-      floating.style.height = `${naturalRect.height}px`;
-    } else {
-      // Two clean, non-overlapping phases instead of one blend: first the
-      // mark shrinks in place, centered where it's been sitting all
-      // along — by the time it's small, it's already impossible for it
-      // to cover the Navbar's nav links or CTA, because it's simply not
-      // wide enough to reach them anymore. Only once it's fully shrunk
-      // does it start gliding — now small — the rest of the way into the
-      // exact Navbar slot.
-      const sizeT = smoothstep(mapRange(dockProgress, 0, 0.5, 0, 1));
-      const posT = smoothstep(mapRange(dockProgress, 0.5, 1, 0, 1));
-
-      const currentWidth = lerp(naturalRect.width, navRect.width, sizeT);
-      const currentHeight = lerp(naturalRect.height, navRect.height, sizeT);
-
-      const naturalCenterX = naturalRect.left + naturalRect.width / 2;
-      const naturalCenterY = naturalRect.top + naturalRect.height / 2;
-      const navCenterX = navRect.left + navRect.width / 2;
-      const navCenterY = navRect.top + navRect.height / 2;
-      const centerX = lerp(naturalCenterX, navCenterX, posT);
-      const centerY = lerp(naturalCenterY, navCenterY, posT);
+    if (rawScrollY < pinEndScrollYRef.current) {
+      // Phase A: pinned. Position never needs to move on its own — the
+      // sticky panel already holds it in place — only size animates, in
+      // place, toward the Navbar mark's dimensions. (The center point
+      // doesn't need a live measurement either — it's constant for all of
+      // Phase A by definition, since sticky is what's holding it there —
+      // settledRef already has it, precomputed in measurePinRange().)
+      const settled = settledRef.current;
+      const sizeT = smoothstep(mapRange(progressA, SHRINK_START, 1, 0, 1));
+      const naturalRect = spacer.getBoundingClientRect();
+      const currentWidth = lerp(naturalRect.width, settled.width, sizeT);
+      const currentHeight = lerp(naturalRect.height, settled.height, sizeT);
 
       floating.style.width = `${currentWidth}px`;
       floating.style.height = `${currentHeight}px`;
-      floating.style.left = `${centerX - currentWidth / 2}px`;
-      floating.style.top = `${centerY - currentHeight / 2}px`;
+      floating.style.left = `${settled.x - currentWidth / 2}px`;
+      floating.style.top = `${settled.y - currentHeight / 2}px`;
+
+      // The water level: rises 0→1 while the page is still held, then
+      // recedes back to 0 while the mark shrinks — draining out, not just
+      // fading, the same mechanism in reverse.
+      const rise = mapRange(progressA, 0, FILL_END, 0, 1);
+      const recede = 1 - mapRange(progressA, FILL_END, RECEDE_END, 0, 1);
+      liquidRef.current?.setScrollReveal(Math.min(rise, recede));
+
+      if (ctaRef.current) ctaRef.current.style.opacity = "0";
+      setDocked(false);
+    } else {
+      // Phase B: unpinned, scrolling normally.
+      const traveled = rawScrollY - pinEndScrollYRef.current;
+      const travelT = clamp01(traveled / TRAVEL_DISTANCE_PX);
+      const eased = smoothstep(travelT);
+
+      const navRect = getNavbarLogoRect();
+      const settled = settledRef.current;
+      const targetCenterX = navRect ? navRect.left + navRect.width / 2 : settled.x;
+      const targetCenterY = navRect ? navRect.top + navRect.height / 2 : settled.y;
+      const centerX = lerp(settled.x, targetCenterX, eased);
+      const centerY = lerp(settled.y, targetCenterY, eased);
+
+      floating.style.width = `${settled.width}px`;
+      floating.style.height = `${settled.height}px`;
+      floating.style.left = `${centerX - settled.width / 2}px`;
+      floating.style.top = `${centerY - settled.height / 2}px`;
+
+      liquidRef.current?.setScrollReveal(0);
+
+      if (ctaRef.current) {
+        const ctaT = smoothstep(mapRange(travelT, 0, CTA_FADE_TRAVEL_END, 0, 1));
+        ctaRef.current.style.opacity = String(ctaT);
+      }
+
+      setDocked(travelT >= DOCK_TRAVEL_THRESHOLD);
     }
-
-    // The water level: rises 0→1 while the page is still held (matches
-    // the pin phase exactly), then recedes back to 0 while the mark
-    // shrinks away — draining out, not just fading, the same mechanism
-    // in reverse.
-    const rise = mapRange(progress, 0, FILL_END, 0, 1);
-    const recede = 1 - mapRange(progress, FILL_END, RECEDE_END, 0, 1);
-    liquidRef.current?.setScrollReveal(Math.min(rise, recede));
-
-    if (ctaRef.current) {
-      const ctaT = smoothstep(mapRange(dockProgress, CTA_FADE_START, CTA_FADE_END, 0, 1));
-      ctaRef.current.style.opacity = String(ctaT);
-      ctaRef.current.style.transform = `translateY(${lerp(16, 0, ctaT)}px)`;
-    }
-
-    setDocked(progress >= DOCKED_THRESHOLD);
   };
 
   useEffect(() => {
     if (prefersReducedMotion) setDocked(true);
   }, [prefersReducedMotion]);
 
+  const measurePinRange = () => {
+    const wrapper = wrapperRef.current;
+    const spacer = spacerRef.current;
+    if (!wrapper || !spacer) return;
+
+    const wrapperTop = wrapper.getBoundingClientRect().top + window.scrollY;
+    pinStartScrollYRef.current = wrapperTop;
+    pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - window.innerHeight;
+
+    // The mark's Phase-A-final state — dead center of the sticky panel
+    // (constant for all of Phase A, so a single measurement is enough)
+    // at the Navbar mark's own size (the size Phase A's shrink animates
+    // toward). Precomputed rather than captured from whatever the last
+    // observed Phase A frame happened to be, so it's correct even if a
+    // scroll jump lands past Phase A without ever rendering a frame
+    // inside it.
+    const naturalRect = spacer.getBoundingClientRect();
+    const navRect = getNavbarLogoRect();
+    settledRef.current = {
+      x: naturalRect.left + naturalRect.width / 2,
+      y: naturalRect.top + naturalRect.height / 2,
+      width: navRect?.width ?? naturalRect.width,
+      height: navRect?.height ?? naturalRect.height,
+    };
+  };
+
   useLayoutEffect(() => {
     if (prefersReducedMotion) return;
     const floating = floatingRef.current;
     if (!floating) return;
 
-    applyDockTransform(scrollYProgress.get());
+    measurePinRange();
+    update();
     floating.style.visibility = "visible";
 
-    const handleResize = () => applyDockTransform(scrollYProgress.get());
+    const handleResize = () => {
+      measurePinRange();
+      update();
+    };
     window.addEventListener("resize", handleResize);
     const ro = new ResizeObserver(handleResize);
     if (spacerRef.current) ro.observe(spacerRef.current);
@@ -147,14 +190,13 @@ export default function HeroSection() {
       window.removeEventListener("resize", handleResize);
       ro.disconnect();
     };
-    // Only needs to (re)bind once motion-preference settles — applyDockTransform
-    // itself always reads live refs/values, never stale closures.
+    // Only needs to (re)bind once motion-preference settles — update()
+    // itself always reads live refs/motion values, never stale closures.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefersReducedMotion]);
 
-  useMotionValueEvent(scrollYProgress, "change", (progress) => {
-    if (prefersReducedMotion) return;
-    applyDockTransform(progress);
+  useMotionValueEvent(scrollY, "change", () => {
+    if (!prefersReducedMotion) update();
   });
 
   const wipeInitial = prefersReducedMotion ? { clipPath: "inset(0 0% 0 0)" } : { clipPath: "inset(0 100% 0 0)" };
@@ -200,8 +242,8 @@ export default function HeroSection() {
         </div>
 
         {/* Used to be its own section below the Hero — folded in here so it
-            can fade in exactly when the logo has finished shrinking, in
-            the space that opens up as it glides off toward the Navbar. */}
+            can fade in exactly when the logo has finished shrinking, then
+            scroll away normally with everything else once Phase B starts. */}
         <div className="mt-8 flex justify-center px-6 md:mt-10">
           <div ref={ctaRef} style={{ opacity: prefersReducedMotion ? 1 : 0 }}>
             <Button
@@ -303,7 +345,7 @@ export default function HeroSection() {
   }
 
   return (
-    <section ref={wrapperRef} id="hero" className="relative h-[260vh]">
+    <section ref={wrapperRef} id="hero" className="relative h-[170vh]">
       <div className="sticky top-0 flex h-screen flex-col justify-between overflow-hidden bg-white pt-[100px] pb-8">
         {heroContent}
       </div>
