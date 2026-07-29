@@ -4,29 +4,35 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import * as THREE from "three";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
-// Main blob (index 0, follows the pointer) + two satellites that orbit it
-// independently — this is what gives the "several connected regions"
-// look instead of one perfect circle.
-const BLOB_COUNT = 3;
-const BASE_RADIUS = [190, 95, 80];
-const ORBIT_RADIUS = [0, 90, 120];
-const ORBIT_SPEED = [0, 0.35, 0.27];
-const ORBIT_PHASE = [0, 0, Math.PI];
-const BREATHE_AMOUNT = [26, 20, 18];
-const BREATHE_SPEED = [0.5, 0.7, 0.42];
+// One large main blob (index 0, follows the pointer) plus four satellites
+// at varied sizes and orbit distances — big ones close enough to bridge
+// into the main mass with thin metaball tendrils, small ones far enough to
+// read as separate ink droplets. That size/distance variety is what makes
+// the field look like a big irregular ink splat instead of a few clean
+// circles (see FIELD_LOW/FIELD_HIGH below for the sharp-edge part of that).
+const BLOB_COUNT = 5;
+const BASE_RADIUS = [230, 150, 110, 55, 42];
+const ORBIT_RADIUS = [0, 140, 185, 270, 330];
+const ORBIT_SPEED = [0, 0.4, 0.3, 0.55, 0.46];
+const ORBIT_PHASE = [0, 0.6, 2.5, 4.1, 1.3];
+const BREATHE_AMOUNT = [32, 26, 22, 13, 11];
+const BREATHE_SPEED = [0.5, 0.65, 0.4, 0.8, 0.6];
 
 const FOLLOW_SPRING_K = 0.045;
 const FOLLOW_DAMPING = 0.86;
 
 // How fast the blob "commits ink" to the trail once the pointer is active,
 // and how fast it stops once it isn't — independent of how slowly that
-// ink then fades, which is TRAIL_DECAY_HALF_LIFE below.
-const PAINT_ATTACK_RATE = 10;
+// ink then fades, which is TRAIL_DECAY_HALF_LIFE below. Both fast: the
+// splat should feel like it's snapping on under the cursor immediately,
+// not fading up gradually.
+const PAINT_ATTACK_RATE = 28;
 
-// The actual "flowing liquid" feel: once painted, a point in the trail
-// keeps glowing and decays on its own, so a moving pointer leaves behind a
-// slowly-dissolving streak instead of a single dot that just teleports.
-const TRAIL_DECAY_HALF_LIFE = 1.1; // seconds
+// A moving pointer still leaves a brief dissolving streak (the "flowing
+// liquid" feel), but short — this was 1.1s and read as sluggish; a splat
+// that lingers for over a second after the pointer leaves reads as
+// unresponsive rather than liquid.
+const TRAIL_DECAY_HALF_LIFE = 0.4; // seconds
 
 // The trail buffer is deliberately lower-resolution than the display
 // canvas — both for performance (it's a ping-ponged full-screen pass every
@@ -76,13 +82,14 @@ const TRAIL_FRAGMENT_SHADER = `
   void main() {
     vec2 pixelPos = vUv * resolution;
 
-    // Slow domain warp so the blob's edges wobble organically instead of
-    // tracing perfect circular arcs.
+    // Strong domain warp so the blobs' edges tear into the thin, irregular
+    // tendrils and pinched waists of a real ink splat instead of tracing
+    // clean circular arcs.
     vec2 warp = vec2(
       valueNoise(pixelPos * 0.01 + vec2(time * 0.06, 0.0)),
       valueNoise(pixelPos * 0.01 + vec2(0.0, time * 0.06) + 50.0)
     );
-    vec2 warpedPos = pixelPos + (warp - 0.5) * 70.0;
+    vec2 warpedPos = pixelPos + (warp - 0.5) * 160.0;
 
     float field = 0.0;
     for (int i = 0; i < ${BLOB_COUNT}; i++) {
@@ -91,7 +98,9 @@ const TRAIL_FRAGMENT_SHADER = `
       field += (blobRadius[i] * blobRadius[i]) / max(d2, 1.0);
     }
 
-    float blobMask = smoothstep(0.85, 1.25, field) * paintStrength;
+    // A narrow threshold band reads as a crisp ink edge rather than a
+    // soft glow — splat paint has a hard boundary, not a gradient falloff.
+    float blobMask = smoothstep(0.92, 1.06, field) * paintStrength;
     float prev = texture2D(prevTrail, vUv).r;
     float next = max(prev * decayFactor, blobMask);
 
@@ -108,12 +117,33 @@ const COMPOSE_FRAGMENT_SHADER = `
   uniform sampler2D trailTex;
   uniform float scrollReveal;
   uniform float videoRepeatX;
+  uniform float time;
   varying vec2 vUv;
+
+  float hash1(float n) {
+    return fract(sin(n) * 43758.5453123);
+  }
+
+  float waveNoise(float x) {
+    float i = floor(x);
+    float f = fract(x);
+    float a = hash1(i);
+    float b = hash1(i + 1.0);
+    return mix(a, b, f * f * (3.0 - 2.0 * f));
+  }
 
   void main() {
     float logoAlpha = texture2D(logoTex, vUv).a;
     float trailVal = texture2D(trailTex, vUv).r;
-    float reveal = logoAlpha * clamp(max(trailVal, scrollReveal), 0.0, 1.0);
+
+    // The scroll-driven reveal floods bottom-to-top like rising water,
+    // not a flat opacity blend — vUv.y is 0 at the bottom, so pixels
+    // below the current water level are lit. A touch of noise on the
+    // edge keeps the waterline from reading as a razor-straight wipe.
+    float wobble = (waveNoise(vUv.x * 5.0 + time * 0.2) - 0.5) * 0.05;
+    float waterReveal = smoothstep(-0.015, 0.015, scrollReveal + wobble - vUv.y);
+
+    float reveal = logoAlpha * clamp(max(trailVal, waterReveal), 0.0, 1.0);
 
     vec2 videoUv = vec2(vUv.x * videoRepeatX, vUv.y);
     vec3 videoColor = texture2D(videoTex, videoUv).rgb;
@@ -253,6 +283,7 @@ const LogoLiquidReveal = forwardRef<LogoLiquidRevealHandle, LogoLiquidRevealProp
         trailTex: { value: null },
         scrollReveal: { value: 0 },
         videoRepeatX: { value: VIDEO_REPEAT_X },
+        time: { value: 0 },
       },
       vertexShader: COMPOSE_VERTEX_SHADER,
       fragmentShader: COMPOSE_FRAGMENT_SHADER,
@@ -342,6 +373,7 @@ const LogoLiquidReveal = forwardRef<LogoLiquidRevealHandle, LogoLiquidRevealProp
       // scroll-driven full-logo reveal) onto the visible canvas.
       material.uniforms.trailTex.value = trailRead.texture;
       material.uniforms.scrollReveal.value = scrollRevealRef.current;
+      material.uniforms.time.value = t;
       renderer.setRenderTarget(null);
       renderer.render(scene, camera);
 

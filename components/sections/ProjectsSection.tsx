@@ -44,7 +44,8 @@ export default function ProjectsSection() {
                 title={project.cardTitle ?? project.title}
                 category={project.cardCategory ?? project.category}
                 imageSrc={project.image}
-                href={`/projects/${project.slug}`}
+                href={project.external ? project.url : `/projects/${project.slug}`}
+                external={project.external}
               />
             )),
             ...comingSoonSlots.map((slot) => <ComingSoonTile key={slot} />),
@@ -64,7 +65,8 @@ export default function ProjectsSection() {
                 title={project.cardTitle ?? project.title}
                 category={project.cardCategory ?? project.category}
                 imageSrc={project.image}
-                href={`/projects/${project.slug}`}
+                href={project.external ? project.url : `/projects/${project.slug}`}
+                external={project.external}
               />
             </motion.div>
           ))}

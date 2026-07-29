@@ -26,7 +26,8 @@ export default function ProjectsPage() {
               title={project.cardTitle ?? project.title}
               category={project.cardCategory ?? project.category}
               imageSrc={project.image}
-              href={`/projects/${project.slug}`}
+              href={project.external ? project.url : `/projects/${project.slug}`}
+              external={project.external}
             />
           ))}
         </div>

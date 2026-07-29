@@ -40,6 +40,8 @@ export interface Project {
   image: string;
   tags?: string[];
   story?: ProjectStory;
+  /** Card links straight out to `url` instead of an internal /projects/[slug] page — no detail page is generated for it. */
+  external?: boolean;
 }
 
 export const projects: Project[] = [
@@ -160,5 +162,15 @@ export const projects: Project[] = [
       ctaText:
         "אם יש לכם מוצר טוב שהעמוד השיווקי שלו עדיין לא עושה לו צדק, אשמח לדבר. אני בונה דפי נחיתה שמספרים סיפור, לא רק מפרטים רשימת פיצ'רים.",
     },
+  },
+  {
+    slug: "sorozin-chef",
+    title: "Sorozin Chef",
+    cardCategory: "דף נחיתה",
+    category: "דף נחיתה",
+    description: "דף נחיתה שבניתי עבור Sorozin Chef.",
+    url: "https://omernetanel.github.io/sorozinchef/",
+    image: "/images/sorozinchefpweb.png",
+    external: true,
   },
 ];
