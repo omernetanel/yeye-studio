@@ -1,7 +1,6 @@
 "use client";
 
 import { forwardRef, useLayoutEffect, useRef } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { LayoutDashboard, Monitor, Rocket, ShoppingCart } from "lucide-react";
@@ -358,26 +357,11 @@ export default function ServicesSection() {
 
   return (
     <>
-      {/* A plain, non-sticky block showing the clip's full, uncropped
-          first frame at its true 16:9 aspect ratio (w-full, height
-          following from that — never viewport-capped). It just scrolls
-          into and out of view normally, like any full-bleed image, so the
-          whole composition (including the top/bottom margins the pinned
-          section below has to crop into) is genuinely seen in full at
-          least once. That natural height is also exactly what puts real
-          breathing room between the Hero above and the interactive pin
-          below, instead of the two butting up against each other. */}
-      <div className="relative w-full overflow-hidden bg-white">
-        <Image
-          src={POSTER_SRC}
-          alt=""
-          aria-hidden="true"
-          width={1920}
-          height={1080}
-          sizes="100vw"
-          className="block h-auto w-full"
-        />
-      </div>
+      {/* Plain breathing room between the Hero above and the pinned video
+          below — not another copy of the composition (that read as a
+          confusing duplicate/glitch, the clip appearing to "restart"),
+          just a clean gap. */}
+      <div className="h-24 bg-white md:h-36" />
 
       <section ref={wrapperRef} id="services" className="relative h-[560vh] bg-white">
         <div className="sticky top-0 h-screen overflow-hidden bg-white">
@@ -390,10 +374,7 @@ export default function ServicesSection() {
               single largest per-side loss as small as it can be — pinning it
               to one edge (object-top/object-bottom) was tried and made that
               one edge's loss roughly double, chewing into real content (the
-              crumple ball's own edges) instead of just margin. The intro
-              block above already showed the whole frame uncropped once, so
-              this modest, balanced crop during the interactive scrub isn't
-              anyone's first impression of the composition.
+              crumple ball's own edges) instead of just margin.
               top-[76px] h-[calc(100%-76px)] — an *explicit* height that's
               already shrunk by the Navbar clearance, not h-full. h-full here
               would leave the box exactly panel-height (100vh) and then push
