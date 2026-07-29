@@ -11,11 +11,11 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 // the field look like a big irregular ink splat instead of a few clean
 // circles (see FIELD_LOW/FIELD_HIGH below for the sharp-edge part of that).
 const BLOB_COUNT = 5;
-const BASE_RADIUS = [230, 150, 110, 55, 42];
-const ORBIT_RADIUS = [0, 140, 185, 270, 330];
+const BASE_RADIUS = [127, 83, 61, 30, 23];
+const ORBIT_RADIUS = [0, 77, 102, 149, 182];
 const ORBIT_SPEED = [0, 0.4, 0.3, 0.55, 0.46];
 const ORBIT_PHASE = [0, 0.6, 2.5, 4.1, 1.3];
-const BREATHE_AMOUNT = [32, 26, 22, 13, 11];
+const BREATHE_AMOUNT = [18, 14, 12, 7, 6];
 const BREATHE_SPEED = [0.5, 0.65, 0.4, 0.8, 0.6];
 
 const FOLLOW_SPRING_K = 0.045;
@@ -110,6 +110,21 @@ const TRAIL_FRAGMENT_SHADER = `
 
 const COMPOSE_VERTEX_SHADER = TRAIL_VERTEX_SHADER;
 
+// Scroll-driven reveal seeds: several points scattered across the
+// wordmark (roughly two per glyph), each growing its own patch of light
+// on a slightly staggered schedule — reads as several places lighting up
+// independently rather than one flat waterline sweeping across the whole
+// logo at once. Positions are hand-placed in UV space (0,0 = bottom-left).
+const SCROLL_SEED_COUNT = 8;
+const SCROLL_SEED_POS = [
+  [0.11, 0.28], [0.16, 0.74],
+  [0.37, 0.7], [0.41, 0.26],
+  [0.61, 0.27], [0.57, 0.73],
+  [0.88, 0.72], [0.83, 0.29],
+];
+const SCROLL_SEED_DELAY = [0, 0.14, 0.05, 0.22, 0.02, 0.16, 0.09, 0.25];
+const SCROLL_SEED_RADIUS = 0.55;
+
 const COMPOSE_FRAGMENT_SHADER = `
   precision highp float;
   uniform sampler2D logoTex;
@@ -118,6 +133,9 @@ const COMPOSE_FRAGMENT_SHADER = `
   uniform float scrollReveal;
   uniform float videoRepeatX;
   uniform float time;
+  uniform vec2 resolution;
+  uniform vec2 scrollSeedPos[${SCROLL_SEED_COUNT}];
+  uniform float scrollSeedDelay[${SCROLL_SEED_COUNT}];
   varying vec2 vUv;
 
   float hash1(float n) {
@@ -136,14 +154,23 @@ const COMPOSE_FRAGMENT_SHADER = `
     float logoAlpha = texture2D(logoTex, vUv).a;
     float trailVal = texture2D(trailTex, vUv).r;
 
-    // The scroll-driven reveal floods bottom-to-top like rising water,
-    // not a flat opacity blend — vUv.y is 0 at the bottom, so pixels
-    // below the current water level are lit. A touch of noise on the
-    // edge keeps the waterline from reading as a razor-straight wipe.
-    float wobble = (waveNoise(vUv.x * 5.0 + time * 0.2) - 0.5) * 0.05;
-    float waterReveal = smoothstep(-0.015, 0.015, scrollReveal + wobble - vUv.y);
+    // Aspect-correct so growth reads circular rather than squished on
+    // this very wide canvas.
+    float aspect = resolution.x / max(resolution.y, 1.0);
 
-    float reveal = logoAlpha * clamp(max(trailVal, waterReveal), 0.0, 1.0);
+    float scrollField = 0.0;
+    for (int i = 0; i < ${SCROLL_SEED_COUNT}; i++) {
+      float local = clamp((scrollReveal - scrollSeedDelay[i]) / (1.0 - scrollSeedDelay[i]), 0.0, 1.0);
+      float radius = local * ${SCROLL_SEED_RADIUS.toFixed(3)};
+      vec2 d = vUv - scrollSeedPos[i];
+      d.x *= aspect;
+      float wobble = (waveNoise(d.x * 6.0 + d.y * 6.0 + time * 0.2 + float(i) * 11.0) - 0.5) * 0.05;
+      float dist = length(d) + wobble;
+      float circle = 1.0 - smoothstep(radius - 0.05, radius + 0.05, dist);
+      scrollField = max(scrollField, circle);
+    }
+
+    float reveal = logoAlpha * clamp(max(trailVal, scrollField), 0.0, 1.0);
 
     vec2 videoUv = vec2(vUv.x * videoRepeatX, vUv.y);
     vec3 videoColor = texture2D(videoTex, videoUv).rgb;
@@ -284,6 +311,9 @@ const LogoLiquidReveal = forwardRef<LogoLiquidRevealHandle, LogoLiquidRevealProp
         scrollReveal: { value: 0 },
         videoRepeatX: { value: VIDEO_REPEAT_X },
         time: { value: 0 },
+        resolution: { value: new THREE.Vector2(1, 1) },
+        scrollSeedPos: { value: SCROLL_SEED_POS.map(([x, y]) => new THREE.Vector2(x, y)) },
+        scrollSeedDelay: { value: new Float32Array(SCROLL_SEED_DELAY) },
       },
       vertexShader: COMPOSE_VERTEX_SHADER,
       fragmentShader: COMPOSE_FRAGMENT_SHADER,
@@ -308,6 +338,7 @@ const LogoLiquidReveal = forwardRef<LogoLiquidRevealHandle, LogoLiquidRevealProp
       renderer.setPixelRatio(dpr);
       renderer.setSize(rect.width, rect.height, false);
       trailMaterial.uniforms.resolution.value.set(rect.width, rect.height);
+      material.uniforms.resolution.value.set(rect.width, rect.height);
 
       const trailWidth = Math.round(Math.min(TRAIL_MAX_WIDTH, rect.width));
       const trailHeight = Math.round(trailWidth * (rect.height / rect.width));
