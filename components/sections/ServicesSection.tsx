@@ -47,18 +47,20 @@ const VIDEO_DURATION_FALLBACK = 9;
 // Phase 1 ("reading"): scroll progress 0 -> READ_END, scoped to this
 // section's own tall wrapper. The clip stays frozen on its first frame —
 // a flat-lay of the mockups, indistinguishable from a plain background
-// image — while the title fades in and then the 4 cards reveal, staggered,
-// on their own schedule (re-scoped 0..1 within this sub-range via p1
-// below). Nothing here touches the video at all; it just isn't playing yet.
-// Widened (0.3 -> 0.38, wrapper height bumped to match) so the cards'
-// own entrance has real room to breathe before the video starts moving —
-// the wrapper's total height grew by the same proportion, so the video
-// scrub phase that follows keeps its original pacing instead of getting
-// rushed into a smaller remaining share.
+// image — for a beat on its own (TITLE_LOCAL_START), then the title
+// fades/grows in, holds for a short pause, and then the 4 cards reveal,
+// staggered, on their own schedule (re-scoped 0..1 within this sub-range
+// via p1 below). Nothing here touches the video at all; it just isn't
+// playing yet. Widened (0.3 -> 0.38, wrapper height bumped to match) so
+// the cards' own entrance has real room to breathe before the video
+// starts moving — the wrapper's total height grew by the same
+// proportion, so the video scrub phase that follows keeps its original
+// pacing instead of getting rushed into a smaller remaining share.
 const READ_END = 0.38;
-const TITLE_LOCAL_END = 0.14;
-const CARDS_LOCAL_START = 0.24;
-const CARD_STAGGER = 0.09;
+const TITLE_LOCAL_START = 0.1;
+const TITLE_LOCAL_END = 0.22;
+const CARDS_LOCAL_START = 0.34;
+const CARD_STAGGER = 0.08;
 const CARD_LOCAL_DURATION = 0.4;
 
 // Phase 2 ("scrub"): READ_END -> 1. video.currentTime maps linearly across
@@ -208,8 +210,9 @@ export default function ServicesSection() {
     const p1 = clamp01(progress / READ_END);
 
     if (titleRef.current) {
-      const titleT = smoothstep(mapRange(p1, 0, TITLE_LOCAL_END, 0, 1));
+      const titleT = smoothstep(mapRange(p1, TITLE_LOCAL_START, TITLE_LOCAL_END, 0, 1));
       titleRef.current.style.opacity = String(titleT);
+      titleRef.current.style.transform = `translateY(${lerp(48, 0, titleT)}px) scale(${lerp(0.82, 1, titleT)})`;
     }
 
     cardRefs.current.forEach((card, i) => {
@@ -355,27 +358,32 @@ export default function ServicesSection() {
   return (
     <section ref={wrapperRef} id="services" className="relative h-[560vh] bg-white">
       <div className="sticky top-0 h-screen overflow-hidden bg-white">
-        {/* object-cover object-top — fills the section edge-to-edge with no
-            white pillarboxing on wide viewports, the way this background is
-            meant to read. The box here (viewport width x full screen
-            height) is wider relative to its height than the clip's own
-            native aspect ratio, so cover has to crop vertically to fill it;
-            object-top pins that crop to the bottom instead of the default
-            center, which was eating into the clip's own top margin (built
-            deliberately white/blank to blend into this section's white bg)
-            and made it read as cut off right at the start. top-[76px] —
-            just past the Navbar's own 68px height, full h-full (not a
-            shorter calc()'d box) — the box stays exactly the size the clip
-            was composed for, just shifted down so its top clears the fixed
-            Navbar; shrinking the box instead would scale the whole
-            composition down with it. The bit that now overflows past the
-            panel's own bottom edge is simply clipped by overflow-hidden
-            above, same as being off-screen either way. A `video` is a
-            replaced element with its own intrinsic aspect ratio — leaving
-            height as `auto` (relying on top+bottom alone) makes the
-            browser size the box from that intrinsic ratio instead of the
-            actual container, so height has to stay explicit. */}
-        <BackgroundVideo ref={videoRef} className="absolute inset-x-0 top-[76px] h-full w-full object-cover object-top" />
+        {/* object-cover, default (center) object-position — fills the
+            section edge-to-edge with no white pillarboxing on wide
+            viewports. The box here (viewport width x visible height below
+            the Navbar) is wider relative to its height than the clip's own
+            16:9 native aspect, so cover has to crop vertically to fill it;
+            splitting that crop evenly top/bottom (the default) keeps the
+            single largest per-side loss as small as it can be — pinning it
+            to one edge (object-top/object-bottom) was tried and made that
+            one edge's loss roughly double, chewing into real content (the
+            crumple ball's own edges) instead of just margin.
+            top-[76px] h-[calc(100%-76px)] — an *explicit* height that's
+            already shrunk by the Navbar clearance, not h-full. h-full here
+            would leave the box exactly panel-height (100vh) and then push
+            it down by top-76, so its own bottom 76px silently hangs past
+            the panel's bottom edge and gets clipped a second time by
+            overflow-hidden on top of the object-cover crop above — an
+            invisible, uncontrollable extra bite out of the bottom that was
+            exactly what made the crumple ball read as cut off. Sizing the
+            box to the actually-visible height up front means the one
+            object-cover crop above is the *only* crop, and it's exactly
+            as calculated. A `video` is a replaced element with its own
+            intrinsic aspect ratio — leaving height as `auto` (relying on
+            top+bottom alone) makes the browser size the box from that
+            intrinsic ratio instead of the actual container, so height has
+            to stay an explicit value either way. */}
+        <BackgroundVideo ref={videoRef} className="absolute inset-x-0 top-[76px] h-[calc(100%-76px)] w-full object-cover" />
 
         {/* pt-[96px] — just past the Navbar's own fixed height, for real
             breathing room above the title (same convention as the Hero's
@@ -387,7 +395,7 @@ export default function ServicesSection() {
           ref={contentRef}
           className="relative z-10 flex h-full flex-col items-center justify-center px-6 pt-[96px]"
         >
-          <div ref={titleRef} style={{ opacity: 0 }}>
+          <div ref={titleRef} style={{ opacity: 0, transform: "translateY(48px) scale(0.82)" }}>
             <TitleBlock />
           </div>
 
