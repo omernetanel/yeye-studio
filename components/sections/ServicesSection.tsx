@@ -307,26 +307,24 @@ export default function ServicesSection() {
   return (
     <section ref={wrapperRef} id="services" className="relative h-[500vh] bg-white">
       <div className="sticky top-0 h-screen overflow-hidden bg-white">
-        {/* object-contain, not object-cover — the clip was shot with a
-            white background and deliberate margins specifically so it
-            blends into this section's own white bg with nothing cropped;
-            cover would zoom past those margins and cut the mockups off at
-            the edges on any viewport whose aspect ratio isn't the clip's
-            own 16:9. Whatever's outside the clip's own frame just shows
-            the (equally white) section background instead — seamless.
-            top-[100px], full h-full (not a shorter calc()'d box) — the
-            box needs to stay exactly the size the clip was actually
-            composed for, just shifted down so its top clears the fixed
-            Navbar; shrinking the box instead scales the whole composition
-            down with it via object-contain, which isn't what "move it
-            down" was supposed to do. The bit that now overflows past the
-            panel's own bottom edge is simply clipped by overflow-hidden
-            above, same as it would be off-screen either way. A `video`
-            is a replaced element with its own intrinsic aspect ratio —
-            leaving height as `auto` (relying on top+bottom alone) makes
-            the browser size the box from that intrinsic ratio instead of
-            the actual container, so the height has to stay explicit. */}
-        <BackgroundVideo ref={videoRef} className="absolute inset-x-0 top-[100px] h-full w-full object-contain" />
+        {/* object-cover — fills the section edge-to-edge with no white
+            pillarboxing on wide viewports, the way this background is
+            meant to read. The clip's own generous white margins around
+            the mockups (deliberately shot that way to blend into this
+            section's white bg) mean cover's crop mostly eats into that
+            margin rather than the mockups themselves. top-[100px], full
+            h-full (not a shorter calc()'d box) — the box stays exactly
+            the size the clip was composed for, just shifted down so its
+            top clears the fixed Navbar; shrinking the box instead would
+            scale the whole composition down with it. The bit that now
+            overflows past the panel's own bottom edge is simply clipped
+            by overflow-hidden above, same as being off-screen either way.
+            A `video` is a replaced element with its own intrinsic aspect
+            ratio — leaving height as `auto` (relying on top+bottom alone)
+            makes the browser size the box from that intrinsic ratio
+            instead of the actual container, so height has to stay
+            explicit. */}
+        <BackgroundVideo ref={videoRef} className="absolute inset-x-0 top-[100px] h-full w-full object-cover" />
 
         {/* pt-[100px] — matches the Navbar's own fixed height plus
             breathing room (same convention as the Hero's sticky panel).
