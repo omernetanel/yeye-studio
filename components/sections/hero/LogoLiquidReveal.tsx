@@ -42,10 +42,21 @@ const TRAIL_MAX_WIDTH = 720;
 
 // The hero video is itself footage of a "YEYE" wordmark (dripping-paint
 // balloon letters), built to the same proportions/margins as logo.png
-// (both ~2.44:1 — 3518x1440 and 8042x3300 respectively), so its UV maps
-// straight onto the canvas 1:1, no repeat/tiling and no per-asset
-// bounding-box remap needed the way the previous, differently-proportioned
-// video required.
+// (both ~2.44:1 — 3518x1440 and 8042x3300 respectively), so one texture
+// UV works for both — no repeat/tiling and no per-asset bounding-box
+// remap between the two.
+//
+// Both source images carry generous internal padding around the actual
+// glyphs though (measured via ffmpeg cropdetect on each one's own alpha:
+// logo.png's letters occupy only y:646-2707 of its full 3300px height —
+// margins of ~20%/18% top/bottom, versus ~10%/8% on the previous, shorter
+// logo.png). Sampled at raw 0..1 UV, that reads as a big empty gap above
+// the visible wordmark. ASSET_UV_MARGIN crops that down the same way
+// `object-fit: cover` does for the plain <img> logo sitting under this
+// canvas (see the `object-cover` on that element) — a canvas's own
+// content doesn't participate in CSS object-fit at all, so the shader
+// has to reproduce that crop itself to keep the two in sync.
+const ASSET_UV_MARGIN = 0.152;
 
 const TRAIL_VERTEX_SHADER = `
   varying vec2 vUv;
@@ -152,7 +163,11 @@ const COMPOSE_FRAGMENT_SHADER = `
   }
 
   void main() {
-    float logoAlpha = texture2D(logoTex, vUv).a;
+    // Crops both the logo and the video's own padded margins down to a
+    // tight fit, matching the plain <img> logo's object-cover crop below
+    // this canvas — see ASSET_UV_MARGIN above.
+    vec2 assetUv = vec2(vUv.x, mix(${ASSET_UV_MARGIN.toFixed(4)}, ${(1 - ASSET_UV_MARGIN).toFixed(4)}, vUv.y));
+    float logoAlpha = texture2D(logoTex, assetUv).a;
     float trailVal = texture2D(trailTex, vUv).r;
 
     // Aspect-correct so growth reads circular rather than squished on
@@ -171,20 +186,28 @@ const COMPOSE_FRAGMENT_SHADER = `
       scrollField = max(scrollField, circle);
     }
 
-    // The scroll-driven fill still only lights up the logo itself (kept
-    // masked by logoAlpha, unchanged) — but the hover trail is no longer
-    // confined to the letter shapes at all: it paints its own opacity
-    // (outAlpha below) as well as its own reveal, so the blob can spill
-    // into the whitespace around and between the glyphs instead of being
-    // clipped the instant it crosses a letter's edge.
-    float reveal = clamp(max(trailVal, scrollField * logoAlpha), 0.0, 1.0);
-    float outAlpha = max(logoAlpha, trailVal);
-
     // The clip is built to the logo's own proportions (see the note up
-    // top), so this is a direct 1:1 sample — no repeat, no per-asset
-    // remap.
-    vec3 videoColor = texture2D(videoTex, vUv).rgb;
-    vec3 finalColor = mix(vec3(0.0), videoColor, reveal);
+    // top) and carries the same kind of padding, so the same crop applies.
+    vec3 videoColor = texture2D(videoTex, assetUv).rgb;
+
+    // Inside the letters, the base really is solid black, so blending
+    // black -> video as the trail/scroll reveal grows is correct: that's
+    // this canvas's whole "liquid fills the mark" premise.
+    float insideReveal = clamp(max(trailVal, scrollField), 0.0, 1.0);
+    vec3 insideColor = mix(vec3(0.0), videoColor, insideReveal);
+
+    // Outside the letters there is no black to blend from at all — mixing
+    // toward black there (the previous formula, applied uniformly) faded
+    // the trail's soft edges through gray on the way to full color, which
+    // then composited against the solid black backing image behind this
+    // canvas as a murky smudge spilling into the whitespace. Outside the
+    // glyphs the trail instead shows the video at full, undiluted color
+    // immediately, fading in purely via alpha — a clean reveal against
+    // the page's own white background, nothing blended toward black.
+    float outsideWeight = (1.0 - logoAlpha) * trailVal;
+
+    vec3 finalColor = mix(insideColor, videoColor, outsideWeight);
+    float outAlpha = max(logoAlpha, outsideWeight);
 
     gl_FragColor = vec4(finalColor, outAlpha);
   }
