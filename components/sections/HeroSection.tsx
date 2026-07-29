@@ -13,14 +13,20 @@ import { cn } from "@/lib/utils";
 const WHATSAPP_NUMBER = "972552434775";
 const CONTACT_EMAIL = "hello@yeyelabs.com";
 
-// Scroll-progress phase boundaries (0..1 across the Hero's own height, via
-// useScroll below). The logo first fills entirely with video, then —
-// overlapping the tail of that fill — shrinks and travels into the
-// Navbar's logo slot, arriving back at a plain solid-black mark exactly
-// as it lands (so the docked logo looks identical to the Navbar's own).
-const REVEAL_PEAK_AT = 0.4;
-const REVEAL_GONE_BY = 0.85;
-const DOCK_START_AT = 0.35;
+// The Hero itself is pinned (via a tall wrapper + `sticky`, not a JS
+// scroll-jack — see the useScroll offset below) for this whole sequence,
+// so it reads as "the page freezes" even though the user is still
+// physically scrolling through the wrapper's extra height. Progress is
+// scoped 0..1 across that wrapper:
+//   0        → FILL_END   : the page holds still; video floods the logo
+//                            bottom-to-top like rising water.
+//   FILL_END → 1           : now scrolling actually moves things — the
+//                            water recedes back to plain black while the
+//                            mark shrinks and glides into the Navbar slot,
+//                            landing exactly as it looks there today.
+const FILL_END = 0.45;
+const RECEDE_END = 0.7;
+const DOCK_START_AT = FILL_END;
 const DOCK_DONE_AT = 1;
 const DOCKED_THRESHOLD = 0.995;
 
@@ -37,16 +43,21 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
+function smoothstep(t: number) {
+  const c = clamp01(t);
+  return c * c * (3 - 2 * c);
+}
+
 export default function HeroSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
   const docked = useDocked();
 
-  const heroRef = useRef<HTMLElement>(null);
+  const wrapperRef = useRef<HTMLElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
   const floatingRef = useRef<HTMLDivElement>(null);
   const liquidRef = useRef<LogoLiquidRevealHandle>(null);
 
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const { scrollYProgress } = useScroll({ target: wrapperRef, offset: ["start start", "end end"] });
 
   const applyDockTransform = (progress: number) => {
     const spacer = spacerRef.current;
@@ -63,29 +74,39 @@ export default function HeroSection() {
       floating.style.width = `${naturalRect.width}px`;
       floating.style.height = `${naturalRect.height}px`;
     } else {
-      // A steep ease-out, applied to position AND size together: the
-      // natural-flow position is already drifting off the top of the
-      // viewport by normal scrolling alone, so the dock transform has to
-      // "catch" it quickly, before it scrolls away, and arrive at its
-      // small final size in the same motion — not shrink in place first
-      // (that left it stranded off-screen while still catching up) and
-      // not travel at the same linear rate as scroll (that kept it huge
-      // while already overlapping the Navbar's own nav links and CTA).
-      // Once caught, it just sits docked for the rest of the scroll range.
-      const t = 1 - Math.pow(1 - dockProgress, 8);
-      floating.style.top = `${lerp(naturalRect.top, navRect.top, t)}px`;
-      floating.style.left = `${lerp(naturalRect.left, navRect.left, t)}px`;
-      floating.style.width = `${lerp(naturalRect.width, navRect.width, t)}px`;
-      floating.style.height = `${lerp(naturalRect.height, navRect.height, t)}px`;
+      // Two clean, non-overlapping phases instead of one blend: first the
+      // mark shrinks in place, centered where it's been sitting all
+      // along — by the time it's small, it's already impossible for it
+      // to cover the Navbar's nav links or CTA, because it's simply not
+      // wide enough to reach them anymore. Only once it's fully shrunk
+      // does it start gliding — now small — the rest of the way into the
+      // exact Navbar slot.
+      const sizeT = smoothstep(mapRange(dockProgress, 0, 0.5, 0, 1));
+      const posT = smoothstep(mapRange(dockProgress, 0.5, 1, 0, 1));
+
+      const currentWidth = lerp(naturalRect.width, navRect.width, sizeT);
+      const currentHeight = lerp(naturalRect.height, navRect.height, sizeT);
+
+      const naturalCenterX = naturalRect.left + naturalRect.width / 2;
+      const naturalCenterY = naturalRect.top + naturalRect.height / 2;
+      const navCenterX = navRect.left + navRect.width / 2;
+      const navCenterY = navRect.top + navRect.height / 2;
+      const centerX = lerp(naturalCenterX, navCenterX, posT);
+      const centerY = lerp(naturalCenterY, navCenterY, posT);
+
+      floating.style.width = `${currentWidth}px`;
+      floating.style.height = `${currentHeight}px`;
+      floating.style.left = `${centerX - currentWidth / 2}px`;
+      floating.style.top = `${centerY - currentHeight / 2}px`;
     }
 
-    // A triangular envelope built from two opposing linear ramps: rises
-    // over [0, REVEAL_PEAK_AT], holds at its peak only instantaneously,
-    // then falls back to 0 by REVEAL_GONE_BY — "fills, then settles back
-    // to plain black" in one continuous scroll-driven curve.
-    const revealIn = mapRange(progress, 0, REVEAL_PEAK_AT, 0, 1);
-    const revealOut = 1 - mapRange(progress, REVEAL_PEAK_AT, REVEAL_GONE_BY, 0, 1);
-    liquidRef.current?.setScrollReveal(Math.min(revealIn, revealOut));
+    // The water level: rises 0→1 while the page is still held (matches
+    // the pin phase exactly), then recedes back to 0 while the mark
+    // shrinks away — draining out, not just fading, the same mechanism
+    // in reverse.
+    const rise = mapRange(progress, 0, FILL_END, 0, 1);
+    const recede = 1 - mapRange(progress, FILL_END, RECEDE_END, 0, 1);
+    liquidRef.current?.setScrollReveal(Math.min(rise, recede));
 
     setDocked(progress >= DOCKED_THRESHOLD);
   };
@@ -123,12 +144,8 @@ export default function HeroSection() {
 
   const wipeInitial = prefersReducedMotion ? { clipPath: "inset(0 0% 0 0)" } : { clipPath: "inset(0 100% 0 0)" };
 
-  return (
-    <section
-      ref={heroRef}
-      id="hero"
-      className="relative flex min-h-screen flex-col justify-between overflow-hidden bg-white pt-[100px] pb-8"
-    >
+  const heroContent = (
+    <>
       <div>
         <div className="mx-auto mt-8 -mb-8 w-full max-w-[1400px] px-6">
           <motion.div
@@ -243,6 +260,22 @@ export default function HeroSection() {
             <Mail size={18} strokeWidth={1.5} />
           </Link>
         </motion.div>
+      </div>
+    </>
+  );
+
+  if (prefersReducedMotion) {
+    return (
+      <section id="hero" className="relative flex min-h-screen flex-col justify-between overflow-hidden bg-white pt-[100px] pb-8">
+        {heroContent}
+      </section>
+    );
+  }
+
+  return (
+    <section ref={wrapperRef} id="hero" className="relative h-[260vh]">
+      <div className="sticky top-0 flex h-screen flex-col justify-between overflow-hidden bg-white pt-[100px] pb-8">
+        {heroContent}
       </div>
     </section>
   );

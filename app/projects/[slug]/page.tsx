@@ -7,7 +7,7 @@ import { projects } from "@/lib/projects";
 import ProjectPageClient from "./ProjectPageClient";
 
 export function generateStaticParams() {
-  return projects.map((p) => ({ slug: p.slug }));
+  return projects.filter((p) => !p.external).map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({
@@ -33,7 +33,7 @@ export async function generateMetadata({
 export default async function ProjectPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const project = projects.find((p) => p.slug === slug);
-  if (!project) notFound();
+  if (!project || project.external) notFound();
 
   return (
     <main className="relative min-h-screen bg-white">

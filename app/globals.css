@@ -38,6 +38,14 @@ html,
 body {
   background-color: var(--color-background);
   color: white;
+}
+
+/* overflow-x: hidden on BOTH html and body (not just one) makes Chromium
+   treat body as its own scroll container too, which silently breaks
+   `position: sticky` everywhere on the page (it never engages — sticky
+   elements just scroll normally instead of holding). Horizontal overflow
+   only needs guarding once, on the actual scrolling root. */
+html {
   overflow-x: hidden;
 }
 
