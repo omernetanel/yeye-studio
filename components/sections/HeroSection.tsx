@@ -5,6 +5,7 @@ import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { Mail } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef } from "react";
+import Button from "@/components/ui/Button";
 import LogoLiquidReveal, { type LogoLiquidRevealHandle } from "@/components/sections/hero/LogoLiquidReveal";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { getNavbarLogoRect, setDocked, useDocked } from "@/lib/motion/heroDock";
@@ -28,6 +29,13 @@ const FILL_END = 0.45;
 const RECEDE_END = 0.7;
 const DOCK_START_AT = FILL_END;
 const DOCK_DONE_AT = 1;
+// The "view my work" CTA used to live in its own section below the Hero;
+// now it fades in right in the Hero itself, timed to when the logo has
+// already finished shrinking to its small, final size (dockProgress 0.5)
+// but is still gliding the rest of the way into the Navbar — so there's
+// already something to look at instead of empty space during that leg.
+const CTA_FADE_START = 0.42;
+const CTA_FADE_END = 0.58;
 const DOCKED_THRESHOLD = 0.995;
 
 function clamp01(value: number) {
@@ -56,6 +64,7 @@ export default function HeroSection() {
   const spacerRef = useRef<HTMLDivElement>(null);
   const floatingRef = useRef<HTMLDivElement>(null);
   const liquidRef = useRef<LogoLiquidRevealHandle>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({ target: wrapperRef, offset: ["start start", "end end"] });
 
@@ -107,6 +116,12 @@ export default function HeroSection() {
     const rise = mapRange(progress, 0, FILL_END, 0, 1);
     const recede = 1 - mapRange(progress, FILL_END, RECEDE_END, 0, 1);
     liquidRef.current?.setScrollReveal(Math.min(rise, recede));
+
+    if (ctaRef.current) {
+      const ctaT = smoothstep(mapRange(dockProgress, CTA_FADE_START, CTA_FADE_END, 0, 1));
+      ctaRef.current.style.opacity = String(ctaT);
+      ctaRef.current.style.transform = `translateY(${lerp(16, 0, ctaT)}px)`;
+    }
 
     setDocked(progress >= DOCKED_THRESHOLD);
   };
@@ -182,6 +197,21 @@ export default function HeroSection() {
             // and travel to the Navbar as the user scrolls.
             <div ref={spacerRef} className="relative mx-auto aspect-[8042/2511] w-full" />
           )}
+        </div>
+
+        {/* Used to be its own section below the Hero — folded in here so it
+            can fade in exactly when the logo has finished shrinking, in
+            the space that opens up as it glides off toward the Navbar. */}
+        <div className="mt-8 flex justify-center px-6 md:mt-10">
+          <div ref={ctaRef} style={{ opacity: prefersReducedMotion ? 1 : 0 }}>
+            <Button
+              href="/projects"
+              variant="primary"
+              className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg"
+            >
+              צפו בעבודות שלי
+            </Button>
+          </div>
         </div>
       </div>
 
