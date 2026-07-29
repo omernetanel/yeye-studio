@@ -389,26 +389,15 @@ export default function ServicesSection() {
       <section ref={wrapperRef} id="services" className="relative h-[560vh] bg-white">
         {/* Capped to exactly the visible slice (100vh - NAVBAR_CLEARANCE_PX)
             and stuck there for the whole pin — a static box, nothing here
-            ever moves or resizes on its own mid-scroll. object-cover has to
-            crop *something* vertically to fill a box this much wider than
-            the clip's own 16:9 aspect; object-[50%_58%] biases that crop
-            toward the top (58% of the loss taken off the top, 42% off the
-            bottom) instead of an even split, since the crumpled ball's own
-            position within the clip's frame (ffmpeg cropdetect:
-            x:774-1146 y:478-722 of 1920x1080) sits well below center, so
-            an even split still leaves it noticeably low.
-            This value was reached by measuring the *actual rendered
-            crop* (not just the math) at each candidate: an earlier,
-            stronger bias (70%) centered the ball almost exactly but left
-            only ~16px of real margin above the flat-lay's own top content
-            — visually indistinguishable from cut off, and exactly what
-            it read as. 58% leaves a real, verified ~40px margin at every
-            phase (flat-lay, mid-crumple, and the held final frame) while
-            still landing the ball within about 25px of center — the
-            margin is the non-negotiable constraint; centering is the
-            best fit that doesn't touch it. */}
+            ever moves or resizes on its own mid-scroll. object-contain (not
+            object-cover) so the clip is never cropped — 100% of every frame
+            stays visible, always. The box is wider than the clip's own
+            16:9 aspect, so the clip fills the box's full height and is
+            pillarboxed left/right; those bars are the same white as the
+            section background, so they read as plain page margin rather
+            than letterboxing. */}
         <div ref={panelRef} className="sticky top-[76px] h-[calc(100vh-76px)] overflow-hidden bg-white">
-          <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-cover object-[50%_58%]" />
+          <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-contain" />
 
           <div
             ref={contentRef}
