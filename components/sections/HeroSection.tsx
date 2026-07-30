@@ -200,8 +200,13 @@ export default function HeroSection() {
           well clear of the h-screen block above so it no longer competes
           with the logo for that block's height budget. The button sits
           absolutely centered (not flex-centered among the label/icons)
-          so its position doesn't shift with their widths. The ink canvas
-          extends through this whole strip — it's the ink's actual
+          so its position doesn't shift with their widths. items-end (not
+          items-center) on both this row and the label/icons group, plus
+          bottom-0 on the button's wrapper, lines up the label text and
+          icons' bottom edges with the button's own bottom edge, rather
+          than all three sharing a vertical center that made the visually
+          taller button appear to hang lower than the label/icons. The ink
+          canvas extends through this whole strip — it's the ink's actual
           stopping point — so this needs the same
           pointer-events-none-on-the-empty-space,
           pointer-events-auto-on-the-real-controls treatment as everything
@@ -209,18 +214,18 @@ export default function HeroSection() {
       <div
         className={
           prefersReducedMotion
-            ? "flex h-[150px] w-full shrink-0 items-center"
-            : "relative z-10 flex h-[150px] w-full shrink-0 items-center pointer-events-none"
+            ? "flex h-[150px] w-full shrink-0 items-end"
+            : "relative z-10 flex h-[150px] w-full shrink-0 items-end pointer-events-none"
         }
       >
-        <div className="relative mx-auto flex w-full max-w-[1400px] items-center justify-between px-6">
+        <div className="relative mx-auto flex w-full max-w-[1400px] items-end justify-between px-6">
           <span className="font-display text-[13px] text-black/50">סטודיו דיגיטלי עצמאי</span>
 
           <div
             className={
               prefersReducedMotion
-                ? "absolute inset-x-0 flex animate-fade-in justify-center"
-                : "absolute inset-x-0 flex animate-fade-in justify-center pointer-events-auto"
+                ? "absolute inset-x-0 bottom-0 flex animate-fade-in justify-center"
+                : "absolute inset-x-0 bottom-0 flex animate-fade-in justify-center pointer-events-auto"
             }
             style={{ animationDelay: "0.4s" }}
           >
@@ -229,7 +234,7 @@ export default function HeroSection() {
             </Button>
           </div>
 
-          <div className={prefersReducedMotion ? "flex items-center gap-4" : "pointer-events-auto flex items-center gap-4"}>
+          <div className={prefersReducedMotion ? "flex items-end gap-4" : "pointer-events-auto flex items-end gap-4"}>
             <Link
               href={`https://wa.me/${WHATSAPP_NUMBER}`}
               target="_blank"
