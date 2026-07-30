@@ -36,6 +36,7 @@ export default function HeroSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
   const { visible: typedTagline, done: taglineTypingDone } = useTypewriter(TAGLINE_TEXT, !prefersReducedMotion);
   const sectionRef = useRef<HTMLElement>(null);
+  const taglineRef = useRef<HTMLParagraphElement>(null);
 
   // The Navbar's own mark stays hidden while the Hero itself is on screen
   // (nothing to dock against yet), and crossfades in once the Hero has
@@ -59,50 +60,90 @@ export default function HeroSection() {
           screen readers and search engines. */}
       <h1 className="sr-only">YEYE</h1>
 
-      <div className="mx-auto mt-8 w-full max-w-[1400px] px-6">
-        <div className="flex flex-col items-start text-right">
-          <p aria-label={TAGLINE_TEXT} className="font-display text-2xl leading-snug font-semibold text-black md:text-4xl">
-            <span aria-hidden="true">
-              {prefersReducedMotion ? TAGLINE_TEXT : typedTagline}
-              {!prefersReducedMotion && !taglineTypingDone && (
-                <span className="ml-0.5 inline-block h-[0.85em] w-[2px] -translate-y-[0.05em] animate-pulse bg-black align-middle" />
-              )}
-            </span>
-          </p>
-        </div>
-      </div>
+      {prefersReducedMotion ? (
+        <>
+          <div className="mx-auto mt-8 w-full max-w-[1400px] px-6">
+            <div className="flex flex-col items-start text-right">
+              <p aria-label={TAGLINE_TEXT} className="font-display text-2xl leading-snug font-semibold text-black md:text-4xl">
+                <span aria-hidden="true">{TAGLINE_TEXT}</span>
+              </p>
+            </div>
+          </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center px-6">
-        <div className="relative w-full select-none px-4 pt-8 sm:px-6 sm:pt-10">
-          {prefersReducedMotion ? (
-            <div className="relative mx-auto aspect-[8200/3500] w-full">
-              {/* logo.png's opaque pixels are white (a solid-fill wordmark on
-                  transparent, not baked black) — brightness(0) recolors them
-                  to black, same as FluidInkReveal's own canvas draw does. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/images/logo.png"
-                alt="YEYE"
-                className="h-full w-full object-contain"
-                style={{ filter: "brightness(0)" }}
-                draggable={false}
+          <div className="flex flex-1 flex-col items-center justify-center px-6">
+            <div className="relative w-full select-none px-4 pt-8 sm:px-6 sm:pt-10">
+              <div className="relative mx-auto aspect-[8200/3500] w-full">
+                {/* logo.png's opaque pixels are white (a solid-fill wordmark on
+                    transparent, not baked black) — brightness(0) recolors them
+                    to black, same as FluidInkReveal's own canvas draw does. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/logo.png"
+                  alt="YEYE"
+                  className="h-full w-full object-contain"
+                  style={{ filter: "brightness(0)" }}
+                  draggable={false}
+                />
+              </div>
+            </div>
+
+            <div className="mt-14 flex justify-center md:mt-20">
+              <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
+                צפו בעבודות שלי
+              </Button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* The ink canvas spans this whole region — tagline through logo,
+              stopping just above the CTA — so the reveal isn't clipped to
+              the logo's own box (per: "האפקט יחול על כל ה-Hero, גם מעל
+              ומתחת ללוגו"). The CTA/social row below stays outside it and
+              fully clickable. */}
+          <div className="relative flex flex-1 flex-col">
+            <div className="mx-auto mt-8 w-full max-w-[1400px] px-6">
+              <div className="flex flex-col items-start text-right">
+                {/* Real text, kept in the DOM for accessibility/SEO and as
+                    the layout/font source FluidInkReveal measures from —
+                    but visually transparent, since the canvas draws the
+                    glyphs itself so they can invert under the ink. Its own
+                    z-index keeps the typewriter caret (a real DOM span,
+                    never drawn into the canvas) visible above the canvas. */}
+                <p
+                  ref={taglineRef}
+                  aria-label={TAGLINE_TEXT}
+                  className="relative z-10 font-display text-2xl leading-snug font-semibold md:text-4xl"
+                  style={{ color: "transparent" }}
+                >
+                  <span aria-hidden="true">
+                    {typedTagline}
+                    {!taglineTypingDone && (
+                      <span className="ml-0.5 inline-block h-[0.85em] w-[2px] -translate-y-[0.05em] animate-pulse bg-black align-middle" />
+                    )}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div className="absolute inset-0 z-0">
+              <FluidInkReveal
+                logoSrc="/images/logo.png"
+                videoSrc="/videos/herovid-loop.mp4"
+                taglineText={typedTagline}
+                taglineElRef={taglineRef}
+                className="relative h-full w-full select-none"
               />
             </div>
-          ) : (
-            <FluidInkReveal
-              logoSrc="/images/logo.png"
-              videoSrc="/videos/herovid-loop.mp4"
-              className="relative mx-auto aspect-[8200/3500] w-full select-none"
-            />
-          )}
-        </div>
+          </div>
 
-        <div className="mt-14 flex justify-center md:mt-20">
-          <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
-            צפו בעבודות שלי
-          </Button>
-        </div>
-      </div>
+          <div className="mt-14 flex justify-center md:mt-20">
+            <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
+              צפו בעבודות שלי
+            </Button>
+          </div>
+        </>
+      )}
 
       <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between px-6">
         <span className="font-display text-[13px] text-black/50">סטודיו דיגיטלי עצמאי</span>
