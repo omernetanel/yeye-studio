@@ -4,13 +4,13 @@ import { motion } from "framer-motion";
 
 export default function StatementSection() {
   return (
-    <section className="relative bg-white px-6 pt-14 pb-6 md:pt-16 md:pb-6">
+    <section className="relative bg-white px-6 pt-24 pb-16 md:pt-32 md:pb-24">
       <motion.p
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.7, ease: "easeOut" }}
-        className="mx-auto max-w-[1400px] text-right font-display text-3xl leading-[1.2] font-normal text-black md:text-5xl"
+        className="mx-auto max-w-[1400px] text-right font-display text-5xl leading-[1.15] font-normal text-black md:text-7xl lg:text-8xl"
       >
         עיצוב מושך תשומת לב.
         <br />
