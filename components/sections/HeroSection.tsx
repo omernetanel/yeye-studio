@@ -2,7 +2,7 @@
 
 import { Mail } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Button from "@/components/ui/Button";
 import FluidInkReveal from "@/components/sections/hero/FluidInkReveal";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
@@ -12,29 +12,9 @@ const WHATSAPP_NUMBER = "972552434775";
 const CONTACT_EMAIL = "hello@yeyelabs.com";
 
 const TAGLINE_TEXT = "בואו נבנה לכם אתר שעובד ומוכר באמת.";
-const TYPEWRITER_START_DELAY_MS = 500;
-const TYPEWRITER_CHAR_MS = 45;
-
-// Reveals `text` one character at a time, in plain logical (string) order.
-// The page is globally dir="rtl" (see app/layout.tsx), so the browser's own
-// bidi rendering already grows Hebrew text from the right edge toward the
-// left as characters are appended — no manual reversal needed here.
-function useTypewriter(text: string, active: boolean) {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    if (!active) return;
-    if (count >= text.length) return;
-    const id = setTimeout(() => setCount((c) => c + 1), count === 0 ? TYPEWRITER_START_DELAY_MS : TYPEWRITER_CHAR_MS);
-    return () => clearTimeout(id);
-  }, [active, count, text.length]);
-
-  return { visible: text.slice(0, count), done: count >= text.length };
-}
 
 export default function HeroSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const { visible: typedTagline, done: taglineTypingDone } = useTypewriter(TAGLINE_TEXT, !prefersReducedMotion);
   const sectionRef = useRef<HTMLElement>(null);
   const taglineRef = useRef<HTMLParagraphElement>(null);
   // logoAreaRef is the flex-1/min-h-0 space left over once the tagline and
@@ -48,11 +28,6 @@ export default function HeroSection() {
   // clipped invisibly by the section's overflow-hidden.
   const logoAreaRef = useRef<HTMLDivElement>(null);
   const logoSlotRef = useRef<HTMLDivElement>(null);
-  // Marks where real content ends and the decorative ink-settle buffer
-  // begins (see that buffer's own comment below) — passed to
-  // FluidInkReveal so it scales splat size/spacing off actual content
-  // height, not the wrapper's full height including that buffer.
-  const settleBufferRef = useRef<HTMLDivElement>(null);
 
   // The Navbar's own mark stays hidden while the Hero itself is on screen
   // (nothing to dock against yet), and crossfades in once the Hero has
@@ -103,35 +78,36 @@ export default function HeroSection() {
   return (
     <section ref={sectionRef} id="hero" className="relative flex flex-col overflow-hidden bg-white">
       {!prefersReducedMotion && (
-        // The ink canvas spans the WHOLE section again — the Navbar's own
+        // The ink canvas spans the WHOLE section — the Navbar's own
         // breathing room above the tagline, down through the tagline, the
-        // now much bigger logo, the bottom social/label row, the CTA
-        // button's own strip, and a final blank settle strip past that
-        // (see its own comment below — genuine buffer room, not an
-        // interactive area) — because the CTA no longer lives inside the
-        // h-screen block (see its own comment below): it moved down into
-        // a dedicated strip after it. -top-[100px] pulls it up to
+        // logo, and the merged bottom row (label, CTA button, contact
+        // icons, all now on one line — see that row's own comment) at the
+        // very end. It does NOT extend past the section's own natural
+        // height (unlike an earlier pass that appended extra blank
+        // buffer past the bottom row) — see FluidInkReveal's own
+        // INTERACTIVE_BOTTOM_MARGIN_PX for how "space to settle without
+        // spreading past the Hero" is handled instead, entirely inside
+        // the canvas's existing footprint. -top-[100px] pulls it up to
         // the section's own top edge (matching the h-screen block's own
         // pt-[100px] exactly, not a value derived from the Navbar's
         // current height) — safe since the Navbar is fixed, opaque, and
         // stacked above everything else regardless. bottom-0 is relative
-        // to the section itself, reaching the CTA strip's own bottom
-        // edge, which is now the section's true bottom edge too. It's the
+        // to the section itself, reaching the bottom row's own bottom
+        // edge, which is the section's true bottom edge too. It's the
         // bottom-most layer (first in DOM, no z-index): the h-screen
-        // block and the CTA strip both get pointer-events-none (and so do
-        // their own interactive-adjacent containers), so a hover anywhere
-        // over either — including their own "empty" gaps — still reaches
-        // this element and splats, with pointer-events-auto opted back in
-        // specifically on the CTA button and the two contact icons so
-        // they stay genuinely, unaffectedly clickable.
+        // block and the bottom row both get pointer-events-none (and so
+        // do their own interactive-adjacent containers), so a hover
+        // anywhere over either — including their own "empty" gaps —
+        // still reaches this element and splats, with pointer-events-auto
+        // opted back in specifically on the CTA button and the two
+        // contact icons so they stay genuinely, unaffectedly clickable.
         <div className="absolute inset-x-0 bottom-0 -top-[100px] overflow-hidden">
           <FluidInkReveal
             logoSrc="/images/logo.png"
             videoSrc="/videos/herovid-loop.mp4"
-            taglineText={typedTagline}
+            taglineText={TAGLINE_TEXT}
             taglineElRef={taglineRef}
             logoSlotRef={logoSlotRef}
-            contentBoundaryElRef={settleBufferRef}
             className="relative h-full w-full select-none"
           />
         </div>
@@ -152,9 +128,7 @@ export default function HeroSection() {
         {prefersReducedMotion ? (
           <div className="mx-auto mt-4 w-full max-w-[1400px] px-6">
             <div className="flex flex-col items-start text-right">
-              <p aria-label={TAGLINE_TEXT} className="font-display text-2xl leading-snug font-semibold text-black md:text-4xl">
-                <span aria-hidden="true">{TAGLINE_TEXT}</span>
-              </p>
+              <p className="font-display text-2xl leading-snug font-semibold text-black md:text-4xl">{TAGLINE_TEXT}</p>
             </div>
           </div>
         ) : (
@@ -166,26 +140,18 @@ export default function HeroSection() {
                   itself so they can invert under the ink. */}
               <p
                 ref={taglineRef}
-                aria-label={TAGLINE_TEXT}
                 className="font-display text-2xl leading-snug font-semibold md:text-4xl"
                 style={{ color: "transparent" }}
               >
-                <span aria-hidden="true">
-                  {typedTagline}
-                  {!taglineTypingDone && (
-                    <span className="ml-0.5 inline-block h-[0.85em] w-[2px] -translate-y-[0.05em] animate-pulse bg-black align-middle" />
-                  )}
-                </span>
+                {TAGLINE_TEXT}
               </p>
             </div>
           </div>
         )}
 
-        {/* Logo now gets the h-screen block's ENTIRE remaining height —
-            the CTA button used to sit in this same flex-1 column, directly
-            competing with the logo for the same fixed budget; now that
-            it's moved to its own strip after this block (see below), this
-            column has nothing else to share space with. */}
+        {/* Logo gets the h-screen block's entire remaining height — the
+            bottom row (label, CTA, icons) lives in its own strip after
+            this block now, not sharing this flex-1 column. */}
         <div
           className={
             prefersReducedMotion
@@ -201,7 +167,7 @@ export default function HeroSection() {
               above), not a plain CSS aspect-ratio, so it shrinks to fit
               both the available width AND height instead of only ever
               being driven by width. */}
-          <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-0 pt-[64px] sm:px-2">
+          <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-0 pt-[54px] sm:px-2">
             {prefersReducedMotion && (
               <div ref={logoSlotRef} className="relative mx-auto overflow-hidden">
                 <div className="absolute inset-x-0" style={{ top: "-19.0476%", height: "119.0476%" }}>
@@ -227,15 +193,34 @@ export default function HeroSection() {
             {!prefersReducedMotion && <div ref={logoSlotRef} className="relative mx-auto" />}
           </div>
         </div>
+      </div>
 
-        <div
-          className={
-            prefersReducedMotion
-              ? "mx-auto flex w-full max-w-[1400px] items-center justify-between px-6"
-              : "relative z-10 mx-auto flex w-full max-w-[1400px] items-center justify-between px-6 pointer-events-none"
-          }
-        >
+      {/* Bottom row — label, CTA button, and contact icons all on one
+          line now (moved down from two separate rows), in its own strip
+          well clear of the h-screen block above so it no longer competes
+          with the logo for that block's height budget. The button sits
+          absolutely centered (not flex-centered among the label/icons)
+          so its position doesn't shift with their widths. The ink canvas
+          extends through this whole strip — it's the ink's actual
+          stopping point — so this needs the same
+          pointer-events-none-on-the-empty-space,
+          pointer-events-auto-on-the-real-controls treatment as everything
+          else the canvas passes under. */}
+      <div
+        className={
+          prefersReducedMotion
+            ? "flex h-[150px] w-full shrink-0 items-center"
+            : "relative z-10 flex h-[150px] w-full shrink-0 items-center pointer-events-none"
+        }
+      >
+        <div className="relative mx-auto flex w-full max-w-[1400px] items-center justify-between px-6">
           <span className="font-display text-[13px] text-black/50">סטודיו דיגיטלי עצמאי</span>
+
+          <div className={prefersReducedMotion ? "absolute inset-x-0 flex justify-center" : "absolute inset-x-0 flex justify-center pointer-events-auto"}>
+            <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
+              צפו בעבודות שלי
+            </Button>
+          </div>
 
           <div className={prefersReducedMotion ? "flex items-center gap-4" : "pointer-events-auto flex items-center gap-4"}>
             <Link
@@ -255,35 +240,6 @@ export default function HeroSection() {
           </div>
         </div>
       </div>
-
-      {/* CTA's own strip, moved well down and out of the h-screen block
-          above (see its own comment) so it no longer competes with the
-          logo for the same fixed height budget. The ink canvas extends
-          through this strip too — it's the ink's actual stopping point —
-          so this needs the same pointer-events-none-on-the-empty-space,
-          pointer-events-auto-on-the-real-control treatment as everything
-          else the canvas passes under. */}
-      <div className={prefersReducedMotion ? "flex h-[150px] w-full shrink-0 items-center justify-center" : "relative z-10 flex h-[150px] w-full shrink-0 items-center justify-center pointer-events-none"}>
-        <div className={prefersReducedMotion ? undefined : "pointer-events-auto"}>
-          <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
-            צפו בעבודות שלי
-          </Button>
-        </div>
-      </div>
-
-      {!prefersReducedMotion && (
-        // Blank settle room after the CTA strip — no controls, nothing to
-        // read here, just canvas. Without it, the ink's own hard bottom
-        // edge sat right where mouse tracking naturally stops (at the CTA
-        // strip), so a drag that ended there got clipped mid-motion,
-        // still jagged/dripping, instead of having room to keep smearing
-        // and rounding out into a soft, settled shape on its own before
-        // hitting an edge. The canvas already reaches this far (it's
-        // sized off the section's own total height, see its comment
-        // above) — this is purely the extra section height for it to
-        // extend into.
-        <div ref={settleBufferRef} aria-hidden="true" className="h-[240px] w-full shrink-0" />
-      )}
     </section>
   );
 }
