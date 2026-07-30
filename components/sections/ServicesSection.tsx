@@ -55,7 +55,7 @@ const VIDEO_DURATION_FALLBACK = 9;
 // it locks). Not part of the pinned range itself (READ_END etc. below
 // are fractions of the pinned range only) — purely a scroll distance to
 // cover first.
-const SPACER_PX = 260;
+const SPACER_PX = 140;
 
 // Phase 1 ("reading"): scroll progress 0 -> READ_END, scoped to this
 // section's own pinned range (after the lead-in above). The clip stays
@@ -415,11 +415,12 @@ export default function ServicesSection() {
 
   return (
     <>
-      {/* Plain breathing room between the Hero above and the pinned video
-          below — not another copy of the composition (that read as a
-          confusing duplicate/glitch, the clip appearing to "restart"),
-          just a clean gap. */}
-      <div className="h-24 bg-white md:h-36" />
+      {/* Plain breathing room between the Statement section above and the
+          pinned video below — not another copy of the composition (that
+          read as a confusing duplicate/glitch, the clip appearing to
+          "restart"), just a clean gap. Kept small since the Statement
+          section above already carries its own bottom padding. */}
+      <div className="h-8 bg-white md:h-12" />
 
       <section ref={wrapperRef} id="services" className="relative h-[calc(575.2vh+260px)] bg-white">
         {/* SPACER_PX of perfectly ordinary scrolling before the panel below
