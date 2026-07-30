@@ -30,8 +30,8 @@ export default function Home() {
         <Navbar />
         <HeroSection />
         <StatementSection />
-        <ServicesSection />
         <ProcessSection />
+        <ServicesSection />
         <AboutSection />
         <ProjectsSection />
         <CTASection />
