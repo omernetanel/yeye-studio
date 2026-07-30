@@ -126,7 +126,7 @@ export default function HeroSection() {
               </div>
             </div>
 
-            <div className="absolute inset-0 z-0">
+            <div className="absolute inset-0 z-0 overflow-hidden">
               <FluidInkReveal
                 logoSrc="/images/logo.png"
                 videoSrc="/videos/herovid-loop.mp4"
