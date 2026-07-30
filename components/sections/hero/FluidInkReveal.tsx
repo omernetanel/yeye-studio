@@ -33,26 +33,28 @@ const CROP_TOP_SHIFT = 0.190476;
 // was exactly what made the ink visibly lag behind a fast-moving cursor —
 // so both are back down near their original values. CURL is 0 (no added
 // vorticity confinement), but that alone doesn't stop a real fluid solve
-// from still looking swirly — a pressure-projected velocity field
-// naturally produces rotational, marbled-looking motion on its own even
-// with zero confinement; the only real way to stop it from ever fully
-// developing into "busy tangled folds" is to not give it time to. Both
-// dissipation constants are high for exactly that reason: velocity settles
-// down almost immediately after the cursor stops (instead of continuing to
-// visibly advect/warp the dye for a second or more afterward), and density
-// fades out over roughly half a second rather than several — long enough
-// to read as a deliberate reveal, short enough that it never lingers into
-// the messy stage.
+// from spreading into thin trailing filaments — a pressure-projected
+// velocity field stretches dye along its own flow lines even with zero
+// confinement, which is what turned "ink fading" into "ink unraveling
+// into wisps first, then fading." VELOCITY_DISSIPATION is pushed high and
+// SPLAT_FORCE is kept low specifically to starve that stretching of the
+// time/energy it needs — velocity collapses back to near-zero within a
+// handful of frames of the cursor stopping, so the dye barely gets
+// advected past its own splat shape before DENSITY_DISSIPATION takes
+// over, reading as the ink pulling back into itself rather than spreading
+// out and evaporating. DENSITY_DISSIPATION itself is slightly lower than
+// the previous pass — that one faded a little too readily; this fades
+// over roughly a second, still well short of lingering.
 const CFG = {
   SIM_RES: 128,
   DYE_RES: 1024,
   PRESSURE_ITERATIONS: 20,
   PRESSURE: 0.8,
   CURL: 0,
-  DENSITY_DISSIPATION: 2.8,
-  VELOCITY_DISSIPATION: 6,
+  DENSITY_DISSIPATION: 2.1,
+  VELOCITY_DISSIPATION: 10,
   SPLAT_RADIUS: 0.0017,
-  SPLAT_FORCE: 450,
+  SPLAT_FORCE: 300,
   SPLAT_SPACING: 0.006,
   MASK_LO: 0.1,
   MASK_HI: 0.34,
@@ -761,6 +763,10 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       video.style.height = `${dispH}px`;
       video.style.left = `${left}px`;
       video.style.top = `${top}px`;
+      // Only reveal once it's actually been sized/positioned — see the
+      // matching opacity:0 on the element's own initial style below for
+      // why this is needed at all.
+      video.style.opacity = "1";
     };
 
     const img = new Image();
@@ -1045,7 +1051,15 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
         playsInline
         preload="auto"
         disablePictureInPicture
-        style={{ position: "absolute", objectFit: "cover" }}
+        // No width/height/left/top until positionVideo() computes them
+        // from the (async-loaded) logo image's own textRect — until then
+        // this is an absolutely positioned element with no explicit size,
+        // which the browser renders at its native intrinsic video
+        // dimensions pinned to the wrapper's top-left corner. Left
+        // visible, that's a real, reproducible flash of a huge unstyled
+        // video before the layout settles. opacity stays 0 until
+        // positionVideo() explicitly sets it to 1.
+        style={{ position: "absolute", objectFit: "cover", opacity: 0 }}
       >
         <source src={videoSrc} type="video/mp4" />
       </video>
