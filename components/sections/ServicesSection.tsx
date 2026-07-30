@@ -89,14 +89,25 @@ const SCRUB_END = 1;
 const TEXT_GONE_AT_SECONDS = 4.5;
 const CONTENT_SHRINK_SCALE = 0.6;
 
-// The pinned panel sticks NAVBAR_CLEARANCE_PX below the viewport top
-// (matching the Navbar's own ~68px height, plus a hair) instead of at 0,
-// so the video's top edge clears the fixed Navbar instead of sitting
-// behind it. Must stay in sync with the `top-[76px]` on the panel's own
-// className below (a literal Tailwind value, can't reference this
-// constant directly). Kept as a real number here because the pin-range
-// math needs it, not just CSS.
-const NAVBAR_CLEARANCE_PX = 76;
+// PANEL_STICKY_TOP_PX is the panel's *real* sticky top offset — negative,
+// so once stuck its own top edge sits above the viewport, behind the
+// fixed Navbar, letting the video's composition keep scrolling a bit
+// further before locking instead of stopping dead the instant its first
+// frame clears the Navbar. Must stay in sync with the `-top-[20px]` on
+// the panel's own className below (a literal Tailwind value, can't
+// reference this constant directly).
+//
+// The title+cards overlay needs to NOT follow that shift, though — it's
+// positioned absolutely *within* the panel, so moving the panel's own
+// top would drag it up behind the Navbar too. Its own top-[96px] below
+// is a compensating offset instead (76 - PANEL_STICKY_TOP_PX, where 76
+// is roughly where the panel used to stick, clear of the Navbar), so it
+// stays anchored at the same on-screen position regardless of where the
+// panel itself now sticks. No live JS reference for that 76 (unlike
+// PANEL_STICKY_TOP_PX, nothing here actually needs it at runtime) — it's
+// baked directly into the two literal Tailwind values below, which have
+// to stay in sync with each other by hand.
+const PANEL_STICKY_TOP_PX = -20;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -266,19 +277,20 @@ export default function ServicesSection() {
     const panel = panelRef.current;
     if (!wrapper || !spacer || !panel) return;
     const wrapperTop = wrapper.getBoundingClientRect().top + window.scrollY;
-    // The panel sticks at NAVBAR_CLEARANCE_PX (not 0). Its own height is
-    // no longer capped to one viewport (see the panel's own aspect-video
-    // sizing above), so the old "the two NAVBAR_CLEARANCE_PX terms cancel
-    // out" shortcut (which relied on panelHeight === innerHeight - T) no
-    // longer holds — a sticky element with `top: T` releases once
-    // scrollY >= wrapperTop + wrapperHeight - panelHeight - T, so T has
-    // to be subtracted explicitly here now. pinStart is likewise offset by
-    // the lead-in spacer's own height — the panel's natural (unstuck) top
-    // sits that far below the wrapper's own top, so it doesn't reach the
-    // NAVBAR_CLEARANCE_PX sticky threshold until scroll has covered that
-    // extra distance too.
-    pinStartScrollYRef.current = wrapperTop + spacer.offsetHeight - NAVBAR_CLEARANCE_PX;
-    pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - panel.offsetHeight - NAVBAR_CLEARANCE_PX;
+    // The panel sticks at PANEL_STICKY_TOP_PX (its own real CSS top, not
+    // NAVBAR_CLEARANCE_PX — see that constant's own comment for why the
+    // two split). Its own height is no longer capped to one viewport (see
+    // the panel's own aspect-video sizing above), so the old "the two
+    // clearance terms cancel out" shortcut (which relied on panelHeight
+    // === innerHeight - T) no longer holds — a sticky element with
+    // `top: T` releases once scrollY >= wrapperTop + wrapperHeight -
+    // panelHeight - T, so T has to be subtracted explicitly here now.
+    // pinStart is likewise offset by the lead-in spacer's own height —
+    // the panel's natural (unstuck) top sits that far below the
+    // wrapper's own top, so it doesn't reach the sticky threshold until
+    // scroll has covered that extra distance too.
+    pinStartScrollYRef.current = wrapperTop + spacer.offsetHeight - PANEL_STICKY_TOP_PX;
+    pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - panel.offsetHeight - PANEL_STICKY_TOP_PX;
   };
 
   useLayoutEffect(() => {
@@ -410,23 +422,26 @@ export default function ServicesSection() {
             object-contain's math exactly (no gap left over to fill with
             bars). On a wide-but-short viewport this box is taller than
             100vh, which means part of it sits below the fold while the
-            panel is stuck at top-[76px] — you see the rest as you keep
+            panel is stuck at -top-[20px] — you see the rest as you keep
             scrolling through the pin, not all at once. Deliberate
             trade-off (confirmed): the alternative is capping the box to
             one screen, which forces either a crop or bars — see
             measurePinRange below for how the pin's release point accounts
             for a panel taller than the viewport. */}
-        <div ref={panelRef} className="sticky top-[76px] aspect-video w-full overflow-hidden bg-white">
+        <div ref={panelRef} className="sticky -top-[20px] aspect-video w-full overflow-hidden bg-white">
           <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-contain" />
 
           {/* Title + cards are their own layer, sized to the actually-visible
-              slice (100vh - NAVBAR_CLEARANCE_PX) and pinned to the panel's
-              own top — not centered within the full aspect-video box above,
+              slice (100vh - NAVBAR_CLEARANCE_PX) — top-[96px], not top-0,
+              to counteract the panel's own -top-[20px] above (76 - -20 =
+              96) and stay anchored at the same on-screen position, safely
+              below the Navbar, regardless of where the panel itself now
+              sticks — not centered within the full aspect-video box above,
               which on a wide-but-short viewport can be much taller than one
               screen and would center this content below the fold. */}
           <div
             ref={contentRef}
-            className="absolute inset-x-0 top-0 z-10 flex h-[calc(100vh-76px)] flex-col items-center justify-center px-6"
+            className="absolute inset-x-0 top-[96px] z-10 flex h-[calc(100vh-76px)] flex-col items-center justify-center px-6"
           >
             <div ref={titleRef} style={{ opacity: 0, transform: "translateY(48px) scale(0.82)" }}>
               <TitleBlock />
