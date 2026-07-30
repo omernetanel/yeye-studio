@@ -53,8 +53,8 @@ const CFG = {
   CURL: 0,
   DENSITY_DISSIPATION: 2.1,
   VELOCITY_DISSIPATION: 10,
-  SPLAT_RADIUS: 0.0013,
-  SPLAT_FORCE: 300,
+  SPLAT_RADIUS: 0.0006,
+  SPLAT_FORCE: 120,
   SPLAT_SPACING: 0.006,
   MASK_LO: 0.1,
   MASK_HI: 0.34,
@@ -369,11 +369,17 @@ interface FluidInkRevealProps {
    * "how big should the logo be" formula is deliberate: a formula is
    * exactly what miscalculated the logo's size in an earlier pass. */
   logoSlotRef: React.RefObject<HTMLElement | null>;
+  /** Marks where "real" content ends and purely decorative buffer space
+   * begins (see HeroSection's own settle strip after the CTA) — its own
+   * top edge, not the wrapper's full height, is what splat size/spacing
+   * scale against. Optional: falls back to the wrapper's own full height
+   * when omitted, matching the plain (no trailing buffer) case. */
+  contentBoundaryElRef?: React.RefObject<HTMLElement | null>;
   className?: string;
 }
 
 const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(function FluidInkReveal(
-  { logoSrc, videoSrc, taglineText, taglineElRef, logoSlotRef, className },
+  { logoSrc, videoSrc, taglineText, taglineElRef, logoSlotRef, contentBoundaryElRef, className },
   ref
 ) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -698,7 +704,16 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
           height: (LOGO_MARK.y1 - LOGO_MARK.y0) * fullRect.height,
         };
 
-        splatRadiusScale = fullRect.height / rect.height;
+        // Scaled against the "real content" height, not the wrapper's own
+        // full height — a trailing decorative buffer (see HeroSection)
+        // grows the wrapper without growing the logo at all, which would
+        // otherwise shrink this scale for a reason that has nothing to do
+        // with the logo's own size, in turn shrinking SPLAT_SPACING's
+        // effective threshold too (see splatAlongStroke below) and packing
+        // strokes far denser than intended.
+        const boundaryTop = contentBoundaryElRef?.current?.getBoundingClientRect().top;
+        const contentHeight = boundaryTop !== undefined ? boundaryTop - rect.top : rect.height;
+        splatRadiusScale = fullRect.height / Math.max(contentHeight, 1);
       }
 
       gl.bindTexture(gl.TEXTURE_2D, paperTexture);

@@ -48,13 +48,14 @@ const VIDEO_DURATION_FALLBACK = 9;
 // before the panel below goes sticky at all — a plain block, not pinned
 // yet. Without this the panel's own natural top sits at the very start
 // of the wrapper, so it went sticky — and phase 1 started — the instant
-// the section entered view at all. Not part of the pinned range itself
-// (READ_END etc. below are fractions of the pinned range only) — purely
-// a scroll distance to cover first. A small, fixed pixel value on
-// purpose (not vh-proportional) — a 30vh version of this was barely
-// perceptible as an intentional beat rather than just "nothing happening
-// yet," so it's a deliberately small, literal nudge instead.
-const SPACER_PX = 20;
+// the section entered view at all, with the illustration's own top
+// corners still cramped right up against the sticky offset instead of
+// having scrolled into a settled position first (confirmed: a too-small
+// value here reads as the images getting clipped at the top the moment
+// it locks). Not part of the pinned range itself (READ_END etc. below
+// are fractions of the pinned range only) — purely a scroll distance to
+// cover first.
+const SPACER_PX = 260;
 
 // Phase 1 ("reading"): scroll progress 0 -> READ_END, scoped to this
 // section's own pinned range (after the lead-in above). The clip stays
@@ -398,7 +399,7 @@ export default function ServicesSection() {
           just a clean gap. */}
       <div className="h-24 bg-white md:h-36" />
 
-      <section ref={wrapperRef} id="services" className="relative h-[calc(515.2vh+20px)] bg-white">
+      <section ref={wrapperRef} id="services" className="relative h-[calc(515.2vh+260px)] bg-white">
         {/* SPACER_PX of perfectly ordinary scrolling before the panel below
             goes sticky — see its own comment up top. */}
         <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />
