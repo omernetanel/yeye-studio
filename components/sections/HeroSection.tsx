@@ -105,18 +105,29 @@ export default function HeroSection() {
         </>
       ) : (
         <div className="relative flex flex-1 flex-col">
-          {/* The ink canvas spans this whole region — tagline through the
-              CTA button, stopping right above the bottom social/label row
-              — so the reveal isn't clipped to the logo's own box. It's the
+          {/* The ink canvas spans this whole region — the Navbar's own
+              breathing room above the tagline, through the tagline, down
+              through the CTA button, stopping right above the bottom
+              social/label row — so the reveal isn't clipped to the logo's
+              own box or cut off from the Navbar. -top-[100px] pulls it up
+              to the section's own top edge (matching the section's own
+              pt-[100px] exactly, not a value derived from the Navbar's
+              current height) — safe since the Navbar is fixed, opaque,
+              and stacked above everything else regardless. It's the
               bottom-most layer (first in DOM, no z-index): the tagline and
-              logo-slot containers below get pointer-events-none so a hover
-              anywhere over them (including directly over the wordmark or
-              the tagline text) still reaches this element and splats,
-              while the CTA button keeps its own default pointer-events and
-              a real position so it stays on top and fully clickable,
-              genuinely unaffected by the ink rather than merely
-              visually covered by it. */}
-          <div className="absolute inset-0 overflow-hidden">
+              logo-slot containers below get pointer-events-none, and so
+              does the shared flex column wrapping both of them (a hover
+              landing in that wrapper's own box but outside either child —
+              e.g. anywhere below the logo — would otherwise be silently
+              swallowed by the wrapper itself instead of reaching this
+              element), so a hover anywhere over the wordmark, the tagline
+              text, or the empty space around either still reaches this
+              element and splats. The CTA button's own row opts back in
+              with pointer-events-auto so it keeps default handling and a
+              real stacking position — on top, fully clickable, genuinely
+              unaffected by the ink rather than merely visually covered by
+              it. */}
+          <div className="absolute inset-x-0 bottom-0 -top-[100px] overflow-hidden">
             <FluidInkReveal
               logoSrc="/images/logo.png"
               videoSrc="/videos/herovid-loop.mp4"
@@ -149,16 +160,16 @@ export default function HeroSection() {
             </div>
           </div>
 
-          <div className="relative z-10 flex flex-1 flex-col items-center justify-start px-6">
+          <div className="relative z-10 flex flex-1 flex-col items-center justify-start px-6 pointer-events-none">
             {/* Invisible spacer marking exactly where the (cropped) logo
                 sits — same box a static <img> would need, just with
                 nothing drawn here; FluidInkReveal measures it and paints
                 the actual pixels on the canvas behind. */}
-            <div className="relative w-full select-none px-4 sm:px-6 pointer-events-none">
+            <div className="relative w-full select-none px-4 sm:px-6">
               <div ref={logoSlotRef} className="relative mx-auto w-full" style={{ aspectRatio: "8200 / 2940" }} />
             </div>
 
-            <div className="mt-14 flex justify-center md:mt-20">
+            <div className="pointer-events-auto mt-14 flex justify-center md:mt-20">
               <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
                 צפו בעבודות שלי
               </Button>
