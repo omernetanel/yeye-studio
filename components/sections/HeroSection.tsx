@@ -98,7 +98,46 @@ export default function HeroSection() {
 
   return (
     <section ref={sectionRef} id="hero" className="relative flex flex-col overflow-hidden bg-white">
-      <div className="relative flex h-screen min-h-[640px] flex-col pt-[100px] pb-4">
+      {!prefersReducedMotion && (
+        // The ink canvas spans the WHOLE section — the Navbar's own
+        // breathing room above the tagline, down through the tagline, the
+        // logo, the CTA button, the bottom social/label row, AND through
+        // the 150px landing strip appended after the h-screen block below
+        // — so a downward drag has real room to pool and settle instead
+        // of hitting a hard rectangular clip right where the ink happens
+        // to be densest. -top-[100px] pulls it up to the section's own
+        // top edge (matching the section's own pt-[100px] below exactly,
+        // not a value derived from the Navbar's current height) — safe
+        // since the Navbar is fixed, opaque, and stacked above everything
+        // else regardless. bottom-0 here is relative to the section
+        // itself, so it reaches the section's true bottom edge, past the
+        // landing strip. It's the bottom-most layer (first in DOM, no
+        // z-index): the h-screen block below it gets pointer-events-none
+        // (and so do its own tagline/logo-slot/bottom-row containers) so
+        // a hover anywhere over it — including its own "empty" gaps —
+        // still reaches this element and splats, with pointer-events-auto
+        // opted back in specifically on the CTA button and the two
+        // contact icons so they stay genuinely, unaffectedly clickable.
+        <div className="absolute inset-x-0 bottom-0 -top-[100px] overflow-hidden">
+          <FluidInkReveal
+            logoSrc="/images/logo.png"
+            videoSrc="/videos/herovid-loop.mp4"
+            taglineText={typedTagline}
+            taglineElRef={taglineRef}
+            logoSlotRef={logoSlotRef}
+            bottomLabelElRef={bottomLabelRef}
+            className="relative h-full w-full select-none"
+          />
+        </div>
+      )}
+
+      <div
+        className={
+          prefersReducedMotion
+            ? "relative flex h-screen min-h-[640px] flex-col pt-[100px] pb-4"
+            : "relative flex h-screen min-h-[640px] flex-col pt-[100px] pb-4 pointer-events-none"
+        }
+      >
         {/* The wordmark is pixels (drawn into a canvas, see FluidInkReveal),
             so a real, visually-hidden heading carries the actual text for
             screen readers and search engines. */}
@@ -156,44 +195,6 @@ export default function HeroSection() {
         </>
       ) : (
         <>
-          {/* The ink canvas spans the WHOLE section now — the Navbar's own
-              breathing room above the tagline, down through the tagline,
-              the logo, the CTA button, and the bottom social/label row, all
-              the way to the section's own bottom edge — so there's no flat,
-              uncovered strip of plain white page anywhere in the Hero.
-              -top-[100px] pulls it up to the section's own top edge
-              (matching the section's own pt-[100px] exactly, not a value
-              derived from the Navbar's current height) — safe since the
-              Navbar is fixed, opaque, and stacked above everything else
-              regardless. bottom-0 here is relative to the SECTION itself
-              (this is now a direct child of it), so it reaches the section's
-              own bottom edge rather than stopping at the flex column above
-              the label row. It's the bottom-most layer (first in DOM, no
-              z-index): the tagline, logo-slot, and bottom-row containers
-              below get pointer-events-none, and so does the shared flex
-              column wrapping the tagline/logo/CTA (a hover landing in that
-              wrapper's own box but outside either child — e.g. anywhere
-              below the logo — would otherwise be silently swallowed by the
-              wrapper itself instead of reaching this element), so a hover
-              anywhere over the wordmark, the tagline text, the bottom label,
-              or the empty space around any of them still reaches this
-              element and splats. The CTA button and the two contact icons
-              opt back in with pointer-events-auto so they keep default
-              handling and a real stacking position — on top, fully
-              clickable, genuinely unaffected by the ink rather than merely
-              visually covered by it. */}
-          <div className="absolute inset-x-0 bottom-0 -top-[100px] overflow-hidden">
-            <FluidInkReveal
-              logoSrc="/images/logo.png"
-              videoSrc="/videos/herovid-loop.mp4"
-              taglineText={typedTagline}
-              taglineElRef={taglineRef}
-              logoSlotRef={logoSlotRef}
-              bottomLabelElRef={bottomLabelRef}
-              className="relative h-full w-full select-none"
-            />
-          </div>
-
           <div className="relative z-10 flex min-h-0 flex-1 flex-col pointer-events-none">
             <div className="relative z-10 mx-auto mt-4 w-full max-w-[1400px] px-6 pointer-events-none">
               <div className="flex flex-col items-start text-right">
@@ -279,10 +280,13 @@ export default function HeroSection() {
       </div>
       </div>
 
-      {/* Plain extra breathing room after the Hero's own (full-viewport,
-          ink-covered) content — not part of the h-screen block above, so
-          the ink canvas (bounded to that block, see its -top-[100px]/
-          bottom-0 positioning) never extends into it. */}
+      {/* Extra strip appended after the Hero's own full-viewport block —
+          not covered by any of the h-screen block's own layout (tagline,
+          logo, CTA all still fit within exactly one screen), but the ink
+          canvas above (a section-level sibling, see its own comment) does
+          extend through it deliberately: it's the ink's landing zone, so
+          a downward drag settles here instead of hitting a hard clip at
+          the h-screen block's own bottom edge. */}
       <div aria-hidden="true" className="h-[150px] w-full shrink-0 bg-white" />
     </section>
   );
