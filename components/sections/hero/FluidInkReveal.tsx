@@ -25,19 +25,26 @@ const CROP_TOP_SHIFT = 0.190476;
 
 // Every fluid constant lives here, per the reference build's own advice —
 // these are starting points, tuned for a wordmark of this rough size, not
-// derived from a formula. Calmer than the first pass: lower CURL and
-// SPLAT_FORCE (less turbulent, doesn't balloon far past the cursor), higher
-// VELOCITY_DISSIPATION (motion settles quickly instead of coasting).
+// derived from a formula. Gentle and elegant rather than turbulent: low
+// CURL (barely any vortex swirl — no "hurricane" tendrils), low
+// SPLAT_FORCE (soft, slow-moving motion instead of a violent flick), high
+// VELOCITY_DISSIPATION (motion settles down quickly instead of coasting
+// and tangling), and low DENSITY_DISSIPATION (the reveal itself lingers
+// for a while instead of snapping back, so the video underneath stays
+// visible for a beat). SIM_RES/DYE_RES are higher than a tight logo-sized
+// canvas would need, because the canvas now spans the whole Hero (see
+// HeroSection) — the same resolution stretched over a much bigger area
+// reads as visibly blocky/pixelated otherwise.
 const CFG = {
-  SIM_RES: 128,
-  DYE_RES: 1024,
+  SIM_RES: 160,
+  DYE_RES: 1536,
   PRESSURE_ITERATIONS: 20,
   PRESSURE: 0.8,
-  CURL: 8,
-  DENSITY_DISSIPATION: 2.2,
-  VELOCITY_DISSIPATION: 2.4,
+  CURL: 1,
+  DENSITY_DISSIPATION: 0.7,
+  VELOCITY_DISSIPATION: 4.5,
   SPLAT_RADIUS: 0.0017,
-  SPLAT_FORCE: 1000,
+  SPLAT_FORCE: 350,
   SPLAT_SPACING: 0.006,
   MASK_LO: 0.1,
   MASK_HI: 0.34,
@@ -425,6 +432,15 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       return;
     }
 
+    // Half-float textures need this extension specifically to be sampled
+    // with bilinear filtering — without it (or on a driver that lacks it)
+    // every FBO below falls back to NEAREST, which reads as visible hard
+    // square blocks in the dye field once the canvas is stretched over an
+    // area much bigger than DYE_RES was tuned for (the whole Hero now,
+    // not just the tight logo box).
+    const linearExt = gl.getExtension("OES_texture_float_linear");
+    const fboFilter = linearExt ? gl.LINEAR : gl.NEAREST;
+
     const supportsRenderTextureFormat = (internalFormat: number, format: number, type: number) => {
       const texture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -501,8 +517,8 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       gl.activeTexture(gl.TEXTURE0);
       const texture = gl.createTexture()!;
       gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, fboFilter);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, fboFilter);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, w, h, 0, format, type, null);
@@ -800,12 +816,19 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     // Interpolates along the stroke, not just at raw pointermove events —
     // without this a fast flick lands as a row of separate dots, since
     // pointermove fires roughly once per frame and a quick flick can cover
-    // a hundred+ pixels between two consecutive events.
+    // a hundred+ pixels between two consecutive events. CFG.SPLAT_SPACING
+    // is tuned in UV units for a canvas the size of the (tight) logo box;
+    // now that the wrapper spans the whole Hero, the same real on-screen
+    // drag distance maps to a much smaller UV delta, so the raw constant
+    // alone would under-count steps and leave the stroke visibly gappy —
+    // scaled by splatRadiusScale (same ratio the splat radius itself uses)
+    // to keep the same effective on-screen spacing regardless of how big
+    // the canvas has grown.
     const splatAlongStroke = (fromX: number, fromY: number, toX: number, toY: number) => {
       const dx = toX - fromX;
       const dy = toY - fromY;
       const dist = Math.hypot(dx, dy);
-      const steps = Math.max(1, Math.ceil(dist / CFG.SPLAT_SPACING));
+      const steps = Math.max(1, Math.ceil(dist / (CFG.SPLAT_SPACING * splatRadiusScale)));
       for (let i = 1; i <= steps; i++) {
         const t = i / steps;
         const x = fromX + dx * t;
