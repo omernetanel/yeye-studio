@@ -37,6 +37,16 @@ export default function HeroSection() {
   const { visible: typedTagline, done: taglineTypingDone } = useTypewriter(TAGLINE_TEXT, !prefersReducedMotion);
   const sectionRef = useRef<HTMLElement>(null);
   const taglineRef = useRef<HTMLParagraphElement>(null);
+  // logoAreaRef is the flex-1/min-h-0 space left over once the tagline and
+  // the CTA row have taken what they need; logoSlotRef is the actual
+  // (cropped-view) logo box, explicitly sized in JS below to fit inside
+  // that space at its correct aspect ratio. A plain CSS aspect-ratio box
+  // sized by width alone (the previous approach) has no ceiling on the
+  // resulting height, so on wide-but-short viewports (a common laptop
+  // window, not just a phone) it could grow taller than the space actually
+  // left for it and push the CTA button below the Hero's own bottom edge,
+  // clipped invisibly by the section's overflow-hidden.
+  const logoAreaRef = useRef<HTMLDivElement>(null);
   const logoSlotRef = useRef<HTMLDivElement>(null);
 
   // The Navbar's own mark stays hidden while the Hero itself is on screen
@@ -53,6 +63,37 @@ export default function HeroSection() {
     io.observe(section);
     return () => io.disconnect();
   }, []);
+
+  // Sizes the logo box to fit fully inside whatever space logoAreaRef
+  // actually has left (after the tagline and CTA take theirs), the same
+  // "shrink to fit both dimensions, preserving aspect ratio" behavior
+  // object-fit: contain gives an <img> for free — but logoAreaRef isn't a
+  // replaced element, so it's done by hand: prefer full width, and only
+  // fall back to fitting by height when that would overflow.
+  useEffect(() => {
+    const area = logoAreaRef.current;
+    const slot = logoSlotRef.current;
+    if (!area || !slot) return;
+    const CROPPED_ASPECT = 2940 / 8200; // height/width of the visible (post-crop) box
+
+    const resize = () => {
+      const rect = area.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+      let width = rect.width;
+      let height = width * CROPPED_ASPECT;
+      if (height > rect.height) {
+        height = rect.height;
+        width = height / CROPPED_ASPECT;
+      }
+      slot.style.width = `${width}px`;
+      slot.style.height = `${height}px`;
+    };
+    resize();
+
+    const ro = new ResizeObserver(resize);
+    ro.observe(area);
+    return () => ro.disconnect();
+  }, [prefersReducedMotion]);
 
   return (
     <section ref={sectionRef} id="hero" className="relative flex h-screen min-h-[640px] flex-col overflow-hidden bg-white pt-[100px] pb-8">
@@ -71,15 +112,23 @@ export default function HeroSection() {
             </div>
           </div>
 
-          <div className="flex flex-1 flex-col items-center justify-start px-6">
-            <div className="relative w-full select-none px-4 sm:px-6">
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-start px-6">
+            <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-4 pt-[10px] sm:px-6">
               {/* logo.png has a ~16% blank margin baked in above the
                   lettering (the fluid sim's own breathing room in the
                   non-reduced-motion build). Cropping to the bottom 84% via
                   overflow-hidden + an oversized, shifted-up absolute inner
                   box removes that margin from the visible box without
-                  distorting the artwork. */}
-              <div className="relative mx-auto w-full overflow-hidden" style={{ aspectRatio: "8200 / 2940" }}>
+                  distorting the artwork. logoSlotRef's own width/height are
+                  set explicitly in JS (see the effect above) instead of a
+                  plain CSS aspect-ratio, so the box shrinks to fit both the
+                  available width AND height — a fixed aspect-ratio is only
+                  ever driven by width, with no ceiling on the resulting
+                  height, which could grow past what's actually free on a
+                  wide-but-short viewport (a normal laptop window, not just
+                  a phone) and get clipped by the section's own
+                  overflow-hidden together with the CTA button below it. */}
+              <div ref={logoSlotRef} className="relative mx-auto overflow-hidden">
                 <div className="absolute inset-x-0" style={{ top: "-19.0476%", height: "119.0476%" }}>
                   {/* logo.png's opaque pixels are white (a solid-fill wordmark on
                       transparent, not baked black) — brightness(0) recolors them
@@ -104,7 +153,7 @@ export default function HeroSection() {
           </div>
         </>
       ) : (
-        <div className="relative flex flex-1 flex-col">
+        <div className="relative flex min-h-0 flex-1 flex-col">
           {/* The ink canvas spans this whole region — the Navbar's own
               breathing room above the tagline, through the tagline, down
               through the CTA button, stopping right above the bottom
@@ -160,13 +209,17 @@ export default function HeroSection() {
             </div>
           </div>
 
-          <div className="relative z-10 flex flex-1 flex-col items-center justify-start px-6 pointer-events-none">
+          <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-start px-6 pointer-events-none">
             {/* Invisible spacer marking exactly where the (cropped) logo
                 sits — same box a static <img> would need, just with
                 nothing drawn here; FluidInkReveal measures it and paints
-                the actual pixels on the canvas behind. */}
-            <div className="relative w-full select-none px-4 sm:px-6">
-              <div ref={logoSlotRef} className="relative mx-auto w-full" style={{ aspectRatio: "8200 / 2940" }} />
+                the actual pixels on the canvas behind. logoSlotRef's own
+                width/height are set explicitly in JS (see the effect
+                above), not a plain CSS aspect-ratio, so it shrinks to fit
+                both the available width AND height instead of only ever
+                being driven by width. */}
+            <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-4 pt-[10px] sm:px-6">
+              <div ref={logoSlotRef} className="relative mx-auto" />
             </div>
 
             <div className="pointer-events-auto mt-14 flex justify-center md:mt-20">
