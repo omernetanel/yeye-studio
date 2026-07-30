@@ -37,7 +37,6 @@ export default function HeroSection() {
   const { visible: typedTagline, done: taglineTypingDone } = useTypewriter(TAGLINE_TEXT, !prefersReducedMotion);
   const sectionRef = useRef<HTMLElement>(null);
   const taglineRef = useRef<HTMLParagraphElement>(null);
-  const bottomLabelRef = useRef<HTMLSpanElement>(null);
   // logoAreaRef is the flex-1/min-h-0 space left over once the tagline and
   // the CTA row have taken what they need; logoSlotRef is the actual
   // (cropped-view) logo box, explicitly sized in JS below to fit inside
@@ -99,25 +98,27 @@ export default function HeroSection() {
   return (
     <section ref={sectionRef} id="hero" className="relative flex flex-col overflow-hidden bg-white">
       {!prefersReducedMotion && (
-        // The ink canvas spans the WHOLE section — the Navbar's own
+        // The ink canvas spans the WHOLE section again — the Navbar's own
         // breathing room above the tagline, down through the tagline, the
-        // logo, the CTA button, the bottom social/label row, AND through
-        // the 150px landing strip appended after the h-screen block below
-        // — so a downward drag has real room to pool and settle instead
-        // of hitting a hard rectangular clip right where the ink happens
-        // to be densest. -top-[100px] pulls it up to the section's own
-        // top edge (matching the section's own pt-[100px] below exactly,
-        // not a value derived from the Navbar's current height) — safe
-        // since the Navbar is fixed, opaque, and stacked above everything
-        // else regardless. bottom-0 here is relative to the section
-        // itself, so it reaches the section's true bottom edge, past the
-        // landing strip. It's the bottom-most layer (first in DOM, no
-        // z-index): the h-screen block below it gets pointer-events-none
-        // (and so do its own tagline/logo-slot/bottom-row containers) so
-        // a hover anywhere over it — including its own "empty" gaps —
-        // still reaches this element and splats, with pointer-events-auto
-        // opted back in specifically on the CTA button and the two
-        // contact icons so they stay genuinely, unaffectedly clickable.
+        // now much bigger logo, the bottom social/label row, and the CTA
+        // button's own strip at the very end — because the CTA no longer
+        // lives inside the h-screen block (see its own comment below): it
+        // moved down into a dedicated strip after it, and "ink stops at
+        // the CTA's height" now means reaching all the way down to that
+        // strip, not stopping short of it. -top-[100px] pulls it up to
+        // the section's own top edge (matching the h-screen block's own
+        // pt-[100px] exactly, not a value derived from the Navbar's
+        // current height) — safe since the Navbar is fixed, opaque, and
+        // stacked above everything else regardless. bottom-0 is relative
+        // to the section itself, reaching the CTA strip's own bottom
+        // edge, which is now the section's true bottom edge too. It's the
+        // bottom-most layer (first in DOM, no z-index): the h-screen
+        // block and the CTA strip both get pointer-events-none (and so do
+        // their own interactive-adjacent containers), so a hover anywhere
+        // over either — including their own "empty" gaps — still reaches
+        // this element and splats, with pointer-events-auto opted back in
+        // specifically on the CTA button and the two contact icons so
+        // they stay genuinely, unaffectedly clickable.
         <div className="absolute inset-x-0 bottom-0 -top-[100px] overflow-hidden">
           <FluidInkReveal
             logoSrc="/images/logo.png"
@@ -125,7 +126,6 @@ export default function HeroSection() {
             taglineText={typedTagline}
             taglineElRef={taglineRef}
             logoSlotRef={logoSlotRef}
-            bottomLabelElRef={bottomLabelRef}
             className="relative h-full w-full select-none"
           />
         </div>
@@ -144,7 +144,6 @@ export default function HeroSection() {
         <h1 className="sr-only">YEYE</h1>
 
         {prefersReducedMotion ? (
-        <>
           <div className="mx-auto mt-4 w-full max-w-[1400px] px-6">
             <div className="flex flex-col items-start text-right">
               <p aria-label={TAGLINE_TEXT} className="font-display text-2xl leading-snug font-semibold text-black md:text-4xl">
@@ -152,28 +151,62 @@ export default function HeroSection() {
               </p>
             </div>
           </div>
+        ) : (
+          <div className="relative z-10 mx-auto mt-4 w-full max-w-[1400px] px-6 pointer-events-none">
+            <div className="flex flex-col items-start text-right">
+              {/* Real text, kept in the DOM for accessibility/SEO and as the
+                  layout/font source FluidInkReveal measures from — but
+                  visually transparent, since the canvas draws the glyphs
+                  itself so they can invert under the ink. */}
+              <p
+                ref={taglineRef}
+                aria-label={TAGLINE_TEXT}
+                className="font-display text-2xl leading-snug font-semibold md:text-4xl"
+                style={{ color: "transparent" }}
+              >
+                <span aria-hidden="true">
+                  {typedTagline}
+                  {!taglineTypingDone && (
+                    <span className="ml-0.5 inline-block h-[0.85em] w-[2px] -translate-y-[0.05em] animate-pulse bg-black align-middle" />
+                  )}
+                </span>
+              </p>
+            </div>
+          </div>
+        )}
 
-          <div className="flex min-h-0 flex-1 flex-col items-center justify-start px-3">
-            <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-0 pt-[24px] sm:px-2">
-              {/* logo.png has a ~16% blank margin baked in above the
-                  lettering (the fluid sim's own breathing room in the
-                  non-reduced-motion build). Cropping to the bottom 84% via
-                  overflow-hidden + an oversized, shifted-up absolute inner
-                  box removes that margin from the visible box without
-                  distorting the artwork. logoSlotRef's own width/height are
-                  set explicitly in JS (see the effect above) instead of a
-                  plain CSS aspect-ratio, so the box shrinks to fit both the
-                  available width AND height — a fixed aspect-ratio is only
-                  ever driven by width, with no ceiling on the resulting
-                  height, which could grow past what's actually free on a
-                  wide-but-short viewport (a normal laptop window, not just
-                  a phone) and get clipped by the section's own
-                  overflow-hidden together with the CTA button below it. */}
+        {/* Logo now gets the h-screen block's ENTIRE remaining height —
+            the CTA button used to sit in this same flex-1 column, directly
+            competing with the logo for the same fixed budget; now that
+            it's moved to its own strip after this block (see below), this
+            column has nothing else to share space with. */}
+        <div
+          className={
+            prefersReducedMotion
+              ? "flex min-h-0 flex-1 flex-col items-center justify-start px-3"
+              : "relative z-10 flex min-h-0 flex-1 flex-col items-center justify-start px-3 pointer-events-none"
+          }
+        >
+          {/* Invisible spacer marking exactly where the (cropped) logo
+              sits — same box a static <img> would need, just with nothing
+              drawn here in the ink build; FluidInkReveal measures it and
+              paints the actual pixels on the canvas behind. logoSlotRef's
+              own width/height are set explicitly in JS (see the effect
+              above), not a plain CSS aspect-ratio, so it shrinks to fit
+              both the available width AND height instead of only ever
+              being driven by width. */}
+          <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-0 pt-[64px] sm:px-2">
+            {prefersReducedMotion && (
               <div ref={logoSlotRef} className="relative mx-auto overflow-hidden">
                 <div className="absolute inset-x-0" style={{ top: "-19.0476%", height: "119.0476%" }}>
                   {/* logo.png's opaque pixels are white (a solid-fill wordmark on
                       transparent, not baked black) — brightness(0) recolors them
-                      to black, same as FluidInkReveal's own canvas draw does. */}
+                      to black, same as FluidInkReveal's own canvas draw does. logo.png
+                      has a ~16% blank margin baked in above the lettering (the fluid
+                      sim's own breathing room in the ink build) — cropping to the
+                      bottom 84% via overflow-hidden + an oversized, shifted-up
+                      absolute inner box removes that margin from the visible box
+                      without distorting the artwork. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/images/logo.png"
@@ -184,110 +217,53 @@ export default function HeroSection() {
                   />
                 </div>
               </div>
-            </div>
-
-            <div className="mt-6 flex justify-center md:mt-10">
-              <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
-                צפו בעבודות שלי
-              </Button>
-            </div>
+            )}
+            {!prefersReducedMotion && <div ref={logoSlotRef} className="relative mx-auto" />}
           </div>
-        </>
-      ) : (
-        <>
-          <div className="relative z-10 flex min-h-0 flex-1 flex-col pointer-events-none">
-            <div className="relative z-10 mx-auto mt-4 w-full max-w-[1400px] px-6 pointer-events-none">
-              <div className="flex flex-col items-start text-right">
-                {/* Real text, kept in the DOM for accessibility/SEO and as the
-                    layout/font source FluidInkReveal measures from — but
-                    visually transparent, since the canvas draws the glyphs
-                    itself so they can invert under the ink. */}
-                <p
-                  ref={taglineRef}
-                  aria-label={TAGLINE_TEXT}
-                  className="font-display text-2xl leading-snug font-semibold md:text-4xl"
-                  style={{ color: "transparent" }}
-                >
-                  <span aria-hidden="true">
-                    {typedTagline}
-                    {!taglineTypingDone && (
-                      <span className="ml-0.5 inline-block h-[0.85em] w-[2px] -translate-y-[0.05em] animate-pulse bg-black align-middle" />
-                    )}
-                  </span>
-                </p>
-              </div>
-            </div>
+        </div>
 
-            <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-start px-3 pointer-events-none">
-              {/* Invisible spacer marking exactly where the (cropped) logo
-                  sits — same box a static <img> would need, just with
-                  nothing drawn here; FluidInkReveal measures it and paints
-                  the actual pixels on the canvas behind. logoSlotRef's own
-                  width/height are set explicitly in JS (see the effect
-                  above), not a plain CSS aspect-ratio, so it shrinks to fit
-                  both the available width AND height instead of only ever
-                  being driven by width. */}
-              <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-0 pt-[24px] sm:px-2">
-                <div ref={logoSlotRef} className="relative mx-auto" />
-              </div>
-
-              <div className="pointer-events-auto mt-6 flex justify-center md:mt-10">
-                <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
-                  צפו בעבודות שלי
-                </Button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
-      <div
-        className={
-          prefersReducedMotion
-            ? "mx-auto flex w-full max-w-[1400px] items-center justify-between px-6"
-            : "relative z-10 mx-auto flex w-full max-w-[1400px] items-center justify-between px-6 pointer-events-none"
-        }
-      >
-        {/* Same treatment as the tagline above: real text stays in the DOM
-            for accessibility, but turns transparent once the ink canvas is
-            active so FluidInkReveal can draw and invert the glyphs itself
-            instead of a plain translucent label going unreadable once the
-            black backdrop shows through behind it. */}
-        <span
-          ref={bottomLabelRef}
-          className="font-display text-[13px] text-black/50"
-          style={prefersReducedMotion ? undefined : { color: "transparent" }}
+        <div
+          className={
+            prefersReducedMotion
+              ? "mx-auto flex w-full max-w-[1400px] items-center justify-between px-6"
+              : "relative z-10 mx-auto flex w-full max-w-[1400px] items-center justify-between px-6 pointer-events-none"
+          }
         >
-          סטודיו דיגיטלי עצמאי
-        </span>
+          <span className="font-display text-[13px] text-black/50">סטודיו דיגיטלי עצמאי</span>
 
-        <div className={prefersReducedMotion ? "flex items-center gap-4" : "pointer-events-auto flex items-center gap-4"}>
-          <Link
-            href={`https://wa.me/${WHATSAPP_NUMBER}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="WhatsApp"
-            className="text-black/50 transition-colors hover:text-black"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-            </svg>
-          </Link>
-          <Link href={`mailto:${CONTACT_EMAIL}`} aria-label="Email" className="text-black/50 transition-colors hover:text-black">
-            <Mail size={18} strokeWidth={1.5} />
-          </Link>
+          <div className={prefersReducedMotion ? "flex items-center gap-4" : "pointer-events-auto flex items-center gap-4"}>
+            <Link
+              href={`https://wa.me/${WHATSAPP_NUMBER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="WhatsApp"
+              className="text-black/50 transition-colors hover:text-black"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+              </svg>
+            </Link>
+            <Link href={`mailto:${CONTACT_EMAIL}`} aria-label="Email" className="text-black/50 transition-colors hover:text-black">
+              <Mail size={18} strokeWidth={1.5} />
+            </Link>
+          </div>
         </div>
       </div>
-      </div>
 
-      {/* Extra strip appended after the Hero's own full-viewport block —
-          not covered by any of the h-screen block's own layout (tagline,
-          logo, CTA all still fit within exactly one screen), but the ink
-          canvas above (a section-level sibling, see its own comment) does
-          extend through it deliberately: it's the ink's landing zone, so
-          a downward drag settles here instead of hitting a hard clip at
-          the h-screen block's own bottom edge. */}
-      <div aria-hidden="true" className="h-[150px] w-full shrink-0 bg-white" />
+      {/* CTA's own strip, moved well down and out of the h-screen block
+          above (see its own comment) so it no longer competes with the
+          logo for the same fixed height budget. The ink canvas extends
+          through this strip too — it's the ink's actual stopping point —
+          so this needs the same pointer-events-none-on-the-empty-space,
+          pointer-events-auto-on-the-real-control treatment as everything
+          else the canvas passes under. */}
+      <div className={prefersReducedMotion ? "flex h-[150px] w-full shrink-0 items-center justify-center" : "relative z-10 flex h-[150px] w-full shrink-0 items-center justify-center pointer-events-none"}>
+        <div className={prefersReducedMotion ? undefined : "pointer-events-auto"}>
+          <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
+            צפו בעבודות שלי
+          </Button>
+        </div>
+      </div>
     </section>
   );
 }
