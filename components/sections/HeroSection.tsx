@@ -167,7 +167,7 @@ export default function HeroSection() {
               above), not a plain CSS aspect-ratio, so it shrinks to fit
               both the available width AND height instead of only ever
               being driven by width. */}
-          <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-0 pt-[54px] sm:px-2">
+          <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-0 pt-[39px] sm:px-2">
             {prefersReducedMotion && (
               <div ref={logoSlotRef} className="relative mx-auto overflow-hidden">
                 <div className="absolute inset-x-0" style={{ top: "-19.0476%", height: "119.0476%" }}>
@@ -216,7 +216,14 @@ export default function HeroSection() {
         <div className="relative mx-auto flex w-full max-w-[1400px] items-center justify-between px-6">
           <span className="font-display text-[13px] text-black/50">סטודיו דיגיטלי עצמאי</span>
 
-          <div className={prefersReducedMotion ? "absolute inset-x-0 flex justify-center" : "absolute inset-x-0 flex justify-center pointer-events-auto"}>
+          <div
+            className={
+              prefersReducedMotion
+                ? "absolute inset-x-0 flex animate-fade-in justify-center"
+                : "absolute inset-x-0 flex animate-fade-in justify-center pointer-events-auto"
+            }
+            style={{ animationDelay: "0.4s" }}
+          >
             <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
               צפו בעבודות שלי
             </Button>
