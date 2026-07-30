@@ -28,8 +28,8 @@ export default function Home() {
       <div className="relative z-10">
         <Navbar />
         <HeroSection />
-        <ServicesSection />
         <AboutSection />
+        <ServicesSection />
         <ProcessSection />
         <ProjectsSection />
         <CTASection />
