@@ -2,15 +2,26 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
+import { cn } from "@/lib/utils";
 
 // Measured (not guessed) fractional bounding boxes of the actual lettering
 // within each source asset's own frame — see the pixel-measurement notes
-// in the project history. logo.png's own margins/proportions were built to
-// roughly match the video's, but not identically, so both are kept and
-// used independently: LOGO_MARK positions the flat wordmark within this
-// canvas, VIDEO_MARK positions the video against wherever that ends up.
+// in the project history. Both are relative to logo.png's OWN full frame
+// (before the visual crop below): LOGO_MARK positions the flat wordmark
+// within it, VIDEO_MARK positions the video against wherever that ends up.
 const LOGO_MARK = { x0: 0.015, y0: 0.2129, x1: 0.9845, y1: 0.8026 };
 const VIDEO_MARK = { x0: 0.0109, y0: 0.1936, x1: 0.9923, y1: 0.8298 };
+
+// logo.png has a ~16% blank margin baked in above the lettering. The DOM
+// slot the logo is measured against (see logoSlotRef) is sized to only the
+// bottom 84% of the full image — these constants recover the full,
+// undistorted image rect from that cropped slot: CROP_HEIGHT_SCALE grows
+// the slot's height back out to the full image's height, CROP_TOP_SHIFT
+// (a fraction of the SLOT's own height) says how far above the slot's own
+// top the full image's top edge sits. Same numbers as the CSS crop this
+// mirrors (see HeroSection): 1/0.84 and 0.16/0.84.
+const CROP_HEIGHT_SCALE = 1.190476;
+const CROP_TOP_SHIFT = 0.190476;
 
 // Every fluid constant lives here, per the reference build's own advice —
 // these are starting points, tuned for a wordmark of this rough size, not
@@ -223,10 +234,28 @@ void main () {
 }`;
 
 // The reveal itself: wherever dye density crosses the threshold band, alpha
-// goes to 0 (transparent — the video shows through). Below the threshold,
-// alpha stays 1 and the color is the paper texture (white page + the flat
-// black wordmark, drawn from logo.png, not HTML) — see the note on why
-// that drawing has to happen on this canvas in FluidInkReveal below.
+// goes to 0 (transparent). Below the threshold, alpha stays 1 and the color
+// is the paper texture (white page + the flat black wordmark + the tagline,
+// drawn from logo.png and the DOM tagline's own metrics — not left as HTML;
+// see the note on why that drawing has to happen on this canvas in
+// FluidInkReveal below).
+//
+// Outside the tagline, a transparent pixel just lets whatever sits behind
+// the canvas show through — the video within its own tight box, or the
+// wrapper's own solid black background everywhere else (see the className
+// below) — both black, so there's no seam where one ends and the other
+// begins.
+//
+// Inside the tagline's own rect specifically, revealing doesn't show
+// anything behind at all: erasing the SAME alpha there as everywhere else
+// would erase the text and its background at the same rate, and since both
+// reveal the identical black behind them, the letters would blend into the
+// background exactly where the ink touches them — the opposite of
+// legible. Instead the tagline always stays fully opaque, and reveals by
+// inverting its own paper colors — paper*aOutside for the white background
+// becomes black, and 1-paper for the black text becomes white, together,
+// from the same source pixels, so contrast is guaranteed rather than
+// incidental.
 const DISPLAY_SHADER = `#version 300 es
 precision highp float;
 precision highp sampler2D;
@@ -235,13 +264,24 @@ uniform sampler2D uDye;
 uniform sampler2D uPaper;
 uniform float maskLo;
 uniform float maskHi;
+uniform vec4 taglineRect;
 out vec4 fragColor;
 void main () {
   float d = texture(uDye, vUv).r;
   float mask = smoothstep(maskLo, maskHi, d);
-  float a = 1.0 - mask;
   vec3 paper = texture(uPaper, vUv).rgb;
-  fragColor = vec4(paper * a, a);
+
+  float inTagline = step(taglineRect.x, vUv.x) * step(vUv.x, taglineRect.z)
+    * step(taglineRect.y, vUv.y) * step(vUv.y, taglineRect.w);
+
+  float aOutside = 1.0 - mask;
+  vec3 colorOutside = paper * aOutside;
+
+  vec3 colorInside = mix(paper, 1.0 - paper, mask);
+
+  vec3 finalColor = mix(colorOutside, colorInside, inTagline);
+  float finalAlpha = mix(aOutside, 1.0, inTagline);
+  fragColor = vec4(finalColor, finalAlpha);
 }`;
 
 function compileShader(gl: WebGL2RenderingContext, type: number, source: string) {
@@ -301,22 +341,49 @@ export interface FluidInkRevealHandle {
 interface FluidInkRevealProps {
   logoSrc: string;
   videoSrc: string;
+  /** Current (possibly mid-typewriter) tagline substring, drawn into the
+   * same canvas as the wordmark so it can invert under the ink too. */
+  taglineText: string;
+  /** The (visually transparent, layout-only) DOM element the tagline's
+   * real position/font/size is measured from — see HeroSection. */
+  taglineElRef: React.RefObject<HTMLElement | null>;
+  /** An invisible DOM spacer marking exactly where the (cropped) logo
+   * should sit — see HeroSection. Measuring this instead of computing a
+   * "how big should the logo be" formula is deliberate: a formula is
+   * exactly what miscalculated the logo's size in an earlier pass. */
+  logoSlotRef: React.RefObject<HTMLElement | null>;
   className?: string;
 }
 
 const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(function FluidInkReveal(
-  { logoSrc, videoSrc, className },
+  { logoSrc, videoSrc, taglineText, taglineElRef, logoSlotRef, className },
   ref
 ) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const activeRef = useRef(false);
+  const redrawRef = useRef<(() => void) | null>(null);
+  // redrawPaper() is created once, inside the main effect below, which
+  // deliberately does NOT re-run on every taglineText change (that would
+  // mean tearing down and rebuilding the whole WebGL context per
+  // keystroke). Reading the `taglineText` prop directly from there would
+  // therefore always see the string from whenever that effect last ran —
+  // stale on every subsequent keystroke. Keeping the latest value in a ref
+  // that redrawPaper reads from each call sidesteps the closure entirely.
+  const taglineTextRef = useRef(taglineText);
+  taglineTextRef.current = taglineText;
   const prefersReducedMotion = usePrefersReducedMotion();
 
   useImperativeHandle(ref, () => ({
     isActive: () => activeRef.current,
   }));
+
+  // Re-paints the paper texture whenever the typewriter advances — the
+  // WebGL setup itself doesn't need to re-run for that, just a redraw.
+  useEffect(() => {
+    redrawRef.current?.();
+  }, [taglineText]);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -494,10 +561,11 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
 
     buildSimTargets();
 
-    // ---- paper texture (the white page + flat black wordmark, drawn from
-    // logo.png — not HTML, so it can be erased by the sim's own alpha
-    // output; see DISPLAY_SHADER). A live 2D canvas is used purely as a
-    // pixel source to upload from, never itself displayed. ----
+    // ---- paper texture (the white page + flat black wordmark + tagline,
+    // drawn from logo.png and the DOM tagline's own metrics — not left as
+    // HTML, so both can be erased/inverted by the sim's own alpha output;
+    // see DISPLAY_SHADER). A live 2D canvas is used purely as a pixel
+    // source to upload from, never itself displayed. ----
     const paperCanvas = document.createElement("canvas");
     const paperCtx = paperCanvas.getContext("2d")!;
     const paperTexture = gl.createTexture()!;
@@ -508,13 +576,23 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
     // The current text bounding box in wrapper-local CSS pixels — recomputed
-    // whenever the paper texture is redrawn, and what both the fullscreen
-    // fluid math (aspect ratio) and the video's own CSS placement key off.
+    // whenever the paper texture is redrawn, and what both the video's CSS
+    // placement and the tagline-invert shader uniform key off.
     let textRect = { left: 0, top: 0, width: 0, height: 0 };
+    let taglineRectUv = [0, 0, 0, 0];
     let logoImage: HTMLImageElement | null = null;
+
+    // How much of the wrapper's own height the (uncropped) logo image
+    // occupies — CFG.SPLAT_RADIUS was tuned back when the wrapper WAS that
+    // image's own tight box (ratio 1). Now the wrapper spans the whole
+    // interactive area and the logo is a small part of it, so scaling the
+    // radius by this ratio keeps the ink sized to the lettering instead of
+    // a fixed fraction of the much bigger canvas.
+    let splatRadiusScale = 1;
 
     const redrawPaper = () => {
       const rect = wrapper.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = Math.max(1, Math.round(rect.width * dpr));
       const h = Math.max(1, Math.round(rect.height * dpr));
@@ -524,17 +602,77 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       paperCtx.fillStyle = "#ffffff";
       paperCtx.fillRect(0, 0, w, h);
 
-      if (logoImage) {
-        // The logo is drawn to fill the canvas exactly — the wrapper's own
-        // box is aspect-locked to logo.png's real aspect ratio (see the
-        // className below), so this never distorts or letterboxes.
-        // logo.png's opaque pixels are white (a solid-fill wordmark on
-        // transparent, not baked black) — brightness(0) recolors them to
-        // black without touching alpha, the same trick the old <Image>
-        // used via a CSS filter.
-        paperCtx.filter = "brightness(0)";
-        paperCtx.drawImage(logoImage, 0, 0, w, h);
-        paperCtx.filter = "none";
+      // Tagline — drawn from the live DOM element's own measured position
+      // and computed font, matching what would have rendered there as
+      // ordinary text (which is now visually transparent — see
+      // HeroSection).
+      const taglineEl = taglineElRef.current;
+      const currentTaglineText = taglineTextRef.current;
+      if (taglineEl) {
+        const tRect = taglineEl.getBoundingClientRect();
+        const relLeft = (tRect.left - rect.left) * dpr;
+        const relTop = (tRect.top - rect.top) * dpr;
+        const relWidth = tRect.width * dpr;
+        const relHeight = tRect.height * dpr;
+
+        if (currentTaglineText && relWidth > 0 && relHeight > 0) {
+          const style = getComputedStyle(taglineEl);
+          const fontSize = parseFloat(style.fontSize) * dpr;
+          paperCtx.font = `${style.fontWeight} ${fontSize}px ${style.fontFamily}`;
+          paperCtx.fillStyle = "#000000";
+          paperCtx.direction = "rtl";
+          paperCtx.textAlign = "right";
+          paperCtx.textBaseline = "middle";
+          paperCtx.fillText(currentTaglineText, relLeft + relWidth, relTop + relHeight / 2);
+        }
+
+        taglineRectUv = [relLeft / w, 1 - (relTop + relHeight) / h, (relLeft + relWidth) / w, 1 - relTop / h];
+      }
+
+      // Logo — measured from the invisible logoSlot spacer (its exact
+      // visual position/size, matching the reduced-motion branch's own CSS
+      // crop pixel-for-pixel), not computed from a "how big should this be"
+      // formula.
+      const logoSlotEl = logoSlotRef.current;
+      if (logoSlotEl && rect.height > 0) {
+        const lRect = logoSlotEl.getBoundingClientRect();
+        const slotRect = {
+          left: lRect.left - rect.left,
+          top: lRect.top - rect.top,
+          width: lRect.width,
+          height: lRect.height,
+        };
+
+        // The slot is the CROPPED (post-margin) view; recover the full,
+        // undistorted image rect so drawImage doesn't stretch the artwork.
+        const fullRect = {
+          left: slotRect.left,
+          top: slotRect.top - slotRect.height * CROP_TOP_SHIFT,
+          width: slotRect.width,
+          height: slotRect.height * CROP_HEIGHT_SCALE,
+        };
+
+        if (logoImage && fullRect.width > 0) {
+          // logo.png's opaque pixels are white (a solid-fill wordmark on
+          // transparent, not baked black) — brightness(0) recolors them to
+          // black without touching alpha, the same trick the old <Image>
+          // used via a CSS filter. Drawing the full (untrimmed) image here
+          // is safe even though it extends above the visible slot: the
+          // margin above the lettering is transparent in the source file,
+          // so it's a no-op paint outside the slot's own bounds.
+          paperCtx.filter = "brightness(0)";
+          paperCtx.drawImage(logoImage, fullRect.left * dpr, fullRect.top * dpr, fullRect.width * dpr, fullRect.height * dpr);
+          paperCtx.filter = "none";
+        }
+
+        textRect = {
+          left: fullRect.left + LOGO_MARK.x0 * fullRect.width,
+          top: fullRect.top + LOGO_MARK.y0 * fullRect.height,
+          width: (LOGO_MARK.x1 - LOGO_MARK.x0) * fullRect.width,
+          height: (LOGO_MARK.y1 - LOGO_MARK.y0) * fullRect.height,
+        };
+
+        splatRadiusScale = fullRect.height / rect.height;
       }
 
       gl.bindTexture(gl.TEXTURE_2D, paperTexture);
@@ -542,15 +680,9 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, paperCanvas);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
-      textRect = {
-        left: LOGO_MARK.x0 * rect.width,
-        top: LOGO_MARK.y0 * rect.height,
-        width: (LOGO_MARK.x1 - LOGO_MARK.x0) * rect.width,
-        height: (LOGO_MARK.y1 - LOGO_MARK.y0) * rect.height,
-      };
-
       positionVideo();
     };
+    redrawRef.current = redrawPaper;
 
     // Video registration: matched on WIDTH (see the note in HeroSection's
     // history) — the rendered 3D letters are chunkier than the flat
@@ -614,7 +746,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       gl.uniform1f(splatProgram.uniforms.aspectRatio, aspect);
       gl.uniform2f(splatProgram.uniforms.point, x, y);
       gl.uniform3f(splatProgram.uniforms.color, dx * CFG.SPLAT_FORCE, dy * CFG.SPLAT_FORCE, 0);
-      gl.uniform1f(splatProgram.uniforms.radius, CFG.SPLAT_RADIUS);
+      gl.uniform1f(splatProgram.uniforms.radius, CFG.SPLAT_RADIUS * splatRadiusScale);
       drawQuad();
       velocity.swap();
 
@@ -806,6 +938,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       gl.uniform1i(displayProgram.uniforms.uPaper, 1);
       gl.uniform1f(displayProgram.uniforms.maskLo, CFG.MASK_LO);
       gl.uniform1f(displayProgram.uniforms.maskHi, CFG.MASK_HI);
+      gl.uniform4f(displayProgram.uniforms.taglineRect, taglineRectUv[0], taglineRectUv[1], taglineRectUv[2], taglineRectUv[3]);
       drawQuad();
 
       rafId = requestAnimationFrame(step);
@@ -814,6 +947,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
 
     return () => {
       disposed = true;
+      redrawRef.current = null;
       if (rafId !== null) cancelAnimationFrame(rafId);
       ro.disconnect();
       window.removeEventListener("orientationchange", resize);
@@ -826,12 +960,13 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       document.removeEventListener("visibilitychange", handleVisibility);
       video.pause();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [logoSrc, videoSrc, prefersReducedMotion]);
 
   if (prefersReducedMotion) return null;
 
   return (
-    <div ref={wrapperRef} className={className} style={{ position: "relative" }}>
+    <div ref={wrapperRef} className={cn("bg-black", className)} style={{ position: "relative" }}>
       <video
         ref={videoRef}
         aria-hidden="true"

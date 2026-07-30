@@ -36,6 +36,8 @@ export default function HeroSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
   const { visible: typedTagline, done: taglineTypingDone } = useTypewriter(TAGLINE_TEXT, !prefersReducedMotion);
   const sectionRef = useRef<HTMLElement>(null);
+  const taglineRef = useRef<HTMLParagraphElement>(null);
+  const logoSlotRef = useRef<HTMLDivElement>(null);
 
   // The Navbar's own mark stays hidden while the Hero itself is on screen
   // (nothing to dock against yet), and crossfades in once the Hero has
@@ -59,75 +61,111 @@ export default function HeroSection() {
           screen readers and search engines. */}
       <h1 className="sr-only">YEYE</h1>
 
-      <div className="mx-auto mt-8 w-full max-w-[1400px] px-6">
-        <div className="flex flex-col items-start text-right">
-          <p aria-label={TAGLINE_TEXT} className="font-display text-2xl leading-snug font-semibold text-black md:text-4xl">
-            <span aria-hidden="true">
-              {prefersReducedMotion ? TAGLINE_TEXT : typedTagline}
-              {!prefersReducedMotion && !taglineTypingDone && (
-                <span className="ml-0.5 inline-block h-[0.85em] w-[2px] -translate-y-[0.05em] animate-pulse bg-black align-middle" />
-              )}
-            </span>
-          </p>
-        </div>
-      </div>
+      {prefersReducedMotion ? (
+        <>
+          <div className="mx-auto mt-8 w-full max-w-[1400px] px-6">
+            <div className="flex flex-col items-start text-right">
+              <p aria-label={TAGLINE_TEXT} className="font-display text-2xl leading-snug font-semibold text-black md:text-4xl">
+                <span aria-hidden="true">{TAGLINE_TEXT}</span>
+              </p>
+            </div>
+          </div>
 
-      <div className="flex flex-1 flex-col items-center justify-start px-6">
-        <div className="relative w-full select-none px-4 sm:px-6">
-          {/* logo.png itself has a ~21% blank margin baked in above the
-              lettering (the fluid sim's own breathing room — see
-              FluidInkReveal's LOGO_MARK), and the whole image is drawn
-              edge-to-edge into its own aspect-locked box, so CSS padding
-              alone can't close the gap to the tagline above. This outer
-              box is cropped to only the bottom 84% of that full box (via
-              overflow-hidden), with the full-aspect box absolutely
-              positioned inside it and shifted up so the cropped-away
-              16% comes off the top margin specifically — eating into the
-              margin instead of shrinking the letters. Plain
-              position/overflow, deliberately not a CSS transform: a
-              transform here was found (via direct DOM-text-vs-screenshot
-              comparison) to desync headless Chromium's painted output
-              from the tagline's own DOM text a few pixels away, even
-              though the two elements share no ancestor — a compositor
-              quirk, not worth the risk. getBoundingClientRect() still
-              reports the real post-crop position, so FluidInkReveal's own
-              video-alignment math picks this up with no changes of its
-              own. */}
-          {prefersReducedMotion ? (
-            <div className="relative mx-auto w-full overflow-hidden" style={{ aspectRatio: "8200 / 2940" }}>
-              <div className="absolute inset-x-0" style={{ top: "-19.0476%", height: "119.0476%" }}>
-                {/* logo.png's opaque pixels are white (a solid-fill wordmark on
-                    transparent, not baked black) — brightness(0) recolors them
-                    to black, same as FluidInkReveal's own canvas draw does. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/logo.png"
-                  alt="YEYE"
-                  className="h-full w-full object-contain"
-                  style={{ filter: "brightness(0)" }}
-                  draggable={false}
-                />
+          <div className="flex flex-1 flex-col items-center justify-start px-6">
+            <div className="relative w-full select-none px-4 sm:px-6">
+              {/* logo.png has a ~16% blank margin baked in above the
+                  lettering (the fluid sim's own breathing room in the
+                  non-reduced-motion build). Cropping to the bottom 84% via
+                  overflow-hidden + an oversized, shifted-up absolute inner
+                  box removes that margin from the visible box without
+                  distorting the artwork. */}
+              <div className="relative mx-auto w-full overflow-hidden" style={{ aspectRatio: "8200 / 2940" }}>
+                <div className="absolute inset-x-0" style={{ top: "-19.0476%", height: "119.0476%" }}>
+                  {/* logo.png's opaque pixels are white (a solid-fill wordmark on
+                      transparent, not baked black) — brightness(0) recolors them
+                      to black, same as FluidInkReveal's own canvas draw does. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/images/logo.png"
+                    alt="YEYE"
+                    className="h-full w-full object-contain"
+                    style={{ filter: "brightness(0)" }}
+                    draggable={false}
+                  />
+                </div>
               </div>
             </div>
-          ) : (
-            <div className="relative mx-auto w-full overflow-hidden" style={{ aspectRatio: "8200 / 2940" }}>
-              <div className="absolute inset-x-0" style={{ top: "-19.0476%", height: "119.0476%" }}>
-                <FluidInkReveal
-                  logoSrc="/images/logo.png"
-                  videoSrc="/videos/herovid-loop.mp4"
-                  className="relative h-full w-full select-none"
-                />
-              </div>
-            </div>
-          )}
-        </div>
 
-        <div className="mt-14 flex justify-center md:mt-20">
-          <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
-            צפו בעבודות שלי
-          </Button>
+            <div className="mt-14 flex justify-center md:mt-20">
+              <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
+                צפו בעבודות שלי
+              </Button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="relative flex flex-1 flex-col">
+          {/* The ink canvas spans this whole region — tagline through the
+              CTA button, stopping right above the bottom social/label row
+              — so the reveal isn't clipped to the logo's own box. It's the
+              bottom-most layer (first in DOM, no z-index): the tagline and
+              logo-slot containers below get pointer-events-none so a hover
+              anywhere over them (including directly over the wordmark or
+              the tagline text) still reaches this element and splats,
+              while the CTA button keeps its own default pointer-events and
+              a real position so it stays on top and fully clickable,
+              genuinely unaffected by the ink rather than merely
+              visually covered by it. */}
+          <div className="absolute inset-0 overflow-hidden">
+            <FluidInkReveal
+              logoSrc="/images/logo.png"
+              videoSrc="/videos/herovid-loop.mp4"
+              taglineText={typedTagline}
+              taglineElRef={taglineRef}
+              logoSlotRef={logoSlotRef}
+              className="relative h-full w-full select-none"
+            />
+          </div>
+
+          <div className="relative z-10 mx-auto mt-8 w-full max-w-[1400px] px-6 pointer-events-none">
+            <div className="flex flex-col items-start text-right">
+              {/* Real text, kept in the DOM for accessibility/SEO and as the
+                  layout/font source FluidInkReveal measures from — but
+                  visually transparent, since the canvas draws the glyphs
+                  itself so they can invert under the ink. */}
+              <p
+                ref={taglineRef}
+                aria-label={TAGLINE_TEXT}
+                className="font-display text-2xl leading-snug font-semibold md:text-4xl"
+                style={{ color: "transparent" }}
+              >
+                <span aria-hidden="true">
+                  {typedTagline}
+                  {!taglineTypingDone && (
+                    <span className="ml-0.5 inline-block h-[0.85em] w-[2px] -translate-y-[0.05em] animate-pulse bg-black align-middle" />
+                  )}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div className="relative z-10 flex flex-1 flex-col items-center justify-start px-6">
+            {/* Invisible spacer marking exactly where the (cropped) logo
+                sits — same box a static <img> would need, just with
+                nothing drawn here; FluidInkReveal measures it and paints
+                the actual pixels on the canvas behind. */}
+            <div className="relative w-full select-none px-4 sm:px-6 pointer-events-none">
+              <div ref={logoSlotRef} className="relative mx-auto w-full" style={{ aspectRatio: "8200 / 2940" }} />
+            </div>
+
+            <div className="mt-14 flex justify-center md:mt-20">
+              <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
+                צפו בעבודות שלי
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between px-6">
         <span className="font-display text-[13px] text-black/50">סטודיו דיגיטלי עצמאי</span>
