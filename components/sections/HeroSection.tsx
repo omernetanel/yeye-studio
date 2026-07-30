@@ -48,6 +48,11 @@ export default function HeroSection() {
   // clipped invisibly by the section's overflow-hidden.
   const logoAreaRef = useRef<HTMLDivElement>(null);
   const logoSlotRef = useRef<HTMLDivElement>(null);
+  // Marks where real content ends and the decorative ink-settle buffer
+  // begins (see that buffer's own comment below) — passed to
+  // FluidInkReveal so it scales splat size/spacing off actual content
+  // height, not the wrapper's full height including that buffer.
+  const settleBufferRef = useRef<HTMLDivElement>(null);
 
   // The Navbar's own mark stays hidden while the Hero itself is on screen
   // (nothing to dock against yet), and crossfades in once the Hero has
@@ -126,6 +131,7 @@ export default function HeroSection() {
             taglineText={typedTagline}
             taglineElRef={taglineRef}
             logoSlotRef={logoSlotRef}
+            contentBoundaryElRef={settleBufferRef}
             className="relative h-full w-full select-none"
           />
         </div>
@@ -276,7 +282,7 @@ export default function HeroSection() {
         // sized off the section's own total height, see its comment
         // above) — this is purely the extra section height for it to
         // extend into.
-        <div aria-hidden="true" className="h-[240px] w-full shrink-0" />
+        <div ref={settleBufferRef} aria-hidden="true" className="h-[240px] w-full shrink-0" />
       )}
     </section>
   );
