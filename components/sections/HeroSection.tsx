@@ -72,8 +72,8 @@ export default function HeroSection() {
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center px-6">
-        <div className="relative w-full select-none px-4 pt-8 sm:px-6 sm:pt-10">
+      <div className="flex flex-1 flex-col items-center justify-start px-6">
+        <div className="relative w-full select-none px-4 pt-2 sm:px-6 sm:pt-3">
           {prefersReducedMotion ? (
             <div className="relative mx-auto aspect-[8200/3500] w-full">
               {/* logo.png's opaque pixels are white (a solid-fill wordmark on
