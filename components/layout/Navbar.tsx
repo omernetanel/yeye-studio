@@ -56,8 +56,8 @@ export default function Navbar() {
             <Image
               src="/images/logo.png"
               alt="YEYE"
-              width={8042}
-              height={3300}
+              width={8200}
+              height={3500}
               className="h-6 w-auto object-contain brightness-0"
               priority
             />

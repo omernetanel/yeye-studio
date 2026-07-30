@@ -48,8 +48,8 @@ export default function Footer({ light = false }: FooterProps) {
           <Image
             src="/images/logo.png"
             alt="YEYE"
-            width={8042}
-            height={3300}
+            width={8200}
+            height={3500}
             className={cn("h-5 w-auto brightness-0", light ? "opacity-40" : "invert-[0.35]")}
           />
         </div>
