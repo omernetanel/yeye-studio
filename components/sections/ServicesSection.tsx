@@ -44,19 +44,17 @@ const POSTER_SRC = "/images/services-bg-poster.jpg";
 // `loadedmetadata` never fires for some reason.
 const VIDEO_DURATION_FALLBACK = 9;
 
-// Phase 0 ("lead-in"): SPACER_VH worth of perfectly ordinary scrolling
+// Phase 0 ("lead-in"): SPACER_PX worth of perfectly ordinary scrolling
 // before the panel below goes sticky at all — a plain block, not pinned
-// yet, scrolling into view from the bottom of the screen like anything
-// else on the page, so its first-frame illustration is already
-// progressively revealing itself before the pin (and the reveal
-// choreography below) engages. Without this the panel's own natural top
-// sits at the very start of the wrapper, so it went sticky — and phase 1
-// started — the instant the section entered view at all, which skipped
-// past that "scrolling in normally" moment entirely. Not part of the
-// pinned range itself (READ_END etc. below are fractions of the pinned
-// range only) — purely a scroll distance to cover first. Tune by eye:
-// bigger reveals more of the illustration before it locks in place.
-const SPACER_VH = 30;
+// yet. Without this the panel's own natural top sits at the very start
+// of the wrapper, so it went sticky — and phase 1 started — the instant
+// the section entered view at all. Not part of the pinned range itself
+// (READ_END etc. below are fractions of the pinned range only) — purely
+// a scroll distance to cover first. A small, fixed pixel value on
+// purpose (not vh-proportional) — a 30vh version of this was barely
+// perceptible as an intentional beat rather than just "nothing happening
+// yet," so it's a deliberately small, literal nudge instead.
+const SPACER_PX = 20;
 
 // Phase 1 ("reading"): scroll progress 0 -> READ_END, scoped to this
 // section's own pinned range (after the lead-in above). The clip stays
@@ -400,10 +398,10 @@ export default function ServicesSection() {
           just a clean gap. */}
       <div className="h-24 bg-white md:h-36" />
 
-      <section ref={wrapperRef} id="services" className="relative h-[545.2vh] bg-white">
-        {/* SPACER_VH of perfectly ordinary scrolling before the panel below
+      <section ref={wrapperRef} id="services" className="relative h-[calc(515.2vh+20px)] bg-white">
+        {/* SPACER_PX of perfectly ordinary scrolling before the panel below
             goes sticky — see its own comment up top. */}
-        <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_VH}vh` }} />
+        <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />
 
         {/* Sized to the clip's own exact 16:9 aspect (not capped to one
             viewport tall) so it fills edge to edge — width and height —
