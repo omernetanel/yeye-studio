@@ -114,7 +114,7 @@ export default function HeroSection() {
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col items-center justify-start px-6">
-            <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-2 pt-[40px] sm:px-4">
+            <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-0 pt-[40px] sm:px-2">
               {/* logo.png has a ~16% blank margin baked in above the
                   lettering (the fluid sim's own breathing room in the
                   non-reduced-motion build). Cropping to the bottom 84% via
@@ -193,7 +193,7 @@ export default function HeroSection() {
             />
           </div>
 
-          <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+          <div className="relative z-10 flex min-h-0 flex-1 flex-col pointer-events-none">
             <div className="relative z-10 mx-auto mt-8 w-full max-w-[1400px] px-6 pointer-events-none">
               <div className="flex flex-col items-start text-right">
                 {/* Real text, kept in the DOM for accessibility/SEO and as the
@@ -225,7 +225,7 @@ export default function HeroSection() {
                   above), not a plain CSS aspect-ratio, so it shrinks to fit
                   both the available width AND height instead of only ever
                   being driven by width. */}
-              <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-2 pt-[40px] sm:px-4">
+              <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-0 pt-[40px] sm:px-2">
                 <div ref={logoSlotRef} className="relative mx-auto" />
               </div>
 
