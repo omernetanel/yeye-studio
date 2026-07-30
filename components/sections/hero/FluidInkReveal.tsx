@@ -25,26 +25,34 @@ const CROP_TOP_SHIFT = 0.190476;
 
 // Every fluid constant lives here, per the reference build's own advice —
 // these are starting points, tuned for a wordmark of this rough size, not
-// derived from a formula. Gentle and elegant rather than turbulent: low
-// CURL (barely any vortex swirl — no "hurricane" tendrils), low
-// SPLAT_FORCE (soft, slow-moving motion instead of a violent flick), high
-// VELOCITY_DISSIPATION (motion settles down quickly instead of coasting
-// and tangling), and low DENSITY_DISSIPATION (the reveal itself lingers
-// for a while instead of snapping back, so the video underneath stays
-// visible for a beat). SIM_RES/DYE_RES are higher than a tight logo-sized
-// canvas would need, because the canvas now spans the whole Hero (see
-// HeroSection) — the same resolution stretched over a much bigger area
-// reads as visibly blocky/pixelated otherwise.
+// derived from a formula. SIM_RES/DYE_RES were bumped up when the canvas
+// grew to span the whole Hero, but that made every frame noticeably
+// heavier — with the dye/velocity FBOs now sampled with LINEAR filtering
+// (see linearExt below) instead of NEAREST, the resolution bump was no
+// longer buying much smoothness, just cost, and the extra per-frame cost
+// was exactly what made the ink visibly lag behind a fast-moving cursor —
+// so both are back down near their original values. CURL is 0 (no added
+// vorticity confinement), but that alone doesn't stop a real fluid solve
+// from still looking swirly — a pressure-projected velocity field
+// naturally produces rotational, marbled-looking motion on its own even
+// with zero confinement; the only real way to stop it from ever fully
+// developing into "busy tangled folds" is to not give it time to. Both
+// dissipation constants are high for exactly that reason: velocity settles
+// down almost immediately after the cursor stops (instead of continuing to
+// visibly advect/warp the dye for a second or more afterward), and density
+// fades out over roughly half a second rather than several — long enough
+// to read as a deliberate reveal, short enough that it never lingers into
+// the messy stage.
 const CFG = {
-  SIM_RES: 160,
-  DYE_RES: 1536,
+  SIM_RES: 128,
+  DYE_RES: 1024,
   PRESSURE_ITERATIONS: 20,
   PRESSURE: 0.8,
-  CURL: 1,
-  DENSITY_DISSIPATION: 0.7,
-  VELOCITY_DISSIPATION: 4.5,
+  CURL: 0,
+  DENSITY_DISSIPATION: 2.8,
+  VELOCITY_DISSIPATION: 6,
   SPLAT_RADIUS: 0.0017,
-  SPLAT_FORCE: 350,
+  SPLAT_FORCE: 450,
   SPLAT_SPACING: 0.006,
   MASK_LO: 0.1,
   MASK_HI: 0.34,
