@@ -73,27 +73,52 @@ export default function HeroSection() {
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-start px-6">
-        <div className="relative w-full select-none px-4 pt-2 sm:px-6 sm:pt-3">
+        <div className="relative w-full select-none px-4 sm:px-6">
+          {/* logo.png itself has a ~21% blank margin baked in above the
+              lettering (the fluid sim's own breathing room — see
+              FluidInkReveal's LOGO_MARK), and the whole image is drawn
+              edge-to-edge into its own aspect-locked box, so CSS padding
+              alone can't close the gap to the tagline above. This outer
+              box is cropped to only the bottom 84% of that full box (via
+              overflow-hidden), with the full-aspect box absolutely
+              positioned inside it and shifted up so the cropped-away
+              16% comes off the top margin specifically — eating into the
+              margin instead of shrinking the letters. Plain
+              position/overflow, deliberately not a CSS transform: a
+              transform here was found (via direct DOM-text-vs-screenshot
+              comparison) to desync headless Chromium's painted output
+              from the tagline's own DOM text a few pixels away, even
+              though the two elements share no ancestor — a compositor
+              quirk, not worth the risk. getBoundingClientRect() still
+              reports the real post-crop position, so FluidInkReveal's own
+              video-alignment math picks this up with no changes of its
+              own. */}
           {prefersReducedMotion ? (
-            <div className="relative mx-auto aspect-[8200/3500] w-full">
-              {/* logo.png's opaque pixels are white (a solid-fill wordmark on
-                  transparent, not baked black) — brightness(0) recolors them
-                  to black, same as FluidInkReveal's own canvas draw does. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/images/logo.png"
-                alt="YEYE"
-                className="h-full w-full object-contain"
-                style={{ filter: "brightness(0)" }}
-                draggable={false}
-              />
+            <div className="relative mx-auto w-full overflow-hidden" style={{ aspectRatio: "8200 / 2940" }}>
+              <div className="absolute inset-x-0" style={{ top: "-19.0476%", height: "119.0476%" }}>
+                {/* logo.png's opaque pixels are white (a solid-fill wordmark on
+                    transparent, not baked black) — brightness(0) recolors them
+                    to black, same as FluidInkReveal's own canvas draw does. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/logo.png"
+                  alt="YEYE"
+                  className="h-full w-full object-contain"
+                  style={{ filter: "brightness(0)" }}
+                  draggable={false}
+                />
+              </div>
             </div>
           ) : (
-            <FluidInkReveal
-              logoSrc="/images/logo.png"
-              videoSrc="/videos/herovid-loop.mp4"
-              className="relative mx-auto aspect-[8200/3500] w-full select-none"
-            />
+            <div className="relative mx-auto w-full overflow-hidden" style={{ aspectRatio: "8200 / 2940" }}>
+              <div className="absolute inset-x-0" style={{ top: "-19.0476%", height: "119.0476%" }}>
+                <FluidInkReveal
+                  logoSrc="/images/logo.png"
+                  videoSrc="/videos/herovid-loop.mp4"
+                  className="relative h-full w-full select-none"
+                />
+              </div>
+            </div>
           )}
         </div>
 
