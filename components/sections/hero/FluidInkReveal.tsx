@@ -16,21 +16,25 @@ const LOGO_ASPECT = 3500 / 8200;
 
 // Every fluid constant lives here, per the reference build's own advice —
 // these are starting points, tuned for a wordmark of this rough size, not
-// derived from a formula. Tuned calmer/slower than a first pass: lower
-// CURL and SPLAT_FORCE (less turbulent, less "hurricane"), higher
+// derived from a formula. Calmer than a first pass: lower CURL and
+// SPLAT_FORCE (less turbulent, less "hurricane", and the dye doesn't
+// balloon far past where the cursor actually was), higher
 // VELOCITY_DISSIPATION (motion settles quickly once the cursor stops
-// instead of coasting), lower DENSITY_DISSIPATION (the ink itself lingers
-// a beat longer, reading as heavier/more viscous).
+// instead of coasting), and — now that the canvas spans the whole Hero,
+// not just the tight logo box, so ordinary cursor movement crosses it far
+// more often — a HIGH DENSITY_DISSIPATION so the ink clears within a
+// beat of the cursor moving on, instead of lingering/accumulating into a
+// "stuck" look.
 const CFG = {
   SIM_RES: 128,
   DYE_RES: 1024,
   PRESSURE_ITERATIONS: 20,
   PRESSURE: 0.8,
   CURL: 8,
-  DENSITY_DISSIPATION: 1.3,
+  DENSITY_DISSIPATION: 3.2,
   VELOCITY_DISSIPATION: 2.4,
-  SPLAT_RADIUS: 0.0017,
-  SPLAT_FORCE: 1100,
+  SPLAT_RADIUS: 0.0011,
+  SPLAT_FORCE: 200,
   SPLAT_SPACING: 0.006,
   MASK_LO: 0.1,
   MASK_HI: 0.34,
@@ -552,17 +556,35 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     let taglineRectUv = [0, 0, 0, 0];
     let logoImage: HTMLImageElement | null = null;
 
+    // CFG.SPLAT_RADIUS was tuned back when the wrapper WAS the logo's own
+    // tight box (logo filled ~100% of it). Now the wrapper spans the whole
+    // Hero and the logo is a much smaller sub-region of it, so a splat of
+    // that same UV radius would cover a wildly bigger fraction of the
+    // (now smaller) lettering — swallowing whole letters at once and
+    // exposing the video's own black background between strokes. Scaling
+    // the radius by how much of the wrapper's height the logo actually
+    // occupies keeps the ink's on-screen size proportional to the letters,
+    // regardless of how much empty canvas surrounds them.
+    let splatRadiusScale = 1;
+
     // The logo is sized as a fraction of the whole (now hero-spanning, not
     // just logo-sized) canvas, centered in the space below the tagline —
     // there's real empty canvas above/around it now for the ink to spread
     // into, per the "the effect should cover the whole Hero" request.
     const computeLogoRect = (rectWidth: number, rectHeight: number, taglineBottom: number) => {
-      const targetWidth = Math.min(rectWidth * 0.62, rectHeight * 1.3);
-      const targetHeight = targetWidth * LOGO_ASPECT;
-      const left = (rectWidth - targetWidth) / 2;
       const availableTop = taglineBottom + 24;
       const availableBottom = rectHeight - 24;
-      const top = Math.max(availableTop, availableTop + (availableBottom - availableTop - targetHeight) / 2);
+      const availableHeight = Math.max(availableBottom - availableTop, 1);
+      // Width capped by BOTH the wrapper's width and the actual vertical
+      // room below the tagline — a height-only cap (rectHeight * fixed
+      // multiplier) could still size a logo taller than what's actually
+      // free between the tagline and the CTA, pushing the video (sized to
+      // match) past the wrapper's own bottom edge, where it renders raw
+      // and unmasked instead of being covered by the canvas.
+      const targetWidth = Math.min(rectWidth * 0.97, availableHeight / LOGO_ASPECT);
+      const targetHeight = targetWidth * LOGO_ASPECT;
+      const left = (rectWidth - targetWidth) / 2;
+      const top = availableTop + (availableHeight - targetHeight) / 2;
       return { left, top, width: targetWidth, height: targetHeight };
     };
 
@@ -614,6 +636,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       }
 
       const logoRect = computeLogoRect(rect.width, rect.height, taglineBottomCss);
+      splatRadiusScale = logoRect.height / rect.height;
 
       if (logoImage) {
         // logo.png's opaque pixels are white (a solid-fill wordmark on
@@ -703,7 +726,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       gl.uniform1f(splatProgram.uniforms.aspectRatio, aspect);
       gl.uniform2f(splatProgram.uniforms.point, x, y);
       gl.uniform3f(splatProgram.uniforms.color, dx * CFG.SPLAT_FORCE, dy * CFG.SPLAT_FORCE, 0);
-      gl.uniform1f(splatProgram.uniforms.radius, CFG.SPLAT_RADIUS);
+      gl.uniform1f(splatProgram.uniforms.radius, CFG.SPLAT_RADIUS * splatRadiusScale);
       drawQuad();
       velocity.swap();
 
