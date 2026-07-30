@@ -1,10 +1,11 @@
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
+import StatementSection from "@/components/sections/StatementSection";
 import ServicesSection from "@/components/sections/ServicesSection";
+import ProcessSection from "@/components/sections/ProcessSection";
 import AboutSection from "@/components/sections/AboutSection";
 import ProjectsSection from "@/components/sections/ProjectsSection";
-import ProcessSection from "@/components/sections/ProcessSection";
 import CTASection from "@/components/sections/CTASection";
 
 export default function Home() {
@@ -28,9 +29,10 @@ export default function Home() {
       <div className="relative z-10">
         <Navbar />
         <HeroSection />
-        <AboutSection />
+        <StatementSection />
         <ServicesSection />
         <ProcessSection />
+        <AboutSection />
         <ProjectsSection />
         <CTASection />
         <Footer light />
