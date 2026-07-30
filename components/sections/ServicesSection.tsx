@@ -44,43 +44,49 @@ const POSTER_SRC = "/images/services-bg-poster.jpg";
 // `loadedmetadata` never fires for some reason.
 const VIDEO_DURATION_FALLBACK = 9;
 
+// Phase 0 ("lead-in"): SPACER_VH worth of perfectly ordinary scrolling
+// before the panel below goes sticky at all — a plain block, not pinned
+// yet, scrolling into view from the bottom of the screen like anything
+// else on the page, so its first-frame illustration is already
+// progressively revealing itself before the pin (and the reveal
+// choreography below) engages. Without this the panel's own natural top
+// sits at the very start of the wrapper, so it went sticky — and phase 1
+// started — the instant the section entered view at all, which skipped
+// past that "scrolling in normally" moment entirely. Not part of the
+// pinned range itself (READ_END etc. below are fractions of the pinned
+// range only) — purely a scroll distance to cover first. Tune by eye:
+// bigger reveals more of the illustration before it locks in place.
+const SPACER_VH = 30;
+
 // Phase 1 ("reading"): scroll progress 0 -> READ_END, scoped to this
-// section's own tall wrapper. The clip stays frozen on its first frame —
-// a flat-lay of the mockups, indistinguishable from a plain background
-// image — for a beat on its own (TITLE_LOCAL_START), then the title
-// fades/grows in, holds for a short pause, and then the 4 cards reveal,
-// staggered, on their own schedule (re-scoped 0..1 within this sub-range
-// via p1 below). Nothing here touches the video at all; it just isn't
-// playing yet. Widened (0.3 -> 0.38, wrapper height bumped to match) so
-// the cards' own entrance has real room to breathe before the video
-// starts moving — the wrapper's total height grew by the same
-// proportion, so the video scrub phase that follows keeps its original
-// pacing instead of getting rushed into a smaller remaining share.
-const READ_END = 0.38;
+// section's own pinned range (after the lead-in above). The clip stays
+// frozen on its first frame — a flat-lay of the mockups, indistinguishable
+// from a plain background image — for a beat on its own (TITLE_LOCAL_START),
+// then the title fades/grows in, holds for a short pause, and then the 4
+// cards reveal, staggered, on their own schedule (re-scoped 0..1 within
+// this sub-range via p1 below). Nothing here touches the video at all; it
+// just isn't playing yet.
+const READ_END = 0.413;
 const TITLE_LOCAL_START = 0.1;
 const TITLE_LOCAL_END = 0.22;
 const CARDS_LOCAL_START = 0.34;
 const CARD_STAGGER = 0.08;
 const CARD_LOCAL_DURATION = 0.4;
 
-// Phase 2 ("scrub"): READ_END -> SCRUB_END. video.currentTime maps
-// linearly across that sub-range, from 0 to the clip's real duration —
-// scrolling down plays it forward frame by frame, scrolling back up plays
-// it in reverse, exactly like any other scroll-linked value here (nothing
-// about this is a one-shot trigger). The title+cards block (already fully
-// revealed by the end of phase 1) shrinks toward the screen's center and
-// fades out as ONE unit, finishing exactly when the clip reaches
-// TEXT_GONE_AT_SECONDS — well before the clip's own end, which keeps
-// scrubbing onward (still purely scroll-driven) through the rest of the
-// crumple to the final, fully-balled-up frame.
-//
-// Phase 3 ("hold"): SCRUB_END -> 1. The clip has already reached its last
-// frame by SCRUB_END (mapRange clamps there), so this remaining sliver of
-// scroll budget just holds that final frame on screen for a beat before
-// the sticky panel releases on its own (same passive mechanism as the
-// Hero's pin) — instead of releasing the instant the crumple finishes,
-// which read as too abrupt.
-const SCRUB_END = 0.92;
+// Phase 2 ("scrub"): READ_END -> SCRUB_END (1 — no trailing hold phase
+// anymore; the clip's last frame now lands exactly when the pin releases,
+// dropped per feedback since holding it read as an unnecessary pause
+// rather than adding anything). video.currentTime maps linearly across
+// this sub-range, from 0 to the clip's real duration — scrolling down
+// plays it forward frame by frame, scrolling back up plays it in reverse,
+// exactly like any other scroll-linked value here (nothing about this is
+// a one-shot trigger). The title+cards block (already fully revealed by
+// the end of phase 1) shrinks toward the screen's center and fades out as
+// ONE unit, finishing exactly when the clip reaches TEXT_GONE_AT_SECONDS —
+// well before the clip's own end, which keeps scrubbing onward (still
+// purely scroll-driven) through the rest of the crumple to the final,
+// fully-balled-up frame.
+const SCRUB_END = 1;
 const TEXT_GONE_AT_SECONDS = 4.5;
 const CONTENT_SHRINK_SCALE = 0.6;
 
@@ -190,6 +196,7 @@ export default function ServicesSection() {
   const skipDesktopMotion = prefersReducedMotion || isMobile;
 
   const wrapperRef = useRef<HTMLElement>(null);
+  const spacerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -256,8 +263,9 @@ export default function ServicesSection() {
 
   const measurePinRange = () => {
     const wrapper = wrapperRef.current;
+    const spacer = spacerRef.current;
     const panel = panelRef.current;
-    if (!wrapper || !panel) return;
+    if (!wrapper || !spacer || !panel) return;
     const wrapperTop = wrapper.getBoundingClientRect().top + window.scrollY;
     // The panel sticks at NAVBAR_CLEARANCE_PX (not 0). Its own height is
     // no longer capped to one viewport (see the panel's own aspect-video
@@ -265,8 +273,12 @@ export default function ServicesSection() {
     // out" shortcut (which relied on panelHeight === innerHeight - T) no
     // longer holds — a sticky element with `top: T` releases once
     // scrollY >= wrapperTop + wrapperHeight - panelHeight - T, so T has
-    // to be subtracted explicitly here now.
-    pinStartScrollYRef.current = wrapperTop - NAVBAR_CLEARANCE_PX;
+    // to be subtracted explicitly here now. pinStart is likewise offset by
+    // the lead-in spacer's own height — the panel's natural (unstuck) top
+    // sits that far below the wrapper's own top, so it doesn't reach the
+    // NAVBAR_CLEARANCE_PX sticky threshold until scroll has covered that
+    // extra distance too.
+    pinStartScrollYRef.current = wrapperTop + spacer.offsetHeight - NAVBAR_CLEARANCE_PX;
     pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - panel.offsetHeight - NAVBAR_CLEARANCE_PX;
   };
 
@@ -388,7 +400,11 @@ export default function ServicesSection() {
           just a clean gap. */}
       <div className="h-24 bg-white md:h-36" />
 
-      <section ref={wrapperRef} id="services" className="relative h-[560vh] bg-white">
+      <section ref={wrapperRef} id="services" className="relative h-[545.2vh] bg-white">
+        {/* SPACER_VH of perfectly ordinary scrolling before the panel below
+            goes sticky — see its own comment up top. */}
+        <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_VH}vh` }} />
+
         {/* Sized to the clip's own exact 16:9 aspect (not capped to one
             viewport tall) so it fills edge to edge — width and height —
             with zero cropping and zero pillarbox/letterbox bars, matching
