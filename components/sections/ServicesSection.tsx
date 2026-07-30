@@ -65,23 +65,31 @@ const SPACER_PX = 260;
 // cards reveal, staggered, on their own schedule (re-scoped 0..1 within
 // this sub-range via p1 below). Nothing here touches the video at all; it
 // just isn't playing yet.
-const READ_END = 0.413;
+const READ_END = 0.37;
 const TITLE_LOCAL_START = 0.1;
 const TITLE_LOCAL_END = 0.22;
 const CARDS_LOCAL_START = 0.34;
 const CARD_STAGGER = 0.08;
 const CARD_LOCAL_DURATION = 0.4;
 
-// Phase 2 ("scrub"): READ_END -> SCRUB_END (1 — no trailing hold phase
-// anymore; the clip's last frame now lands exactly when the pin releases,
-// dropped per feedback since holding it read as an unnecessary pause
-// rather than adding anything). video.currentTime maps linearly across
-// this sub-range, from 0 to the clip's real duration — scrolling down
-// plays it forward frame by frame, scrolling back up plays it in reverse,
-// exactly like any other scroll-linked value here (nothing about this is
-// a one-shot trigger). The title+cards block (already fully revealed by
-// the end of phase 1) shrinks toward the screen's center and fades out as
-// ONE unit, finishing exactly when the clip reaches TEXT_GONE_AT_SECONDS —
+// Phase 1.5 ("hold"): READ_END -> HOLD_END, a plain reading pause. Once
+// the title and all 4 cards have fully revealed, scrolling further used
+// to immediately start shrinking/fading them out (tied directly to the
+// video's own scrub time, which starts advancing the instant progress
+// passes READ_END) — there was no room to actually read the cards
+// without scrolling back and forth. This range does nothing at all: no
+// shrink, no video movement, just scroll budget spent standing still.
+const HOLD_END = 0.474;
+
+// Phase 2 ("scrub"): HOLD_END -> SCRUB_END (1 — no trailing hold-the-
+// last-frame phase; the clip's last frame lands exactly when the pin
+// releases). video.currentTime maps linearly across this sub-range, from
+// 0 to the clip's real duration — scrolling down plays it forward frame
+// by frame, scrolling back up plays it in reverse, exactly like any other
+// scroll-linked value here (nothing about this is a one-shot trigger).
+// The title+cards block (already fully revealed and held through the
+// pause above) shrinks toward the screen's center and fades out as ONE
+// unit, finishing exactly when the clip reaches TEXT_GONE_AT_SECONDS —
 // well before the clip's own end, which keeps scrubbing onward (still
 // purely scroll-driven) through the rest of the crumple to the final,
 // fully-balled-up frame.
@@ -255,18 +263,20 @@ export default function ServicesSection() {
     });
 
     // Phase 2 — video.currentTime is a pure linear function of scroll
-    // progress across the READ_END..SCRUB_END range, so it's automatically,
+    // progress across the HOLD_END..SCRUB_END range (not READ_END —
+    // see the hold phase's own comment above), so it's automatically,
     // exactly reversible on scroll-up; no separate "rewind" logic needed.
-    // mapRange clamps at 1 once progress passes SCRUB_END, which is
-    // exactly what holds the clip on its last frame through phase 3.
-    const scrubT = mapRange(progress, READ_END, SCRUB_END, 0, 1);
+    // mapRange clamps at 0 until progress reaches HOLD_END (holding the
+    // clip on its first frame through the reading pause) and at 1 once
+    // progress passes SCRUB_END (holding it on the last frame).
+    const scrubT = mapRange(progress, HOLD_END, SCRUB_END, 0, 1);
     const targetTime = scrubT * videoDurationRef.current;
     if (videoReadyRef.current && Math.abs(video.currentTime - targetTime) > 0.008) {
       video.currentTime = targetTime;
     }
 
     const textGoneT = smoothstep(mapRange(targetTime, 0, TEXT_GONE_AT_SECONDS, 0, 1));
-    const shrinkT = progress <= READ_END ? 0 : textGoneT;
+    const shrinkT = progress <= HOLD_END ? 0 : textGoneT;
     content.style.opacity = String(1 - shrinkT);
     content.style.transform = `scale(${lerp(1, CONTENT_SHRINK_SCALE, shrinkT)})`;
   };
@@ -411,7 +421,7 @@ export default function ServicesSection() {
           just a clean gap. */}
       <div className="h-24 bg-white md:h-36" />
 
-      <section ref={wrapperRef} id="services" className="relative h-[calc(515.2vh+260px)] bg-white">
+      <section ref={wrapperRef} id="services" className="relative h-[calc(575.2vh+260px)] bg-white">
         {/* SPACER_PX of perfectly ordinary scrolling before the panel below
             goes sticky — see its own comment up top. */}
         <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />

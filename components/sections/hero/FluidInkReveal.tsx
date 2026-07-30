@@ -60,6 +60,16 @@ const CFG = {
   MASK_HI: 0.34,
 };
 
+// The bottom-most INTERACTIVE_BOTTOM_MARGIN_PX of the wrapper (roughly the
+// Hero's own bottom row — label, CTA button, contact icons) stops
+// registering new splats a bit before that row's own line, on purpose:
+// the canvas itself still renders that whole area (nothing about the
+// fluid sim's own extent changes), so ink that's already drifted there
+// keeps visually settling/smearing on its own, but hovering directly over
+// the row doesn't keep pinning fresh ink to it or push the effect against
+// the wrapper's own hard bottom edge mid-motion.
+const INTERACTIVE_BOTTOM_MARGIN_PX = 190;
+
 const BASE_VERTEX_SHADER = `#version 300 es
 precision highp float;
 in vec2 aPosition;
@@ -369,17 +379,11 @@ interface FluidInkRevealProps {
    * "how big should the logo be" formula is deliberate: a formula is
    * exactly what miscalculated the logo's size in an earlier pass. */
   logoSlotRef: React.RefObject<HTMLElement | null>;
-  /** Marks where "real" content ends and purely decorative buffer space
-   * begins (see HeroSection's own settle strip after the CTA) — its own
-   * top edge, not the wrapper's full height, is what splat size/spacing
-   * scale against. Optional: falls back to the wrapper's own full height
-   * when omitted, matching the plain (no trailing buffer) case. */
-  contentBoundaryElRef?: React.RefObject<HTMLElement | null>;
   className?: string;
 }
 
 const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(function FluidInkReveal(
-  { logoSrc, videoSrc, taglineText, taglineElRef, logoSlotRef, contentBoundaryElRef, className },
+  { logoSrc, videoSrc, taglineText, taglineElRef, logoSlotRef, className },
   ref
 ) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -704,16 +708,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
           height: (LOGO_MARK.y1 - LOGO_MARK.y0) * fullRect.height,
         };
 
-        // Scaled against the "real content" height, not the wrapper's own
-        // full height — a trailing decorative buffer (see HeroSection)
-        // grows the wrapper without growing the logo at all, which would
-        // otherwise shrink this scale for a reason that has nothing to do
-        // with the logo's own size, in turn shrinking SPLAT_SPACING's
-        // effective threshold too (see splatAlongStroke below) and packing
-        // strokes far denser than intended.
-        const boundaryTop = contentBoundaryElRef?.current?.getBoundingClientRect().top;
-        const contentHeight = boundaryTop !== undefined ? boundaryTop - rect.top : rect.height;
-        splatRadiusScale = fullRect.height / Math.max(contentHeight, 1);
+        splatRadiusScale = fullRect.height / rect.height;
       }
 
       gl.bindTexture(gl.TEXTURE_2D, paperTexture);
@@ -830,6 +825,15 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     };
 
     const handlePointerMove = (e: PointerEvent) => {
+      const rect = wrapper.getBoundingClientRect();
+      if (e.clientY > rect.bottom - INTERACTIVE_BOTTOM_MARGIN_PX) {
+        // Same handling as the pointer actually leaving — see
+        // INTERACTIVE_BOTTOM_MARGIN_PX's own comment. Re-entering the
+        // reactive area above starts a fresh stroke instead of connecting
+        // a line down through here once the pointer comes back up.
+        lastPointer.has = false;
+        return;
+      }
       const { x, y } = toUv(e.clientX, e.clientY);
       if (lastPointer.has) {
         splatAlongStroke(lastPointer.x, lastPointer.y, x, y);
