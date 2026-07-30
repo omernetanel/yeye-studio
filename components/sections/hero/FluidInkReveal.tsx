@@ -282,25 +282,22 @@ uniform sampler2D uPaper;
 uniform float maskLo;
 uniform float maskHi;
 uniform vec4 taglineRect;
-uniform vec4 bottomRect;
 out vec4 fragColor;
-float inRect(vec4 r, vec2 uv) {
-  return step(r.x, uv.x) * step(uv.x, r.z) * step(r.y, uv.y) * step(uv.y, r.w);
-}
 void main () {
   float d = texture(uDye, vUv).r;
   float mask = smoothstep(maskLo, maskHi, d);
   vec3 paper = texture(uPaper, vUv).rgb;
 
-  float inInvertZone = max(inRect(taglineRect, vUv), inRect(bottomRect, vUv));
+  float inTagline = step(taglineRect.x, vUv.x) * step(vUv.x, taglineRect.z)
+    * step(taglineRect.y, vUv.y) * step(vUv.y, taglineRect.w);
 
   float aOutside = 1.0 - mask;
   vec3 colorOutside = paper * aOutside;
 
   vec3 colorInside = mix(paper, 1.0 - paper, mask);
 
-  vec3 finalColor = mix(colorOutside, colorInside, inInvertZone);
-  float finalAlpha = mix(aOutside, 1.0, inInvertZone);
+  vec3 finalColor = mix(colorOutside, colorInside, inTagline);
+  float finalAlpha = mix(aOutside, 1.0, inTagline);
   fragColor = vec4(finalColor, finalAlpha);
 }`;
 
@@ -367,11 +364,6 @@ interface FluidInkRevealProps {
   /** The (visually transparent, layout-only) DOM element the tagline's
    * real position/font/size is measured from — see HeroSection. */
   taglineElRef: React.RefObject<HTMLElement | null>;
-  /** Same idea as taglineElRef, for the small label in the Hero's bottom
-   * row ("סטודיו דיגיטלי עצמאי") — a second invert-in-place zone so that
-   * text stays legible once the canvas (now spanning the whole Hero, see
-   * HeroSection) reveals the black backdrop behind it too. */
-  bottomLabelElRef: React.RefObject<HTMLElement | null>;
   /** An invisible DOM spacer marking exactly where the (cropped) logo
    * should sit — see HeroSection. Measuring this instead of computing a
    * "how big should the logo be" formula is deliberate: a formula is
@@ -381,7 +373,7 @@ interface FluidInkRevealProps {
 }
 
 const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(function FluidInkReveal(
-  { logoSrc, videoSrc, taglineText, taglineElRef, bottomLabelElRef, logoSlotRef, className },
+  { logoSrc, videoSrc, taglineText, taglineElRef, logoSlotRef, className },
   ref
 ) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -614,7 +606,6 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     // placement and the tagline-invert shader uniform key off.
     let textRect = { left: 0, top: 0, width: 0, height: 0 };
     let taglineRectUv = [0, 0, 0, 0];
-    let bottomRectUv = [0, 0, 0, 0];
     let logoImage: HTMLImageElement | null = null;
 
     // How much of the wrapper's own height the (uncropped) logo image
@@ -662,34 +653,6 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
         }
 
         taglineRectUv = [relLeft / w, 1 - (relTop + relHeight) / h, (relLeft + relWidth) / w, 1 - relTop / h];
-      }
-
-      // Bottom-row label ("סטודיו דיגיטלי עצמאי") — same idea as the
-      // tagline above, a second invert-in-place zone. Drawn at the CSS
-      // rgba the label would otherwise render at (rather than solid
-      // black), so its resting look — before any ink touches it — still
-      // matches the original translucent label instead of reading heavier.
-      const bottomLabelEl = bottomLabelElRef.current;
-      if (bottomLabelEl) {
-        const bRect = bottomLabelEl.getBoundingClientRect();
-        const relLeft = (bRect.left - rect.left) * dpr;
-        const relTop = (bRect.top - rect.top) * dpr;
-        const relWidth = bRect.width * dpr;
-        const relHeight = bRect.height * dpr;
-        const labelText = bottomLabelEl.textContent || "";
-
-        if (labelText && relWidth > 0 && relHeight > 0) {
-          const style = getComputedStyle(bottomLabelEl);
-          const fontSize = parseFloat(style.fontSize) * dpr;
-          paperCtx.font = `${style.fontWeight} ${fontSize}px ${style.fontFamily}`;
-          paperCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
-          paperCtx.direction = "rtl";
-          paperCtx.textAlign = "right";
-          paperCtx.textBaseline = "middle";
-          paperCtx.fillText(labelText, relLeft + relWidth, relTop + relHeight / 2);
-        }
-
-        bottomRectUv = [relLeft / w, 1 - (relTop + relHeight) / h, (relLeft + relWidth) / w, 1 - relTop / h];
       }
 
       // Logo — measured from the invisible logoSlot spacer (its exact
@@ -1013,7 +976,6 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       gl.uniform1f(displayProgram.uniforms.maskLo, CFG.MASK_LO);
       gl.uniform1f(displayProgram.uniforms.maskHi, CFG.MASK_HI);
       gl.uniform4f(displayProgram.uniforms.taglineRect, taglineRectUv[0], taglineRectUv[1], taglineRectUv[2], taglineRectUv[3]);
-      gl.uniform4f(displayProgram.uniforms.bottomRect, bottomRectUv[0], bottomRectUv[1], bottomRectUv[2], bottomRectUv[3]);
       drawQuad();
 
       rafId = requestAnimationFrame(step);

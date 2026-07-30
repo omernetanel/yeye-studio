@@ -42,7 +42,7 @@ export default function Navbar() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="fixed inset-x-0 top-0 z-50 border-b border-black/8 bg-white"
       >
-      <div className="relative mx-auto flex h-[68px] max-w-[1200px] items-center justify-between px-6">
+      <div className="relative mx-auto flex h-[58px] max-w-[1200px] items-center justify-between px-6">
         {/* Logo — pinned to the visual left, brand-convention regardless of RTL.
             Hidden until the Hero's own pin releases (see lib/motion/heroDock.ts),
             at which point it just crossfades in on its own — tabIndex keeps
@@ -58,7 +58,7 @@ export default function Navbar() {
               alt="YEYE"
               width={8200}
               height={3500}
-              className="h-6 w-auto object-contain brightness-0"
+              className="h-9 w-auto object-contain brightness-0"
               priority
             />
           </span>
