@@ -100,12 +100,12 @@ export default function HeroSection() {
       {!prefersReducedMotion && (
         // The ink canvas spans the WHOLE section again — the Navbar's own
         // breathing room above the tagline, down through the tagline, the
-        // now much bigger logo, the bottom social/label row, and the CTA
-        // button's own strip at the very end — because the CTA no longer
-        // lives inside the h-screen block (see its own comment below): it
-        // moved down into a dedicated strip after it, and "ink stops at
-        // the CTA's height" now means reaching all the way down to that
-        // strip, not stopping short of it. -top-[100px] pulls it up to
+        // now much bigger logo, the bottom social/label row, the CTA
+        // button's own strip, and a final blank settle strip past that
+        // (see its own comment below — genuine buffer room, not an
+        // interactive area) — because the CTA no longer lives inside the
+        // h-screen block (see its own comment below): it moved down into
+        // a dedicated strip after it. -top-[100px] pulls it up to
         // the section's own top edge (matching the h-screen block's own
         // pt-[100px] exactly, not a value derived from the Navbar's
         // current height) — safe since the Navbar is fixed, opaque, and
@@ -264,6 +264,20 @@ export default function HeroSection() {
           </Button>
         </div>
       </div>
+
+      {!prefersReducedMotion && (
+        // Blank settle room after the CTA strip — no controls, nothing to
+        // read here, just canvas. Without it, the ink's own hard bottom
+        // edge sat right where mouse tracking naturally stops (at the CTA
+        // strip), so a drag that ended there got clipped mid-motion,
+        // still jagged/dripping, instead of having room to keep smearing
+        // and rounding out into a soft, settled shape on its own before
+        // hitting an edge. The canvas already reaches this far (it's
+        // sized off the section's own total height, see its comment
+        // above) — this is purely the extra section height for it to
+        // extend into.
+        <div aria-hidden="true" className="h-[240px] w-full shrink-0" />
+      )}
     </section>
   );
 }
