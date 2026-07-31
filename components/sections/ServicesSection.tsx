@@ -47,38 +47,37 @@ const VIDEO_DURATION_FALLBACK = 9;
 // Phase 0 ("lead-in"): SPACER_PX worth of perfectly ordinary scrolling
 // before the panel below goes sticky at all — a plain block, not pinned
 // yet. Without this the panel's own natural top sits at the very start
-// of the wrapper, so it went sticky — and phase 1 started — the instant
-// the section entered view at all, with the illustration's own top
-// corners still cramped right up against the sticky offset instead of
-// having scrolled into a settled position first (confirmed: a too-small
-// value here reads as the images getting clipped at the top the moment
-// it locks). Not part of the pinned range itself (READ_END etc. below
-// are fractions of the pinned range only) — purely a scroll distance to
-// cover first.
+// of the wrapper, so it went sticky the instant the section entered view
+// at all, with the illustration's own top corners still cramped right up
+// against the sticky offset instead of having scrolled into a settled
+// position first (confirmed: a too-small value here reads as the images
+// getting clipped at the top the moment it locks). Not part of the
+// pinned range itself — purely a scroll distance to cover first.
 const SPACER_PX = 140;
 
-// Phase 1 ("reading"): scroll progress 0 -> READ_END, scoped to this
-// section's own pinned range (after the lead-in above). The clip stays
-// frozen on its first frame — a flat-lay of the mockups, indistinguishable
-// from a plain background image — for a beat on its own (TITLE_LOCAL_START),
-// then the title fades/grows in, holds for a short pause, and then the 4
-// cards reveal, staggered, on their own schedule (re-scoped 0..1 within
-// this sub-range via p1 below). Nothing here touches the video at all; it
-// just isn't playing yet.
-const READ_END = 0.37;
+// The title + 4 cards reveal DURING this same ordinary pre-lock scroll —
+// REVEAL_LEAD_PX worth of scrolling, ending exactly at the moment the
+// panel goes sticky (pinStartScrollYRef) — not gated behind the video
+// locking first. The clip itself stays frozen on its first frame the
+// whole time (untouched by revealT below); by the time its top reaches
+// the Navbar and it snaps into its stuck position, the title and all 4
+// cards are already fully visible. TITLE_LOCAL_START/END and
+// CARDS_LOCAL_START/CARD_STAGGER/CARD_LOCAL_DURATION stagger the reveal
+// within that 0..1 window (re-scoped via revealT below), same pacing as
+// before, just now scoped to the lead-in instead of the pinned range.
+const REVEAL_LEAD_PX = 640;
 const TITLE_LOCAL_START = 0.1;
 const TITLE_LOCAL_END = 0.22;
 const CARDS_LOCAL_START = 0.34;
 const CARD_STAGGER = 0.08;
 const CARD_LOCAL_DURATION = 0.4;
 
-// Phase 1.5 ("hold"): READ_END -> HOLD_END, a plain reading pause. Once
-// the title and all 4 cards have fully revealed, scrolling further used
-// to immediately start shrinking/fading them out (tied directly to the
-// video's own scrub time, which starts advancing the instant progress
-// passes READ_END) — there was no room to actually read the cards
-// without scrolling back and forth. This range does nothing at all: no
-// shrink, no video movement, just scroll budget spent standing still.
+// Phase 1 ("hold"): pinned progress 0 -> HOLD_END, a plain reading pause
+// once locked. The title/cards are already fully revealed (see above) and
+// the clip is still frozen on its first frame — scrolling through this
+// range does nothing at all: no shrink, no video movement, just scroll
+// budget spent standing still so there's room to actually read the cards
+// without scrolling back and forth.
 const HOLD_END = 0.474;
 
 // Phase 2 ("scrub"): HOLD_END -> SCRUB_END (1 — no trailing hold-the-
@@ -89,9 +88,10 @@ const HOLD_END = 0.474;
 // scroll-linked value here (nothing about this is a one-shot trigger).
 // The title+cards block (already fully revealed and held through the
 // pause above) shrinks toward the screen's center and fades out as ONE
-// unit, finishing exactly when the clip reaches TEXT_GONE_AT_SECONDS —
-// well before the clip's own end, which keeps scrubbing onward (still
-// purely scroll-driven) through the rest of the crumple to the final,
+// unit — disappearing into the page right as its own crumple begins —
+// finishing exactly when the clip reaches TEXT_GONE_AT_SECONDS — well
+// before the clip's own end, which keeps scrubbing onward (still purely
+// scroll-driven) through the rest of the crumple to the final,
 // fully-balled-up frame.
 const SCRUB_END = 1;
 const TEXT_GONE_AT_SECONDS = 4.5;
@@ -243,13 +243,15 @@ export default function ServicesSection() {
     const rawScrollY = scrollY.get();
     const progress = clamp01(mapRange(rawScrollY, pinStartScrollYRef.current, pinEndScrollYRef.current, 0, 1));
 
-    // Phase 1 sub-progress — clamps at 1 once `progress` passes READ_END,
-    // which is exactly what holds the title/cards at their fully-revealed
-    // state (not fading back out) all through phase 2 below.
-    const p1 = clamp01(progress / READ_END);
+    // Reveal progress — 0 at REVEAL_LEAD_PX before the panel locks, 1
+    // exactly at lock (pinStartScrollYRef), and pinned at 1 for the rest
+    // of the pinned range (mapRange/clamp01 clamp past both ends), which
+    // is what holds the title/cards at their fully-revealed state all
+    // through the hold phase below.
+    const revealT = clamp01(mapRange(rawScrollY, pinStartScrollYRef.current - REVEAL_LEAD_PX, pinStartScrollYRef.current, 0, 1));
 
     if (titleRef.current) {
-      const titleT = smoothstep(mapRange(p1, TITLE_LOCAL_START, TITLE_LOCAL_END, 0, 1));
+      const titleT = smoothstep(mapRange(revealT, TITLE_LOCAL_START, TITLE_LOCAL_END, 0, 1));
       titleRef.current.style.opacity = String(titleT);
       titleRef.current.style.transform = `translateY(${lerp(48, 0, titleT)}px) scale(${lerp(0.82, 1, titleT)})`;
     }
@@ -257,15 +259,15 @@ export default function ServicesSection() {
     cardRefs.current.forEach((card, i) => {
       if (!card) return;
       const start = CARDS_LOCAL_START + i * CARD_STAGGER;
-      const cardT = smoothstep(mapRange(p1, start, start + CARD_LOCAL_DURATION, 0, 1));
+      const cardT = smoothstep(mapRange(revealT, start, start + CARD_LOCAL_DURATION, 0, 1));
       card.style.opacity = String(cardT);
       card.style.transform = `translateY(${lerp(36, 0, cardT)}px) scale(${lerp(0.92, 1, cardT)})`;
     });
 
     // Phase 2 — video.currentTime is a pure linear function of scroll
-    // progress across the HOLD_END..SCRUB_END range (not READ_END —
-    // see the hold phase's own comment above), so it's automatically,
-    // exactly reversible on scroll-up; no separate "rewind" logic needed.
+    // progress across the HOLD_END..SCRUB_END range, so it's
+    // automatically, exactly reversible on scroll-up; no separate
+    // "rewind" logic needed.
     // mapRange clamps at 0 until progress reaches HOLD_END (holding the
     // clip on its first frame through the reading pause) and at 1 once
     // progress passes SCRUB_END (holding it on the last frame).
