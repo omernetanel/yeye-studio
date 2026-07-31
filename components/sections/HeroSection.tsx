@@ -104,7 +104,7 @@ export default function HeroSection() {
         <div className="absolute inset-x-0 bottom-0 -top-[100px] overflow-hidden">
           <FluidInkReveal
             logoSrc="/images/logo.png"
-            videoSrc="/videos/herovid-loop.mp4"
+            videoSrc="/videos/herobg.mp4"
             taglineText={TAGLINE_TEXT}
             taglineElRef={taglineRef}
             logoSlotRef={logoSlotRef}
