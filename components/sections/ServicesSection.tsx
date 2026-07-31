@@ -36,13 +36,13 @@ const services = [
   },
 ];
 
-const VIDEO_SRC = "/videos/services-bg.mp4";
-const POSTER_SRC = "/images/services-bg-poster.jpg";
-// The source is ~9s, but the phase math below always reads the real
+const VIDEO_SRC = "/videos/servicesbg.mp4";
+const POSTER_SRC = "/images/servicesbg-poster.jpg";
+// The source is ~8.1s, but the phase math below always reads the real
 // value off the element once its metadata loads (see videoDurationRef) —
 // this is only what renders before that, and a safety fallback if
 // `loadedmetadata` never fires for some reason.
-const VIDEO_DURATION_FALLBACK = 9;
+const VIDEO_DURATION_FALLBACK = 8;
 
 // Phase 0 ("lead-in"): SPACER_PX worth of perfectly ordinary scrolling
 // before the panel below goes sticky at all — a plain block, not pinned
@@ -72,29 +72,26 @@ const CARDS_LOCAL_START = 0.34;
 const CARD_STAGGER = 0.08;
 const CARD_LOCAL_DURATION = 0.4;
 
-// Phase 1 ("hold"): pinned progress 0 -> HOLD_END, a plain reading pause
-// once locked. The title/cards are already fully revealed (see above) and
-// the clip is still frozen on its first frame — scrolling through this
-// range does nothing at all: no shrink, no video movement, just scroll
-// budget spent standing still so there's room to actually read the cards
-// without scrolling back and forth.
-const HOLD_END = 0.474;
+// Phase 1 ("scrub"): the ENTIRE pinned range (progress 0 -> 1) maps
+// linearly to video.currentTime, from 0 to the clip's real duration —
+// scrolling down plays it forward frame by frame, scrolling back up plays
+// it in reverse, exactly like any other scroll-linked value here (nothing
+// about this is a one-shot trigger). Playback starts the instant the
+// panel locks (touches the Navbar) — no separate hold/delay phase; the
+// clip's own first ~5s is just a static flat-lay of the page, which reads
+// as a reading pause on its own without needing one baked into the scroll
+// math.
 
-// Phase 2 ("scrub"): HOLD_END -> SCRUB_END (1 — no trailing hold-the-
-// last-frame phase; the clip's last frame lands exactly when the pin
-// releases). video.currentTime maps linearly across this sub-range, from
-// 0 to the clip's real duration — scrolling down plays it forward frame
-// by frame, scrolling back up plays it in reverse, exactly like any other
-// scroll-linked value here (nothing about this is a one-shot trigger).
-// The title+cards block (already fully revealed and held through the
-// pause above) shrinks toward the screen's center and fades out as ONE
-// unit — disappearing into the page right as its own crumple begins —
-// finishing exactly when the clip reaches TEXT_GONE_AT_SECONDS — well
-// before the clip's own end, which keeps scrubbing onward (still purely
-// scroll-driven) through the rest of the crumple to the final,
+// The title+cards block (already fully revealed via revealT above) stays
+// visible and static while the clip plays its first TEXT_FADE_START_SECONDS
+// of static flat-lay, then shrinks toward the screen's center and fades
+// out as ONE unit — disappearing into the page right as its own crumple
+// begins — finishing exactly at TEXT_FULLY_GONE_SECONDS (the clip's own
+// 30fps timecode 00:00:06:09). The clip keeps scrubbing onward (still
+// purely scroll-driven) through the rest of the crumple to the final,
 // fully-balled-up frame.
-const SCRUB_END = 1;
-const TEXT_GONE_AT_SECONDS = 4.5;
+const TEXT_FADE_START_SECONDS = 5;
+const TEXT_FULLY_GONE_SECONDS = 6 + 9 / 30;
 const CONTENT_SHRINK_SCALE = 0.6;
 
 // PANEL_STICKY_TOP_PX is the panel's *real* sticky top offset — negative,
@@ -264,21 +261,15 @@ export default function ServicesSection() {
       card.style.transform = `translateY(${lerp(36, 0, cardT)}px) scale(${lerp(0.92, 1, cardT)})`;
     });
 
-    // Phase 2 — video.currentTime is a pure linear function of scroll
-    // progress across the HOLD_END..SCRUB_END range, so it's
-    // automatically, exactly reversible on scroll-up; no separate
-    // "rewind" logic needed.
-    // mapRange clamps at 0 until progress reaches HOLD_END (holding the
-    // clip on its first frame through the reading pause) and at 1 once
-    // progress passes SCRUB_END (holding it on the last frame).
-    const scrubT = mapRange(progress, HOLD_END, SCRUB_END, 0, 1);
-    const targetTime = scrubT * videoDurationRef.current;
+    // video.currentTime is a pure linear function of scroll progress
+    // across the whole pinned range, so it's automatically, exactly
+    // reversible on scroll-up; no separate "rewind" logic needed.
+    const targetTime = progress * videoDurationRef.current;
     if (videoReadyRef.current && Math.abs(video.currentTime - targetTime) > 0.008) {
       video.currentTime = targetTime;
     }
 
-    const textGoneT = smoothstep(mapRange(targetTime, 0, TEXT_GONE_AT_SECONDS, 0, 1));
-    const shrinkT = progress <= HOLD_END ? 0 : textGoneT;
+    const shrinkT = smoothstep(mapRange(targetTime, TEXT_FADE_START_SECONDS, TEXT_FULLY_GONE_SECONDS, 0, 1));
     content.style.opacity = String(1 - shrinkT);
     content.style.transform = `scale(${lerp(1, CONTENT_SHRINK_SCALE, shrinkT)})`;
   };
@@ -292,7 +283,7 @@ export default function ServicesSection() {
     // The panel sticks at PANEL_STICKY_TOP_PX (its own real CSS top, not
     // NAVBAR_CLEARANCE_PX — see that constant's own comment for why the
     // two split). Its own height is no longer capped to one viewport (see
-    // the panel's own aspect-video sizing above), so the old "the two
+    // the panel's own aspect-ratio sizing above), so the old "the two
     // clearance terms cancel out" shortcut (which relied on panelHeight
     // === innerHeight - T) no longer holds — a sticky element with
     // `top: T` releases once scrollY >= wrapperTop + wrapperHeight -
@@ -421,19 +412,23 @@ export default function ServicesSection() {
             goes sticky — see its own comment up top. */}
         <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />
 
-        {/* Sized to the clip's own exact 16:9 aspect (not capped to one
-            viewport tall) so it fills edge to edge — width and height —
-            with zero cropping and zero pillarbox/letterbox bars, matching
-            object-contain's math exactly (no gap left over to fill with
-            bars). On a wide-but-short viewport this box is taller than
-            100vh, which means part of it sits below the fold while the
-            panel is stuck at -top-[20px] — you see the rest as you keep
-            scrolling through the pin, not all at once. Deliberate
-            trade-off (confirmed): the alternative is capping the box to
-            one screen, which forces either a crop or bars — see
-            measurePinRange below for how the pin's release point accounts
-            for a panel taller than the viewport. */}
-        <div ref={panelRef} className="sticky -top-[20px] aspect-video w-full overflow-hidden bg-white">
+        {/* Sized to the clip's own exact 3:2 aspect (servicesbg.mp4 is
+            1080x720 — not capped to one viewport tall) so it fills edge to
+            edge — width and height — with zero cropping and zero
+            pillarbox/letterbox bars, matching object-contain's math
+            exactly (no gap left over to fill with bars). This matters more
+            here than a generic video would: the crumple effect needs to
+            read as the WHOLE screen folding into a paper ball — any
+            visible white margin around it breaks that illusion and makes
+            it look like a framed clip instead. On a wide-but-short
+            viewport this box is taller than 100vh, which means part of it
+            sits below the fold while the panel is stuck at -top-[20px] —
+            you see the rest as you keep scrolling through the pin, not all
+            at once. Deliberate trade-off (confirmed): the alternative is
+            capping the box to one screen, which forces either a crop or
+            bars — see measurePinRange below for how the pin's release
+            point accounts for a panel taller than the viewport. */}
+        <div ref={panelRef} className="sticky -top-[20px] aspect-[3/2] w-full overflow-hidden bg-white">
           <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-contain" />
 
           {/* Title + cards are their own layer, sized to the actually-visible
@@ -441,7 +436,7 @@ export default function ServicesSection() {
               to counteract the panel's own -top-[20px] above (76 - -20 =
               96) and stay anchored at the same on-screen position, safely
               below the Navbar, regardless of where the panel itself now
-              sticks — not centered within the full aspect-video box above,
+              sticks — not centered within the full aspect-ratio box above,
               which on a wide-but-short viewport can be much taller than one
               screen and would center this content below the fold. */}
           <div
