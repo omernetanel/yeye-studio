@@ -31,8 +31,8 @@ export default function Home() {
         <HeroSection />
         <StatementSection />
         <ServicesSection />
-        <ProcessSection />
         <AboutSection />
+        <ProcessSection />
         <ProjectsSection />
         <CTASection />
         <Footer light />
