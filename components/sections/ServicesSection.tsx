@@ -416,15 +416,7 @@ export default function ServicesSection() {
   }
 
   return (
-    <>
-      {/* Plain breathing room between the Statement section above and the
-          pinned video below — not another copy of the composition (that
-          read as a confusing duplicate/glitch, the clip appearing to
-          "restart"), just a clean gap. Kept small since the Statement
-          section above already carries its own bottom padding. */}
-      <div className="h-8 bg-white md:h-12" />
-
-      <section ref={wrapperRef} id="services" className="relative h-[calc(575.2vh+260px)] bg-white">
+    <section ref={wrapperRef} id="services" className="relative h-[calc(575.2vh+260px)] bg-white">
         {/* SPACER_PX of perfectly ordinary scrolling before the panel below
             goes sticky — see its own comment up top. */}
         <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />
@@ -475,6 +467,5 @@ export default function ServicesSection() {
           </div>
         </div>
       </section>
-    </>
   );
 }
