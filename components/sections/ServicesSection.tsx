@@ -202,7 +202,7 @@ function ServicesRowsBlock() {
           so the rows end up close to the ball's own left edge instead of
           stranded against the panel's true left edge with a big gap
           before the ball. */}
-      <div className="mx-auto mt-16 flex w-full max-w-[900px] -translate-x-[15px] translate-y-[20px] justify-end">
+      <div className="mx-auto mt-16 flex w-full max-w-[900px] -translate-x-[15px] translate-y-[40px] justify-end">
         <div className="flex w-full max-w-[480px] origin-top scale-[0.85] flex-col">
           {services.map((service, i) => (
             <ServiceRow key={service.title} service={service} index={i} />
