@@ -3,10 +3,9 @@ import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
 import StatementSection from "@/components/sections/StatementSection";
 import ServicesSection from "@/components/sections/ServicesSection";
-import ProcessSection from "@/components/sections/ProcessSection";
-import AboutSection from "@/components/sections/AboutSection";
-import ProjectsSection from "@/components/sections/ProjectsSection";
 import CTASection from "@/components/sections/CTASection";
+import ProcessSection from "@/components/sections/ProcessSection";
+import ProjectsSection from "@/components/sections/ProjectsSection";
 
 export default function Home() {
   return (
@@ -31,10 +30,9 @@ export default function Home() {
         <HeroSection />
         <StatementSection />
         <ServicesSection />
-        <AboutSection />
+        <CTASection />
         <ProcessSection />
         <ProjectsSection />
-        <CTASection />
         <Footer light />
       </div>
     </main>

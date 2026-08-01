@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 const navLinks = [
   { label: "עבודות", href: "/#projects" },
   { label: "שירותים", href: "/#services" },
-  { label: "אודות", href: "/#about" },
+  { label: "צור קשר", href: "/#contact" },
 ];
 
 export default function Navbar() {
