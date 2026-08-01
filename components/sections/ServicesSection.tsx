@@ -119,24 +119,21 @@ const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 const CONTENT_SHRINK_SCALE = 0.6;
 
 // PANEL_STICKY_TOP_PX is the panel's *real* sticky top offset — negative,
-// so once stuck its own top edge sits above the viewport, behind the
-// fixed Navbar, letting the video's composition keep scrolling a bit
-// further before locking instead of stopping dead the instant its first
-// frame clears the Navbar. Must stay in sync with the `-top-[20px]` on
-// the panel's own className below (a literal Tailwind value, can't
-// reference this constant directly).
-//
-// The content overlay needs to NOT follow that shift, though — it's
-// positioned absolutely *within* the panel, so moving the panel's own
-// top would drag it up behind the Navbar too. Its own top-[96px] below
-// is a compensating offset instead (76 - PANEL_STICKY_TOP_PX, where 76
-// is roughly where the panel used to stick, clear of the Navbar), so it
-// stays anchored at the same on-screen position regardless of where the
-// panel itself now sticks. No live JS reference for that 76 (unlike
-// PANEL_STICKY_TOP_PX, nothing here actually needs it at runtime) — it's
-// baked directly into the two literal Tailwind values below, which have
-// to stay in sync with each other by hand.
+// so once stuck its own top edge sits slightly above the viewport,
+// letting the video's composition keep scrolling a bit further before
+// locking instead of stopping dead the instant it reaches the top. Must
+// stay in sync with the `-top-[20px]` on the panel's own className below
+// (a literal Tailwind value, can't reference this constant directly).
 const PANEL_STICKY_TOP_PX = -20;
+
+// The heading zone's rest-state padding — must be animated down to 0 in
+// lockstep with its own `height` (see update()), not left as a fixed
+// Tailwind class: with box-sizing: border-box, a padded box's `height`
+// can never be set below its own padding sum, so a fixed pt/pb class
+// would silently floor the "collapse to 0" animation at that sum instead
+// of actually reaching 0.
+const HEADING_ZONE_PADDING_TOP_PX = 80;
+const HEADING_ZONE_PADDING_BOTTOM_PX = 24;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -193,26 +190,53 @@ function ServiceRow({ service, index, rowRef }: ServiceRowProps) {
   );
 }
 
-function ServicesListBlock({ getRowRef }: { getRowRef?: (i: number) => (el: HTMLAnchorElement | null) => void }) {
+const ServicesHeading = forwardRef<HTMLHeadingElement>(function ServicesHeading(_props, ref) {
+  return (
+    <h2 ref={ref} className="font-display text-6xl font-bold text-black md:text-7xl">
+      מה אני עושה
+    </h2>
+  );
+});
+
+function ServicesRowsBlock({ getRowRef }: { getRowRef?: (i: number) => (el: HTMLAnchorElement | null) => void }) {
   return (
     <div className="w-full">
       {/* Centered across the FULL panel width (list + the paper ball's own
           space beside it) — exactly in the middle of the whole frame,
           not shifted toward either side. */}
       <div className="flex w-full flex-col items-center text-center">
-        <h2 className="font-display text-6xl font-bold text-black md:text-7xl">מה אני עושה</h2>
-        <p className="mt-6 max-w-[380px] font-body text-[15px] leading-[1.8] text-black/55">
+        <p className="max-w-[380px] font-body text-[15px] leading-[1.8] text-black/55">
           פתרונות דיגיטליים מותאמים אישית לעסקים שצריכים תוצאות.
         </p>
         <div className="mt-8 h-[3px] w-10 rounded-full bg-[image:var(--gradient-accent)]" />
       </div>
 
-      <div className="mt-16 flex w-full justify-end">
-        <div className="flex w-full max-w-[580px] flex-col">
+      {/* Docked left within a centered sub-zone (not the full panel width)
+          so the rows end up close to the ball's own left edge instead of
+          stranded against the panel's true left edge with a big gap
+          before the ball. */}
+      <div className="mx-auto mt-16 flex w-full max-w-[900px] justify-end">
+        <div className="flex w-full max-w-[480px] flex-col">
           {services.map((service, i) => (
             <ServiceRow key={service.title} service={service} index={i} rowRef={getRowRef ? getRowRef(i) : () => {}} />
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Mobile/reduced-motion only — the heading and rows aren't split across
+    two panel zones there (no pinned video to keep clear of), so they're
+    just stacked together as one plain block. */
+function ServicesListBlock({ getRowRef }: { getRowRef?: (i: number) => (el: HTMLAnchorElement | null) => void }) {
+  return (
+    <div className="w-full">
+      <div className="flex w-full flex-col items-center text-center">
+        <ServicesHeading />
+      </div>
+      <div className="mt-6">
+        <ServicesRowsBlock getRowRef={getRowRef} />
       </div>
     </div>
   );
@@ -223,7 +247,7 @@ function AboutBlock() {
     <div className="mx-auto flex w-full max-w-[820px] flex-col items-center text-center">
       <span className="font-display text-xs font-medium tracking-[0.2em] text-black/45 uppercase">Who I Am</span>
       <h2 className="mt-3 font-display text-4xl font-bold text-black md:text-5xl">מי אני</h2>
-      <p className="mt-6 font-body text-[16px] leading-[1.8] text-black/70">
+      <p className="mt-2 font-body text-[16px] leading-[1.8] text-black/70">
         YEYE נולד מתוך אובססיה לפרטים קטנים ואמונה עמוקה שכל עסק ראוי לנוכחות דיגיטלית{" "}
         <strong className="text-black">ברמה הגבוהה ביותר</strong>. אני מעצב ומפתח עם ניסיון של שנים בבניית חוויות
         דיגיטליות <strong className="text-black">שלא רק נראות טוב, אלא עובדות</strong>.
@@ -276,9 +300,15 @@ export default function ServicesSection() {
   const spacerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const headingZoneRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const servicesContentRef = useRef<HTMLDivElement>(null);
   const aboutContentRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<Array<HTMLAnchorElement | null>>([]);
+  // The heading zone's own natural (unshrunk) height — measured once on
+  // mount/resize, since it needs to be known BEFORE update() starts
+  // driving that same height down toward 0 as the Services text fades.
+  const headingZoneNaturalHeightRef = useRef(0);
 
   // Analytical, not scrollYProgress-derived — same reasoning as the Hero's
   // own pin: a target-scoped scrollYProgress motion value lags an instant
@@ -296,9 +326,11 @@ export default function ServicesSection() {
   const update = () => {
     const wrapper = wrapperRef.current;
     const video = videoRef.current;
+    const headingZone = headingZoneRef.current;
+    const heading = headingRef.current;
     const servicesContent = servicesContentRef.current;
     const aboutContent = aboutContentRef.current;
-    if (!wrapper || !video || !servicesContent || !aboutContent) return;
+    if (!wrapper || !video || !headingZone || !heading || !servicesContent || !aboutContent) return;
 
     const rawScrollY = scrollY.get();
     const progress = clamp01(mapRange(rawScrollY, pinStartScrollYRef.current, pinEndScrollYRef.current, 0, 1));
@@ -327,6 +359,17 @@ export default function ServicesSection() {
     }
 
     const servicesShrinkT = smoothstep(mapRange(targetTime, SERVICES_FADE_START_SECONDS, SERVICES_FADE_END_SECONDS, 0, 1));
+    heading.style.opacity = String(1 - servicesShrinkT);
+    heading.style.transform = `scale(${lerp(1, CONTENT_SHRINK_SCALE, servicesShrinkT)})`;
+    // The heading zone's own height (and padding — see that constant's
+    // own comment) collapses in step with its fade — the video zone
+    // below it grows to fill the freed space, so by the time the paper
+    // is fully open the video is flush with the panel's top edge (no gap
+    // left exposing its own boundary against the page).
+    headingZone.style.height = `${lerp(headingZoneNaturalHeightRef.current, 0, servicesShrinkT)}px`;
+    headingZone.style.paddingTop = `${lerp(HEADING_ZONE_PADDING_TOP_PX, 0, servicesShrinkT)}px`;
+    headingZone.style.paddingBottom = `${lerp(HEADING_ZONE_PADDING_BOTTOM_PX, 0, servicesShrinkT)}px`;
+
     servicesContent.style.opacity = String(1 - servicesShrinkT);
     servicesContent.style.transform = `scale(${lerp(1, CONTENT_SHRINK_SCALE, servicesShrinkT)})`;
 
@@ -362,6 +405,26 @@ export default function ServicesSection() {
     pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - panel.offsetHeight - PANEL_STICKY_TOP_PX;
   };
 
+  // The heading zone's height AND padding are JS-controlled after the
+  // first update() call, so re-measuring its *natural* height on resize
+  // means resetting both to their rest-state values first — otherwise
+  // this would just read back whatever (possibly mid-collapse) values
+  // update() last wrote.
+  const measureHeadingZoneHeight = () => {
+    const headingZone = headingZoneRef.current;
+    if (!headingZone) return;
+    const prevHeight = headingZone.style.height;
+    const prevPaddingTop = headingZone.style.paddingTop;
+    const prevPaddingBottom = headingZone.style.paddingBottom;
+    headingZone.style.height = "auto";
+    headingZone.style.paddingTop = `${HEADING_ZONE_PADDING_TOP_PX}px`;
+    headingZone.style.paddingBottom = `${HEADING_ZONE_PADDING_BOTTOM_PX}px`;
+    headingZoneNaturalHeightRef.current = headingZone.getBoundingClientRect().height;
+    headingZone.style.height = prevHeight;
+    headingZone.style.paddingTop = prevPaddingTop;
+    headingZone.style.paddingBottom = prevPaddingBottom;
+  };
+
   useLayoutEffect(() => {
     if (skipDesktopMotion) return;
     const wrapper = wrapperRef.current;
@@ -387,10 +450,12 @@ export default function ServicesSection() {
       video.addEventListener("loadedmetadata", handleLoadedMetadata, { once: true });
     }
 
+    measureHeadingZoneHeight();
     measurePinRange();
     update();
 
     const handleResize = () => {
+      measureHeadingZoneHeight();
       measurePinRange();
       update();
     };
@@ -478,25 +543,46 @@ export default function ServicesSection() {
           edge to edge with little to no visible margin, and any leftover
           margin is invisible anyway since the clip's own background and
           this container are both plain white. */}
-      <div ref={panelRef} className="sticky -top-[20px] h-screen w-full overflow-hidden bg-white">
-        <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-contain" />
+      <div ref={panelRef} className="sticky -top-[20px] flex h-screen w-full flex-col overflow-hidden bg-white">
+        {/* Heading zone — just the h2, sitting in plain white space above
+            the video (not layered on top of it). Its own height collapses
+            toward 0 as the Services text fades (see update()), so the
+            video zone below grows to fill the whole panel by the time the
+            paper is fully open, leaving no gap that would expose its own
+            edge against the page. */}
+        <div
+          ref={headingZoneRef}
+          className="relative z-10 flex shrink-0 items-center justify-center overflow-hidden px-6"
+          style={{ paddingTop: HEADING_ZONE_PADDING_TOP_PX, paddingBottom: HEADING_ZONE_PADDING_BOTTOM_PX }}
+        >
+          <ServicesHeading ref={headingRef} />
+        </div>
 
-        {/* Two content layers share the same on-screen slot — Services
-            fades/shrinks out first (as the paper unfolds), then About
-            fades in on top of the now-open paper and shrinks/fades out in
-            turn (as it re-crumples) — never both visible at once, since
-            aboutContent starts at opacity 0 until the paper is open. */}
-        <div className="absolute inset-x-0 top-[96px] z-10 flex h-[calc(100vh-76px)] flex-col items-center justify-center px-6 pb-24">
-          <div ref={servicesContentRef} className="flex w-full justify-end">
-            <ServicesListBlock
-              getRowRef={(i) => (el) => {
-                rowRefs.current[i] = el;
-              }}
-            />
-          </div>
+        {/* Video zone — the ball/paper clip, plus everything that stays
+            aligned with it: the subtitle, divider, and rows (Services
+            phase), then About (its own phase), positioned relative to
+            *this* zone rather than the whole panel. */}
+        <div className="relative min-h-0 flex-1 overflow-hidden">
+          <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-contain" />
 
-          <div ref={aboutContentRef} className="pointer-events-none absolute inset-x-0 px-6" style={{ opacity: 0 }}>
-            <AboutBlock />
+          {/* Two content layers share the same on-screen slot — Services
+              fades/shrinks out first (as the paper unfolds), then About
+              fades in on top of the now-open paper and shrinks/fades out
+              in turn (as it re-crumples) — never both visible at once,
+              since aboutContent starts at opacity 0 until the paper is
+              open. */}
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center px-6 pb-24">
+            <div ref={servicesContentRef} className="flex w-full justify-end">
+              <ServicesRowsBlock
+                getRowRef={(i) => (el) => {
+                  rowRefs.current[i] = el;
+                }}
+              />
+            </div>
+
+            <div ref={aboutContentRef} className="pointer-events-none absolute inset-x-0 px-6" style={{ opacity: 0 }}>
+              <AboutBlock />
+            </div>
           </div>
         </div>
       </div>
