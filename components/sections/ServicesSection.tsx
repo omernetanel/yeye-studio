@@ -110,10 +110,10 @@ const ROW_LOCAL_DURATION = 0.4;
 //
 // video.currentTime maps linearly across the ENTIRE pinned range (progress
 // 0 -> 1), so it's automatically, exactly reversible on scroll-up.
-const SERVICES_FADE_START_SECONDS = 2 + 2 / 30 - 0.3;
-const SERVICES_FADE_END_SECONDS = 2 + 29 / 30 - 0.3;
+const SERVICES_FADE_START_SECONDS = 2 + 2 / 30 - 0.8;
+const SERVICES_FADE_END_SECONDS = 2 + 29 / 30 - 1.1;
 const ABOUT_FADE_IN_START_SECONDS = SERVICES_FADE_END_SECONDS;
-const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.3;
+const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.8;
 const ABOUT_FADE_OUT_START_SECONDS = 5 + 6 / 30 - 0.5;
 const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 const CONTENT_SHRINK_SCALE = 0.6;
@@ -196,20 +196,23 @@ function ServiceRow({ service, index, rowRef }: ServiceRowProps) {
 function ServicesListBlock({ getRowRef }: { getRowRef?: (i: number) => (el: HTMLAnchorElement | null) => void }) {
   return (
     <div className="w-full">
-      {/* Centered across the FULL panel width (list + the paper ball's own
-          space beside it), not just within the row column below — the
-          heading needs to sit exactly in the middle of the whole frame,
-          not the middle of the (left-docked) list alone. */}
-      <div className="flex w-full flex-col items-center text-center">
-        <h2 className="font-display text-4xl font-bold text-black md:text-5xl">מה אני עושה</h2>
-        <p className="mt-4 max-w-[360px] font-body text-[15px] leading-[1.8] text-black/55">
+      {/* Centered over the left ~62% of the panel (list + breathing room),
+          deliberately NOT the ball's own space on the right — a plain
+          full-width center would put a large heading close enough to
+          crowd the ball. ml-0/mr-auto (physical, not logical) is what
+          actually pins it to that left zone regardless of the page's
+          own RTL direction — a bare width without them would hug the
+          *inline-start* edge instead, which in RTL is the right. */}
+      <div className="mr-auto ml-0 flex w-full max-w-[640px] flex-col items-center text-center">
+        <h2 className="font-display text-6xl font-bold text-black md:text-7xl">מה אני עושה</h2>
+        <p className="mt-6 max-w-[380px] font-body text-[15px] leading-[1.8] text-black/55">
           פתרונות דיגיטליים מותאמים אישית לעסקים שצריכים תוצאות.
         </p>
-        <div className="mt-6 h-[3px] w-10 rounded-full bg-[image:var(--gradient-accent)]" />
+        <div className="mt-8 h-[3px] w-10 rounded-full bg-[image:var(--gradient-accent)]" />
       </div>
 
-      <div className="mt-8 flex w-full justify-end">
-        <div className="flex w-full max-w-[700px] flex-col">
+      <div className="mt-16 flex w-full justify-end">
+        <div className="flex w-full max-w-[580px] flex-col">
           {services.map((service, i) => (
             <ServiceRow key={service.title} service={service} index={i} rowRef={getRowRef ? getRowRef(i) : () => {}} />
           ))}
