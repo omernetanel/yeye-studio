@@ -196,14 +196,10 @@ function ServiceRow({ service, index, rowRef }: ServiceRowProps) {
 function ServicesListBlock({ getRowRef }: { getRowRef?: (i: number) => (el: HTMLAnchorElement | null) => void }) {
   return (
     <div className="w-full">
-      {/* Centered over the left ~62% of the panel (list + breathing room),
-          deliberately NOT the ball's own space on the right — a plain
-          full-width center would put a large heading close enough to
-          crowd the ball. ml-0/mr-auto (physical, not logical) is what
-          actually pins it to that left zone regardless of the page's
-          own RTL direction — a bare width without them would hug the
-          *inline-start* edge instead, which in RTL is the right. */}
-      <div className="mr-auto ml-0 flex w-full max-w-[640px] flex-col items-center text-center">
+      {/* Centered across the FULL panel width (list + the paper ball's own
+          space beside it) — exactly in the middle of the whole frame,
+          not shifted toward either side. */}
+      <div className="flex w-full flex-col items-center text-center">
         <h2 className="font-display text-6xl font-bold text-black md:text-7xl">מה אני עושה</h2>
         <p className="mt-6 max-w-[380px] font-body text-[15px] leading-[1.8] text-black/55">
           פתרונות דיגיטליים מותאמים אישית לעסקים שצריכים תוצאות.
