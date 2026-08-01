@@ -644,17 +644,24 @@ export default function ServicesSection() {
             phase), then About (its own phase), positioned relative to
             *this* zone rather than the whole panel. */}
         <div className="relative min-h-0 flex-1 overflow-hidden">
-          {/* bg-white just keeps object-contain's letterbox margin the same
-              colour as the page. The thin vertical line that used to show
-              along the clip's own content edge was NOT this margin — the
-              source was encoded limited-range (color_range=tv, white at
-              Y=235), and browsers whose H.264 path skips the limited->full
-              expansion painted the whole video rect as #EBEBEB against a
-              white page, so its edge read as a seam. Fixed at the source:
-              servicesbg.mp4 is now full-range (color_range=pc, white at
-              Y=255), which renders white under both decoder behaviours —
-              correct ones leave 255 alone, ones that expand anyway clip
-              back to 255. Keep any re-encode of this clip full-range. */}
+          {/* bg-white keeps object-contain's letterbox margin the same colour
+              as the page.
+
+              A thin vertical line reported beside the ball is NOT explained
+              by either of these, both tried and ruled out against a real
+              browser: (1) the letterbox margin's default black backing —
+              bg-white changed nothing; (2) the clip's limited colour range
+              (color_range=tv, white at Y=235) rendering the video rect as
+              #EBEBEB on decoders that skip the limited->full expansion — a
+              full-range re-encode changed nothing either. Cause still
+              unknown; note it is invisible to headless testing here, which
+              cannot decode H.264 at all and only ever shows the poster.
+
+              If this clip is ever re-encoded, it MUST keep a dense GOP
+              (-g 5; the source carries a keyframe every 5 frames). The
+              scroll scrub seeks currentTime on every tick, so a default
+              GOP makes each seek decode dozens of frames and visibly
+              wrecks the animation. */}
           <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full bg-white object-contain" />
 
           {/* Two content layers share the same on-screen slot — Services
