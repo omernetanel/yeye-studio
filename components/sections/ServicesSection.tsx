@@ -109,6 +109,14 @@ const CONTENT_SHRINK_SCALE = 0.6;
 const VIDEO_REST_SCALE = 1.18;
 const VIDEO_REST_SHIFT_X_PX = 45;
 
+// About's entrance keeps this custom, off-center origin (matches the
+// direction the paper unfolds toward), but its exit switches to the true
+// panel center instead of re-using this same point — see the switch in
+// update(). Safe to swap the instant the shrink phase starts: scale is
+// exactly 1 at that boundary, so transform-origin has no visible effect
+// yet.
+const ABOUT_ENTRANCE_ORIGIN = "72% 82%";
+
 // PANEL_STICKY_TOP_PX is the panel's *real* sticky top offset — negative,
 // so once stuck its own top edge sits slightly above the viewport,
 // letting the video's composition keep scrolling a bit further before
@@ -123,7 +131,7 @@ const PANEL_STICKY_TOP_PX = -20;
 // can never be set below its own padding sum, so a fixed pt/pb class
 // would silently floor the "collapse to 0" animation at that sum instead
 // of actually reaching 0.
-const HEADING_ZONE_PADDING_TOP_PX = 80;
+const HEADING_ZONE_PADDING_TOP_PX = 72;
 const HEADING_ZONE_PADDING_BOTTOM_PX = 24;
 
 function clamp01(value: number) {
@@ -173,20 +181,20 @@ function ServiceRow({ service, index }: ServiceRowProps) {
   return (
     <Link
       href={service.href}
-      className="group flex items-center justify-between gap-6 border-b border-black/8 py-6 pe-10 first:pt-0 last:border-b-0"
+      className="group flex items-center justify-between gap-6 border-b border-black/8 py-5 pe-10 first:pt-0 last:border-b-0"
     >
       <div className="flex items-center gap-5">
-        <span className={cn("font-display text-6xl leading-none font-bold text-black transition-colors duration-200", hoverTextClass)}>
+        <span className={cn("font-display text-5xl leading-none font-bold text-black transition-colors duration-200", hoverTextClass)}>
           {String(index + 1).padStart(2, "0")}
         </span>
         <span className="w-px self-stretch bg-black/10" />
         <div
           className={cn(
-            "flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-black/10 bg-black/[0.02] transition-colors duration-200",
+            "flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-black/10 bg-black/[0.02] transition-colors duration-200",
             hoverBorderClass
           )}
         >
-          <Icon size={22} strokeWidth={1.5} className={cn("text-black/70 transition-colors duration-200", hoverTextClass)} />
+          <Icon size={20} strokeWidth={1.5} className={cn("text-black/70 transition-colors duration-200", hoverTextClass)} />
         </div>
         <div className="text-right">
           <h3 className={cn("font-display text-lg font-bold text-black transition-colors duration-200", hoverTextClass)}>{service.title}</h3>
@@ -211,40 +219,34 @@ function ServiceRow({ service, index }: ServiceRowProps) {
   );
 }
 
-const ServicesHeading = forwardRef<HTMLHeadingElement>(function ServicesHeading(_props, ref) {
+// Heading zone content — the h2 AND the subtitle/divider beneath it live
+// together here now, not split across the heading zone and the video
+// zone's row block. The video zone's own height (and therefore this
+// group's vertical centering within it) depends on viewport resolution,
+// so a resolution where that centering pushed the subtitle above the
+// zone's clipped (overflow-hidden) bounds was rendering it invisible even
+// though it was still technically "there" in the DOM.
+const ServicesHeading = forwardRef<HTMLDivElement>(function ServicesHeading(_props, ref) {
   return (
-    <h2 ref={ref} className="font-display text-6xl font-bold text-black md:text-7xl">
-      מה אני עושה
-    </h2>
+    <div ref={ref} className="flex flex-col items-center text-center">
+      <h2 className="font-display text-6xl font-bold text-black md:text-7xl">מה אני עושה</h2>
+      <p className="mt-4 max-w-[380px] font-body text-[15px] leading-[1.8] text-black/55">
+        פתרונות דיגיטליים מותאמים אישית לעסקים שצריכים תוצאות.
+      </p>
+      <div className="mt-8 h-[3px] w-10 rounded-full bg-[image:var(--gradient-accent)]" />
+    </div>
   );
 });
 
 function ServicesRowsBlock() {
   return (
-    <div className="w-full">
-      {/* Centered across the FULL panel width (list + the paper ball's own
-          space beside it) — exactly in the middle of the whole frame,
-          not shifted toward either side. */}
-      <div className="isolate flex w-full flex-col items-center text-center">
-        <p className="max-w-[380px] font-body text-[15px] leading-[1.8] text-black/55">
-          פתרונות דיגיטליים מותאמים אישית לעסקים שצריכים תוצאות.
-        </p>
-        <div className="mt-8 h-[3px] w-10 rounded-full bg-[image:var(--gradient-accent)]" />
-      </div>
-
-      {/* Docked left within a centered sub-zone (not the full panel width)
-          so the rows end up close to the ball's own left edge instead of
-          stranded against the panel's true left edge with a big gap
-          before the ball. isolate on both this and the subtitle block
-          above gives each its own stacking context — without it, some
-          browsers mis-paint the subtitle/divider sibling when a scale()
-          transform is applied here. */}
-      <div className="isolate mx-auto mt-16 flex w-full max-w-[900px] -translate-x-[15px] translate-y-[40px] justify-end">
-        <div className="flex w-full max-w-[480px] origin-top scale-[0.85] flex-col">
-          {services.map((service, i) => (
-            <ServiceRow key={service.title} service={service} index={i} />
-          ))}
-        </div>
+    <div
+      className="isolate mx-auto flex w-full max-w-[900px] -translate-x-[15px] translate-y-[64px] justify-end"
+    >
+      <div className="flex w-full max-w-[480px] origin-top scale-[0.85] flex-col">
+        {services.map((service, i) => (
+          <ServiceRow key={service.title} service={service} index={i} />
+        ))}
       </div>
     </div>
   );
@@ -325,9 +327,15 @@ export default function ServicesSection() {
   const panelRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const headingZoneRef = useRef<HTMLDivElement>(null);
-  const headingRef = useRef<HTMLHeadingElement>(null);
+  const headingRef = useRef<HTMLDivElement>(null);
   const servicesContentRef = useRef<HTMLDivElement>(null);
   const aboutContentRef = useRef<HTMLDivElement>(null);
+  // About's exit-phase transform-origin (screen center, in pixels relative
+  // to its own box) — measured live in update() while About is fully
+  // visible. "50% 50%" (its own center, which sits near screen center
+  // anyway) is only the fallback for a scroll jump so fast the fully-
+  // visible window was never sampled.
+  const aboutCenterOriginRef = useRef("50% 50%");
   // The heading zone's own natural (unshrunk) height — measured once on
   // mount/resize, since it needs to be known BEFORE update() starts
   // driving that same height down toward 0 as the Services text fades.
@@ -374,8 +382,10 @@ export default function ServicesSection() {
     // else fading out.
     video.style.transform = `translateX(${lerp(VIDEO_REST_SHIFT_X_PX, 0, servicesShrinkT)}px) scale(${lerp(VIDEO_REST_SCALE, 1, servicesShrinkT)})`;
 
+    // The heading exits as a plain fade — no scale/shrink of its own
+    // (explicitly requested; the rows below DO keep their shrink-to-center
+    // exit). The zone collapse beneath it still happens regardless.
     heading.style.opacity = String(1 - servicesShrinkT);
-    heading.style.transform = `scale(${lerp(1, CONTENT_SHRINK_SCALE, servicesShrinkT)})`;
     // The heading zone's own height (and padding — see that constant's
     // own comment) collapses in step with its fade — the video zone
     // below it grows to fill the freed space, so by the time the paper
@@ -400,8 +410,26 @@ export default function ServicesSection() {
     // then shrinking back down as it fades out, instead of popping in at
     // full size the instant opacity starts rising.
     const aboutGrowT = aboutFadeInT * (1 - aboutShrinkT);
+    // Entrance and exit intentionally use different origins: growing in
+    // keeps the custom off-center point, but the shrink-out re-centers on
+    // the screen like Services' own exit does — switching exactly at
+    // aboutShrinkT > 0 lands on scale === 1, so the origin change itself
+    // causes no visible jump.
+    aboutContent.style.transformOrigin = aboutShrinkT > 0 ? aboutCenterOriginRef.current : ABOUT_ENTRANCE_ORIGIN;
     aboutContent.style.opacity = String(aboutGrowT);
     aboutContent.style.transform = `scale(${lerp(CONTENT_SHRINK_SCALE, 1, aboutGrowT)})`;
+    // The screen-center exit origin can only be measured HERE, live, while
+    // About is fully grown and the panel is actually stuck — a mount-time
+    // measurement reads the panel at its unstuck page position (and About
+    // at its initial 0.6 scale), producing an origin thousands of pixels
+    // off. Measured AFTER this frame's scale(1) write lands, so the rect
+    // isn't skewed by a previous frame's leftover mid-grow scale.
+    // getBoundingClientRect is already in viewport coordinates, so screen
+    // center is just innerWidth/2 × innerHeight/2, no sticky-offset math.
+    if (aboutFadeInT === 1 && aboutShrinkT === 0) {
+      const rect = aboutContent.getBoundingClientRect();
+      aboutCenterOriginRef.current = `${window.innerWidth / 2 - rect.left}px ${window.innerHeight / 2 - rect.top}px`;
+    }
   };
 
   const measurePinRange = () => {
@@ -445,19 +473,17 @@ export default function ServicesSection() {
     headingZone.style.paddingBottom = prevPaddingBottom;
   };
 
-  // The heading's own entrance keeps the default (its own box's) scale
-  // origin, but the Services text's *exit* — heading and rows both —
-  // should shrink toward the true center of the panel, not whichever
-  // point their own (much smaller/off-center) box happens to center on.
-  // transform-origin only ever measures relative to the element's own
-  // box, so hitting an arbitrary point like "panel center" means
-  // computing that offset by hand, once at rest (before either element
+  // The rows' *exit* should shrink toward the true center of the panel,
+  // not whichever point their own (much smaller/off-center) box happens
+  // to center on. (The heading isn't involved — it exits as a plain fade,
+  // no transform.) transform-origin only ever measures relative to the
+  // element's own box, so hitting an arbitrary point like "panel center"
+  // means computing that offset by hand, once at rest (before the element
   // has started shrinking, since the heading zone's own collapse would
   // throw off a mid-animation re-measurement).
   const measureShrinkOrigins = () => {
-    const heading = headingRef.current;
     const servicesContent = servicesContentRef.current;
-    if (!heading || !servicesContent) return;
+    if (!servicesContent) return;
     // Computed directly from the panel's own known (fixed) sticky
     // geometry rather than panelRef.getBoundingClientRect() — the panel
     // is only actually *at* PANEL_STICKY_TOP_PX once scrolled into its
@@ -465,9 +491,6 @@ export default function ServicesSection() {
     // read wherever it naturally sits in the page flow instead.
     const panelCenterX = window.innerWidth / 2;
     const panelCenterY = PANEL_STICKY_TOP_PX + window.innerHeight / 2;
-
-    const headingRect = heading.getBoundingClientRect();
-    heading.style.transformOrigin = `${panelCenterX - headingRect.left}px ${panelCenterY - headingRect.top}px`;
 
     const servicesRect = servicesContent.getBoundingClientRect();
     servicesContent.style.transformOrigin = `${panelCenterX - servicesRect.left}px ${panelCenterY - servicesRect.top}px`;
@@ -548,7 +571,7 @@ export default function ServicesSection() {
     // the site's mobile sections.
     return (
       <section id="services" className="relative overflow-hidden bg-white px-6 py-16">
-        <BackgroundVideo autoPlay className="absolute inset-0 h-full w-full object-contain opacity-25" />
+        <BackgroundVideo autoPlay className="absolute inset-0 h-full w-full bg-white object-contain opacity-25" />
 
         <div className="relative z-10 mx-auto max-w-[1200px]">
           <motion.div
@@ -613,7 +636,13 @@ export default function ServicesSection() {
             phase), then About (its own phase), positioned relative to
             *this* zone rather than the whole panel. */}
         <div className="relative min-h-0 flex-1 overflow-hidden">
-          <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-contain" />
+          {/* bg-white: object-contain leaves the video element's own
+              intrinsic-aspect margin unpainted, which several browsers
+              default to a black backing surface — visible as a thin dark
+              seam right where that margin's edge lands once the element
+              is scaled/shifted (see VIDEO_REST_SCALE/SHIFT above). White
+              backing makes that margin invisible against the page instead. */}
+          <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full bg-white object-contain" />
 
           {/* Two content layers share the same on-screen slot — Services
               fades/shrinks out first (as the paper unfolds), then About
@@ -626,11 +655,7 @@ export default function ServicesSection() {
               <ServicesRowsBlock />
             </div>
 
-            <div
-              ref={aboutContentRef}
-              className="pointer-events-none absolute inset-x-0 px-6"
-              style={{ opacity: 0, transformOrigin: "72% 82%" }}
-            >
+            <div ref={aboutContentRef} className="pointer-events-none absolute inset-x-0 px-6" style={{ opacity: 0 }}>
               <AboutBlock />
             </div>
           </div>
