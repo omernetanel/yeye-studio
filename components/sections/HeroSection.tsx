@@ -229,9 +229,14 @@ export default function HeroSection() {
             }
             style={{ animationDelay: "0.4s" }}
           >
-            <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
-              צפו בעבודות שלי
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
+                צפו בעבודות שלי
+              </Button>
+              <Button href="/#contact" variant="primary" showArrow={false} className="!border !border-black !bg-none !bg-white !text-black !shadow-none px-10 py-4 text-lg">
+                צרו קשר
+              </Button>
+            </div>
           </div>
 
           <div className={prefersReducedMotion ? "flex items-end gap-4" : "pointer-events-auto flex items-end gap-4"}>

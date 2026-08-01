@@ -42,16 +42,16 @@ export default function QuickContactBand() {
   };
 
   return (
-    <section className="px-6 py-10 md:py-12">
+    <section className="px-6 pt-4 pb-16 md:pt-6 md:pb-20">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="mx-auto flex max-w-[1000px] flex-col items-center justify-between gap-5 rounded-2xl border border-black/8 bg-black/[0.02] px-6 py-6 md:flex-row md:gap-8 md:px-10"
+        className="mx-auto flex max-w-[1080px] flex-col items-center justify-between gap-6 rounded-2xl border border-black/8 bg-black/[0.02] px-7 py-8 md:flex-row md:gap-10 md:px-12 md:py-9"
       >
-        <p className="shrink-0 text-center font-display text-lg font-bold text-black md:text-right md:text-xl">
-          מעדיפים שאני אפנה אליכם?
+        <p className="shrink-0 text-center font-display text-xl font-bold text-black md:text-right md:text-2xl">
+          בואו נתחיל לעבוד על הפרוייקט הבא שלכם, ביחד
         </p>
 
         {status === "success" ? (

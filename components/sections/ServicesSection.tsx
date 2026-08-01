@@ -110,12 +110,12 @@ const ROW_LOCAL_DURATION = 0.4;
 //
 // video.currentTime maps linearly across the ENTIRE pinned range (progress
 // 0 -> 1), so it's automatically, exactly reversible on scroll-up.
-const SERVICES_FADE_START_SECONDS = 2 + 2 / 30;
-const SERVICES_FADE_END_SECONDS = 2 + 29 / 30;
+const SERVICES_FADE_START_SECONDS = 2 + 2 / 30 - 0.3;
+const SERVICES_FADE_END_SECONDS = 2 + 29 / 30 - 0.3;
 const ABOUT_FADE_IN_START_SECONDS = SERVICES_FADE_END_SECONDS;
-const ABOUT_FADE_IN_END_SECONDS = 3.4;
-const ABOUT_FADE_OUT_START_SECONDS = 5 + 6 / 30;
-const ABOUT_FADE_OUT_END_SECONDS = 6.1;
+const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.3;
+const ABOUT_FADE_OUT_START_SECONDS = 5 + 6 / 30 - 0.5;
+const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 const CONTENT_SHRINK_SCALE = 0.6;
 
 // PANEL_STICKY_TOP_PX is the panel's *real* sticky top offset — negative,
@@ -183,7 +183,7 @@ function ServiceRow({ service, index, rowRef }: ServiceRowProps) {
         <span className="font-display text-3xl font-light text-black/25">{String(index + 1).padStart(2, "0")}</span>
       </div>
 
-      <span aria-hidden className="text-black/40 transition-transform duration-200 group-hover:-translate-x-1">
+      <span aria-hidden className="ms-4 shrink-0 text-black/40 transition-transform duration-200 group-hover:-translate-x-1">
         ←
       </span>
     </Link>
@@ -192,12 +192,14 @@ function ServiceRow({ service, index, rowRef }: ServiceRowProps) {
 
 function ServicesListBlock({ getRowRef }: { getRowRef?: (i: number) => (el: HTMLAnchorElement | null) => void }) {
   return (
-    <div className="w-full max-w-[620px]">
-      <h2 className="font-display text-4xl font-bold text-black md:text-5xl">מה אני עושה</h2>
-      <p className="mt-4 max-w-[440px] font-body text-[15px] leading-[1.8] text-black/55">
-        פתרונות דיגיטליים מותאמים אישית לעסקים שצריכים תוצאות.
-      </p>
-      <div className="mt-6 h-[3px] w-10 rounded-full bg-[image:var(--gradient-accent)]" />
+    <div className="w-full max-w-[700px]">
+      <div className="flex flex-col items-center text-center">
+        <h2 className="font-display text-4xl font-bold text-black md:text-5xl">מה אני עושה</h2>
+        <p className="mt-4 max-w-[360px] font-body text-[15px] leading-[1.8] text-black/55">
+          פתרונות דיגיטליים מותאמים אישית לעסקים שצריכים תוצאות.
+        </p>
+        <div className="mt-6 h-[3px] w-10 rounded-full bg-[image:var(--gradient-accent)]" />
+      </div>
 
       <div className="mt-8 flex flex-col">
         {services.map((service, i) => (
