@@ -171,10 +171,6 @@ function ServiceRow({ service, index, rowRef }: ServiceRowProps) {
       style={{ opacity: 0, transform: "translateY(24px)" }}
       className="group flex items-center justify-between gap-6 border-b border-black/8 py-6 first:pt-0 last:border-b-0"
     >
-      <span aria-hidden className="text-black/40 transition-transform duration-200 group-hover:-translate-x-1">
-        ←
-      </span>
-
       <div className="flex items-center gap-5">
         <div className="text-right">
           <h3 className="font-display text-lg font-bold text-black">{service.title}</h3>
@@ -186,6 +182,10 @@ function ServiceRow({ service, index, rowRef }: ServiceRowProps) {
         <span className="w-px self-stretch bg-black/10" />
         <span className="font-display text-3xl font-light text-black/25">{String(index + 1).padStart(2, "0")}</span>
       </div>
+
+      <span aria-hidden className="text-black/40 transition-transform duration-200 group-hover:-translate-x-1">
+        ←
+      </span>
     </Link>
   );
 }
@@ -193,8 +193,7 @@ function ServiceRow({ service, index, rowRef }: ServiceRowProps) {
 function ServicesListBlock({ getRowRef }: { getRowRef?: (i: number) => (el: HTMLAnchorElement | null) => void }) {
   return (
     <div className="w-full max-w-[620px]">
-      <span className="font-display text-xs font-medium tracking-[0.2em] text-black/45 uppercase">What I Do</span>
-      <h2 className="mt-3 font-display text-4xl font-bold text-black md:text-5xl">מה אני עושה</h2>
+      <h2 className="font-display text-4xl font-bold text-black md:text-5xl">מה אני עושה</h2>
       <p className="mt-4 max-w-[440px] font-body text-[15px] leading-[1.8] text-black/55">
         פתרונות דיגיטליים מותאמים אישית לעסקים שצריכים תוצאות.
       </p>
@@ -481,7 +480,7 @@ export default function ServicesSection() {
             />
           </div>
 
-          <div ref={aboutContentRef} className="absolute inset-x-0 px-6" style={{ opacity: 0 }}>
+          <div ref={aboutContentRef} className="pointer-events-none absolute inset-x-0 px-6" style={{ opacity: 0 }}>
             <AboutBlock />
           </div>
         </div>

@@ -3,9 +3,10 @@ import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
 import StatementSection from "@/components/sections/StatementSection";
 import ServicesSection from "@/components/sections/ServicesSection";
-import CTASection from "@/components/sections/CTASection";
+import QuickContactBand from "@/components/sections/QuickContactBand";
 import ProcessSection from "@/components/sections/ProcessSection";
 import ProjectsSection from "@/components/sections/ProjectsSection";
+import CTASection from "@/components/sections/CTASection";
 
 export default function Home() {
   return (
@@ -30,9 +31,10 @@ export default function Home() {
         <HeroSection />
         <StatementSection />
         <ServicesSection />
-        <CTASection />
+        <QuickContactBand />
         <ProcessSection />
         <ProjectsSection />
+        <CTASection />
         <Footer light />
       </div>
     </main>
