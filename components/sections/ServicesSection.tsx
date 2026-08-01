@@ -80,18 +80,6 @@ const VIDEO_DURATION_FALLBACK = 8.15;
 // pinned range itself — purely a scroll distance to cover first.
 const SPACER_PX = 35;
 
-// The Services list reveals DURING this same ordinary pre-lock scroll —
-// REVEAL_LEAD_PX worth of scrolling, ending exactly at the moment the
-// panel goes sticky (pinStartScrollYRef) — not gated behind the video
-// locking first. The clip itself stays frozen on its first frame (the
-// ball at rest, off to the right of frame) the whole time; by the time
-// its top reaches the Navbar and it snaps into its stuck position, the
-// whole list is already fully visible. The heading/eyebrow/subtitle have
-// no entrance effect at all — only the 4 list rows stagger in.
-const REVEAL_LEAD_PX = 160;
-const ROW_LOCAL_START = 0.34;
-const ROW_STAGGER = 0.08;
-const ROW_LOCAL_DURATION = 0.4;
 
 // This single clip now carries TWO overlaid content phases across its
 // timeline, converted from the source edit's own 30fps timecodes:
@@ -112,11 +100,13 @@ const ROW_LOCAL_DURATION = 0.4;
 // 0 -> 1), so it's automatically, exactly reversible on scroll-up.
 const SERVICES_FADE_START_SECONDS = 2 + 2 / 30 - 0.8;
 const SERVICES_FADE_END_SECONDS = 2 + 29 / 30 - 1.1;
-const ABOUT_FADE_IN_START_SECONDS = SERVICES_FADE_END_SECONDS;
-const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.8;
+const ABOUT_FADE_IN_START_SECONDS = SERVICES_FADE_END_SECONDS + 1;
+const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.8 + 1;
 const ABOUT_FADE_OUT_START_SECONDS = 5 + 6 / 30 - 0.5;
 const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 const CONTENT_SHRINK_SCALE = 0.6;
+const VIDEO_REST_SCALE = 1.05;
+const VIDEO_REST_SHIFT_X_PX = 28;
 
 // PANEL_STICKY_TOP_PX is the panel's *real* sticky top offset — negative,
 // so once stuck its own top edge sits slightly above the viewport,
@@ -156,20 +146,17 @@ function smoothstep(t: number) {
 interface ServiceRowProps {
   service: (typeof services)[number];
   index: number;
-  rowRef: (el: HTMLAnchorElement | null) => void;
 }
 
-function ServiceRow({ service, index, rowRef }: ServiceRowProps) {
+function ServiceRow({ service, index }: ServiceRowProps) {
   const Icon = service.icon;
   return (
     <Link
-      ref={rowRef}
       href={service.href}
-      style={{ opacity: 0, transform: "translateY(24px)" }}
       className="group flex items-center justify-between gap-6 border-b border-black/8 py-6 pe-10 first:pt-0 last:border-b-0"
     >
       <div className="flex items-center gap-5">
-        <span className="font-display text-4xl font-bold text-black">{String(index + 1).padStart(2, "0")}</span>
+        <span className="font-display text-6xl leading-none font-bold text-black">{String(index + 1).padStart(2, "0")}</span>
         <span className="w-px self-stretch bg-black/10" />
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-black/10 bg-black/[0.02]">
           <Icon size={22} strokeWidth={1.5} className="text-black/70" />
@@ -198,7 +185,7 @@ const ServicesHeading = forwardRef<HTMLHeadingElement>(function ServicesHeading(
   );
 });
 
-function ServicesRowsBlock({ getRowRef }: { getRowRef?: (i: number) => (el: HTMLAnchorElement | null) => void }) {
+function ServicesRowsBlock() {
   return (
     <div className="w-full">
       {/* Centered across the FULL panel width (list + the paper ball's own
@@ -215,10 +202,10 @@ function ServicesRowsBlock({ getRowRef }: { getRowRef?: (i: number) => (el: HTML
           so the rows end up close to the ball's own left edge instead of
           stranded against the panel's true left edge with a big gap
           before the ball. */}
-      <div className="mx-auto mt-16 flex w-full max-w-[900px] justify-end">
+      <div className="mx-auto mt-16 flex w-full max-w-[900px] -translate-x-[15px] justify-end">
         <div className="flex w-full max-w-[480px] flex-col">
           {services.map((service, i) => (
-            <ServiceRow key={service.title} service={service} index={i} rowRef={getRowRef ? getRowRef(i) : () => {}} />
+            <ServiceRow key={service.title} service={service} index={i} />
           ))}
         </div>
       </div>
@@ -229,14 +216,14 @@ function ServicesRowsBlock({ getRowRef }: { getRowRef?: (i: number) => (el: HTML
 /** Mobile/reduced-motion only — the heading and rows aren't split across
     two panel zones there (no pinned video to keep clear of), so they're
     just stacked together as one plain block. */
-function ServicesListBlock({ getRowRef }: { getRowRef?: (i: number) => (el: HTMLAnchorElement | null) => void }) {
+function ServicesListBlock() {
   return (
     <div className="w-full">
       <div className="flex w-full flex-col items-center text-center">
         <ServicesHeading />
       </div>
       <div className="mt-6">
-        <ServicesRowsBlock getRowRef={getRowRef} />
+        <ServicesRowsBlock />
       </div>
     </div>
   );
@@ -304,7 +291,6 @@ export default function ServicesSection() {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const servicesContentRef = useRef<HTMLDivElement>(null);
   const aboutContentRef = useRef<HTMLDivElement>(null);
-  const rowRefs = useRef<Array<HTMLAnchorElement | null>>([]);
   // The heading zone's own natural (unshrunk) height — measured once on
   // mount/resize, since it needs to be known BEFORE update() starts
   // driving that same height down toward 0 as the Services text fades.
@@ -335,21 +321,6 @@ export default function ServicesSection() {
     const rawScrollY = scrollY.get();
     const progress = clamp01(mapRange(rawScrollY, pinStartScrollYRef.current, pinEndScrollYRef.current, 0, 1));
 
-    // Reveal progress — 0 at REVEAL_LEAD_PX before the panel locks, 1
-    // exactly at lock (pinStartScrollYRef), and pinned at 1 for the rest
-    // of the pinned range (mapRange/clamp01 clamp past both ends), which
-    // is what holds the rows at their fully-revealed state through the
-    // whole rest of the sequence.
-    const revealT = clamp01(mapRange(rawScrollY, pinStartScrollYRef.current - REVEAL_LEAD_PX, pinStartScrollYRef.current, 0, 1));
-
-    rowRefs.current.forEach((row, i) => {
-      if (!row) return;
-      const start = ROW_LOCAL_START + i * ROW_STAGGER;
-      const rowT = smoothstep(mapRange(revealT, start, start + ROW_LOCAL_DURATION, 0, 1));
-      row.style.opacity = String(rowT);
-      row.style.transform = `translateY(${lerp(24, 0, rowT)}px)`;
-    });
-
     // video.currentTime is a pure linear function of scroll progress
     // across the whole pinned range, so it's automatically, exactly
     // reversible on scroll-up; no separate "rewind" logic needed.
@@ -359,6 +330,13 @@ export default function ServicesSection() {
     }
 
     const servicesShrinkT = smoothstep(mapRange(targetTime, SERVICES_FADE_START_SECONDS, SERVICES_FADE_END_SECONDS, 0, 1));
+
+    // The ball sits slightly enlarged and shifted right at rest — clear
+    // of the row text beside it — easing back to its natural scale/
+    // position as the paper starts unfolding, same span as everything
+    // else fading out.
+    video.style.transform = `translateX(${lerp(VIDEO_REST_SHIFT_X_PX, 0, servicesShrinkT)}px) scale(${lerp(VIDEO_REST_SCALE, 1, servicesShrinkT)})`;
+
     heading.style.opacity = String(1 - servicesShrinkT);
     heading.style.transform = `scale(${lerp(1, CONTENT_SHRINK_SCALE, servicesShrinkT)})`;
     // The heading zone's own height (and padding — see that constant's
@@ -573,14 +551,14 @@ export default function ServicesSection() {
               open. */}
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center px-6 pb-24">
             <div ref={servicesContentRef} className="flex w-full justify-end">
-              <ServicesRowsBlock
-                getRowRef={(i) => (el) => {
-                  rowRefs.current[i] = el;
-                }}
-              />
+              <ServicesRowsBlock />
             </div>
 
-            <div ref={aboutContentRef} className="pointer-events-none absolute inset-x-0 px-6" style={{ opacity: 0 }}>
+            <div
+              ref={aboutContentRef}
+              className="pointer-events-none absolute inset-x-0 px-6"
+              style={{ opacity: 0, transformOrigin: "72% 82%" }}
+            >
               <AboutBlock />
             </div>
           </div>
