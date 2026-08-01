@@ -157,7 +157,7 @@ export default function ProcessSection() {
   const useSwipe = !prefersReducedMotion && isMobile;
 
   return (
-    <section id="process" className="relative bg-black py-16 md:py-20">
+    <section id="process" className="relative bg-black pt-32 pb-16 md:pt-36 md:pb-20">
       <div className="relative z-10 mx-auto max-w-[1200px] px-6">
         <SectionHeading title="איך אני עובד?" className="mb-12 md:mb-16" />
       </div>
