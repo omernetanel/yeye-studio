@@ -9,6 +9,7 @@ import ServiceCard from "@/components/ui/ServiceCard";
 import Card from "@/components/ui/Card";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
+import { cn } from "@/lib/utils";
 
 const services = [
   {
@@ -105,7 +106,7 @@ const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.8 + 0.5;
 const ABOUT_FADE_OUT_START_SECONDS = 5 + 6 / 30 - 0.5;
 const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 const CONTENT_SHRINK_SCALE = 0.6;
-const VIDEO_REST_SCALE = 1.1;
+const VIDEO_REST_SCALE = 1.18;
 const VIDEO_REST_SHIFT_X_PX = 45;
 
 // PANEL_STICKY_TOP_PX is the panel's *real* sticky top offset — negative,
@@ -148,22 +149,42 @@ interface ServiceRowProps {
   index: number;
 }
 
+// Literal class strings (not built from interpolation) so Tailwind's JIT
+// scanner — which only ever detects classes it can see verbatim in the
+// source — actually generates these arbitrary-color utilities.
+const ROW_HOVER_TEXT_CLASSES = [
+  "group-hover:text-[#A7FF3C]",
+  "group-hover:text-[#3CD9FF]",
+  "group-hover:text-[#A7FF3C]",
+  "group-hover:text-[#FF4FD8]",
+];
+
 function ServiceRow({ service, index }: ServiceRowProps) {
   const Icon = service.icon;
+  const hoverTextClass = ROW_HOVER_TEXT_CLASSES[index];
   return (
     <Link
       href={service.href}
       className="group flex items-center justify-between gap-6 border-b border-black/8 py-6 pe-10 first:pt-0 last:border-b-0"
     >
       <div className="flex items-center gap-5">
-        <span className="font-display text-6xl leading-none font-bold text-black">{String(index + 1).padStart(2, "0")}</span>
+        <span className={cn("font-display text-6xl leading-none font-bold text-black transition-colors duration-200", hoverTextClass)}>
+          {String(index + 1).padStart(2, "0")}
+        </span>
         <span className="w-px self-stretch bg-black/10" />
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-black/10 bg-black/[0.02]">
           <Icon size={22} strokeWidth={1.5} className="text-black/70" />
         </div>
         <div className="text-right">
-          <h3 className="font-display text-lg font-bold text-black">{service.title}</h3>
-          <p className="mt-1 whitespace-pre-line font-body text-[13px] leading-[1.6] text-black/55">{service.description}</p>
+          <h3 className={cn("font-display text-lg font-bold text-black transition-colors duration-200", hoverTextClass)}>{service.title}</h3>
+          <p
+            className={cn(
+              "mt-1 whitespace-pre-line font-body text-[13px] leading-[1.6] text-black/55 transition-colors duration-200",
+              hoverTextClass
+            )}
+          >
+            {service.description}
+          </p>
         </div>
       </div>
 
@@ -191,7 +212,7 @@ function ServicesRowsBlock() {
       {/* Centered across the FULL panel width (list + the paper ball's own
           space beside it) — exactly in the middle of the whole frame,
           not shifted toward either side. */}
-      <div className="flex w-full flex-col items-center text-center">
+      <div className="isolate flex w-full flex-col items-center text-center">
         <p className="max-w-[380px] font-body text-[15px] leading-[1.8] text-black/55">
           פתרונות דיגיטליים מותאמים אישית לעסקים שצריכים תוצאות.
         </p>
@@ -201,8 +222,11 @@ function ServicesRowsBlock() {
       {/* Docked left within a centered sub-zone (not the full panel width)
           so the rows end up close to the ball's own left edge instead of
           stranded against the panel's true left edge with a big gap
-          before the ball. */}
-      <div className="mx-auto mt-16 flex w-full max-w-[900px] -translate-x-[15px] translate-y-[40px] justify-end">
+          before the ball. isolate on both this and the subtitle block
+          above gives each its own stacking context — without it, some
+          browsers mis-paint the subtitle/divider sibling when a scale()
+          transform is applied here. */}
+      <div className="isolate mx-auto mt-16 flex w-full max-w-[900px] -translate-x-[15px] translate-y-[40px] justify-end">
         <div className="flex w-full max-w-[480px] origin-top scale-[0.85] flex-col">
           {services.map((service, i) => (
             <ServiceRow key={service.title} service={service} index={i} />
@@ -350,6 +374,11 @@ export default function ServicesSection() {
 
     servicesContent.style.opacity = String(1 - servicesShrinkT);
     servicesContent.style.transform = `scale(${lerp(1, CONTENT_SHRINK_SCALE, servicesShrinkT)})`;
+    // Once faded out, the row links must stop intercepting clicks meant
+    // for whatever's now on top (About) — opacity alone doesn't disable
+    // pointer-events, so a "fully invisible" row would otherwise still
+    // swallow a click/hover.
+    servicesContent.style.pointerEvents = servicesShrinkT > 0.5 ? "none" : "auto";
 
     const aboutFadeInT = smoothstep(mapRange(targetTime, ABOUT_FADE_IN_START_SECONDS, ABOUT_FADE_IN_END_SECONDS, 0, 1));
     const aboutShrinkT = smoothstep(mapRange(targetTime, ABOUT_FADE_OUT_START_SECONDS, ABOUT_FADE_OUT_END_SECONDS, 0, 1));
