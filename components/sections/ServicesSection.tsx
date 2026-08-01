@@ -53,7 +53,7 @@ const VIDEO_DURATION_FALLBACK = 8;
 // position first (confirmed: a too-small value here reads as the images
 // getting clipped at the top the moment it locks). Not part of the
 // pinned range itself — purely a scroll distance to cover first.
-const SPACER_PX = 140;
+const SPACER_PX = 70;
 
 // The title + 4 cards reveal DURING this same ordinary pre-lock scroll —
 // REVEAL_LEAD_PX worth of scrolling, ending exactly at the moment the
@@ -65,7 +65,7 @@ const SPACER_PX = 140;
 // CARDS_LOCAL_START/CARD_STAGGER/CARD_LOCAL_DURATION stagger the reveal
 // within that 0..1 window (re-scoped via revealT below), same pacing as
 // before, just now scoped to the lead-in instead of the pinned range.
-const REVEAL_LEAD_PX = 640;
+const REVEAL_LEAD_PX = 320;
 const TITLE_LOCAL_START = 0.1;
 const TITLE_LOCAL_END = 0.22;
 const CARDS_LOCAL_START = 0.34;
@@ -282,12 +282,11 @@ export default function ServicesSection() {
     const wrapperTop = wrapper.getBoundingClientRect().top + window.scrollY;
     // The panel sticks at PANEL_STICKY_TOP_PX (its own real CSS top, not
     // NAVBAR_CLEARANCE_PX — see that constant's own comment for why the
-    // two split). Its own height is no longer capped to one viewport (see
-    // the panel's own aspect-ratio sizing above), so the old "the two
-    // clearance terms cancel out" shortcut (which relied on panelHeight
-    // === innerHeight - T) no longer holds — a sticky element with
-    // `top: T` releases once scrollY >= wrapperTop + wrapperHeight -
-    // panelHeight - T, so T has to be subtracted explicitly here now.
+    // two split), so the old "the two clearance terms cancel out"
+    // shortcut (which relied on panelHeight === innerHeight exactly) no
+    // longer holds — a sticky element with `top: T` releases once
+    // scrollY >= wrapperTop + wrapperHeight - panelHeight - T, so T has
+    // to be subtracted explicitly here regardless.
     // pinStart is likewise offset by the lead-in spacer's own height —
     // the panel's natural (unstuck) top sits that far below the
     // wrapper's own top, so it doesn't reach the sticky threshold until
@@ -412,33 +411,26 @@ export default function ServicesSection() {
             goes sticky — see its own comment up top. */}
         <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />
 
-        {/* Sized to the clip's own exact 3:2 aspect (servicesbg.mp4 is
-            1080x720 — not capped to one viewport tall) so it fills edge to
-            edge — width and height — with zero cropping and zero
-            pillarbox/letterbox bars, matching object-contain's math
-            exactly (no gap left over to fill with bars). This matters more
-            here than a generic video would: the crumple effect needs to
-            read as the WHOLE screen folding into a paper ball — any
-            visible white margin around it breaks that illusion and makes
-            it look like a framed clip instead. On a wide-but-short
-            viewport this box is taller than 100vh, which means part of it
-            sits below the fold while the panel is stuck at -top-[20px] —
-            you see the rest as you keep scrolling through the pin, not all
-            at once. Deliberate trade-off (confirmed): the alternative is
-            capping the box to one screen, which forces either a crop or
-            bars — see measurePinRange below for how the pin's release
-            point accounts for a panel taller than the viewport. */}
-        <div ref={panelRef} className="sticky -top-[20px] aspect-[3/2] w-full overflow-hidden bg-white">
-          <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-contain" />
+        {/* Capped to exactly one viewport tall (not the clip's own 3:2
+            aspect) — servicesbg.mp4 has the crumple ball centered with a
+            lot of empty white canvas around it, so sizing the box to the
+            clip's real aspect made the whole panel much taller than the
+            screen, which read as both an oversized "ball" (more of the
+            screen dominated by it while scrolling) and a long dead scroll
+            stretch before any of it was even on screen. object-cover (not
+            object-contain) crops in to fill this box completely — zero
+            pillarbox/letterbox bars — trimming only the source's own
+            blank margin around the ball, never the ball itself, so the
+            crumple still reads as the whole screen folding up, not a
+            framed clip. */}
+        <div ref={panelRef} className="sticky -top-[20px] h-screen w-full overflow-hidden bg-white">
+          <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-cover" />
 
           {/* Title + cards are their own layer, sized to the actually-visible
               slice (100vh - NAVBAR_CLEARANCE_PX) — top-[96px], not top-0,
               to counteract the panel's own -top-[20px] above (76 - -20 =
               96) and stay anchored at the same on-screen position, safely
-              below the Navbar, regardless of where the panel itself now
-              sticks — not centered within the full aspect-ratio box above,
-              which on a wide-but-short viewport can be much taller than one
-              screen and would center this content below the fold. */}
+              below the Navbar. */}
           <div
             ref={contentRef}
             className="absolute inset-x-0 top-[96px] z-10 flex h-[calc(100vh-76px)] flex-col items-center justify-center px-6"
