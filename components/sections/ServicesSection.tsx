@@ -53,21 +53,20 @@ const VIDEO_DURATION_FALLBACK = 8;
 // position first (confirmed: a too-small value here reads as the images
 // getting clipped at the top the moment it locks). Not part of the
 // pinned range itself — purely a scroll distance to cover first.
-const SPACER_PX = 70;
+const SPACER_PX = 35;
 
-// The title + 4 cards reveal DURING this same ordinary pre-lock scroll —
+// The 4 cards reveal DURING this same ordinary pre-lock scroll —
 // REVEAL_LEAD_PX worth of scrolling, ending exactly at the moment the
 // panel goes sticky (pinStartScrollYRef) — not gated behind the video
 // locking first. The clip itself stays frozen on its first frame the
 // whole time (untouched by revealT below); by the time its top reaches
-// the Navbar and it snaps into its stuck position, the title and all 4
-// cards are already fully visible. TITLE_LOCAL_START/END and
-// CARDS_LOCAL_START/CARD_STAGGER/CARD_LOCAL_DURATION stagger the reveal
-// within that 0..1 window (re-scoped via revealT below), same pacing as
-// before, just now scoped to the lead-in instead of the pinned range.
-const REVEAL_LEAD_PX = 320;
-const TITLE_LOCAL_START = 0.1;
-const TITLE_LOCAL_END = 0.22;
+// the Navbar and it snaps into its stuck position, all 4 cards are
+// already fully visible. CARDS_LOCAL_START/CARD_STAGGER/CARD_LOCAL_DURATION
+// stagger the reveal within that 0..1 window (re-scoped via revealT
+// below), same pacing as before, just now scoped to the lead-in instead
+// of the pinned range. The title itself has no entrance effect — it's
+// just statically visible from the start.
+const REVEAL_LEAD_PX = 160;
 const CARDS_LOCAL_START = 0.34;
 const CARD_STAGGER = 0.08;
 const CARD_LOCAL_DURATION = 0.4;
@@ -215,7 +214,6 @@ export default function ServicesSection() {
   const panelRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Array<HTMLAnchorElement | null>>([]);
 
   // Analytical, not scrollYProgress-derived — same reasoning as the Hero's
@@ -243,15 +241,11 @@ export default function ServicesSection() {
     // Reveal progress — 0 at REVEAL_LEAD_PX before the panel locks, 1
     // exactly at lock (pinStartScrollYRef), and pinned at 1 for the rest
     // of the pinned range (mapRange/clamp01 clamp past both ends), which
-    // is what holds the title/cards at their fully-revealed state all
-    // through the hold phase below.
+    // is what holds the cards at their fully-revealed state all through
+    // the hold phase below. The title itself has no entrance effect —
+    // it's just statically visible (see its plain JSX below) — only the
+    // cards stagger in against this.
     const revealT = clamp01(mapRange(rawScrollY, pinStartScrollYRef.current - REVEAL_LEAD_PX, pinStartScrollYRef.current, 0, 1));
-
-    if (titleRef.current) {
-      const titleT = smoothstep(mapRange(revealT, TITLE_LOCAL_START, TITLE_LOCAL_END, 0, 1));
-      titleRef.current.style.opacity = String(titleT);
-      titleRef.current.style.transform = `translateY(${lerp(48, 0, titleT)}px) scale(${lerp(0.82, 1, titleT)})`;
-    }
 
     cardRefs.current.forEach((card, i) => {
       if (!card) return;
@@ -411,20 +405,14 @@ export default function ServicesSection() {
             goes sticky — see its own comment up top. */}
         <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />
 
-        {/* Capped to exactly one viewport tall (not the clip's own 3:2
-            aspect) — servicesbg.mp4 has the crumple ball centered with a
-            lot of empty white canvas around it, so sizing the box to the
-            clip's real aspect made the whole panel much taller than the
-            screen, which read as both an oversized "ball" (more of the
-            screen dominated by it while scrolling) and a long dead scroll
-            stretch before any of it was even on screen. object-cover (not
-            object-contain) crops in to fill this box completely — zero
-            pillarbox/letterbox bars — trimming only the source's own
-            blank margin around the ball, never the ball itself, so the
-            crumple still reads as the whole screen folding up, not a
-            framed clip. */}
-        <div ref={panelRef} className="sticky -top-[20px] h-screen w-full overflow-hidden bg-white">
-          <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-cover" />
+        {/* Sized to the clip's own real 3:2 aspect (servicesbg.mp4 is
+            1080x720) — full width, natural height, no forced crop and no
+            extra stretching beyond that. object-contain at a
+            container matching the clip's own aspect renders it 1:1, so
+            this fills edge to edge with zero pillarbox/letterbox bars
+            without ever touching the ball itself. */}
+        <div ref={panelRef} className="sticky -top-[20px] aspect-[3/2] w-full overflow-hidden bg-white">
+          <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-contain" />
 
           {/* Title + cards are their own layer, sized to the actually-visible
               slice (100vh - NAVBAR_CLEARANCE_PX) — top-[96px], not top-0,
@@ -435,9 +423,7 @@ export default function ServicesSection() {
             ref={contentRef}
             className="absolute inset-x-0 top-[96px] z-10 flex h-[calc(100vh-76px)] flex-col items-center justify-center px-6"
           >
-            <div ref={titleRef} style={{ opacity: 0, transform: "translateY(48px) scale(0.82)" }}>
-              <TitleBlock />
-            </div>
+            <TitleBlock />
 
             <div className="mx-auto mt-10 grid w-full max-w-[1240px] grid-cols-4 gap-5">
               {services.map((service, i) => (
