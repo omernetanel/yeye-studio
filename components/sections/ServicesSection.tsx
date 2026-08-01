@@ -405,13 +405,17 @@ export default function ServicesSection() {
             goes sticky — see its own comment up top. */}
         <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />
 
-        {/* Sized to the clip's own real 3:2 aspect (servicesbg.mp4 is
-            1080x720) — full width, natural height, no forced crop and no
-            extra stretching beyond that. object-contain at a
-            container matching the clip's own aspect renders it 1:1, so
-            this fills edge to edge with zero pillarbox/letterbox bars
-            without ever touching the ball itself. */}
-        <div ref={panelRef} className="sticky -top-[20px] aspect-[3/2] w-full overflow-hidden bg-white">
+        {/* Capped to exactly one viewport tall — the clip's own real aspect
+            (servicesbg.mp4 is 3:2) made this taller than the viewport,
+            which meant only ever seeing a partial, scroll-position-
+            dependent SLICE of it: the crumple ball (centered within the
+            clip's own frame) drifted off-center and out of view as you
+            scrolled, instead of staying centered on screen. object-contain
+            (not cover) never crops or zooms the ball itself — any leftover
+            margin from the clip's own aspect not matching the viewport's
+            is invisible anyway, since the clip's background and this
+            container are both plain white. */}
+        <div ref={panelRef} className="sticky -top-[20px] h-screen w-full overflow-hidden bg-white">
           <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full object-contain" />
 
           {/* Title + cards are their own layer, sized to the actually-visible
