@@ -100,13 +100,13 @@ const SPACER_PX = 35;
 // 0 -> 1), so it's automatically, exactly reversible on scroll-up.
 const SERVICES_FADE_START_SECONDS = 2 + 2 / 30 - 0.8;
 const SERVICES_FADE_END_SECONDS = 2 + 29 / 30 - 1.1;
-const ABOUT_FADE_IN_START_SECONDS = SERVICES_FADE_END_SECONDS + 1;
-const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.8 + 1;
+const ABOUT_FADE_IN_START_SECONDS = SERVICES_FADE_END_SECONDS + 0.5;
+const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.8 + 0.5;
 const ABOUT_FADE_OUT_START_SECONDS = 5 + 6 / 30 - 0.5;
 const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 const CONTENT_SHRINK_SCALE = 0.6;
-const VIDEO_REST_SCALE = 1.05;
-const VIDEO_REST_SHIFT_X_PX = 28;
+const VIDEO_REST_SCALE = 1.1;
+const VIDEO_REST_SHIFT_X_PX = 45;
 
 // PANEL_STICKY_TOP_PX is the panel's *real* sticky top offset — negative,
 // so once stuck its own top edge sits slightly above the viewport,
@@ -203,7 +203,7 @@ function ServicesRowsBlock() {
           stranded against the panel's true left edge with a big gap
           before the ball. */}
       <div className="mx-auto mt-16 flex w-full max-w-[900px] -translate-x-[15px] justify-end">
-        <div className="flex w-full max-w-[480px] flex-col">
+        <div className="flex w-full max-w-[480px] origin-top scale-[0.85] flex-col">
           {services.map((service, i) => (
             <ServiceRow key={service.title} service={service} index={i} />
           ))}
@@ -403,6 +403,34 @@ export default function ServicesSection() {
     headingZone.style.paddingBottom = prevPaddingBottom;
   };
 
+  // The heading's own entrance keeps the default (its own box's) scale
+  // origin, but the Services text's *exit* — heading and rows both —
+  // should shrink toward the true center of the panel, not whichever
+  // point their own (much smaller/off-center) box happens to center on.
+  // transform-origin only ever measures relative to the element's own
+  // box, so hitting an arbitrary point like "panel center" means
+  // computing that offset by hand, once at rest (before either element
+  // has started shrinking, since the heading zone's own collapse would
+  // throw off a mid-animation re-measurement).
+  const measureShrinkOrigins = () => {
+    const heading = headingRef.current;
+    const servicesContent = servicesContentRef.current;
+    if (!heading || !servicesContent) return;
+    // Computed directly from the panel's own known (fixed) sticky
+    // geometry rather than panelRef.getBoundingClientRect() — the panel
+    // is only actually *at* PANEL_STICKY_TOP_PX once scrolled into its
+    // stuck state, so measuring its rect at mount (before that) would
+    // read wherever it naturally sits in the page flow instead.
+    const panelCenterX = window.innerWidth / 2;
+    const panelCenterY = PANEL_STICKY_TOP_PX + window.innerHeight / 2;
+
+    const headingRect = heading.getBoundingClientRect();
+    heading.style.transformOrigin = `${panelCenterX - headingRect.left}px ${panelCenterY - headingRect.top}px`;
+
+    const servicesRect = servicesContent.getBoundingClientRect();
+    servicesContent.style.transformOrigin = `${panelCenterX - servicesRect.left}px ${panelCenterY - servicesRect.top}px`;
+  };
+
   useLayoutEffect(() => {
     if (skipDesktopMotion) return;
     const wrapper = wrapperRef.current;
@@ -429,11 +457,13 @@ export default function ServicesSection() {
     }
 
     measureHeadingZoneHeight();
+    measureShrinkOrigins();
     measurePinRange();
     update();
 
     const handleResize = () => {
       measureHeadingZoneHeight();
+      measureShrinkOrigins();
       measurePinRange();
       update();
     };
