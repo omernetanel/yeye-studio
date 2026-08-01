@@ -3,7 +3,7 @@
 import { forwardRef, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
-import { Code2, LayoutDashboard, Monitor, Paintbrush, Rocket, ShoppingCart, Target, type LucideIcon } from "lucide-react";
+import { Code2, Layers, Monitor, Paintbrush, PenTool, Rocket, ShoppingBag, Target, type LucideIcon } from "lucide-react";
 import SwipeCarousel from "@/components/ui/SwipeCarousel";
 import ServiceCard from "@/components/ui/ServiceCard";
 import Card from "@/components/ui/Card";
@@ -12,7 +12,7 @@ import { useIsMobile } from "@/lib/use-mobile";
 
 const services = [
   {
-    icon: ShoppingCart,
+    icon: ShoppingBag,
     title: "חנויות אונליין",
     description: "חנויות מעוצבות ומדויקות\nעם חוויית קנייה שמביאה מכירות.",
     href: "/services/online-stores",
@@ -30,10 +30,16 @@ const services = [
     href: "/services/business-sites",
   },
   {
-    icon: LayoutDashboard,
+    icon: Layers,
     title: "מערכות ניהול",
     description: "דשבורדים וכלי ניהול פנימיים\nשמסדרים את העסק שלך במקום אחד.",
     href: "/services/dashboards",
+  },
+  {
+    icon: PenTool,
+    title: "מיתוג עסקי",
+    description: "זהות חזותית מלאה שמבדלת אותך\nמהמתחרים ובונה מותג שנשאר בזיכרון.",
+    href: "/services/branding",
   },
 ];
 
@@ -169,21 +175,21 @@ function ServiceRow({ service, index, rowRef }: ServiceRowProps) {
       ref={rowRef}
       href={service.href}
       style={{ opacity: 0, transform: "translateY(24px)" }}
-      className="group flex items-center justify-between gap-6 border-b border-black/8 py-6 first:pt-0 last:border-b-0"
+      className="group flex items-center justify-between gap-6 border-b border-black/8 py-6 pe-8 first:pt-0 last:border-b-0"
     >
       <div className="flex items-center gap-5">
         <div className="text-right">
           <h3 className="font-display text-lg font-bold text-black">{service.title}</h3>
           <p className="mt-1 whitespace-pre-line font-body text-[13px] leading-[1.6] text-black/55">{service.description}</p>
         </div>
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-black/10 bg-black/[0.02]">
-          <Icon size={20} strokeWidth={1.5} className="text-black/70" />
-        </div>
-        <span className="w-px self-stretch bg-black/10" />
         <span className="font-display text-3xl font-light text-black/25">{String(index + 1).padStart(2, "0")}</span>
+        <span className="w-px self-stretch bg-black/10" />
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-black/10 bg-black/[0.02]">
+          <Icon size={22} strokeWidth={1.5} className="text-black/70" />
+        </div>
       </div>
 
-      <span aria-hidden className="ms-4 shrink-0 text-black/40 transition-transform duration-200 group-hover:-translate-x-1">
+      <span aria-hidden className="shrink-0 text-2xl font-bold text-black transition-transform duration-200 group-hover:-translate-x-1">
         ←
       </span>
     </Link>
@@ -478,7 +484,7 @@ export default function ServicesSection() {
             fades in on top of the now-open paper and shrinks/fades out in
             turn (as it re-crumples) — never both visible at once, since
             aboutContent starts at opacity 0 until the paper is open. */}
-        <div className="absolute inset-x-0 top-[96px] z-10 flex h-[calc(100vh-76px)] flex-col items-center justify-center px-6">
+        <div className="absolute inset-x-0 top-[96px] z-10 flex h-[calc(100vh-76px)] flex-col items-center justify-center px-6 pb-24">
           <div ref={servicesContentRef} className="flex w-full justify-end">
             <ServicesListBlock
               getRowRef={(i) => (el) => {
