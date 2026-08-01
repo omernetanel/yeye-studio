@@ -3,7 +3,7 @@
 import { forwardRef, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
-import { Code2, Layers, Monitor, Paintbrush, PenTool, Rocket, ShoppingBag, Target, type LucideIcon } from "lucide-react";
+import { Code2, Layers, Paintbrush, PenTool, Rocket, ShoppingBag, Target, type LucideIcon } from "lucide-react";
 import SwipeCarousel from "@/components/ui/SwipeCarousel";
 import ServiceCard from "@/components/ui/ServiceCard";
 import Card from "@/components/ui/Card";
@@ -19,15 +19,9 @@ const services = [
   },
   {
     icon: Rocket,
-    title: "דפי נחיתה",
-    description: "דפי נחיתה ממוקדים שממירים\nגולשים ללקוחות ומביאים תוצאות.",
+    title: "דפי נחיתה ואתרי תדמית",
+    description: "דפים ואתרים ממוקדים שממירים\nגולשים ללקוחות ובונים אמון.",
     href: "/services/landing-pages",
-  },
-  {
-    icon: Monitor,
-    title: "אתרי תדמית",
-    description: "אתרים יוקרתיים שבונים אמון\nומציגים את העסק שלך ברמה הגבוהה ביותר.",
-    href: "/services/business-sites",
   },
   {
     icon: Layers,
