@@ -3,7 +3,7 @@
 import { forwardRef, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
-import { Code2, Layers, Paintbrush, PenTool, Rocket, ShoppingBag, Target, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Code2, Layers, Paintbrush, PenTool, Rocket, ShoppingBag, Target, type LucideIcon } from "lucide-react";
 import SwipeCarousel from "@/components/ui/SwipeCarousel";
 import ServiceCard from "@/components/ui/ServiceCard";
 import Card from "@/components/ui/Card";
@@ -169,23 +169,26 @@ function ServiceRow({ service, index, rowRef }: ServiceRowProps) {
       ref={rowRef}
       href={service.href}
       style={{ opacity: 0, transform: "translateY(24px)" }}
-      className="group flex items-center justify-between gap-6 border-b border-black/8 py-6 pe-8 first:pt-0 last:border-b-0"
+      className="group flex items-center justify-between gap-6 border-b border-black/8 py-6 pe-10 first:pt-0 last:border-b-0"
     >
       <div className="flex items-center gap-5">
-        <div className="text-right">
-          <h3 className="font-display text-lg font-bold text-black">{service.title}</h3>
-          <p className="mt-1 whitespace-pre-line font-body text-[13px] leading-[1.6] text-black/55">{service.description}</p>
-        </div>
-        <span className="font-display text-3xl font-light text-black/25">{String(index + 1).padStart(2, "0")}</span>
+        <span className="font-display text-4xl font-bold text-black">{String(index + 1).padStart(2, "0")}</span>
         <span className="w-px self-stretch bg-black/10" />
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-black/10 bg-black/[0.02]">
           <Icon size={22} strokeWidth={1.5} className="text-black/70" />
         </div>
+        <div className="text-right">
+          <h3 className="font-display text-lg font-bold text-black">{service.title}</h3>
+          <p className="mt-1 whitespace-pre-line font-body text-[13px] leading-[1.6] text-black/55">{service.description}</p>
+        </div>
       </div>
 
-      <span aria-hidden className="shrink-0 text-2xl font-bold text-black transition-transform duration-200 group-hover:-translate-x-1">
-        ←
-      </span>
+      <ArrowLeft
+        aria-hidden
+        size={32}
+        strokeWidth={2.25}
+        className="shrink-0 text-black transition-transform duration-200 group-hover:-translate-x-1"
+      />
     </Link>
   );
 }
