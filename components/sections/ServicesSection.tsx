@@ -99,10 +99,18 @@ const SPACER_PX = 35;
 //
 // video.currentTime maps linearly across the ENTIRE pinned range (progress
 // 0 -> 1), so it's automatically, exactly reversible on scroll-up.
-const SERVICES_FADE_START_SECONDS = 2 + 2 / 30 - 0.8;
-const SERVICES_FADE_END_SECONDS = 2 + 29 / 30 - 1.1;
+// A beat where the Services text sits fully visible once the panel pins,
+// before it starts fading at all. Without it the fade begins so early in
+// the pinned range that a single normal scroll flick covers the entire
+// fade window, so the heading reads as vanishing the instant it arrives.
+// Shifts the Services fade and About's entrance together (About's exit is
+// deliberately left where it is), so the gap between the two phases —
+// and About's own fade-in duration — stay exactly as tuned.
+const SERVICES_HOLD_SECONDS = 0.5;
+const SERVICES_FADE_START_SECONDS = 2 + 2 / 30 - 0.8 + SERVICES_HOLD_SECONDS;
+const SERVICES_FADE_END_SECONDS = 2 + 29 / 30 - 1.1 + SERVICES_HOLD_SECONDS;
 const ABOUT_FADE_IN_START_SECONDS = SERVICES_FADE_END_SECONDS + 0.5;
-const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.8 + 0.5;
+const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.8 + 0.5 + SERVICES_HOLD_SECONDS;
 const ABOUT_FADE_OUT_START_SECONDS = 5 + 6 / 30 - 0.5;
 const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 const CONTENT_SHRINK_SCALE = 0.6;
@@ -636,12 +644,17 @@ export default function ServicesSection() {
             phase), then About (its own phase), positioned relative to
             *this* zone rather than the whole panel. */}
         <div className="relative min-h-0 flex-1 overflow-hidden">
-          {/* bg-white: object-contain leaves the video element's own
-              intrinsic-aspect margin unpainted, which several browsers
-              default to a black backing surface — visible as a thin dark
-              seam right where that margin's edge lands once the element
-              is scaled/shifted (see VIDEO_REST_SCALE/SHIFT above). White
-              backing makes that margin invisible against the page instead. */}
+          {/* bg-white just keeps object-contain's letterbox margin the same
+              colour as the page. The thin vertical line that used to show
+              along the clip's own content edge was NOT this margin — the
+              source was encoded limited-range (color_range=tv, white at
+              Y=235), and browsers whose H.264 path skips the limited->full
+              expansion painted the whole video rect as #EBEBEB against a
+              white page, so its edge read as a seam. Fixed at the source:
+              servicesbg.mp4 is now full-range (color_range=pc, white at
+              Y=255), which renders white under both decoder behaviours —
+              correct ones leave 255 alone, ones that expand anyway clip
+              back to 255. Keep any re-encode of this clip full-range. */}
           <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full bg-white object-contain" />
 
           {/* Two content layers share the same on-screen slot — Services
