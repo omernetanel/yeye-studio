@@ -192,8 +192,12 @@ function ServiceRow({ service, index, rowRef }: ServiceRowProps) {
 
 function ServicesListBlock({ getRowRef }: { getRowRef?: (i: number) => (el: HTMLAnchorElement | null) => void }) {
   return (
-    <div className="w-full max-w-[700px]">
-      <div className="flex flex-col items-center text-center">
+    <div className="w-full">
+      {/* Centered across the FULL panel width (list + the paper ball's own
+          space beside it), not just within the row column below — the
+          heading needs to sit exactly in the middle of the whole frame,
+          not the middle of the (left-docked) list alone. */}
+      <div className="flex w-full flex-col items-center text-center">
         <h2 className="font-display text-4xl font-bold text-black md:text-5xl">מה אני עושה</h2>
         <p className="mt-4 max-w-[360px] font-body text-[15px] leading-[1.8] text-black/55">
           פתרונות דיגיטליים מותאמים אישית לעסקים שצריכים תוצאות.
@@ -201,10 +205,12 @@ function ServicesListBlock({ getRowRef }: { getRowRef?: (i: number) => (el: HTML
         <div className="mt-6 h-[3px] w-10 rounded-full bg-[image:var(--gradient-accent)]" />
       </div>
 
-      <div className="mt-8 flex flex-col">
-        {services.map((service, i) => (
-          <ServiceRow key={service.title} service={service} index={i} rowRef={getRowRef ? getRowRef(i) : () => {}} />
-        ))}
+      <div className="mt-8 flex w-full justify-end">
+        <div className="flex w-full max-w-[700px] flex-col">
+          {services.map((service, i) => (
+            <ServiceRow key={service.title} service={service} index={i} rowRef={getRowRef ? getRowRef(i) : () => {}} />
+          ))}
+        </div>
       </div>
     </div>
   );
