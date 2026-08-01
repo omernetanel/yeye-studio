@@ -324,8 +324,13 @@ export default function ServicesSection() {
 
     const aboutFadeInT = smoothstep(mapRange(targetTime, ABOUT_FADE_IN_START_SECONDS, ABOUT_FADE_IN_END_SECONDS, 0, 1));
     const aboutShrinkT = smoothstep(mapRange(targetTime, ABOUT_FADE_OUT_START_SECONDS, ABOUT_FADE_OUT_END_SECONDS, 0, 1));
-    aboutContent.style.opacity = String(aboutFadeInT * (1 - aboutShrinkT));
-    aboutContent.style.transform = `scale(${lerp(1, CONTENT_SHRINK_SCALE, aboutShrinkT)})`;
+    // Same combined curve drives both opacity and scale — small and
+    // invisible before it starts, growing to full size as it fades in,
+    // then shrinking back down as it fades out, instead of popping in at
+    // full size the instant opacity starts rising.
+    const aboutGrowT = aboutFadeInT * (1 - aboutShrinkT);
+    aboutContent.style.opacity = String(aboutGrowT);
+    aboutContent.style.transform = `scale(${lerp(CONTENT_SHRINK_SCALE, 1, aboutGrowT)})`;
   };
 
   const measurePinRange = () => {

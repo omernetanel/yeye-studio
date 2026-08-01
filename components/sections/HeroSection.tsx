@@ -89,9 +89,9 @@ export default function HeroSection() {
         // spreading past the Hero" is handled instead, entirely inside
         // the canvas's existing footprint. -top-[100px] pulls it up to
         // the section's own top edge (matching the h-screen block's own
-        // pt-[100px] exactly, not a value derived from the Navbar's
-        // current height) — safe since the Navbar is fixed, opaque, and
-        // stacked above everything else regardless. bottom-0 is relative
+        // pt-[48px] exactly, not a value derived from the Navbar's
+        // current height) — the ink already covers the small strip
+        // the Navbar's floating logo sits over too. bottom-0 is relative
         // to the section itself, reaching the bottom row's own bottom
         // edge, which is the section's true bottom edge too. It's the
         // bottom-most layer (first in DOM, no z-index): the h-screen
@@ -101,7 +101,7 @@ export default function HeroSection() {
         // still reaches this element and splats, with pointer-events-auto
         // opted back in specifically on the CTA button and the two
         // contact icons so they stay genuinely, unaffectedly clickable.
-        <div className="absolute inset-x-0 bottom-0 -top-[100px] overflow-hidden">
+        <div className="absolute inset-x-0 bottom-0 -top-[48px] overflow-hidden">
           <FluidInkReveal
             logoSrc="/images/logo.png"
             videoSrc="/videos/herobg.mp4"
@@ -116,8 +116,8 @@ export default function HeroSection() {
       <div
         className={
           prefersReducedMotion
-            ? "relative flex h-screen min-h-[640px] flex-col pt-[100px] pb-4"
-            : "relative flex h-screen min-h-[640px] flex-col pt-[100px] pb-4 pointer-events-none"
+            ? "relative flex h-screen min-h-[640px] flex-col pt-[48px] pb-4"
+            : "relative flex h-screen min-h-[640px] flex-col pt-[48px] pb-4 pointer-events-none"
         }
       >
         {/* The wordmark is pixels (drawn into a canvas, see FluidInkReveal),
@@ -167,7 +167,7 @@ export default function HeroSection() {
               above), not a plain CSS aspect-ratio, so it shrinks to fit
               both the available width AND height instead of only ever
               being driven by width. */}
-          <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-0 pt-[39px] sm:px-2">
+          <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-0 pt-[12px] sm:px-2">
             {prefersReducedMotion && (
               <div ref={logoSlotRef} className="relative mx-auto overflow-hidden">
                 <div className="absolute inset-x-0" style={{ top: "-19.0476%", height: "119.0476%" }}>
