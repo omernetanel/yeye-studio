@@ -153,15 +153,23 @@ interface ServiceRowProps {
 // scanner — which only ever detects classes it can see verbatim in the
 // source — actually generates these arbitrary-color utilities.
 const ROW_HOVER_TEXT_CLASSES = [
-  "group-hover:text-[#A7FF3C]",
+  "group-hover:text-[#FF9D3C]",
   "group-hover:text-[#3CD9FF]",
   "group-hover:text-[#A7FF3C]",
   "group-hover:text-[#FF4FD8]",
 ];
 
+const ROW_HOVER_BORDER_CLASSES = [
+  "group-hover:border-[#FF9D3C]",
+  "group-hover:border-[#3CD9FF]",
+  "group-hover:border-[#A7FF3C]",
+  "group-hover:border-[#FF4FD8]",
+];
+
 function ServiceRow({ service, index }: ServiceRowProps) {
   const Icon = service.icon;
   const hoverTextClass = ROW_HOVER_TEXT_CLASSES[index];
+  const hoverBorderClass = ROW_HOVER_BORDER_CLASSES[index];
   return (
     <Link
       href={service.href}
@@ -172,8 +180,13 @@ function ServiceRow({ service, index }: ServiceRowProps) {
           {String(index + 1).padStart(2, "0")}
         </span>
         <span className="w-px self-stretch bg-black/10" />
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-black/10 bg-black/[0.02]">
-          <Icon size={22} strokeWidth={1.5} className="text-black/70" />
+        <div
+          className={cn(
+            "flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-black/10 bg-black/[0.02] transition-colors duration-200",
+            hoverBorderClass
+          )}
+        >
+          <Icon size={22} strokeWidth={1.5} className={cn("text-black/70 transition-colors duration-200", hoverTextClass)} />
         </div>
         <div className="text-right">
           <h3 className={cn("font-display text-lg font-bold text-black transition-colors duration-200", hoverTextClass)}>{service.title}</h3>
