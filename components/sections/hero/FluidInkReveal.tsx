@@ -56,8 +56,8 @@ const CFG = {
   SPLAT_RADIUS: 0.0006,
   SPLAT_FORCE: 120,
   SPLAT_SPACING: 0.006,
-  MASK_LO: 0.1,
-  MASK_HI: 0.34,
+  MASK_LO: 0.09,
+  MASK_HI: 0.31,
 };
 
 // The bottom-most INTERACTIVE_BOTTOM_MARGIN_PX of the wrapper (roughly the
