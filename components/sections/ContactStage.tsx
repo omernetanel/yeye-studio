@@ -42,6 +42,24 @@ const BEZEL = 26;
 // Scroll length of the pinned run, on top of the section's own first screen.
 const PIN_VH = 220;
 
+// A beat after the pull-back finishes where the panel is still pinned but
+// nothing moves, so the finished room gets to sit still before the page
+// carries on into the process section instead of the zoom running straight
+// out of the pin. Roughly two notches of a mouse wheel.
+const HOLD_VH = 35;
+
+// The floating logo's fixed spot. The clip is the only dark thing in this
+// section, and it shrinks away from the corner as the zoom pulls back, so the
+// logo has to flip from light to dark partway through — mirrored from
+// Navbar's own LOGO_CENTER_Y_PX.
+const LOGO_X_PX = 66;
+const LOGO_Y_PX = 40;
+
+// Where in the pinned range the zoom is finished. Past this the mapping below
+// clamps, which is what makes the tail a genuine hold rather than a slower
+// continuation of the move.
+const ZOOM_END = PIN_VH / (PIN_VH + HOLD_VH);
+
 // The contact block clears out over the first slice of the pin, and the zoom
 // only starts once it has: pulling the scene back while the form is still
 // legible reads as two things happening at once rather than one.
@@ -224,7 +242,7 @@ export default function ContactStage() {
     // whichever axis it has to rather than ever showing a white margin.
     const scaleStart = vw / VIDEO_W;
     const scaleEnd = Math.max(vw / ROOM_W, vh / ROOM_H);
-    const zoomT = smoothstep(mapRange(progress, ZOOM_START, 1, 0, 1));
+    const zoomT = smoothstep(mapRange(progress, ZOOM_START, ZOOM_END, 0, 1));
     const scale = lerp(scaleStart, scaleEnd, zoomT);
 
     // Where the screen's centre sits on screen at each end. Interpolating the
@@ -239,6 +257,19 @@ export default function ContactStage() {
     const focalY = lerp(focalStartY, focalEndY, zoomT);
 
     stage.style.transform = `translate(${focalX - SCREEN_CX * scale}px, ${focalY - SCREEN_CY * scale}px) scale(${scale})`;
+
+    // The clip is centred on the focal point, so its on-screen box falls out
+    // of the same two numbers. Report dark only while it actually sits under
+    // the logo — the room behind it is white, so once the clip has pulled away
+    // from the corner the logo has to go back to its dark-on-light form.
+    const halfW = (VIDEO_W * scale) / 2;
+    const halfH = (VIDEO_H * scale) / 2;
+    const overClip =
+      LOGO_X_PX >= focalX - halfW &&
+      LOGO_X_PX <= focalX + halfW &&
+      LOGO_Y_PX >= focalY - halfH &&
+      LOGO_Y_PX <= focalY + halfH;
+    wrapperRef.current?.setAttribute("data-nav-dark", overClip ? "true" : "false");
   };
 
   const measurePinRange = () => {
@@ -297,7 +328,7 @@ export default function ContactStage() {
       ref={wrapperRef}
       id="contact"
       className="relative bg-white"
-      style={{ height: `calc(100vh + ${PIN_VH}vh)` }}
+      style={{ height: `calc(100vh + ${PIN_VH + HOLD_VH}vh)` }}
     >
       <div ref={panelRef} className="sticky top-0 h-screen w-full overflow-hidden bg-white">
         {/* One rigid scene in the plate's own pixel space. Only this element's

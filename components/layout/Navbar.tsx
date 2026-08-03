@@ -46,9 +46,19 @@ export default function Navbar() {
   const checkTheme = () => {
     const img = imgRef.current;
     if (!img) return;
-    const dark = document.getElementById("process");
-    const rect = dark?.getBoundingClientRect();
-    const onDark = !!rect && rect.top <= LOGO_CENTER_Y_PX && rect.bottom >= LOGO_CENTER_Y_PX;
+    // Any section can declare itself dark behind the logo via data-nav-dark.
+    // Sections whose darkness changes as you scroll — the contact stage opens
+    // on full-bleed footage and ends on a white room — flip that flag
+    // themselves, so this stays a simple "is something dark under me" check
+    // rather than needing to know how each section works.
+    let onDark = false;
+    for (const el of document.querySelectorAll<HTMLElement>('[data-nav-dark="true"]')) {
+      const rect = el.getBoundingClientRect();
+      if (rect.top <= LOGO_CENTER_Y_PX && rect.bottom >= LOGO_CENTER_Y_PX) {
+        onDark = true;
+        break;
+      }
+    }
     img.style.filter = onDark ? DARK_FILTER : LIGHT_FILTER;
   };
 
@@ -56,7 +66,28 @@ export default function Navbar() {
     checkTheme();
   }, [pathname]);
 
-  useMotionValueEvent(scrollY, "change", checkTheme);
+  // Deferred a frame on purpose. Sections that compute their own darkness
+  // write data-nav-dark from their own scroll handler, and this component
+  // subscribes to the same motion value earlier, so reading it inline meant
+  // sampling the previous frame's value — which then stuck if the user
+  // stopped scrolling on the very frame it changed. A rAF hop guarantees
+  // every writer has run first; the ref keeps it to one check per frame.
+  const rafRef = useRef<number | null>(null);
+  const scheduleCheck = () => {
+    if (rafRef.current !== null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      checkTheme();
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  useMotionValueEvent(scrollY, "change", scheduleCheck);
 
   return (
     <motion.div

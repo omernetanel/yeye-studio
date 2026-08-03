@@ -309,6 +309,7 @@ function PinnedSteps() {
     <section
       ref={wrapperRef}
       id="process"
+      data-nav-dark="true"
       className="relative bg-black"
       style={{ height: `calc(100vh + ${steps.length * STEP_SCROLL_VH}vh + ${PRE_PIN_SPACER_PX}px)` }}
     >
@@ -354,7 +355,7 @@ export default function ProcessSection() {
 
   if (prefersReducedMotion) {
     return (
-      <section id="process" className="relative bg-black pt-32 pb-16 md:pt-36 md:pb-20">
+      <section id="process" data-nav-dark="true" className="relative bg-black pt-32 pb-16 md:pt-36 md:pb-20">
         <div className="relative z-10 mx-auto max-w-[1200px] px-6">
           <SectionHeading title="איך אני עובד?" className="mb-12 md:mb-16" />
         </div>
@@ -367,7 +368,7 @@ export default function ProcessSection() {
 
   if (isMobile) {
     return (
-      <section id="process" className="relative bg-black pt-32 pb-16 md:pt-36 md:pb-20">
+      <section id="process" data-nav-dark="true" className="relative bg-black pt-32 pb-16 md:pt-36 md:pb-20">
         <div className="relative z-10 mx-auto max-w-[1200px] px-6">
           <SectionHeading title="איך אני עובד?" className="mb-12 md:mb-16" />
         </div>
