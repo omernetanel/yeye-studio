@@ -26,6 +26,15 @@ const SCREEN_H = 1152;
 const SCREEN_CX = SCREEN_X + SCREEN_W / 2;
 const SCREEN_CY = SCREEN_Y + SCREEN_H / 2;
 
+// The clip is never reframed to suit the plate. The plate is a placeholder and
+// its cut-out happens to be 1.94:1, so the clip keeps its true 16:9 and is
+// fitted inside that cut-out by height and centred; the leftover strip on
+// either side simply becomes more black bezel. Nothing is cropped at any zoom
+// level. When the plate is replaced with one whose screen is a real 16:9,
+// these numbers collapse to the cut-out itself with no side strip left.
+const VIDEO_H = SCREEN_H;
+const VIDEO_W = SCREEN_H * (16 / 9);
+
 // Plasma-style bezel, in the same image space, so it scales with everything
 // else instead of staying a fixed number of screen pixels.
 const BEZEL = 26;
@@ -149,10 +158,8 @@ function StageVideo() {
       autoPlay
       preload="auto"
       disablePictureInPicture
-      // object-cover: the cut-out is 1.94:1 against the clip's 16:9, so the
-      // screen is filled edge to edge with a slight vertical crop instead of
-      // leaving slack inside the bezel. The crop is identical at every zoom
-      // level, which is what keeps the move reading as one rigid scene.
+      // Its box is built at the clip's own 16:9, so nothing is ever cropped
+      // or letterboxed here — the frame is shown whole at every zoom level.
       className="h-full w-full object-cover"
     >
       <source src={VIDEO_SRC} type="video/mp4" />
@@ -215,7 +222,7 @@ export default function ContactStage() {
     // Start: the screen cut-out spans the full viewport width.
     // End: the plate covers the viewport — max, not min, so it bleeds off
     // whichever axis it has to rather than ever showing a white margin.
-    const scaleStart = vw / SCREEN_W;
+    const scaleStart = vw / VIDEO_W;
     const scaleEnd = Math.max(vw / ROOM_W, vh / ROOM_H);
     const zoomT = smoothstep(mapRange(progress, ZOOM_START, 1, 0, 1));
     const scale = lerp(scaleStart, scaleEnd, zoomT);
@@ -224,7 +231,7 @@ export default function ContactStage() {
     // focal point (rather than the plate's corner) is what anchors the zoom to
     // the footage instead of letting the scene slide while it shrinks.
     const focalStartX = vw / 2;
-    const focalStartY = (SCREEN_H * scaleStart) / 2;
+    const focalStartY = (VIDEO_H * scaleStart) / 2;
     const focalEndX = (vw - ROOM_W * scaleEnd) / 2 + SCREEN_CX * scaleEnd;
     const focalEndY = (vh - ROOM_H * scaleEnd) / 2 + SCREEN_CY * scaleEnd;
 
@@ -329,7 +336,10 @@ export default function ContactStage() {
               boxSizing: "border-box",
             }}
           >
-            <div className="relative h-full w-full overflow-hidden">
+            <div
+              className="absolute top-1/2 left-1/2 overflow-hidden"
+              style={{ width: VIDEO_W, height: VIDEO_H, transform: "translate(-50%, -50%)" }}
+            >
               <StageVideo />
             </div>
           </div>
