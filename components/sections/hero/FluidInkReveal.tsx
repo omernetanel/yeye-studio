@@ -385,11 +385,24 @@ interface FluidInkRevealProps {
    * "how big should the logo be" formula is deliberate: a formula is
    * exactly what miscalculated the logo's size in an earlier pass. */
   logoSlotRef: React.RefObject<HTMLElement | null>;
+  /** Hero CTAs painted onto the paper layer so the ink washes over them the
+   * same way it does the wordmark. Their DOM elements stay real and
+   * clickable but transparent; these are measured, never styled. */
+  ctas?: CtaTarget[];
   className?: string;
 }
 
+export interface CtaTarget {
+  ref: React.RefObject<HTMLElement | null>;
+  labelRef: React.RefObject<HTMLElement | null>;
+  arrowRef: React.RefObject<HTMLElement | null>;
+  fill: string;
+  textColor: string;
+  borderColor?: string;
+}
+
 const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(function FluidInkReveal(
-  { logoSrc, videoSrc, taglineText, taglineElRef, logoSlotRef, className },
+  { logoSrc, videoSrc, taglineText, taglineElRef, logoSlotRef, ctas, className },
   ref
 ) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -397,6 +410,13 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
   const videoRef = useRef<HTMLVideoElement>(null);
   const activeRef = useRef(false);
   const redrawRef = useRef<(() => void) | null>(null);
+  // Same escape hatch the tagline text uses: read through a ref so the
+  // single long-lived effect below never needs these in its dep array.
+  const ctasRef = useRef<CtaTarget[] | undefined>(ctas);
+  ctasRef.current = ctas;
+  // Which CTA the pointer is currently over, so its arrow can sit shifted.
+  // Only ever changes on enter/leave, so a repaint per change is cheap.
+  const hoveredCtaRef = useRef(-1);
   // redrawPaper() is created once, inside the main effect below, which
   // deliberately does NOT re-run on every taglineText change (that would
   // mean tearing down and rebuilding the whole WebGL context per
@@ -717,6 +737,76 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
         splatRadiusScale = fullRect.height / rect.height;
       }
 
+      // CTAs — painted straight onto the paper layer, measured from their
+      // own (transparent) DOM boxes so the canvas copy lands exactly where
+      // the real, clickable link already is.
+      const currentCtas = ctasRef.current;
+      if (currentCtas) {
+        currentCtas.forEach((cta, i) => {
+          const el = cta.ref.current;
+          if (!el) return;
+          const bRect = el.getBoundingClientRect();
+          if (bRect.width <= 0 || bRect.height <= 0) return;
+          const bx = (bRect.left - rect.left) * dpr;
+          const by = (bRect.top - rect.top) * dpr;
+          const bw = bRect.width * dpr;
+          const bh = bRect.height * dpr;
+          const radius = 8 * dpr; // matches rounded-lg
+
+          paperCtx.beginPath();
+          if (typeof paperCtx.roundRect === "function") {
+            paperCtx.roundRect(bx, by, bw, bh, radius);
+          } else {
+            paperCtx.rect(bx, by, bw, bh);
+          }
+          paperCtx.fillStyle = cta.fill;
+          paperCtx.fill();
+          if (cta.borderColor) {
+            paperCtx.lineWidth = Math.max(1, dpr);
+            paperCtx.strokeStyle = cta.borderColor;
+            paperCtx.stroke();
+          }
+
+          const labelEl = cta.labelRef.current;
+          if (labelEl) {
+            const lRect = labelEl.getBoundingClientRect();
+            const lStyle = getComputedStyle(labelEl);
+            paperCtx.font = `${lStyle.fontWeight} ${parseFloat(lStyle.fontSize) * dpr}px ${lStyle.fontFamily}`;
+            paperCtx.fillStyle = cta.textColor;
+            paperCtx.textAlign = "center";
+            paperCtx.textBaseline = "middle";
+            paperCtx.direction = "rtl";
+            paperCtx.fillText(
+              labelEl.textContent ?? "",
+              (lRect.left + lRect.width / 2 - rect.left) * dpr,
+              (lRect.top + lRect.height / 2 - rect.top) * dpr
+            );
+          }
+
+          const arrowEl = cta.arrowRef.current;
+          if (arrowEl) {
+            const aRect = arrowEl.getBoundingClientRect();
+            // Only movement on hover — the arrow slides toward the direction
+            // it points, the same nudge the service rows use.
+            const shift = (hoveredCtaRef.current === i ? -4 : 0) * dpr;
+            const ax = (aRect.left - rect.left) * dpr + shift;
+            const ay = (aRect.top - rect.top) * dpr;
+            const size = aRect.width * dpr;
+            const u = size / 14; // the icon's own 14x14 viewBox
+            paperCtx.beginPath();
+            paperCtx.moveTo(ax + 11.5 * u, ay + 7 * u);
+            paperCtx.lineTo(ax + 2.5 * u, ay + 7 * u);
+            paperCtx.moveTo(ax + 6.5 * u, ay + 3 * u);
+            paperCtx.lineTo(ax + 2.5 * u, ay + 7 * u);
+            paperCtx.lineTo(ax + 6.5 * u, ay + 11 * u);
+            paperCtx.strokeStyle = cta.textColor;
+            paperCtx.lineWidth = 1.5 * u;
+            paperCtx.lineCap = "round";
+            paperCtx.lineJoin = "round";
+            paperCtx.stroke();
+          }
+        });
+      }
       gl.bindTexture(gl.TEXTURE_2D, paperTexture);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, paperCanvas);
@@ -724,6 +814,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
 
       positionVideo();
     };
+
     redrawRef.current = redrawPaper;
 
     // Video registration: matched on WIDTH (see the note in HeroSection's
@@ -862,6 +953,31 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     //
     // No touch-action: none — a drag across the mark should still let the
     // page scroll normally; we only ever read pointer position.
+    // The CTAs' only hover response: their arrow slides. Repainting the
+    // paper layer on enter/leave is two repaints per hover, not one per
+    // frame, which is why this stayed affordable when a scale/shimmer
+    // effect would not have.
+    const ctaCleanups: (() => void)[] = [];
+    (ctasRef.current ?? []).forEach((cta, i) => {
+      const el = cta.ref.current;
+      if (!el) return;
+      const onEnter = () => {
+        hoveredCtaRef.current = i;
+        redrawPaper();
+      };
+      const onLeave = () => {
+        if (hoveredCtaRef.current !== i) return;
+        hoveredCtaRef.current = -1;
+        redrawPaper();
+      };
+      el.addEventListener("pointerenter", onEnter);
+      el.addEventListener("pointerleave", onLeave);
+      ctaCleanups.push(() => {
+        el.removeEventListener("pointerenter", onEnter);
+        el.removeEventListener("pointerleave", onLeave);
+      });
+    });
+
     const interactionTarget: HTMLElement = wrapper.closest("section") ?? wrapper;
     interactionTarget.addEventListener("pointermove", handlePointerMove);
     interactionTarget.addEventListener("pointerleave", handlePointerLeave);
@@ -1024,6 +1140,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       if (rafId !== null) cancelAnimationFrame(rafId);
       ro.disconnect();
       window.removeEventListener("orientationchange", resize);
+      ctaCleanups.forEach((fn) => fn());
       interactionTarget.removeEventListener("pointermove", handlePointerMove);
       interactionTarget.removeEventListener("pointerleave", handlePointerLeave);
       interactionTarget.removeEventListener("pointercancel", handlePointerLeave);

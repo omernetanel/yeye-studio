@@ -52,6 +52,16 @@ export default function Footer({ light = false }: FooterProps) {
             height={3500}
             className={cn("h-5 w-auto brightness-0", light ? "opacity-40" : "invert-[0.35]")}
           />
+          {/* Sits under the footer mark only — the hero wordmark and the
+              floating navbar mark are deliberately left as they are. */}
+          <span
+            className={cn(
+              "font-display text-[10px] font-medium tracking-[0.42em] uppercase",
+              light ? "text-black/35" : "text-white/35"
+            )}
+          >
+            Digital
+          </span>
         </div>
 
         {/* Copyright */}
