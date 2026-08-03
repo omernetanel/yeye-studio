@@ -54,12 +54,12 @@ export default function HeroSection() {
     const area = logoAreaRef.current;
     const slot = logoSlotRef.current;
     if (!area || !slot) return;
-    const CROPPED_ASPECT = 2940 / 8200; // height/width of the visible (post-crop) box
+    const CROPPED_ASPECT = 2434 / 8200; // height/width of the visible (post-crop) box
     // Applied AFTER the fit below, so the mark reads a touch smaller than
     // the space it's given without ever being able to overflow it — the
     // fit already guarantees it fits, and scaling both axes by the same
     // factor keeps the aspect ratio and the centring intact.
-    const LOGO_FIT_SCALE = 0.92;
+    const LOGO_FIT_SCALE = 0.96;
 
     const resize = () => {
       const rect = area.getBoundingClientRect();
@@ -121,8 +121,8 @@ export default function HeroSection() {
       <div
         className={
           prefersReducedMotion
-            ? "relative flex h-[calc(100vh-120px)] min-h-[520px] flex-col pt-[48px] pb-4"
-            : "relative flex h-[calc(100vh-120px)] min-h-[520px] flex-col pt-[48px] pb-4 pointer-events-none"
+            ? "relative flex h-[calc(100vh-96px)] min-h-[544px] flex-col pt-[48px] pb-4"
+            : "relative flex h-[calc(100vh-96px)] min-h-[544px] flex-col pt-[48px] pb-4 pointer-events-none"
         }
       >
         {/* The wordmark is pixels (drawn into a canvas, see FluidInkReveal),
@@ -180,10 +180,14 @@ export default function HeroSection() {
               above), not a plain CSS aspect-ratio, so it shrinks to fit
               both the available width AND height instead of only ever
               being driven by width. */}
-          <div ref={logoAreaRef} className="relative min-h-0 w-full flex-1 select-none px-0 pt-[12px] sm:px-2">
+          {/* pt offsets this box so the mark lands optically centred between the
+              tagline above and the buttons below, rather than centred in its
+              own box — both reference points sit a fixed distance outside
+              this box's own edges. */}
+          <div ref={logoAreaRef} className="relative flex min-h-0 w-full flex-1 select-none items-center justify-center px-0 pt-[18px] sm:px-2">
             {prefersReducedMotion && (
               <div ref={logoSlotRef} className="relative mx-auto overflow-hidden">
-                <div className="absolute inset-x-0" style={{ top: "-19.0476%", height: "119.0476%" }}>
+                <div className="absolute inset-x-0" style={{ top: "-23.0074%", height: "143.7962%" }}>
                   {/* logo.png's opaque pixels are white (a solid-fill wordmark on
                       transparent, not baked black) — brightness(0) recolors them
                       to black, same as FluidInkReveal's own canvas draw does. logo.png
@@ -227,8 +231,8 @@ export default function HeroSection() {
       <div
         className={
           prefersReducedMotion
-            ? "flex h-[120px] w-full shrink-0 items-end pb-8"
-            : "relative z-10 flex h-[120px] w-full shrink-0 items-end pb-8 pointer-events-none"
+            ? "flex h-[96px] w-full shrink-0 items-end pb-8"
+            : "relative z-10 flex h-[96px] w-full shrink-0 items-end pb-8 pointer-events-none"
         }
       >
         <div className="relative mx-auto flex w-full max-w-[1400px] items-end justify-between px-6">
@@ -246,7 +250,7 @@ export default function HeroSection() {
               <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
                 צפו בעבודות שלי
               </Button>
-              <Button href="/#contact" variant="primary" showArrow={false} className="!border !border-black !bg-none !bg-white !text-black !shadow-none px-10 py-4 text-lg">
+              <Button href="/#contact" variant="primary" className="!border !border-black !bg-none !bg-white !text-black !shadow-none px-10 py-4 text-lg">
                 קבעו פגישה
               </Button>
             </div>
