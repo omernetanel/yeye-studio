@@ -114,7 +114,7 @@ const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.8 + 0.5 + SERVICES_HOLD_SECONDS;
 const ABOUT_FADE_OUT_START_SECONDS = 5 + 6 / 30 - 0.5;
 const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 const CONTENT_SHRINK_SCALE = 0.6;
-const VIDEO_REST_SCALE = 1.46;
+const VIDEO_REST_SCALE = 1.10;
 const VIDEO_REST_SHIFT_X_PX = 45;
 
 // About's entrance keeps this custom, off-center origin (matches the
@@ -246,7 +246,6 @@ const ServicesHeading = forwardRef<HTMLDivElement>(function ServicesHeading(_pro
         לעסקים שרוצים תוצאות.
       </h2>
       <p className="mt-2 font-body text-[15px] leading-[1.8] text-black/55">ובתכל&rsquo;ס, זה מה שאני עושה:</p>
-      <div className="mt-4 h-[3px] w-10 rounded-full bg-[image:var(--gradient-accent)]" />
     </div>
   );
 });
@@ -254,7 +253,7 @@ const ServicesHeading = forwardRef<HTMLDivElement>(function ServicesHeading(_pro
 function ServicesRowsBlock() {
   return (
     <div
-      className="isolate mx-auto flex w-full max-w-[900px] -translate-x-[15px] translate-y-[82px] justify-end"
+      className="isolate mx-auto flex w-full max-w-[900px] -translate-x-[15px] translate-y-[94px] justify-end"
     >
       <div className="flex w-full max-w-[480px] origin-center scale-[0.95] flex-col">
         {services.map((service, i) => (
