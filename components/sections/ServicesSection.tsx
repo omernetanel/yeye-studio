@@ -117,6 +117,11 @@ const CONTENT_SHRINK_SCALE = 0.6;
 const VIDEO_REST_SCALE = 1.10;
 const VIDEO_REST_SHIFT_X_PX = 45;
 
+// servicesbg.mp4 is 16:9; used to locate the picture's own edge inside the
+// letterboxed element so it can be trimmed (see update()).
+const VIDEO_ASPECT = 16 / 9;
+const VIDEO_EDGE_TRIM_PX = 2;
+
 // About's entrance keeps this custom, off-center origin (matches the
 // direction the paper unfolds toward), but its exit switches to the true
 // panel center instead of re-using this same point — see the switch in
@@ -240,7 +245,7 @@ const ServicesHeading = forwardRef<HTMLDivElement>(function ServicesHeading(_pro
       {/* Sized well below the old two-word heading: this is a full sentence
           on two lines, so 72px would tower over the rest of the panel and
           eat the height the list and the ball need. */}
-      <h2 className="font-display text-4xl leading-[1.2] font-bold text-black md:text-5xl">
+      <h2 className="font-display text-4xl leading-[1.2] font-bold text-black md:text-[44px]">
         אני בונה פתרונות דיגיטליים
         <br />
         לעסקים שרוצים תוצאות.
@@ -393,6 +398,28 @@ export default function ServicesSection() {
     // position as the paper starts unfolding, same span as everything
     // else fading out.
     video.style.transform = `translateX(${lerp(VIDEO_REST_SHIFT_X_PX, 0, servicesShrinkT)}px) scale(${lerp(VIDEO_REST_SCALE, 1, servicesShrinkT)})`;
+
+    // object-contain letterboxes the frame inside the element, so the picture
+    // has its own edge sitting well inside the element's box — and scaling the
+    // element drags that edge around with it. That edge is where a hairline has
+    // been showing up. Clipping a couple of pixels off the picture's own bounds
+    // removes the edge row the browser resamples, and the replacement boundary
+    // is a plain CSS clip through flat white, which has nothing to resample.
+    // Computed from the live box rather than hardcoded, so it tracks the
+    // element at any viewport and any scale.
+    const elW = video.clientWidth;
+    const elH = video.clientHeight;
+    if (elW > 0 && elH > 0) {
+      let contentW = elW;
+      let contentH = elW / VIDEO_ASPECT;
+      if (contentH > elH) {
+        contentH = elH;
+        contentW = elH * VIDEO_ASPECT;
+      }
+      const insetX = (elW - contentW) / 2 + VIDEO_EDGE_TRIM_PX;
+      const insetY = (elH - contentH) / 2 + VIDEO_EDGE_TRIM_PX;
+      video.style.clipPath = `inset(${insetY}px ${insetX}px)`;
+    }
 
     // The heading exits as a plain fade — no scale/shrink of its own
     // (explicitly requested; the rows below DO keep their shrink-to-center
