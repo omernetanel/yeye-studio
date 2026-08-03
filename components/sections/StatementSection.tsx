@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export default function StatementSection() {
   return (
-    <section className="relative bg-white px-6 pt-40 pb-20 md:pt-52 md:pb-28">
+    <section className="relative bg-white px-6 pt-12 pb-20 md:pt-16 md:pb-28">
       <motion.p
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
