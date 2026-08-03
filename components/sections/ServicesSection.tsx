@@ -122,12 +122,15 @@ const VIDEO_REST_SHIFT_X_PX = 45;
 const VIDEO_ASPECT = 16 / 9;
 const VIDEO_EDGE_TRIM_PX = 2;
 
-// The video zone is pulled up 86px so the resting ball fits the screen (see
-// its -mt on the panel below). That is fine while the paper is a small ball,
-// but once it unfolds to full size the same offset carries its top edge off
-// the top of the screen. So the clip slides back down by that offset exactly
-// as the heading fades — by the time the paper is open it is centred again.
-const VIDEO_OPEN_SHIFT_Y_PX = 96;
+// The video zone is deliberately TALLER than the viewport (it is pulled up
+// 86px so the resting ball fits the screen), which means object-contain sizes
+// the sheet to the zone rather than to the screen. While the paper is a small
+// ball that is invisible, but the moment it unfolds to fill the frame it runs
+// off an edge — and shifting it only ever trades a cut top for a cut bottom.
+// So the open state also scales down to whatever actually fits the viewport,
+// and shifts to sit centred in it.
+const VIDEO_OPEN_SCALE = 0.86;
+const VIDEO_OPEN_SHIFT_Y_PX = 63;
 
 // About's entrance keeps this custom, off-center origin (matches the
 // direction the paper unfolds toward), but its exit switches to the true
@@ -404,7 +407,7 @@ export default function ServicesSection() {
     // of the row text beside it — easing back to its natural scale/
     // position as the paper starts unfolding, same span as everything
     // else fading out.
-    video.style.transform = `translateX(${lerp(VIDEO_REST_SHIFT_X_PX, 0, servicesShrinkT)}px) translateY(${lerp(0, VIDEO_OPEN_SHIFT_Y_PX, servicesShrinkT)}px) scale(${lerp(VIDEO_REST_SCALE, 1, servicesShrinkT)})`;
+    video.style.transform = `translateX(${lerp(VIDEO_REST_SHIFT_X_PX, 0, servicesShrinkT)}px) translateY(${lerp(0, VIDEO_OPEN_SHIFT_Y_PX, servicesShrinkT)}px) scale(${lerp(VIDEO_REST_SCALE, VIDEO_OPEN_SCALE, servicesShrinkT)})`;
 
     // object-contain letterboxes the frame inside the element, so the picture
     // has its own edge sitting well inside the element's box — and scaling the
