@@ -579,15 +579,18 @@ export default function ServicesSection() {
     // (explicitly requested; the rows below DO keep their shrink-to-center
     // exit). The zone collapse beneath it still happens regardless.
     heading.style.opacity = String(1 - servicesShrinkT);
-    // Fired once, the first time the heading is actually settled in front of
-    // the reader — not on mount, which would spend the glint far above the
-    // fold where nobody is looking.
-    // The threshold is a window, not an exact equality: a fast flick can land
-    // the first sampled frame well past the pin start with the shrink already
-    // under way, and an `=== 0` test would silently never match.
-    if (!headingShineDoneRef.current && servicesShrinkT < 0.35 && rawScrollY >= pinStartScrollYRef.current) {
-      headingShineDoneRef.current = true;
-      heading.querySelector("h2")?.classList.add("heading-shine");
+    // Fired once, off the heading's own position on screen — the moment it is
+    // fully in the viewport, which is the moment a reader would say it had
+    // arrived. Keying it to the pin start instead put it 575px of scroll late
+    // at 1280x690: the panel is only sticky after the lead-in, but the heading
+    // rides into view well before that and just sat there waiting.
+    if (!headingShineDoneRef.current) {
+      const h2 = heading.querySelector("h2");
+      const box = h2?.getBoundingClientRect();
+      if (h2 && box && box.top >= 0 && box.bottom <= window.innerHeight) {
+        headingShineDoneRef.current = true;
+        h2.classList.add("heading-shine");
+      }
     }
     // The zone around it collapses to nothing so the footage can grow into the
     // freed space, and the heading is centred in that zone — so left alone it
