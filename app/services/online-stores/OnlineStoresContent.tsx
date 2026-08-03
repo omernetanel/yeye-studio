@@ -2,6 +2,7 @@
 
 import { BarChart3, Code2, CreditCard, MessageSquare, Paintbrush, Rocket, ShoppingCart, Smartphone } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
+import SubPageNav from "@/components/layout/SubPageNav";
 import Footer from "@/components/layout/Footer";
 import ServiceAmbientBackground from "@/components/services/ServiceAmbientBackground";
 import ServiceHero from "@/components/services/ServiceHero";
@@ -55,6 +56,7 @@ export default function OnlineStoresContent() {
     <main className="relative min-h-screen overflow-hidden bg-white">
       <ServiceAmbientBackground />
       <Navbar />
+      <SubPageNav />
 
       <div className="relative z-10">
         <ServiceHero
