@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/site";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { projects } from "@/lib/projects";
 import ProjectCard from "@/components/ui/ProjectCard";
 
 export const metadata: Metadata = {
-  title: "פרויקטים | YEYE LABS",
+  title: pageTitle("פרויקטים"),
   description: "עבודה מלאה שבניתי כדי להראות איך אני חושב ובונה.",
 };
 

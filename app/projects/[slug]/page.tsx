@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/site";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -20,10 +21,10 @@ export async function generateMetadata({
   if (!project) return {};
 
   return {
-    title: `${project.title} | YEYE LABS`,
+    title: pageTitle(project.title),
     description: project.description,
     openGraph: {
-      title: `${project.title} | YEYE LABS`,
+      title: pageTitle(project.title),
       description: project.description,
       images: [project.image],
     },
