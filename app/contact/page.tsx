@@ -38,7 +38,7 @@ export default function ContactPage() {
       setStatus("success");
 
       const msg = encodeURIComponent(
-        `היי YEYE LABS! אני ${form.from_name}, מחפש ${form.project_type}. ${form.business_description}`
+        `היי YEYE Digital! אני ${form.from_name}, מחפש ${form.project_type}. ${form.business_description}`
       );
       window.open(`https://wa.me/972552434775?text=${msg}`, "_blank");
     } catch {
