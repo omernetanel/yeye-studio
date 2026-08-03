@@ -74,7 +74,7 @@ const CFG = {
 // back. It was 190px when the Hero ran a full viewport taller; at the
 // current one-screen height that reached up into the wordmark itself and
 // killed the interaction over the bottom of the logo.
-const INTERACTIVE_BOTTOM_MARGIN_PX = 150;
+const INTERACTIVE_BOTTOM_MARGIN_PX = 24;
 
 const BASE_VERTEX_SHADER = `#version 300 es
 precision highp float;
