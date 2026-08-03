@@ -63,8 +63,11 @@ const ZOOM_END = PIN_VH / (PIN_VH + HOLD_VH);
 // The contact block clears out over the first slice of the pin, and the zoom
 // only starts once it has: pulling the scene back while the form is still
 // legible reads as two things happening at once rather than one.
-const FORM_FADE_END = 0.34;
-const ZOOM_START = 0.38;
+// The form held fully legible before it starts fading at all — it was
+// dissolving from the instant the panel pinned, which gave it no moment.
+const FORM_HOLD = 0.20;
+const FORM_FADE_END = 0.46;
+const ZOOM_START = 0.50;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -231,7 +234,7 @@ export default function ContactStage() {
     const vh = window.innerHeight;
     const progress = clamp01(mapRange(scrollY.get(), pinStartScrollYRef.current, pinEndScrollYRef.current, 0, 1));
 
-    const fadeT = smoothstep(mapRange(progress, 0, FORM_FADE_END, 0, 1));
+    const fadeT = smoothstep(mapRange(progress, FORM_HOLD, FORM_FADE_END, 0, 1));
     form.style.opacity = String(1 - fadeT);
     // Opacity alone would leave the faded block still catching clicks over the
     // footage behind it.

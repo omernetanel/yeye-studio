@@ -162,6 +162,33 @@ const PANEL_STICKY_TOP_PX = -20;
 const HEADING_ZONE_PADDING_TOP_PX = 44;
 const HEADING_ZONE_PADDING_BOTTOM_PX = 8;
 
+// Scroll no longer maps straight onto the clip's timeline. At each of these
+// moments the clip FREEZES while scrolling keeps accumulating, so the page
+// genuinely stops on the content instead of sliding past it — and because it
+// is still scroll-driven, it stays exactly reversible on the way back up.
+// `share` is the fraction of the whole pinned range spent held.
+const TIME_HOLDS: { at: number; share: number }[] = [
+  { at: 3.7, share: 0.13 }, // "מי אני" fully up, paper flat
+];
+const TOTAL_HOLD_SHARE = TIME_HOLDS.reduce((sum, h) => sum + h.share, 0);
+
+function progressToTime(progress: number, duration: number) {
+  // Scroll-per-second for the moving stretches, once the holds have taken
+  // their share of the range.
+  const rate = (1 - TOTAL_HOLD_SHARE) / duration;
+  let consumed = 0;
+  let fromTime = 0;
+  for (const hold of TIME_HOLDS) {
+    const span = (hold.at - fromTime) * rate;
+    if (progress <= consumed + span) return fromTime + (progress - consumed) / rate;
+    consumed += span;
+    if (progress <= consumed + hold.share) return hold.at;
+    consumed += hold.share;
+    fromTime = hold.at;
+  }
+  return fromTime + (progress - consumed) / rate;
+}
+
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
 }
@@ -401,7 +428,7 @@ export default function ServicesSection() {
     // video.currentTime is a pure linear function of scroll progress
     // across the whole pinned range, so it's automatically, exactly
     // reversible on scroll-up; no separate "rewind" logic needed.
-    const targetTime = progress * videoDurationRef.current;
+    const targetTime = progressToTime(progress, videoDurationRef.current);
     if (videoReadyRef.current && Math.abs(video.currentTime - targetTime) > 0.008) {
       video.currentTime = targetTime;
     }
