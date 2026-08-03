@@ -28,37 +28,6 @@ export default function HeroSection() {
   // clipped invisibly by the section's overflow-hidden.
   const logoAreaRef = useRef<HTMLDivElement>(null);
   const logoSlotRef = useRef<HTMLDivElement>(null);
-  // The two Hero CTAs are painted onto the ink's paper layer rather than
-  // rendered as ordinary DOM, so the ink can wash over them the same way it
-  // does the wordmark and the tagline. The DOM elements stay in place —
-  // real links, real hit areas, keyboard focusable — but are visually
-  // transparent; these refs are what the canvas measures to know where to
-  // paint each box, its label, and its arrow.
-  const ctaPrimaryRef = useRef<HTMLAnchorElement>(null);
-  const ctaPrimaryLabelRef = useRef<HTMLSpanElement>(null);
-  const ctaPrimaryArrowRef = useRef<HTMLSpanElement>(null);
-  const ctaSecondaryRef = useRef<HTMLAnchorElement>(null);
-  const ctaSecondaryLabelRef = useRef<HTMLSpanElement>(null);
-  const ctaSecondaryArrowRef = useRef<HTMLSpanElement>(null);
-
-  const ctas = [
-    {
-      ref: ctaPrimaryRef,
-      labelRef: ctaPrimaryLabelRef,
-      arrowRef: ctaPrimaryArrowRef,
-      fill: "#000000",
-      textColor: "#ffffff",
-      borderColor: "#000000",
-    },
-    {
-      ref: ctaSecondaryRef,
-      labelRef: ctaSecondaryLabelRef,
-      arrowRef: ctaSecondaryArrowRef,
-      fill: "#ffffff",
-      textColor: "#000000",
-      borderColor: "#000000",
-    },
-  ];
 
   // The Navbar's own mark stays hidden while the Hero itself is on screen
   // (nothing to dock against yet), and crossfades in once the Hero has
@@ -151,7 +120,6 @@ export default function HeroSection() {
             taglineText={TAGLINE_TEXT}
             taglineElRef={taglineRef}
             logoSlotRef={logoSlotRef}
-            ctas={ctas}
             className="relative h-full w-full select-none"
           />
         </div>
@@ -285,41 +253,14 @@ export default function HeroSection() {
             }
             style={{ animationDelay: "0.4s" }}
           >
-            {prefersReducedMotion ? (
-              <div className="flex items-center gap-3">
-                <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
-                  צפו בעבודות שלי
-                </Button>
-                <Button href="/#contact" variant="primary" className="!border !border-black !bg-none !bg-white !text-black !shadow-none px-10 py-4 text-lg">
-                  קבעו פגישה
-                </Button>
-              </div>
-            ) : (
-              /* Transparent on purpose — the canvas paints these. No scale or
-                 shimmer here unlike the site's other buttons: the paper layer
-                 only repaints on layout changes, so a per-frame hover effect
-                 would either not show or cost a full repaint every mouse move.
-                 The arrow's slide is the one exception, and it only needs a
-                 repaint on enter and leave. */
-              <div className="flex items-center gap-3">
-                <Link
-                  ref={ctaPrimaryRef}
-                  href="/#projects"
-                  className="inline-flex items-center gap-2 rounded-lg px-10 py-4 font-display text-lg font-medium text-transparent"
-                >
-                  <span ref={ctaPrimaryLabelRef}>צפו בעבודות שלי</span>
-                  <span ref={ctaPrimaryArrowRef} aria-hidden className="block h-[14px] w-[14px]" />
-                </Link>
-                <Link
-                  ref={ctaSecondaryRef}
-                  href="/#contact"
-                  className="inline-flex items-center gap-2 rounded-lg border border-transparent px-10 py-4 font-display text-lg font-medium text-transparent"
-                >
-                  <span ref={ctaSecondaryLabelRef}>קבעו פגישה</span>
-                  <span ref={ctaSecondaryArrowRef} aria-hidden className="block h-[14px] w-[14px]" />
-                </Link>
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              <Button href="/#projects" variant="primary" className="hero-cta !border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
+                צפו בעבודות שלי
+              </Button>
+              <Button href="/#contact" variant="primary" className="hero-cta !border !border-black !bg-none !bg-white !text-black !shadow-none px-10 py-4 text-lg">
+                קבעו פגישה
+              </Button>
+            </div>
           </div>
 
           <div className={prefersReducedMotion ? "flex items-end gap-4" : "pointer-events-auto flex items-end gap-4"}>
