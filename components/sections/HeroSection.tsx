@@ -46,16 +46,16 @@ export default function HeroSection() {
       ref: ctaPrimaryRef,
       labelRef: ctaPrimaryLabelRef,
       arrowRef: ctaPrimaryArrowRef,
-      fill: "#000000",
-      textColor: "#ffffff",
+      fill: "#ffffff",
+      textColor: "#000000",
       borderColor: "#000000",
     },
     {
       ref: ctaSecondaryRef,
       labelRef: ctaSecondaryLabelRef,
       arrowRef: ctaSecondaryArrowRef,
-      fill: "#ffffff",
-      textColor: "#000000",
+      fill: "#000000",
+      textColor: "#ffffff",
       borderColor: "#000000",
     },
   ];
@@ -287,10 +287,10 @@ export default function HeroSection() {
           >
             {prefersReducedMotion ? (
               <div className="flex items-center gap-3">
-                <Button href="/#projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
-                  צפו בעבודות שלי
+                <Button href="/#projects" variant="primary" className="!border !border-black !bg-none !bg-white !text-black !shadow-none px-10 py-4 text-lg">
+                  העבודות שלי
                 </Button>
-                <Button href="/#contact" variant="primary" className="!border !border-black !bg-none !bg-white !text-black !shadow-none px-10 py-4 text-lg">
+                <Button href="/#contact" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
                   קבעו פגישה
                 </Button>
               </div>
@@ -307,7 +307,7 @@ export default function HeroSection() {
                   href="/#projects"
                   className="inline-flex items-center gap-2 rounded-lg px-10 py-4 font-display text-lg font-medium text-transparent"
                 >
-                  <span ref={ctaPrimaryLabelRef}>צפו בעבודות שלי</span>
+                  <span ref={ctaPrimaryLabelRef}>העבודות שלי</span>
                   <span ref={ctaPrimaryArrowRef} aria-hidden className="block h-[14px] w-[14px]" />
                 </Link>
                 <Link
@@ -340,6 +340,13 @@ export default function HeroSection() {
           </div>
         </div>
       </div>
+
+      {/* Pure breathing room appended below the fold — nothing is moved or
+          resized to make space for it, so the logo, tagline and CTAs sit
+          exactly where they did. The ink canvas spans the whole section, so
+          this simply hands the ink somewhere to drift and settle instead of
+          being driven straight into the section's hard bottom edge. */}
+      <div aria-hidden="true" className="h-[180px] w-full shrink-0" />
     </section>
   );
 }
