@@ -143,6 +143,16 @@ const VIDEO_OPEN_SHIFT_Y_PX = 63;
 // bottom-heavy.
 const ABOUT_SHIFT_Y_PX = -30;
 
+// The ball starts unfolding into the plane at ~11.1s (measured off the clip),
+// so the frame finishes opening to full bleed just before that and the plane
+// is never anything but edge to edge. The window starts after 8.13s, which is
+// where the old clip ended — so none of the tuning above is touched.
+const PLANE_FULLBLEED_START_SECONDS = 9.3;
+const PLANE_FULLBLEED_END_SECONDS = 11.0;
+// A hair beyond an exact cover, so a fractional viewport height can never
+// leave a one-pixel seam at an edge.
+const VIDEO_FULLBLEED_OVERSCAN = 0.02;
+
 const ABOUT_ENTRANCE_ORIGIN = "72% 82%";
 
 // PANEL_STICKY_TOP_PX is the panel's *real* sticky top offset — negative,
@@ -167,8 +177,15 @@ const HEADING_ZONE_PADDING_BOTTOM_PX = 8;
 // genuinely stops on the content instead of sliding past it — and because it
 // is still scroll-driven, it stays exactly reversible on the way back up.
 // `share` is the fraction of the whole pinned range spent held.
+// The share is derived, not eyeballed. It and the wrapper height below are
+// solved together from two constraints, so that lengthening the clip changes
+// nothing about how the opening 8.13s feel:
+//   scroll-per-second equal:  (1 - Sn)/Dn * Hn = (1 - So)/Do * Ho
+//   hold length equal:        Sn * Hn          = So * Ho
+// With Do = 8.133s, So = 0.13 and Dn = 18.467s that gives Hn = 2.1053 * Ho
+// and Sn = 0.13 / 2.1053. Both numbers below are those results.
 const TIME_HOLDS: { at: number; share: number }[] = [
-  { at: 3.7, share: 0.13 }, // "מי אני" fully up, paper flat
+  { at: 3.7, share: 0.0617 }, // "מי אני" fully up, paper flat
 ];
 const TOTAL_HOLD_SHARE = TIME_HOLDS.reduce((sum, h) => sum + h.share, 0);
 
@@ -191,6 +208,19 @@ function progressToTime(progress: number, duration: number) {
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
+}
+
+// Where object-contain actually puts the picture inside a box of elW x elH.
+// The picture's own edge sits well inside the element's box, and both the
+// hairline trim and the full-bleed scale below need to know exactly where.
+function containedPictureSize(elW: number, elH: number) {
+  let contentW = elW;
+  let contentH = elW / VIDEO_ASPECT;
+  if (contentH > elH) {
+    contentH = elH;
+    contentW = elH * VIDEO_ASPECT;
+  }
+  return { contentW, contentH };
 }
 
 function mapRange(value: number, inMin: number, inMax: number, outMin: number, outMax: number) {
@@ -384,6 +414,7 @@ export default function ServicesSection() {
   const wrapperRef = useRef<HTMLElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const videoZoneRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const headingZoneRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLDivElement>(null);
@@ -440,7 +471,41 @@ export default function ServicesSection() {
     // of the row text beside it — easing back to its natural scale/
     // position as the paper starts unfolding, same span as everything
     // else fading out.
-    video.style.transform = `translateX(${lerp(VIDEO_REST_SHIFT_X_PX, 0, servicesShrinkT)}px) translateY(${lerp(0, VIDEO_OPEN_SHIFT_Y_PX, servicesShrinkT)}px) scale(${lerp(VIDEO_REST_SCALE, VIDEO_OPEN_SCALE, servicesShrinkT)})`;
+    let scale = lerp(VIDEO_REST_SCALE, VIDEO_OPEN_SCALE, servicesShrinkT);
+    let shiftX = lerp(VIDEO_REST_SHIFT_X_PX, 0, servicesShrinkT);
+    let shiftY = lerp(0, VIDEO_OPEN_SHIFT_Y_PX, servicesShrinkT);
+
+    // Then, once the ball is about to unfold into the plane, the frame opens
+    // out to full bleed. Up to here the picture is deliberately smaller than
+    // the panel, which is right for the ball but wrong for the plane: it would
+    // fly off the picture's own edge with white page still around it, and read
+    // as being cut in mid-air rather than leaving the screen. Everything is
+    // measured live rather than hardcoded, so it covers at any viewport.
+    const panel = panelRef.current;
+    const videoZone = videoZoneRef.current;
+    const fullBleedT = smoothstep(
+      mapRange(targetTime, PLANE_FULLBLEED_START_SECONDS, PLANE_FULLBLEED_END_SECONDS, 0, 1),
+    );
+    if (fullBleedT > 0 && panel && videoZone) {
+      const { contentW, contentH } = containedPictureSize(video.clientWidth, video.clientHeight);
+      if (contentW > 0 && contentH > 0) {
+        const panelW = panel.clientWidth;
+        const panelH = panel.clientHeight;
+        // Cover, not contain — the clip's own background is the same flat
+        // white as the page, so cropping its long edge costs nothing.
+        const coverScale =
+          Math.max(panelW / contentW, panelH / contentH) * (1 + VIDEO_FULLBLEED_OVERSCAN);
+        // The zone is pulled up above the panel, so the picture's centre and
+        // the panel's centre are not the same point; close the gap or the
+        // grown frame sits off-centre.
+        const centreShiftY = panelH / 2 - (videoZone.offsetTop + video.clientHeight / 2);
+        scale = lerp(scale, coverScale, fullBleedT);
+        shiftX = lerp(shiftX, 0, fullBleedT);
+        shiftY = lerp(shiftY, centreShiftY, fullBleedT);
+      }
+    }
+
+    video.style.transform = `translateX(${shiftX}px) translateY(${shiftY}px) scale(${scale})`;
 
     // object-contain letterboxes the frame inside the element, so the picture
     // has its own edge sitting well inside the element's box — and scaling the
@@ -453,12 +518,7 @@ export default function ServicesSection() {
     const elW = video.clientWidth;
     const elH = video.clientHeight;
     if (elW > 0 && elH > 0) {
-      let contentW = elW;
-      let contentH = elW / VIDEO_ASPECT;
-      if (contentH > elH) {
-        contentH = elH;
-        contentW = elH * VIDEO_ASPECT;
-      }
+      const { contentW, contentH } = containedPictureSize(elW, elH);
       const insetX = (elW - contentW) / 2 + VIDEO_EDGE_TRIM_PX;
       const insetY = (elH - contentH) / 2 + VIDEO_EDGE_TRIM_PX;
       video.style.clipPath = `inset(${insetY}px ${insetX}px)`;
@@ -711,7 +771,11 @@ export default function ServicesSection() {
   }
 
   return (
-    <section ref={wrapperRef} id="services" className="relative h-[calc(790vh+260px)] bg-white">
+    // 790vh+260px scaled by the 2.1053 solved for at TIME_HOLDS. The clip is
+    // 2.27x longer than the one this range was tuned against, so leaving the
+    // height alone would have handed the opening 8.13s less than half the
+    // scroll they had and run the whole thing at 2.27x speed.
+    <section ref={wrapperRef} id="services" className="relative h-[calc(1663vh+547px)] bg-white">
       {/* SPACER_PX of perfectly ordinary scrolling before the panel below
           goes sticky — see its own comment up top. */}
       <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />
@@ -746,7 +810,7 @@ export default function ServicesSection() {
             heading zone sits above at z-10 and simply overlaps the top of
             the footage, which buys the ball the height it needs to fit the
             screen instead of being pushed down and cropped. */}
-        <div className="relative -mt-[86px] min-h-0 flex-1 overflow-hidden">
+        <div ref={videoZoneRef} className="relative -mt-[86px] min-h-0 flex-1 overflow-hidden">
           {/* bg-white keeps object-contain's letterbox margin the same colour
               as the page.
 
