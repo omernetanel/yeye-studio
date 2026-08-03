@@ -471,7 +471,10 @@ export default function ServicesSection() {
     // Fired once, the first time the heading is actually settled in front of
     // the reader — not on mount, which would spend the glint far above the
     // fold where nobody is looking.
-    if (!headingShineDoneRef.current && servicesShrinkT === 0 && rawScrollY >= pinStartScrollYRef.current) {
+    // The threshold is a window, not an exact equality: a fast flick can land
+    // the first sampled frame well past the pin start with the shrink already
+    // under way, and an `=== 0` test would silently never match.
+    if (!headingShineDoneRef.current && servicesShrinkT < 0.35 && rawScrollY >= pinStartScrollYRef.current) {
       headingShineDoneRef.current = true;
       heading.querySelector("h2")?.classList.add("heading-shine");
     }

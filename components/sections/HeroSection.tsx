@@ -346,7 +346,7 @@ export default function HeroSection() {
           exactly where they did. The ink canvas spans the whole section, so
           this simply hands the ink somewhere to drift and settle instead of
           being driven straight into the section's hard bottom edge. */}
-      <div aria-hidden="true" className="h-[180px] w-full shrink-0" />
+      <div aria-hidden="true" className="h-[15px] w-full shrink-0" />
     </section>
   );
 }
