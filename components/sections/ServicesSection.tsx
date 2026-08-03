@@ -122,6 +122,13 @@ const VIDEO_REST_SHIFT_X_PX = 45;
 const VIDEO_ASPECT = 16 / 9;
 const VIDEO_EDGE_TRIM_PX = 2;
 
+// The video zone is pulled up 86px so the resting ball fits the screen (see
+// its -mt on the panel below). That is fine while the paper is a small ball,
+// but once it unfolds to full size the same offset carries its top edge off
+// the top of the screen. So the clip slides back down by that offset exactly
+// as the heading fades — by the time the paper is open it is centred again.
+const VIDEO_OPEN_SHIFT_Y_PX = 96;
+
 // About's entrance keeps this custom, off-center origin (matches the
 // direction the paper unfolds toward), but its exit switches to the true
 // panel center instead of re-using this same point — see the switch in
@@ -397,7 +404,7 @@ export default function ServicesSection() {
     // of the row text beside it — easing back to its natural scale/
     // position as the paper starts unfolding, same span as everything
     // else fading out.
-    video.style.transform = `translateX(${lerp(VIDEO_REST_SHIFT_X_PX, 0, servicesShrinkT)}px) scale(${lerp(VIDEO_REST_SCALE, 1, servicesShrinkT)})`;
+    video.style.transform = `translateX(${lerp(VIDEO_REST_SHIFT_X_PX, 0, servicesShrinkT)}px) translateY(${lerp(0, VIDEO_OPEN_SHIFT_Y_PX, servicesShrinkT)}px) scale(${lerp(VIDEO_REST_SCALE, 1, servicesShrinkT)})`;
 
     // object-contain letterboxes the frame inside the element, so the picture
     // has its own edge sitting well inside the element's box — and scaling the
@@ -658,7 +665,7 @@ export default function ServicesSection() {
   }
 
   return (
-    <section ref={wrapperRef} id="services" className="relative h-[calc(575.2vh+260px)] bg-white">
+    <section ref={wrapperRef} id="services" className="relative h-[calc(790vh+260px)] bg-white">
       {/* SPACER_PX of perfectly ordinary scrolling before the panel below
           goes sticky — see its own comment up top. */}
       <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />

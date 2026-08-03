@@ -63,8 +63,8 @@ const ZOOM_END = PIN_VH / (PIN_VH + HOLD_VH);
 // The contact block clears out over the first slice of the pin, and the zoom
 // only starts once it has: pulling the scene back while the form is still
 // legible reads as two things happening at once rather than one.
-const FORM_FADE_END = 0.22;
-const ZOOM_START = 0.26;
+const FORM_FADE_END = 0.34;
+const ZOOM_START = 0.38;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
