@@ -245,7 +245,7 @@ const ServicesHeading = forwardRef<HTMLDivElement>(function ServicesHeading(_pro
         <br />
         לעסקים שרוצים תוצאות.
       </h2>
-      <p className="mt-2 font-body text-[15px] leading-[1.8] text-black/55">ובתכל'ס, זה מה שאני עושה:</p>
+      <p className="mt-2 font-body text-[15px] leading-[1.8] text-black/55">ובתכל&rsquo;ס, זה מה שאני עושה:</p>
       <div className="mt-4 h-[3px] w-10 rounded-full bg-[image:var(--gradient-accent)]" />
     </div>
   );
