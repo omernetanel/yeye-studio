@@ -71,7 +71,7 @@ const PRE_PIN_SPACER_PX = 48;
 // Width of the crossfade between two steps, in step units. Adjacent steps
 // overlap across this window so one is always arriving as the other leaves,
 // rather than the screen passing through an empty gap between them.
-const STEP_CROSSFADE = 0.28;
+const STEP_CROSSFADE = 0.45;
 
 // How far a step slides while entering/leaving. Small on purpose: the point
 // is that the steps advance, not that they fly around.
