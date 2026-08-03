@@ -6,7 +6,7 @@ import StickyMobileCTA from "@/components/layout/StickyMobileCTA";
 
 // TODO: replace with the real production domain before launch (also used in app/sitemap.ts and app/robots.ts).
 const BASE_URL = "https://yeyelabs.com";
-const SITE_TITLE = "YEYE - סטודיו דיגיטלי";
+const SITE_TITLE = "YEYE Digital - סטודיו דיגיטלי";
 const SITE_DESCRIPTION = "אני בונה אתרים ומערכות שמייצרות לקוחות לעסקים.";
 
 export const metadata: Metadata = {
