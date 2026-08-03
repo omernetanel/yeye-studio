@@ -144,6 +144,16 @@ body {
   animation: arrow-drift 1.7s ease-in-out infinite;
 }
 
+/* The solid CTA is black, and so is the ink — once ink washes behind it the
+   two merge and the button loses its silhouette entirely. A white contour
+   fixes that without changing how it looks at rest: against the white page
+   it is invisible, and only against ink does it become the edge that keeps
+   the button a distinct object. outline (not border or shadow) so it costs
+   no layout and survives the !shadow-none on the button itself. */
+.hero-cta-solid {
+  outline: 2px solid #ffffff;
+}
+
 .hero-cta:hover {
   transform: none;
 }
