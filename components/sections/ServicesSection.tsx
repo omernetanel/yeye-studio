@@ -161,6 +161,17 @@ const STATEMENT_FADE_IN_START_SECONDS = 13.0;
 const STATEMENT_FADE_IN_END_SECONDS = 14.4;
 const STATEMENT_RISE_PX = 26;
 
+// Once the clip has run out, the pin does NOT release straight away. There is
+// a tail of scroll in which the statement — now the only thing on screen —
+// draws down and lifts a little, and then a shorter stretch where it is parked
+// and nothing moves at all, so it reads as having settled before the page
+// carries on. Both are viewport-relative, and both are part of the wrapper
+// height below rather than extra range stolen from the clip's own scrub.
+const STATEMENT_TAIL_VH = 60;
+const STATEMENT_PARK_VH = 25;
+const STATEMENT_TAIL_SCALE = 0.88;
+const STATEMENT_TAIL_RISE_PX = 72;
+
 const ABOUT_ENTRANCE_ORIGIN = "72% 82%";
 
 // PANEL_STICKY_TOP_PX is the panel's *real* sticky top offset — negative,
@@ -449,6 +460,9 @@ export default function ServicesSection() {
   // raw global scrollY never do that.
   const pinStartScrollYRef = useRef(0);
   const pinEndScrollYRef = useRef(0);
+  // Where the clip's own scrub finishes. Everything between here and pinEnd is
+  // the statement's tail, so the clip must not be mapped across it.
+  const clipEndScrollYRef = useRef(0);
   const videoDurationRef = useRef(VIDEO_DURATION_FALLBACK);
   const videoReadyRef = useRef(false);
 
@@ -464,7 +478,10 @@ export default function ServicesSection() {
     if (!wrapper || !video || !headingZone || !heading || !servicesContent || !aboutContent) return;
 
     const rawScrollY = scrollY.get();
-    const progress = clamp01(mapRange(rawScrollY, pinStartScrollYRef.current, pinEndScrollYRef.current, 0, 1));
+    // Against clipEnd, not pinEnd — the statement's tail past clipEnd is not
+    // part of the clip's timeline, and mapping across it would slow the whole
+    // scrub down and leave the clip finishing after the paper already had.
+    const progress = clamp01(mapRange(rawScrollY, pinStartScrollYRef.current, clipEndScrollYRef.current, 0, 1));
 
     // video.currentTime is a pure linear function of scroll progress
     // across the whole pinned range, so it's automatically, exactly
@@ -521,8 +538,24 @@ export default function ServicesSection() {
       const statementT = smoothstep(
         mapRange(targetTime, STATEMENT_FADE_IN_START_SECONDS, STATEMENT_FADE_IN_END_SECONDS, 0, 1),
       );
+      // Past the end of the clip the statement gets its own stretch of scroll:
+      // it draws down and lifts, then holds through the park before the pin
+      // releases. Driven off raw scroll rather than clip time, which has
+      // nothing left to say by this point.
+      const tailT = smoothstep(
+        clamp01(
+          mapRange(
+            rawScrollY,
+            clipEndScrollYRef.current,
+            clipEndScrollYRef.current + (window.innerHeight * STATEMENT_TAIL_VH) / 100,
+            0,
+            1,
+          ),
+        ),
+      );
+      const y = lerp(STATEMENT_RISE_PX, 0, statementT) + lerp(0, -STATEMENT_TAIL_RISE_PX, tailT);
       statement.style.opacity = String(statementT);
-      statement.style.transform = `translateY(${lerp(STATEMENT_RISE_PX, 0, statementT)}px)`;
+      statement.style.transform = `translateY(${y}px) scale(${lerp(1, STATEMENT_TAIL_SCALE, tailT)})`;
     }
 
     // object-contain letterboxes the frame inside the element, so the picture
@@ -635,6 +668,8 @@ export default function ServicesSection() {
     // scroll has covered that extra distance too.
     pinStartScrollYRef.current = wrapperTop + spacer.offsetHeight - PANEL_STICKY_TOP_PX;
     pinEndScrollYRef.current = wrapperTop + wrapper.offsetHeight - panel.offsetHeight - PANEL_STICKY_TOP_PX;
+    clipEndScrollYRef.current =
+      pinEndScrollYRef.current - (window.innerHeight * (STATEMENT_TAIL_VH + STATEMENT_PARK_VH)) / 100;
   };
 
   // The heading zone's height AND padding are JS-controlled after the
@@ -793,7 +828,9 @@ export default function ServicesSection() {
     // 2.27x longer than the one this range was tuned against, so leaving the
     // height alone would have handed the opening 8.13s less than half the
     // scroll they had and run the whole thing at 2.27x speed.
-    <section ref={wrapperRef} id="services" className="relative h-[calc(1663vh+547px)] bg-white">
+    // 1663vh+547px of clip scrub, plus STATEMENT_TAIL_VH + STATEMENT_PARK_VH
+    // for the statement's own tail after the clip has finished.
+    <section ref={wrapperRef} id="services" className="relative h-[calc(1748vh+547px)] bg-white">
       {/* SPACER_PX of perfectly ordinary scrolling before the panel below
           goes sticky — see its own comment up top. */}
       <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />
@@ -876,7 +913,10 @@ export default function ServicesSection() {
         <div
           ref={statementRef}
           className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-6 pb-14"
-          style={{ opacity: 0 }}
+          // Scales about its own right edge, which is the edge the text is set
+          // against — about the centre it would drift left as it shrank and
+          // break the alignment it shares with everything else on the page.
+          style={{ opacity: 0, transformOrigin: "100% 50%" }}
         >
           <p className="mx-auto max-w-[1400px] text-right font-display text-[42px] leading-[1.15] font-normal text-black md:text-[62px] lg:text-[84px]">
             עיצוב מושך תשומת לב.
