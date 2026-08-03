@@ -3,7 +3,7 @@ import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
 import StatementSection from "@/components/sections/StatementSection";
 import ServicesSection from "@/components/sections/ServicesSection";
-import QuickContactBand from "@/components/sections/QuickContactBand";
+import ContactStage from "@/components/sections/ContactStage";
 import ProcessSection from "@/components/sections/ProcessSection";
 import ProjectsSection from "@/components/sections/ProjectsSection";
 import CTASection from "@/components/sections/CTASection";
@@ -31,7 +31,7 @@ export default function Home() {
         <HeroSection />
         <StatementSection />
         <ServicesSection />
-        <QuickContactBand />
+        <ContactStage />
         <ProcessSection />
         <ProjectsSection />
         <CTASection />
