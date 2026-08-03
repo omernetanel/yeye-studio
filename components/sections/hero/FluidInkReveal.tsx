@@ -424,9 +424,6 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
   // single long-lived effect below never needs these in its dep array.
   const ctasRef = useRef<CtaTarget[] | undefined>(ctas);
   ctasRef.current = ctas;
-  // Which CTA the pointer is currently over, so its arrow can sit shifted.
-  // Only ever changes on enter/leave, so a repaint per change is cheap.
-  const hoveredCtaRef = useRef(-1);
   // redrawPaper() is created once, inside the main effect below, which
   // deliberately does NOT re-run on every taglineText change (that would
   // mean tearing down and rebuilding the whole WebGL context per
@@ -780,7 +777,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
         }
       }
       if (currentCtas) {
-        currentCtas.forEach((cta, i) => {
+        currentCtas.forEach((cta) => {
           const el = cta.ref.current;
           if (!el) return;
           const bRect = el.getBoundingClientRect();
@@ -824,10 +821,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
           const arrowEl = cta.arrowRef.current;
           if (arrowEl) {
             const aRect = arrowEl.getBoundingClientRect();
-            // Only movement on hover — the arrow slides toward the direction
-            // it points, the same nudge the service rows use.
-            const shift = (hoveredCtaRef.current === i ? -4 : 0) * dpr;
-            const ax = (aRect.left - rect.left) * dpr + shift;
+            const ax = (aRect.left - rect.left) * dpr;
             const ay = (aRect.top - rect.top) * dpr;
             const size = aRect.width * dpr;
             const u = size / 14; // the icon's own 14x14 viewBox
@@ -991,31 +985,6 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     //
     // No touch-action: none — a drag across the mark should still let the
     // page scroll normally; we only ever read pointer position.
-    // The CTAs' only hover response: their arrow slides. Repainting the
-    // paper layer on enter/leave is two repaints per hover, not one per
-    // frame, which is why this stayed affordable when a scale/shimmer
-    // effect would not have.
-    const ctaCleanups: (() => void)[] = [];
-    (ctasRef.current ?? []).forEach((cta, i) => {
-      const el = cta.ref.current;
-      if (!el) return;
-      const onEnter = () => {
-        hoveredCtaRef.current = i;
-        redrawPaper();
-      };
-      const onLeave = () => {
-        if (hoveredCtaRef.current !== i) return;
-        hoveredCtaRef.current = -1;
-        redrawPaper();
-      };
-      el.addEventListener("pointerenter", onEnter);
-      el.addEventListener("pointerleave", onLeave);
-      ctaCleanups.push(() => {
-        el.removeEventListener("pointerenter", onEnter);
-        el.removeEventListener("pointerleave", onLeave);
-      });
-    });
-
     const interactionTarget: HTMLElement = wrapper.closest("section") ?? wrapper;
     interactionTarget.addEventListener("pointermove", handlePointerMove);
     interactionTarget.addEventListener("pointerleave", handlePointerLeave);
@@ -1179,7 +1148,6 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       if (rafId !== null) cancelAnimationFrame(rafId);
       ro.disconnect();
       window.removeEventListener("orientationchange", resize);
-      ctaCleanups.forEach((fn) => fn());
       interactionTarget.removeEventListener("pointermove", handlePointerMove);
       interactionTarget.removeEventListener("pointerleave", handlePointerLeave);
       interactionTarget.removeEventListener("pointercancel", handlePointerLeave);
