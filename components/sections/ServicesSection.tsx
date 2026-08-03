@@ -153,6 +153,14 @@ const PLANE_FULLBLEED_END_SECONDS = 11.0;
 // leave a one-pixel seam at an edge.
 const VIDEO_FULLBLEED_OVERSCAN = 0.02;
 
+// The closing statement rises into the bottom of the pinned frame while the
+// plane is still in flight, and stays there: the clip's last second is plain
+// white, so once scrolling reaches the end the whole screen is the sentence on
+// white, held until the pin releases into the contact stage.
+const STATEMENT_FADE_IN_START_SECONDS = 13.0;
+const STATEMENT_FADE_IN_END_SECONDS = 14.4;
+const STATEMENT_RISE_PX = 26;
+
 const ABOUT_ENTRANCE_ORIGIN = "72% 82%";
 
 // PANEL_STICKY_TOP_PX is the panel's *real* sticky top offset — negative,
@@ -415,6 +423,7 @@ export default function ServicesSection() {
   const spacerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const videoZoneRef = useRef<HTMLDivElement>(null);
+  const statementRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const headingZoneRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLDivElement>(null);
@@ -506,6 +515,15 @@ export default function ServicesSection() {
     }
 
     video.style.transform = `translateX(${shiftX}px) translateY(${shiftY}px) scale(${scale})`;
+
+    const statement = statementRef.current;
+    if (statement) {
+      const statementT = smoothstep(
+        mapRange(targetTime, STATEMENT_FADE_IN_START_SECONDS, STATEMENT_FADE_IN_END_SECONDS, 0, 1),
+      );
+      statement.style.opacity = String(statementT);
+      statement.style.transform = `translateY(${lerp(STATEMENT_RISE_PX, 0, statementT)}px)`;
+    }
 
     // object-contain letterboxes the frame inside the element, so the picture
     // has its own edge sitting well inside the element's box — and scaling the
@@ -846,6 +864,25 @@ export default function ServicesSection() {
               <AboutBlock />
             </div>
           </div>
+        </div>
+
+        {/* The closing statement, delivered inside the pinned frame rather than
+            as a section of its own below it. By the time it rises the clip is
+            full-bleed white with the plane still in it, so the sentence reads
+            as landing on the same surface the paper was on — and it is still
+            there, alone on white, when the clip runs out. Sits on the panel
+            rather than inside the video zone so the zone's overflow clip and
+            the video's own transform can never touch it. */}
+        <div
+          ref={statementRef}
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-6 pb-14"
+          style={{ opacity: 0 }}
+        >
+          <p className="mx-auto max-w-[1400px] text-right font-display text-[42px] leading-[1.15] font-normal text-black md:text-[62px] lg:text-[84px]">
+            עיצוב מושך תשומת לב.
+            <br />
+            חשיבה יוצרת תוצאה.
+          </p>
         </div>
       </div>
     </section>
