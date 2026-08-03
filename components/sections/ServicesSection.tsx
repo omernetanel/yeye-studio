@@ -114,7 +114,7 @@ const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.8 + 0.5 + SERVICES_HOLD_SECONDS;
 const ABOUT_FADE_OUT_START_SECONDS = 5 + 6 / 30 - 0.5;
 const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 const CONTENT_SHRINK_SCALE = 0.6;
-const VIDEO_REST_SCALE = 1.72;
+const VIDEO_REST_SCALE = 1.46;
 const VIDEO_REST_SHIFT_X_PX = 45;
 
 // About's entrance keeps this custom, off-center origin (matches the
@@ -140,7 +140,7 @@ const PANEL_STICKY_TOP_PX = -20;
 // would silently floor the "collapse to 0" animation at that sum instead
 // of actually reaching 0.
 const HEADING_ZONE_PADDING_TOP_PX = 44;
-const HEADING_ZONE_PADDING_BOTTOM_PX = 24;
+const HEADING_ZONE_PADDING_BOTTOM_PX = 8;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -245,8 +245,8 @@ const ServicesHeading = forwardRef<HTMLDivElement>(function ServicesHeading(_pro
         <br />
         לעסקים שרוצים תוצאות.
       </h2>
-      <p className="mt-5 font-body text-[15px] leading-[1.8] text-black/55">ובגדול, זה מה שאני עושה:</p>
-      <div className="mt-8 h-[3px] w-10 rounded-full bg-[image:var(--gradient-accent)]" />
+      <p className="mt-2 font-body text-[15px] leading-[1.8] text-black/55">ובתכל'ס, זה מה שאני עושה:</p>
+      <div className="mt-4 h-[3px] w-10 rounded-full bg-[image:var(--gradient-accent)]" />
     </div>
   );
 });
@@ -254,7 +254,7 @@ const ServicesHeading = forwardRef<HTMLDivElement>(function ServicesHeading(_pro
 function ServicesRowsBlock() {
   return (
     <div
-      className="isolate mx-auto flex w-full max-w-[900px] -translate-x-[15px] translate-y-[48px] justify-end"
+      className="isolate mx-auto flex w-full max-w-[900px] -translate-x-[15px] translate-y-[82px] justify-end"
     >
       <div className="flex w-full max-w-[480px] origin-center scale-[0.95] flex-col">
         {services.map((service, i) => (
@@ -647,8 +647,13 @@ export default function ServicesSection() {
         {/* Video zone — the ball/paper clip, plus everything that stays
             aligned with it: the subtitle, divider, and rows (Services
             phase), then About (its own phase), positioned relative to
-            *this* zone rather than the whole panel. */}
-        <div className="relative min-h-0 flex-1 overflow-hidden">
+            *this* zone rather than the whole panel.
+
+            Pulled up under the heading rather than starting below it: the
+            heading zone sits above at z-10 and simply overlaps the top of
+            the footage, which buys the ball the height it needs to fit the
+            screen instead of being pushed down and cropped. */}
+        <div className="relative -mt-[86px] min-h-0 flex-1 overflow-hidden">
           {/* bg-white keeps object-contain's letterbox margin the same colour
               as the page.
 
