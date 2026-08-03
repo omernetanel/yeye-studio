@@ -114,7 +114,7 @@ const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.8 + 0.5 + SERVICES_HOLD_SECONDS;
 const ABOUT_FADE_OUT_START_SECONDS = 5 + 6 / 30 - 0.5;
 const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 const CONTENT_SHRINK_SCALE = 0.6;
-const VIDEO_REST_SCALE = 1.18;
+const VIDEO_REST_SCALE = 1.34;
 const VIDEO_REST_SHIFT_X_PX = 45;
 
 // About's entrance keeps this custom, off-center origin (matches the
@@ -139,7 +139,7 @@ const PANEL_STICKY_TOP_PX = -20;
 // can never be set below its own padding sum, so a fixed pt/pb class
 // would silently floor the "collapse to 0" animation at that sum instead
 // of actually reaching 0.
-const HEADING_ZONE_PADDING_TOP_PX = 72;
+const HEADING_ZONE_PADDING_TOP_PX = 44;
 const HEADING_ZONE_PADDING_BOTTOM_PX = 24;
 
 function clamp01(value: number) {
@@ -237,10 +237,15 @@ function ServiceRow({ service, index }: ServiceRowProps) {
 const ServicesHeading = forwardRef<HTMLDivElement>(function ServicesHeading(_props, ref) {
   return (
     <div ref={ref} className="flex flex-col items-center text-center">
-      <h2 className="font-display text-6xl font-bold text-black md:text-7xl">מה אני עושה</h2>
-      <p className="mt-4 max-w-[380px] font-body text-[15px] leading-[1.8] text-black/55">
-        פתרונות דיגיטליים מותאמים אישית לעסקים שצריכים תוצאות.
-      </p>
+      {/* Sized well below the old two-word heading: this is a full sentence
+          on two lines, so 72px would tower over the rest of the panel and
+          eat the height the list and the ball need. */}
+      <h2 className="font-display text-4xl leading-[1.2] font-bold text-black md:text-5xl">
+        אני בונה פתרונות דיגיטליים
+        <br />
+        לעסקים שרוצים תוצאות.
+      </h2>
+      <p className="mt-5 font-body text-[15px] leading-[1.8] text-black/55">ובגדול, זה מה שאני עושה:</p>
       <div className="mt-8 h-[3px] w-10 rounded-full bg-[image:var(--gradient-accent)]" />
     </div>
   );
@@ -249,9 +254,9 @@ const ServicesHeading = forwardRef<HTMLDivElement>(function ServicesHeading(_pro
 function ServicesRowsBlock() {
   return (
     <div
-      className="isolate mx-auto flex w-full max-w-[900px] -translate-x-[15px] translate-y-[64px] justify-end"
+      className="isolate mx-auto flex w-full max-w-[900px] -translate-x-[15px] translate-y-[48px] justify-end"
     >
-      <div className="flex w-full max-w-[480px] origin-top scale-[0.85] flex-col">
+      <div className="flex w-full max-w-[480px] origin-center scale-[0.95] flex-col">
         {services.map((service, i) => (
           <ServiceRow key={service.title} service={service} index={i} />
         ))}
