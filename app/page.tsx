@@ -29,8 +29,12 @@ export default function Home() {
       <div className="relative z-10">
         <Navbar />
         <HeroSection />
-        <StatementSection />
         <ServicesSection />
+        {/* Sits between the paper sequence and the contact stage rather than
+            before the paper: after a long pinned run it reads as a breath and
+            a summary of what was just shown, where ahead of it it interrupted
+            the page before anything had happened yet. */}
+        <StatementSection />
         <ContactStage />
         <ProcessSection />
         <ProjectsSection />
