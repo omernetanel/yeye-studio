@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { googleSans, assistant } from "@/lib/fonts";
+import { SITE_NAME, SITE_TITLE, SITE_DESCRIPTION } from "@/lib/site";
 import { SmoothScrollProvider } from "@/lib/motion/lenis";
 import StickyMobileCTA from "@/components/layout/StickyMobileCTA";
 
 // TODO: replace with the real production domain before launch (also used in app/sitemap.ts and app/robots.ts).
 const BASE_URL = "https://yeyelabs.com";
-const SITE_TITLE = "YEYE Digital - סטודיו דיגיטלי";
-const SITE_DESCRIPTION = "אני בונה אתרים ומערכות שמייצרות לקוחות לעסקים.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -17,7 +16,7 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     url: "/",
-    siteName: "YEYE LABS",
+    siteName: SITE_NAME,
     locale: "he_IL",
     type: "website",
   },
