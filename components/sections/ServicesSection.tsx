@@ -114,7 +114,7 @@ const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.8 + 0.5 + SERVICES_HOLD_SECONDS;
 const ABOUT_FADE_OUT_START_SECONDS = 5 + 6 / 30 - 0.5;
 const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 const CONTENT_SHRINK_SCALE = 0.6;
-const VIDEO_REST_SCALE = 1.34;
+const VIDEO_REST_SCALE = 1.72;
 const VIDEO_REST_SHIFT_X_PX = 45;
 
 // About's entrance keeps this custom, off-center origin (matches the
