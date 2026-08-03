@@ -306,7 +306,7 @@ export function CodeIllustration({ active }: IllustrationProps) {
 
   const codeLines = [
     { text: "const", color: "rgba(74,74,74,0.85)", suffix: " studio = {" },
-    { text: "  name:", color: "rgba(0,0,0,0.5)", suffix: ' "YEYE LABS"', suffixColor: "rgba(22,163,74,0.85)" },
+    { text: "  name:", color: "rgba(0,0,0,0.5)", suffix: ' "YEYE Digital"', suffixColor: "rgba(22,163,74,0.85)" },
     { text: "  quality:", color: "rgba(0,0,0,0.5)", suffix: " 100", suffixColor: "rgba(22,163,74,0.85)" },
     { text: "  deliver:", color: "rgba(0,0,0,0.5)", suffix: " true", suffixColor: "rgba(22,163,74,0.85)" },
     { text: "}", color: "rgba(74,74,74,0.85)", suffix: "" },

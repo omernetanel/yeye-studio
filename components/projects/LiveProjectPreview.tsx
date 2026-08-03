@@ -16,7 +16,7 @@ interface LiveProjectPreviewProps {
 type View = "desktop" | "mobile";
 
 /**
- * The project stays embedded live, in-page — no need to leave YEYE LABS
+ * The project stays embedded live, in-page — no need to leave YEYE Digital
  * to see it work. The mobile toggle doesn't fake a phone screenshot: it
  * actually resizes the iframe's viewport to phone width, so the embedded
  * site's own responsive breakpoints kick in for real.
