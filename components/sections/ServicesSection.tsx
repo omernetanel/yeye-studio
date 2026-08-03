@@ -138,6 +138,11 @@ const VIDEO_OPEN_SHIFT_Y_PX = 63;
 // update(). Safe to swap the instant the shrink phase starts: scale is
 // exactly 1 at that boundary, so transform-origin has no visible effect
 // yet.
+// Sits high on the opened sheet rather than centred in the panel — the paper
+// fills the frame by then, and a centred block leaves the composition looking
+// bottom-heavy.
+const ABOUT_SHIFT_Y_PX = -30;
+
 const ABOUT_ENTRANCE_ORIGIN = "72% 82%";
 
 // PANEL_STICKY_TOP_PX is the panel's *real* sticky top offset — negative,
@@ -480,7 +485,7 @@ export default function ServicesSection() {
     // causes no visible jump.
     aboutContent.style.transformOrigin = aboutShrinkT > 0 ? aboutCenterOriginRef.current : ABOUT_ENTRANCE_ORIGIN;
     aboutContent.style.opacity = String(aboutGrowT);
-    aboutContent.style.transform = `scale(${lerp(CONTENT_SHRINK_SCALE, 1, aboutGrowT)})`;
+    aboutContent.style.transform = `translateY(${ABOUT_SHIFT_Y_PX}px) scale(${lerp(CONTENT_SHRINK_SCALE, 1, aboutGrowT)})`;
     // The screen-center exit origin can only be measured HERE, live, while
     // About is fully grown and the panel is actually stuck — a mount-time
     // measurement reads the panel at its unstuck page position (and About
