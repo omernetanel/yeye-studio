@@ -124,44 +124,6 @@ body {
   animation: shimmer-sweep 0.35s ease-out forwards;
 }
 
-/* The Hero's two CTAs are deliberately plainer than every other button on
-   the site: no lift, no shimmer sweep. Their only motion is the arrow,
-   which drifts continuously rather than reacting to hover, so the pair
-   reads as quietly alive instead of waiting to be poked. The global
-   prefers-reduced-motion rule below already stops this for anyone who
-   asks for less movement. */
-@keyframes arrow-drift {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  50% {
-    transform: translateX(-5px);
-  }
-}
-
-.hero-cta svg {
-  animation: arrow-drift 1.7s ease-in-out infinite;
-}
-
-/* The solid CTA is black, and so is the ink — once ink washes behind it the
-   two merge and the button loses its silhouette entirely. A white contour
-   fixes that without changing how it looks at rest: against the white page
-   it is invisible, and only against ink does it become the edge that keeps
-   the button a distinct object. outline (not border or shadow) so it costs
-   no layout and survives the !shadow-none on the button itself. */
-.hero-cta-solid {
-  outline: 2px solid #ffffff;
-}
-
-.hero-cta:hover {
-  transform: none;
-}
-
-.hero-cta::after {
-  display: none;
-}
-
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
