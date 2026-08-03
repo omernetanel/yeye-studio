@@ -23,7 +23,11 @@ export default function SubPageNav() {
   return (
     <>
       <nav className="fixed inset-x-0 top-0 z-40 border-b border-black/5 bg-white/85 backdrop-blur-md">
-        <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-end gap-6 px-6 ps-[120px]">
+        {/* justify-start is the RIGHT edge under dir="rtl", which is where the
+            row belongs. The logo Navbar owns is pinned physically left, so the
+            space kept clear for it is padding-inline-END here — reserving it at
+            the start instead is what was pushing the row into the logo. */}
+        <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-start gap-6 px-6 pe-[120px]">
           {LINKS.map((link, i) => (
             <div key={link.href + link.label} className="flex items-center gap-6">
               <Link
@@ -41,7 +45,7 @@ export default function SubPageNav() {
       {/* Below the row, per its own line in the layout — offset by the bar's
           own height so it never sits under it. */}
       <div className="fixed inset-x-0 top-[72px] z-40">
-        <div className="mx-auto flex max-w-[1400px] justify-end px-6 pt-4">
+        <div className="mx-auto flex max-w-[1400px] justify-start px-6 pt-4">
           <Link
             href="/#services"
             className="group inline-flex items-center gap-2 font-display text-[14px] font-medium text-black/70 transition-colors hover:text-black"
