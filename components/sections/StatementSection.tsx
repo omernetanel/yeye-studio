@@ -10,7 +10,7 @@ export default function StatementSection() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.7, ease: "easeOut" }}
-        className="mx-auto max-w-[1400px] text-right font-display text-5xl leading-[1.15] font-normal text-black md:text-7xl lg:text-8xl"
+        className="mx-auto max-w-[1400px] text-right font-display text-[42px] leading-[1.15] font-normal text-black md:text-[62px] lg:text-[84px]"
       >
         עיצוב מושך תשומת לב.
         <br />

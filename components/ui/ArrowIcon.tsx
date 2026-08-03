@@ -10,8 +10,10 @@ export default function ArrowIcon({ className }: { className?: string }) {
       xmlns="http://www.w3.org/2000/svg"
       className={cn("shrink-0", className)}
     >
+      {/* A flat arrow pointing left — "forward" in an RTL layout, matching
+          the direction the service rows' own arrow already points. */}
       <path
-        d="M2.5 11.5L11.5 2.5M11.5 2.5H5.5M11.5 2.5V8.5"
+        d="M11.5 7H2.5M6.5 3L2.5 7L6.5 11"
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"

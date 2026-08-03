@@ -20,8 +20,8 @@ const VIDEO_MARK = { x0: 0.0109, y0: 0.1936, x1: 0.9923, y1: 0.8298 };
 // (a fraction of the SLOT's own height) says how far above the slot's own
 // top the full image's top edge sits. Same numbers as the CSS crop this
 // mirrors (see HeroSection): 1/0.84 and 0.16/0.84.
-const CROP_HEIGHT_SCALE = 1.190476;
-const CROP_TOP_SHIFT = 0.190476;
+const CROP_HEIGHT_SCALE = 1.437962;
+const CROP_TOP_SHIFT = 0.230074;
 
 // Every fluid constant lives here, per the reference build's own advice —
 // these are starting points, tuned for a wordmark of this rough size, not
@@ -60,15 +60,21 @@ const CFG = {
   MASK_HI: 0.31,
 };
 
-// The bottom-most INTERACTIVE_BOTTOM_MARGIN_PX of the wrapper (roughly the
-// Hero's own bottom row — label, CTA button, contact icons) stops
-// registering new splats a bit before that row's own line, on purpose:
-// the canvas itself still renders that whole area (nothing about the
-// fluid sim's own extent changes), so ink that's already drifted there
-// keeps visually settling/smearing on its own, but hovering directly over
-// the row doesn't keep pinning fresh ink to it or push the effect against
-// the wrapper's own hard bottom edge mid-motion.
-const INTERACTIVE_BOTTOM_MARGIN_PX = 190;
+// The bottom-most INTERACTIVE_BOTTOM_MARGIN_PX of the wrapper stops
+// registering new splats, purely so ink is never pinned hard against the
+// wrapper's own bottom edge mid-motion — that edge is a clip, and driving
+// fresh ink into it is what reads as the effect ending abruptly rather
+// than settling. Nothing about the fluid sim's own extent changes here:
+// the canvas still renders the whole area, and ink that drifts down keeps
+// settling and smearing on its own all the way to the bottom.
+//
+// Kept deliberately narrow — just a hair below the CTA row's own bottom
+// edge — so the ink stays live across the entire composition, the buttons
+// included, and only the last few pixels before the hard edge are held
+// back. It was 190px when the Hero ran a full viewport taller; at the
+// current one-screen height that reached up into the wordmark itself and
+// killed the interaction over the bottom of the logo.
+const INTERACTIVE_BOTTOM_MARGIN_PX = 24;
 
 const BASE_VERTEX_SHADER = `#version 300 es
 precision highp float;
@@ -844,11 +850,22 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       lastPointer.has = false;
     };
 
+    // Listen on the whole Hero section, not just the canvas wrapper. The
+    // CTA buttons and contact icons are siblings of the wrapper, not
+    // descendants, and they carry pointer-events-auto so they stay
+    // clickable — which meant a pointer over them never reached the
+    // wrapper at all and the ink went dead exactly there. The section is
+    // the common ancestor of both, and the handler works in absolute
+    // client coordinates anyway, so moving the listener up makes the ink
+    // live across the entire composition without touching the sim or
+    // costing the buttons their own interactivity.
+    //
     // No touch-action: none — a drag across the mark should still let the
     // page scroll normally; we only ever read pointer position.
-    wrapper.addEventListener("pointermove", handlePointerMove);
-    wrapper.addEventListener("pointerleave", handlePointerLeave);
-    wrapper.addEventListener("pointercancel", handlePointerLeave);
+    const interactionTarget: HTMLElement = wrapper.closest("section") ?? wrapper;
+    interactionTarget.addEventListener("pointermove", handlePointerMove);
+    interactionTarget.addEventListener("pointerleave", handlePointerLeave);
+    interactionTarget.addEventListener("pointercancel", handlePointerLeave);
 
     // ---- resize ----
     const resize = () => {
@@ -1007,9 +1024,9 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       if (rafId !== null) cancelAnimationFrame(rafId);
       ro.disconnect();
       window.removeEventListener("orientationchange", resize);
-      wrapper.removeEventListener("pointermove", handlePointerMove);
-      wrapper.removeEventListener("pointerleave", handlePointerLeave);
-      wrapper.removeEventListener("pointercancel", handlePointerLeave);
+      interactionTarget.removeEventListener("pointermove", handlePointerMove);
+      interactionTarget.removeEventListener("pointerleave", handlePointerLeave);
+      interactionTarget.removeEventListener("pointercancel", handlePointerLeave);
       wrapper.removeEventListener("pointerdown", handleFirstPointerDown);
       video.removeEventListener("loadedmetadata", handleVideoMeta);
       video.removeEventListener("canplay", attemptPlay);
