@@ -6,7 +6,6 @@ import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { ArrowLeft, Code2, Layers, Paintbrush, PenTool, Rocket, ShoppingBag, Target, type LucideIcon } from "lucide-react";
 import SwipeCarousel from "@/components/ui/SwipeCarousel";
 import ServiceCard from "@/components/ui/ServiceCard";
-import Card from "@/components/ui/Card";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
 import { cn } from "@/lib/utils";
@@ -132,17 +131,6 @@ const VIDEO_EDGE_TRIM_PX = 2;
 const VIDEO_OPEN_SCALE = 0.86;
 const VIDEO_OPEN_SHIFT_Y_PX = 63;
 
-// About's entrance keeps this custom, off-center origin (matches the
-// direction the paper unfolds toward), but its exit switches to the true
-// panel center instead of re-using this same point — see the switch in
-// update(). Safe to swap the instant the shrink phase starts: scale is
-// exactly 1 at that boundary, so transform-origin has no visible effect
-// yet.
-// Sits high on the opened sheet rather than centred in the panel — the paper
-// fills the frame by then, and a centred block leaves the composition looking
-// bottom-heavy.
-const ABOUT_SHIFT_Y_PX = -30;
-
 // The ball starts unfolding into the plane at ~11.1s (measured off the clip),
 // so the frame finishes opening to full bleed just before that and the plane
 // is never anything but edge to edge. The window starts after 8.13s, which is
@@ -172,8 +160,6 @@ const STATEMENT_PARK_VH = 25;
 const STATEMENT_TAIL_SCALE = 0.88;
 const STATEMENT_TAIL_RISE_PX = 72;
 
-const ABOUT_ENTRANCE_ORIGIN = "72% 82%";
-
 // PANEL_STICKY_TOP_PX is the panel's *real* sticky top offset — negative,
 // so once stuck its own top edge sits slightly above the viewport,
 // letting the video's composition keep scrolling a bit further before
@@ -181,6 +167,12 @@ const ABOUT_ENTRANCE_ORIGIN = "72% 82%";
 // stay in sync with the `-top-[20px]` on the panel's own className below
 // (a literal Tailwind value, can't reference this constant directly).
 const PANEL_STICKY_TOP_PX = -20;
+
+// The panel is stuck slightly ABOVE the viewport top, so its own centre sits
+// PANEL_STICKY_TOP_PX above the screen's. Cancelling that exactly is what puts
+// the block on the centre of the SCREEN rather than the centre of the panel —
+// which matters because that same point is what it scales into on the way out.
+const ABOUT_SHIFT_Y_PX = -PANEL_STICKY_TOP_PX;
 
 // The heading zone's rest-state padding — must be animated down to 0 in
 // lockstep with its own `height` (see update()), not left as a fixed
@@ -376,28 +368,65 @@ function ServicesListBlock() {
   );
 }
 
+/**
+ * The "who I am" block: copy and numbered value cards on one side, a portrait
+ * on the other.
+ *
+ * The pair is laid out as one centred composition rather than two columns
+ * pinned to the page edges, because the whole block is positioned — and shrunk
+ * away — against the centre of the screen. Anything anchored to an edge would
+ * slide sideways as it scaled instead of collapsing into the middle.
+ */
 function AboutBlock() {
   return (
-    <div className="mx-auto flex w-full max-w-[820px] flex-col items-center text-center">
-      <span className="font-display text-xs font-medium tracking-[0.2em] text-black/45 uppercase">Who I Am</span>
-      <h2 className="mt-3 font-display text-4xl font-bold text-black md:text-5xl">מי אני</h2>
-      <p className="mt-2 font-body text-[16px] leading-[1.8] text-black/70">
-        YEYE נולד מתוך אובססיה לפרטים קטנים ואמונה עמוקה שכל עסק ראוי לנוכחות דיגיטלית{" "}
-        <strong className="text-black">ברמה הגבוהה ביותר</strong>. אני מעצב ומפתח עם ניסיון של שנים בבניית חוויות
-        דיגיטליות <strong className="text-black">שלא רק נראות טוב, אלא עובדות</strong>.
-      </p>
+    <div className="mx-auto flex w-full max-w-[1120px] items-center justify-center gap-10 lg:gap-14">
+      <figure className="relative m-0 hidden shrink-0 lg:block">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/portrait.webp"
+          alt="עומר, מייסד YEYE Digital"
+          width={430}
+          height={560}
+          className="h-[430px] w-[330px] rounded-2xl object-cover shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+          draggable={false}
+        />
+        <figcaption className="mt-4 text-right font-body text-[13px] leading-[1.6] text-black/70">
+          אני כאן כדי להפוך את הרעיון שלך
+          <br />
+          <strong className="font-semibold text-black">למוצר דיגיטלי שמייצר אימפקט.</strong>
+        </figcaption>
+      </figure>
 
-      <div className="mt-8 grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
-        {aboutValues.map((value) => {
-          const Icon = value.icon;
-          return (
-            <Card key={value.title} light className="!p-4 flex flex-col items-center gap-2 text-center">
-              <Icon size={18} strokeWidth={1.5} className="text-accent" />
-              <span className="font-display text-[13px] font-bold text-black">{value.title}</span>
-              <p className="font-body text-[12px] leading-[1.5] text-black/50">{value.description}</p>
-            </Card>
-          );
-        })}
+      <div className="flex max-w-[560px] flex-col items-end text-right">
+        <span className="font-display text-xs font-medium tracking-[0.2em] text-black/40 uppercase">Who I Am</span>
+        <h2 className="mt-2 font-display text-[40px] leading-none font-bold text-black sm:text-5xl md:text-[64px]">מי אני?</h2>
+        <p className="mt-5 font-body text-[15px] leading-[1.85] text-black/70">
+          YEYE נולד מתוך אובססיה לפרטים קטנים ואמונה עמוקה שכל עסק ראוי לנוכחות דיגיטלית{" "}
+          <strong className="font-semibold text-black">ברמה הגבוהה ביותר</strong>. אני מעצב ומפתח עם ניסיון של שנים
+          בבניית חוויות דיגיטליות <strong className="font-semibold text-black">שלא רק נראות טוב, אלא עובדות</strong>.
+        </p>
+
+        <div className="mt-7 grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
+          {aboutValues.map((value, i) => {
+            const Icon = value.icon;
+            return (
+              <div
+                key={value.title}
+                className="flex flex-col rounded-lg border border-black/10 bg-white/70 p-4 text-right backdrop-blur-[2px]"
+              >
+                <Icon size={17} strokeWidth={1.5} className="self-end text-black/70" />
+                <span className="mt-3 font-display text-[13px] font-bold text-black">{value.title}</span>
+                <span aria-hidden="true" className="mt-2 mb-2 h-px w-6 self-end bg-black/15" />
+                <p className="font-body text-[11.5px] leading-[1.55] text-black/50">{value.description}</p>
+                {/* Index, as in the reference. Purely decorative, so it is kept
+                    out of the accessibility tree rather than read aloud. */}
+                <span aria-hidden="true" className="mt-4 font-display text-[11px] tracking-[0.15em] text-black/25">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -445,7 +474,6 @@ export default function ServicesSection() {
   // visible. "50% 50%" (its own center, which sits near screen center
   // anyway) is only the fallback for a scroll jump so fast the fully-
   // visible window was never sampled.
-  const aboutCenterOriginRef = useRef("50% 50%");
   // The heading zone's own natural (unshrunk) height — measured once on
   // mount/resize, since it needs to be known BEFORE update() starts
   // driving that same height down toward 0 as the Services text fades.
@@ -630,26 +658,25 @@ export default function ServicesSection() {
     // then shrinking back down as it fades out, instead of popping in at
     // full size the instant opacity starts rising.
     const aboutGrowT = aboutFadeInT * (1 - aboutShrinkT);
-    // Entrance and exit intentionally use different origins: growing in
-    // keeps the custom off-center point, but the shrink-out re-centers on
-    // the screen like Services' own exit does — switching exactly at
-    // aboutShrinkT > 0 lands on scale === 1, so the origin change itself
-    // causes no visible jump.
-    aboutContent.style.transformOrigin = aboutShrinkT > 0 ? aboutCenterOriginRef.current : ABOUT_ENTRANCE_ORIGIN;
+    // Both the entrance and the exit scale about the centre of the screen, so
+    // the block grows out of that point and collapses straight back into it
+    // rather than drifting toward a corner on the way out.
+    //
+    // The origin is recomputed on every frame where the block is at its own
+    // full size, from its live box: the element is centred by flex, but the
+    // panel it sits in is only one screen tall while the block's own box is
+    // not necessarily the same height, so "the middle of the element" and
+    // "the middle of the screen" are not the same point and the difference
+    // moves with the viewport. Measuring it live also means a fast flick that
+    // skips the fully-grown frame entirely cannot leave a stale origin behind
+    // — the fallback below is already screen-centre in element terms.
+    // The block is centred on the screen, so its own centre IS the screen
+    // centre and a plain 50% 50% origin grows it out of that point and
+    // collapses it straight back into it. Nothing measured, so there is no
+    // origin that can go stale when a fast flick skips a frame.
+    aboutContent.style.transformOrigin = "50% 50%";
     aboutContent.style.opacity = String(aboutGrowT);
     aboutContent.style.transform = `translateY(${ABOUT_SHIFT_Y_PX}px) scale(${lerp(CONTENT_SHRINK_SCALE, 1, aboutGrowT)})`;
-    // The screen-center exit origin can only be measured HERE, live, while
-    // About is fully grown and the panel is actually stuck — a mount-time
-    // measurement reads the panel at its unstuck page position (and About
-    // at its initial 0.6 scale), producing an origin thousands of pixels
-    // off. Measured AFTER this frame's scale(1) write lands, so the rect
-    // isn't skewed by a previous frame's leftover mid-grow scale.
-    // getBoundingClientRect is already in viewport coordinates, so screen
-    // center is just innerWidth/2 × innerHeight/2, no sticky-offset math.
-    if (aboutFadeInT === 1 && aboutShrinkT === 0) {
-      const rect = aboutContent.getBoundingClientRect();
-      aboutCenterOriginRef.current = `${window.innerWidth / 2 - rect.left}px ${window.innerHeight / 2 - rect.top}px`;
-    }
   };
 
   const measurePinRange = () => {
@@ -900,10 +927,19 @@ export default function ServicesSection() {
               <ServicesRowsBlock />
             </div>
 
-            <div ref={aboutContentRef} className="pointer-events-none absolute inset-x-0 px-6" style={{ opacity: 0 }}>
-              <AboutBlock />
-            </div>
           </div>
+        </div>
+
+        {/* On the PANEL, not inside the video zone. The zone is pulled up 86px
+            and runs taller than a screen, so a box filling it is not centred on
+            the screen — and the screen's centre is exactly the point this block
+            has to grow out of and collapse back into. */}
+        <div
+          ref={aboutContentRef}
+          className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-6"
+          style={{ opacity: 0 }}
+        >
+          <AboutBlock />
         </div>
 
         {/* The closing statement, delivered inside the pinned frame rather than
