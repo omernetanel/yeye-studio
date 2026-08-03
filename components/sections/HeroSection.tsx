@@ -55,6 +55,11 @@ export default function HeroSection() {
     const slot = logoSlotRef.current;
     if (!area || !slot) return;
     const CROPPED_ASPECT = 2940 / 8200; // height/width of the visible (post-crop) box
+    // Applied AFTER the fit below, so the mark reads a touch smaller than
+    // the space it's given without ever being able to overflow it — the
+    // fit already guarantees it fits, and scaling both axes by the same
+    // factor keeps the aspect ratio and the centring intact.
+    const LOGO_FIT_SCALE = 0.92;
 
     const resize = () => {
       const rect = area.getBoundingClientRect();
@@ -65,8 +70,8 @@ export default function HeroSection() {
         height = rect.height;
         width = height / CROPPED_ASPECT;
       }
-      slot.style.width = `${width}px`;
-      slot.style.height = `${height}px`;
+      slot.style.width = `${width * LOGO_FIT_SCALE}px`;
+      slot.style.height = `${height * LOGO_FIT_SCALE}px`;
     };
     resize();
 
@@ -116,8 +121,8 @@ export default function HeroSection() {
       <div
         className={
           prefersReducedMotion
-            ? "relative flex h-screen min-h-[640px] flex-col pt-[48px] pb-4"
-            : "relative flex h-screen min-h-[640px] flex-col pt-[48px] pb-4 pointer-events-none"
+            ? "relative flex h-[calc(100vh-120px)] min-h-[520px] flex-col pt-[48px] pb-4"
+            : "relative flex h-[calc(100vh-120px)] min-h-[520px] flex-col pt-[48px] pb-4 pointer-events-none"
         }
       >
         {/* The wordmark is pixels (drawn into a canvas, see FluidInkReveal),
@@ -149,9 +154,17 @@ export default function HeroSection() {
           </div>
         )}
 
-        {/* Logo gets the h-screen block's entire remaining height — the
-            bottom row (label, CTA, icons) lives in its own strip after
-            this block now, not sharing this flex-1 column. */}
+        {/* Logo gets this block's entire remaining height. The bottom row
+            (label, CTAs, icons) lives in its own strip after this block
+            rather than sharing this flex-1 column — but the block is sized
+            to the viewport MINUS that strip's own height, so the two
+            together come to exactly one screen and the buttons land above
+            the fold with the logo instead of just below it. The 120px in
+            that calc is the bottom strip's own h-[120px]; the two have to
+            move together. That strip was trimmed from 150px because it was
+            mostly dead air above its bottom-aligned content — cutting it
+            closes the gap under the logo and hands the height back to the
+            logo rather than to empty space. */}
         <div
           className={
             prefersReducedMotion
@@ -214,8 +227,8 @@ export default function HeroSection() {
       <div
         className={
           prefersReducedMotion
-            ? "flex h-[150px] w-full shrink-0 items-end"
-            : "relative z-10 flex h-[150px] w-full shrink-0 items-end pointer-events-none"
+            ? "flex h-[120px] w-full shrink-0 items-end pb-8"
+            : "relative z-10 flex h-[120px] w-full shrink-0 items-end pb-8 pointer-events-none"
         }
       >
         <div className="relative mx-auto flex w-full max-w-[1400px] items-end justify-between px-6">
@@ -234,7 +247,7 @@ export default function HeroSection() {
                 צפו בעבודות שלי
               </Button>
               <Button href="/#contact" variant="primary" showArrow={false} className="!border !border-black !bg-none !bg-white !text-black !shadow-none px-10 py-4 text-lg">
-                צרו קשר
+                קבעו פגישה
               </Button>
             </div>
           </div>
