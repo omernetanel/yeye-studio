@@ -425,6 +425,20 @@ export default function ServicesSection() {
     // (explicitly requested; the rows below DO keep their shrink-to-center
     // exit). The zone collapse beneath it still happens regardless.
     heading.style.opacity = String(1 - servicesShrinkT);
+    // The zone around it collapses to nothing so the footage can grow into the
+    // freed space, and the heading is centred in that zone — so left alone it
+    // gets dragged upward as the zone shrinks, which reads as the text sliding
+    // away rather than fading. Translating it back by half the collapse holds
+    // it exactly still, leaving opacity as the only thing that changes.
+    // With flex centring, the heading's centre sits at
+    //   zoneTop + padTop + (height - padTop - padBottom) / 2
+    // and every one of those three animates to zero together, so the centre
+    // travels the whole of that offset. Compensating for the height alone
+    // leaves the padding's share of the drift behind.
+    const restCentreOffset =
+      HEADING_ZONE_PADDING_TOP_PX +
+      (headingZoneNaturalHeightRef.current - HEADING_ZONE_PADDING_TOP_PX - HEADING_ZONE_PADDING_BOTTOM_PX) / 2;
+    heading.style.transform = `translateY(${restCentreOffset * servicesShrinkT}px)`;
     // The heading zone's own height (and padding — see that constant's
     // own comment) collapses in step with its fade — the video zone
     // below it grows to fill the freed space, so by the time the paper
@@ -664,7 +678,7 @@ export default function ServicesSection() {
             edge against the page. */}
         <div
           ref={headingZoneRef}
-          className="relative z-10 flex shrink-0 items-center justify-center overflow-hidden px-6"
+          className="relative z-10 flex shrink-0 items-center justify-center px-6"
           style={{ paddingTop: HEADING_ZONE_PADDING_TOP_PX, paddingBottom: HEADING_ZONE_PADDING_BOTTOM_PX }}
         >
           <ServicesHeading ref={headingRef} />
