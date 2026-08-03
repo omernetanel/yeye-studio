@@ -124,6 +124,31 @@ body {
   animation: shimmer-sweep 0.35s ease-out forwards;
 }
 
+/* A single light sweep across the services heading, fired once it has settled
+   fully into view rather than on mount — the class is added from the section's
+   own scroll handler, which is what starts the animation. The delay is inside
+   the animation so the heading is readable for a beat first. Both keyframe
+   ends park the gradient off the text, so the glint enters and leaves cleanly
+   instead of sitting parked over a word. */
+@keyframes heading-shine {
+  from {
+    background-position: 190% 0;
+  }
+  to {
+    background-position: -90% 0;
+  }
+}
+
+.heading-shine {
+  background-image: linear-gradient(105deg, #000 43%, rgba(255, 255, 255, 0.92) 50%, #000 57%);
+  background-size: 260% 100%;
+  background-position: 190% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: heading-shine 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.7s 1 both;
+}
+
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
