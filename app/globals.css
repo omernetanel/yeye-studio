@@ -129,15 +129,17 @@ body {
    own scroll handler, which is what starts the animation. Both keyframe ends
    park the gradient off the text, so the glint enters and leaves cleanly
    instead of sitting parked over a word. */
-/* 8%/92% rather than 0%/100%: the band is already clear of the text by then,
-   so the last tenth at each end was runtime spent with nothing visibly
-   happening — which reads as the glint starting late. */
+/* Runs 92% -> 8%, which sweeps the band left to right (a rising background
+   position walks the tile leftwards, so the glint travels the other way).
+   Stopping short of 0%/100% is deliberate: the band is already clear of the
+   text past 10%/90%, so those ends would be runtime with nothing visibly
+   happening. */
 @keyframes heading-shine {
   from {
-    background-position: 8% 0;
+    background-position: 92% 0;
   }
   to {
-    background-position: 92% 0;
+    background-position: 8% 0;
   }
 }
 
@@ -153,14 +155,17 @@ body {
      clear of them entirely. */
   background-image: linear-gradient(105deg, #000 40%, #9a9a9a 50%, #000 60%);
   background-size: 300% 100%;
-  background-position: 8% 0;
+  background-position: 92% 0;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   /* Linear on purpose: the band only overlaps the words across the middle of
      its travel, so an ease-in-out spends its slow ends off the text and rips
      the glint through the letters in a fraction of the runtime. */
-  animation: heading-shine 1.1s linear 1 both;
+  /* backwards fill holds the 92% start through the half-second delay, so the
+     heading is plain black while it waits rather than flashing the gradient's
+     resting position first. */
+  animation: heading-shine 1.1s linear 0.5s 1 both;
 }
 
 .no-scrollbar {

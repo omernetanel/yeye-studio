@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -13,6 +13,12 @@ const VIDEO_SRC = "/videos/hearmeoutbgvid.mp4";
 // the plate's own coordinate space and the <img> is laid out at the full
 // ROOM_W regardless, so the file's own resolution is free to differ from it.
 const ROOM_SRC = "/images/bghearmeout.webp";
+
+// How far ahead of the stage the clip starts downloading, as a share of the
+// viewport. Generous on purpose: the clip is full-screen from the very first
+// frame of the pin, so it has to be decodable by the time the section arrives,
+// not merely requested.
+const VIDEO_PRELOAD_MARGIN = "200% 0px";
 
 // The showroom plate, and the screen cut-out measured out of its own alpha
 // channel rather than eyeballed: a solid transparent rectangle at
@@ -172,9 +178,15 @@ function ContactForm() {
   );
 }
 
-function StageVideo() {
+function StageVideo({ src }: { src?: string }) {
   return (
     <video
+      // Held back until the stage is close (see VIDEO_PRELOAD_MARGIN). This is
+      // the heaviest asset on the site by a wide margin and it lives at the far
+      // end of a very long page, so loading it up front made every visitor who
+      // never got here pay for it in full. Setting the attribute later runs the
+      // media load algorithm, so it still autoplays on arrival.
+      src={src}
       aria-hidden="true"
       tabIndex={-1}
       muted
@@ -186,9 +198,7 @@ function StageVideo() {
       // Its box is built at the clip's own 16:9, so nothing is ever cropped
       // or letterboxed here — the frame is shown whole at every zoom level.
       className="h-full w-full object-cover"
-    >
-      <source src={VIDEO_SRC} type="video/mp4" />
-    </video>
+    />
   );
 }
 
@@ -226,6 +236,27 @@ export default function ContactStage() {
 
   const pinStartScrollYRef = useRef(0);
   const pinEndScrollYRef = useRef(0);
+
+  // Its own element, attached in both branches, so the gate does not depend on
+  // which one rendered.
+  const gateRef = useRef<HTMLDivElement>(null);
+  const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const gate = gateRef.current;
+    if (!gate) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setVideoSrc(VIDEO_SRC);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: VIDEO_PRELOAD_MARGIN },
+    );
+    observer.observe(gate);
+    return () => observer.disconnect();
+  }, []);
 
   const { scrollY } = useScroll();
 
@@ -320,8 +351,8 @@ export default function ContactStage() {
   if (skipPin) {
     return (
       <section id="contact" className="relative overflow-hidden bg-black">
-        <div className="relative w-full" style={{ aspectRatio: `${SCREEN_W} / ${SCREEN_H}` }}>
-          <StageVideo />
+        <div ref={gateRef} className="relative w-full" style={{ aspectRatio: `${SCREEN_W} / ${SCREEN_H}` }}>
+          <StageVideo src={videoSrc} />
         </div>
         <div className="absolute inset-0 flex items-center justify-center">
           <ContactForm />
@@ -337,6 +368,11 @@ export default function ContactStage() {
       className="relative bg-white"
       style={{ height: `calc(100vh + ${PIN_VH + HOLD_VH}vh)` }}
     >
+      {/* Zero-height marker at the very top of the section: the observer
+          needs something that scrolls with the page, and the panel itself is
+          sticky, which would keep it intersecting once reached. */}
+      <div ref={gateRef} aria-hidden="true" className="absolute inset-x-0 top-0 h-px" />
+
       <div ref={panelRef} className="sticky top-0 h-screen w-full overflow-hidden bg-white">
         {/* One rigid scene in the plate's own pixel space. Only this element's
             transform ever changes; nothing inside it moves independently. */}
@@ -378,7 +414,7 @@ export default function ContactStage() {
               className="absolute top-1/2 left-1/2 overflow-hidden"
               style={{ width: VIDEO_W, height: VIDEO_H, transform: "translate(-50%, -50%)" }}
             >
-              <StageVideo />
+              <StageVideo src={videoSrc} />
             </div>
           </div>
         </div>
