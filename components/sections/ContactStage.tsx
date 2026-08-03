@@ -8,7 +8,11 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
 
 const VIDEO_SRC = "/videos/hearmeoutbgvid.mp4";
-const ROOM_SRC = "/images/bghearmeout.png";
+// The plate ships at half its nominal pixel size (3344x1882 against a ROOM_W
+// of 6688). That is fine and deliberate: the composition below is expressed in
+// the plate's own coordinate space and the <img> is laid out at the full
+// ROOM_W regardless, so the file's own resolution is free to differ from it.
+const ROOM_SRC = "/images/bghearmeout.webp";
 
 // The showroom plate, and the screen cut-out measured out of its own alpha
 // channel rather than eyeballed: a solid transparent rectangle at
