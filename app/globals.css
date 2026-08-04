@@ -47,6 +47,12 @@ body {
    only needs guarding once, on the actual scrolling root. */
 html {
   overflow-x: hidden;
+  /* Stops the pull-to-refresh gesture and the rubber-band bounce at the ends of
+     the page. Dragging on the ink at the top of the hero was reaching the
+     scroller before the canvas did and arming a page refresh — the single
+     biggest reason the page felt like it moved under the finger. Nothing else
+     on the site depends on either behaviour. */
+  overscroll-behavior-y: contain;
 }
 
 body {
