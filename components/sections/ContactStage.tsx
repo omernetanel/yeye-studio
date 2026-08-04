@@ -36,18 +36,18 @@ const SCREEN_H = 1152;
 const SCREEN_CX = SCREEN_X + SCREEN_W / 2;
 const SCREEN_CY = SCREEN_Y + SCREEN_H / 2;
 
-// The clip is never reframed to suit the plate. The plate is a placeholder and
-// its cut-out happens to be 1.94:1, so the clip keeps its true 16:9 and is
-// fitted inside that cut-out by height and centred; the leftover strip on
-// either side simply becomes more black bezel. Nothing is cropped at any zoom
-// level. When the plate is replaced with one whose screen is a real 16:9,
-// these numbers collapse to the cut-out itself with no side strip left.
+// The clip fills the cut-out edge to edge. The plate is a placeholder whose
+// cut-out is 1.94:1 against the clip's 16:9, so filling it costs ~4% off the
+// top and bottom of the frame — the alternative was fitting the clip by height
+// and leaving a bare strip of bezel down each side, which read as margin rather
+// than as part of the frame. When the plate is replaced with one whose screen
+// is a real 16:9 the crop disappears on its own, with nothing here to change.
 const VIDEO_H = SCREEN_H;
-const VIDEO_W = SCREEN_H * (16 / 9);
+const VIDEO_W = SCREEN_W;
 
 // Plasma-style bezel, in the same image space, so it scales with everything
 // else instead of staying a fixed number of screen pixels.
-const BEZEL = 26;
+const BEZEL = 44;
 
 // Scroll length of the pinned run, on top of the section's own first screen.
 const PIN_VH = 220;
@@ -395,9 +395,16 @@ export default function ContactStage() {
             draggable={false}
           />
 
-          {/* The screen: bezel drawn outward from the cut-out so the black
-              frame lands on the plate's own edge rather than eating into the
-              picture. The clip sits ON the plate, not behind it. */}
+          {/* The screen. The bezel is drawn outward from the cut-out so it lands
+              on the plate's own edge rather than eating into the picture, and
+              the clip now FILLS that cut-out — it used to sit inside it at its
+              own 16:9, which left a strip of bare bezel down each side that read
+              as margin rather than as part of the frame.
+
+              Chrome rather than black, with a glossy sweep over it, so it reads
+              as a plasma set's frame instead of a flat rectangle. The gradient
+              runs across the corner, which is what gives a moulded edge its
+              light and dark sides. */}
           <div
             className="absolute"
             style={{
@@ -405,14 +412,29 @@ export default function ContactStage() {
               top: SCREEN_Y - BEZEL,
               width: SCREEN_W + BEZEL * 2,
               height: SCREEN_H + BEZEL * 2,
-              background: "#000",
+              background:
+                "linear-gradient(148deg, #5c5c5c 0%, #333 14%, #1e1e1e 38%, #262626 62%, #454545 84%, #6a6a6a 100%)",
               padding: BEZEL,
               boxSizing: "border-box",
+              borderRadius: BEZEL * 0.5,
+              boxShadow:
+                "inset 0 2px 3px rgba(255,255,255,0.30), inset 0 -2px 3px rgba(0,0,0,0.55), 0 30px 70px rgba(0,0,0,0.35)",
             }}
           >
+            {/* The specular sweep. Separate layer so it sits over the bezel's
+                own gradient without tinting the screen inside it. */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0"
+              style={{
+                borderRadius: BEZEL * 0.5,
+                background:
+                  "linear-gradient(112deg, rgba(255,255,255,0) 28%, rgba(255,255,255,0.20) 42%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 62%)",
+              }}
+            />
             <div
               className="absolute top-1/2 left-1/2 overflow-hidden"
-              style={{ width: VIDEO_W, height: VIDEO_H, transform: "translate(-50%, -50%)" }}
+              style={{ width: SCREEN_W, height: SCREEN_H, transform: "translate(-50%, -50%)" }}
             >
               <StageVideo src={videoSrc} />
             </div>
