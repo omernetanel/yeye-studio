@@ -84,6 +84,12 @@ function clamp01(value: number) {
 }
 
 function mapRange(value: number, inMin: number, inMax: number, outMin: number, outMax: number) {
+  // A degenerate range divides by zero, and 0/0 is NaN, which then spreads into
+  // every value derived from it. Not hypothetical: update() runs once on mount
+  // BEFORE the pin range has been measured, so both ends are still 0. See the
+  // same guard in ServicesSection, where an unguarded NaN reached
+  // video.currentTime and threw.
+  if (inMax === inMin) return outMin;
   const t = clamp01((value - inMin) / (inMax - inMin));
   return outMin + t * (outMax - outMin);
 }

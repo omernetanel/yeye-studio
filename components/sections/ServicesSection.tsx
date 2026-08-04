@@ -1021,15 +1021,18 @@ export default function ServicesSection() {
           {/* bg-white keeps object-contain's letterbox margin the same colour
               as the page.
 
-              A thin vertical line reported beside the ball is NOT explained
-              by either of these, both tried and ruled out against a real
-              browser: (1) the letterbox margin's default black backing —
-              bg-white changed nothing; (2) the clip's limited colour range
-              (color_range=tv, white at Y=235) rendering the video rect as
-              #EBEBEB on decoders that skip the limited->full expansion — a
-              full-range re-encode changed nothing either. Cause still
-              unknown; note it is invisible to headless testing here, which
-              cannot decode H.264 at all and only ever shows the poster.
+              SOLVED: the thin vertical line that used to show beside the ball
+              was object-contain's own letterbox edge. The picture sits well
+              inside the element's box, and scaling the element dragged that
+              edge around with it, leaving a row of resampled pixels. It is cut
+              off with a clip-path inset in update() — computed from the live
+              box, so it holds at any viewport and any scale.
+
+              Two earlier theories were measured and ruled out, and are recorded
+              so they are not re-tried: the letterbox margin's default black
+              backing (bg-white changed nothing), and the clip's limited colour
+              range rendering the video rect as #EBEBEB (a full-range re-encode
+              changed nothing, and broke the GOP in the process).
 
               If this clip is ever re-encoded, it MUST keep a dense GOP
               (-g 5; the source carries a keyframe every 5 frames). The
