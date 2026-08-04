@@ -3,7 +3,6 @@ import "./globals.css";
 import { googleSans, assistant } from "@/lib/fonts";
 import { SITE_NAME, SITE_TITLE, SITE_DESCRIPTION } from "@/lib/site";
 import { SmoothScrollProvider } from "@/lib/motion/lenis";
-import StickyMobileCTA from "@/components/layout/StickyMobileCTA";
 
 // TODO: replace with the real production domain before launch (also used in app/sitemap.ts and app/robots.ts).
 const BASE_URL = "https://yeyelabs.com";
@@ -36,7 +35,6 @@ export default function RootLayout({
     <html lang="he" dir="rtl" className={`${googleSans.variable} ${assistant.variable}`}>
       <body className="bg-background font-body text-white">
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
-        <StickyMobileCTA />
       </body>
     </html>
   );
