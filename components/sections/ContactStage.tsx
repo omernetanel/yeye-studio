@@ -413,12 +413,12 @@ export default function ContactStage() {
               width: SCREEN_W + BEZEL * 2,
               height: SCREEN_H + BEZEL * 2,
               background:
-                "linear-gradient(148deg, #5c5c5c 0%, #333 14%, #1e1e1e 38%, #262626 62%, #454545 84%, #6a6a6a 100%)",
+                "linear-gradient(148deg, #2e2e2e 0%, #171717 14%, #080808 38%, #0d0d0d 62%, #1c1c1c 84%, #383838 100%)",
               padding: BEZEL,
               boxSizing: "border-box",
               borderRadius: BEZEL * 0.5,
               boxShadow:
-                "inset 0 2px 3px rgba(255,255,255,0.30), inset 0 -2px 3px rgba(0,0,0,0.55), 0 30px 70px rgba(0,0,0,0.35)",
+                "inset 0 2px 3px rgba(255,255,255,0.16), inset 0 -2px 3px rgba(0,0,0,0.70), 0 30px 70px rgba(0,0,0,0.40)",
             }}
           >
             {/* The specular sweep. Separate layer so it sits over the bezel's
@@ -429,7 +429,7 @@ export default function ContactStage() {
               style={{
                 borderRadius: BEZEL * 0.5,
                 background:
-                  "linear-gradient(112deg, rgba(255,255,255,0) 28%, rgba(255,255,255,0.20) 42%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 62%)",
+                  "linear-gradient(112deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.11) 43%, rgba(255,255,255,0.03) 51%, rgba(255,255,255,0) 62%)",
               }}
             />
             <div
