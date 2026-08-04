@@ -36,7 +36,17 @@ export default function SwipeCarousel({ children, className, slideWidth = "85%" 
   }, [children.length]);
 
   return (
-    <div className={className}>
+    // overflow-x-clip (not hidden) on the outer box: the track below is
+    // deliberately 48px wider than its parent so the slides can bleed to the
+    // screen edges, and without a clip here that extra width lands on the
+    // document. Under dir="rtl" that does not just add a scrollbar — it moves
+    // the whole page's paint origin sideways, which is what put a strip of
+    // page background down the left of every section on mobile.
+    //
+    // clip rather than hidden because hidden makes this a scroll container,
+    // and this site pins several sections with position: sticky, which stops
+    // engaging inside one.
+    <div className={cn("overflow-x-clip", className)}>
       <div className="no-scrollbar -mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-1">
         {children.map((child, i) => (
           <div

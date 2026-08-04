@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import Button from "@/components/ui/Button";
 import FluidInkReveal from "@/components/sections/hero/FluidInkReveal";
+import ArrowIcon from "@/components/ui/ArrowIcon";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
+import { useIsMobile } from "@/lib/use-mobile";
 import { setDocked } from "@/lib/motion/heroDock";
 
 const WHATSAPP_NUMBER = "972552434775";
@@ -15,6 +17,7 @@ const TAGLINE_TEXT = "בואו נבנה לכם אתר שעובד ומוכר בא
 
 export default function HeroSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const isMobile = useIsMobile();
   const sectionRef = useRef<HTMLElement>(null);
   const taglineRef = useRef<HTMLParagraphElement>(null);
   // logoAreaRef is the flex-1/min-h-0 space left over once the tagline and
@@ -90,11 +93,13 @@ export default function HeroSection() {
     // the space it's given without ever being able to overflow it — the
     // fit already guarantees it fits, and scaling both axes by the same
     // factor keeps the aspect ratio and the centring intact.
-    const LOGO_FIT_SCALE = 0.96;
+    // On mobile the mark and the button beneath it share one column and have to
+    // line up on the same two edges, so it fills its box exactly.
+    const LOGO_FIT_SCALE = isMobile ? 1 : 0.96;
     // A flat trim off the fitted width, not another ratio: a ratio would
     // take a different number of pixels off at every viewport, and this is
     // meant to be exactly 10px wherever it renders.
-    const LOGO_TRIM_PX = 10;
+    const LOGO_TRIM_PX = isMobile ? 0 : 10;
 
     const resize = () => {
       const rect = area.getBoundingClientRect();
@@ -116,7 +121,89 @@ export default function HeroSection() {
     const ro = new ResizeObserver(resize);
     ro.observe(area);
     return () => ro.disconnect();
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, isMobile]);
+
+  // Mobile gets its own arrangement rather than the desktop one squeezed down.
+  // One screen, three anchored blocks — line at the top, wordmark in the middle,
+  // actions and studio line at the bottom — with the wordmark and the button
+  // sharing the column's exact width so the whole thing lines up on two edges.
+  // 100dvh, not 100vh: on a phone the browser chrome is inside 100vh, so a
+  // 100vh column puts its own bottom row underneath the address bar.
+  if (isMobile) {
+    return (
+      <section ref={sectionRef} id="hero" className="relative flex h-[100dvh] min-h-[560px] flex-col overflow-hidden bg-white">
+        {!prefersReducedMotion && (
+          <div className="absolute inset-0 overflow-hidden">
+            <FluidInkReveal
+              logoSrc="/images/logo.png"
+              videoSrc="/videos/herobg.mp4"
+              taglineText={TAGLINE_TEXT}
+              taglineElRef={taglineRef}
+              logoSlotRef={logoSlotRef}
+              className="relative h-full w-full select-none"
+            />
+          </div>
+        )}
+
+        {/* pointer-events-none so a touch anywhere in the empty space still
+            reaches the ink canvas underneath; the controls opt back in. */}
+        <div className="pointer-events-none relative z-10 flex h-full flex-col px-6 pt-[72px] pb-8">
+          <h1 className="sr-only">YEYE</h1>
+
+          <p
+            ref={taglineRef}
+            className="text-right font-display text-[19px] leading-[1.4] font-semibold"
+            // Transparent under the ink for the same reason as desktop: the
+            // canvas redraws these glyphs itself so they can invert.
+            style={{ color: prefersReducedMotion ? "#000" : "transparent" }}
+          >
+            {TAGLINE_TEXT}
+          </p>
+
+          <div ref={logoAreaRef} className="relative flex min-h-0 w-full flex-1 select-none items-center justify-center">
+            {prefersReducedMotion ? (
+              <div ref={logoSlotRef} className="relative mx-auto overflow-hidden">
+                <div className="absolute inset-x-0" style={{ top: "-23.0074%", height: "143.7962%" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/images/logo.png"
+                    alt="YEYE"
+                    className="h-full w-full object-contain"
+                    style={{ filter: "brightness(0)" }}
+                    draggable={false}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div ref={logoSlotRef} className="relative mx-auto" />
+            )}
+          </div>
+
+          {/* One real button, with the second route as a text link under it.
+              Two buttons of equal weight split the attention and read as
+              indecision; the studios this is modelled on all commit to one. */}
+          <div className="pointer-events-auto flex w-full flex-col items-center">
+            <Button
+              href="/#contact"
+              variant="primary"
+              className="!border-black !bg-none !bg-black !shadow-none w-full justify-center py-4 text-[17px]"
+            >
+              קבעו פגישה
+            </Button>
+            <Link
+              href="/#projects"
+              className="mt-4 inline-flex items-center gap-2 font-display text-[15px] font-medium text-black/70"
+            >
+              העבודות שלי
+              <ArrowIcon />
+            </Link>
+          </div>
+
+          <span className="mt-7 text-center font-display text-[12px] text-black/45">סטודיו דיגיטלי עצמאי</span>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section ref={sectionRef} id="hero" className="relative flex flex-col overflow-hidden bg-white">

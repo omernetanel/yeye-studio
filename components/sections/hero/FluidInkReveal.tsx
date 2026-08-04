@@ -651,6 +651,8 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     let taglineRectUv = [0, 0, 0, 0];
     let ctaRectUv = [0, 0, 0, 0];
     let logoImage: HTMLImageElement | null = null;
+    // Reused across frames; recreating it every paint would thrash allocation.
+    let logoTintCanvas: HTMLCanvasElement | null = null;
 
     // How much of the wrapper's own height the (uncropped) logo image
     // occupies — CFG.SPLAT_RADIUS was tuned back when the wrapper WAS that
@@ -723,16 +725,39 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
         };
 
         if (logoImage && fullRect.width > 0) {
-          // logo.png's opaque pixels are white (a solid-fill wordmark on
-          // transparent, not baked black) — brightness(0) recolors them to
-          // black without touching alpha, the same trick the old <Image>
-          // used via a CSS filter. Drawing the full (untrimmed) image here
-          // is safe even though it extends above the visible slot: the
-          // margin above the lettering is transparent in the source file,
-          // so it's a no-op paint outside the slot's own bounds.
-          paperCtx.filter = "brightness(0)";
-          paperCtx.drawImage(logoImage, fullRect.left * dpr, fullRect.top * dpr, fullRect.width * dpr, fullRect.height * dpr);
-          paperCtx.filter = "none";
+          // logo.png's opaque pixels are WHITE (a solid-fill wordmark on
+          // transparent, not baked black), so it has to be recoloured to black
+          // before it goes on the paper.
+          //
+          // This used to be `paperCtx.filter = "brightness(0)"`, which mobile
+          // Safari silently ignores — canvas filter support landed late there
+          // and is still unreliable. When it is ignored the wordmark paints in
+          // its own white, onto white paper, and all that survives is a faint
+          // edge that reads as a frame around nothing. That is exactly the
+          // reported symptom, and it only showed on a real device because
+          // desktop Chrome honours the filter.
+          //
+          // A source-in composite does the same recolour with no filter
+          // support required: draw the artwork, then flood the canvas with
+          // black keeping only the pixels the artwork already covers.
+          const lw = Math.max(1, Math.round(fullRect.width * dpr));
+          const lh = Math.max(1, Math.round(fullRect.height * dpr));
+          const tint = logoTintCanvas ?? (logoTintCanvas = document.createElement("canvas"));
+          if (tint.width !== lw || tint.height !== lh) {
+            tint.width = lw;
+            tint.height = lh;
+          }
+          const tintCtx = tint.getContext("2d");
+          if (tintCtx) {
+            tintCtx.clearRect(0, 0, lw, lh);
+            tintCtx.globalCompositeOperation = "source-over";
+            tintCtx.drawImage(logoImage, 0, 0, lw, lh);
+            tintCtx.globalCompositeOperation = "source-in";
+            tintCtx.fillStyle = "#000000";
+            tintCtx.fillRect(0, 0, lw, lh);
+            tintCtx.globalCompositeOperation = "source-over";
+            paperCtx.drawImage(tint, fullRect.left * dpr, fullRect.top * dpr, lw, lh);
+          }
         }
 
         textRect = {
