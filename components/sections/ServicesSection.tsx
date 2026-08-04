@@ -64,6 +64,9 @@ const POSTER_SRC = "/images/servicesbg-poster.jpg";
 // this is only what renders before that, and a safety fallback if
 // `loadedmetadata` never fires for some reason.
 const VIDEO_DURATION_FALLBACK = 8.15;
+// The clip's own frame rate. Scroll is quantised onto this grid so the scrub
+// only ever seeks when the frame on screen would actually change.
+const VIDEO_FPS = 30;
 
 // Phase 0 ("lead-in"): SPACER_PX worth of perfectly ordinary scrolling
 // before the panel below goes sticky at all — a plain block, not pinned
@@ -516,6 +519,8 @@ export default function ServicesSection() {
   const clipEndScrollYRef = useRef(0);
   const videoDurationRef = useRef(VIDEO_DURATION_FALLBACK);
   const videoReadyRef = useRef(false);
+  // Which video frame was last asked for, so an unchanged frame costs nothing.
+  const lastSeekFrameRef = useRef(-1);
 
   const { scrollY } = useScroll();
 
@@ -538,8 +543,22 @@ export default function ServicesSection() {
     // across the whole pinned range, so it's automatically, exactly
     // reversible on scroll-up; no separate "rewind" logic needed.
     const targetTime = progressToTime(progress, videoDurationRef.current);
-    if (videoReadyRef.current && Math.abs(video.currentTime - targetTime) > 0.008) {
-      video.currentTime = targetTime;
+    // Seek to the FRAME the target time falls in, not to the exact time, and
+    // only when that frame actually changes.
+    //
+    // The old test fired whenever the target moved more than 8ms — a quarter of
+    // a frame at 30fps — so most frames issued a seek that could not change a
+    // single displayed pixel, and each one still costs a full decode. Landing
+    // on the frame's own midpoint also keeps the browser from picking the
+    // neighbouring frame on a rounding boundary, which is what makes a slow
+    // drag flicker between two frames instead of holding one.
+    if (videoReadyRef.current) {
+      const frame = Math.round(targetTime * VIDEO_FPS - 0.5);
+      const snapped = (frame + 0.5) / VIDEO_FPS;
+      if (frame !== lastSeekFrameRef.current) {
+        lastSeekFrameRef.current = frame;
+        video.currentTime = snapped;
+      }
     }
 
     const servicesShrinkT = smoothstep(mapRange(targetTime, SERVICES_FADE_START_SECONDS, SERVICES_FADE_END_SECONDS, 0, 1));
