@@ -50,13 +50,13 @@ export default function Footer({ light = false }: FooterProps) {
             alt="YEYE"
             width={8200}
             height={3500}
-            className={cn("h-5 w-auto brightness-0", light ? "opacity-40" : "invert-[0.35]")}
+            className={cn("h-8 w-auto brightness-0", light ? "opacity-40" : "invert-[0.35]")}
           />
           {/* Sits under the footer mark only — the hero wordmark and the
               floating navbar mark are deliberately left as they are. */}
           <span
             className={cn(
-              "font-display text-[10px] font-medium tracking-[0.42em] uppercase",
+              "font-display text-[13px] font-medium tracking-[0.42em] uppercase",
               light ? "text-black/35" : "text-white/35"
             )}
           >
@@ -66,7 +66,7 @@ export default function Footer({ light = false }: FooterProps) {
 
         {/* Copyright */}
         <div className={cn("font-display text-[13px]", light ? "text-black/35" : "text-white/35")}>
-          © 2026 YEYE. כל הזכויות שמורות.
+          © 2026 YEYE Digital. כל הזכויות שמורות.
         </div>
       </div>
     </footer>
