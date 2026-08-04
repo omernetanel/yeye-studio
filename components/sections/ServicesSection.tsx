@@ -418,17 +418,20 @@ function AboutBlock() {
           </h2>
           <HeadingSwash className="mt-2 w-[190px] text-black md:w-[230px]" />
         </div>
-        {/* The line breaks are the author's own. They are kept only from md up
-            — forced at a narrow width they would break in the middle of a
-            phrase, so below that the text wraps naturally. */}
-        <p className="mt-6 font-body text-[15px] leading-[1.85] text-black/70">
-          YEYE הוקם מתוך אובססיה לפרטים הקטנים ואמונה עמוקה שכל עסק ראוי
-          <br className="hidden md:block" /> לנוכחות דיגיטלית{" "}
+        {/* text-balance rather than hand-placed breaks. Fixed breaks were
+            leaving a long line above a short one at this measure, and they only
+            hold at one width — the browser evens the lines out itself here, at
+            every width, and never splits a phrase to do it.
+
+            The one break kept is the one before the closing clause, which is
+            the line the whole paragraph lands on and wants to stand alone. */}
+        <p className="mt-6 font-body text-[15px] leading-[1.85] text-balance text-black/70">
+          YEYE הוקם מתוך אובססיה לפרטים הקטנים ואמונה עמוקה שכל עסק ראוי לנוכחות דיגיטלית{" "}
           <strong className="font-semibold text-black">ברמה הגבוהה ביותר</strong>.
         </p>
-        <p className="mt-4 font-body text-[15px] leading-[1.85] text-black/70">
+        <p className="mt-4 font-body text-[15px] leading-[1.85] text-balance text-black/70">
           אני עומר, מעצב מגיל 15 ומפתח מגיל 17, ואני בונה חוויות דיגיטליות
-          <br className="hidden md:block" />{" "}
+          <br />
           <strong className="font-semibold text-black">שלא רק נראות טוב, אלא עובדות.</strong>
         </p>
 
