@@ -127,11 +127,15 @@ export default function HeroSection() {
   // One screen, three anchored blocks — line at the top, wordmark in the middle,
   // actions and studio line at the bottom — with the wordmark and the button
   // sharing the column's exact width so the whole thing lines up on two edges.
-  // 100dvh, not 100vh: on a phone the browser chrome is inside 100vh, so a
-  // 100vh column puts its own bottom row underneath the address bar.
+  // 100svh — the SMALL viewport height, which is the height with the browser
+  // chrome showing and, crucially, a constant. 100vh is too tall (it puts the
+  // bottom row under the address bar) and 100dvh, which was here first, is
+  // worse: it tracks the chrome hiding and showing as you scroll, so the hero
+  // resized on every scroll and the ink simulation was rebuilt each time —
+  // which is what made the white flicker and show the clip underneath.
   if (isMobile) {
     return (
-      <section ref={sectionRef} id="hero" className="relative flex h-[100dvh] min-h-[560px] flex-col overflow-hidden bg-white">
+      <section ref={sectionRef} id="hero" className="relative flex h-[100svh] min-h-[560px] flex-col overflow-hidden bg-white">
         {!prefersReducedMotion && (
           <div className="absolute inset-0 overflow-hidden">
             <FluidInkReveal
