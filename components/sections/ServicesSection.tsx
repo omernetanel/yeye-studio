@@ -3,7 +3,7 @@
 import { forwardRef, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
-import { ArrowLeft, Code2, Layers, Paintbrush, PenTool, Rocket, ShoppingBag, Target, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Layers, PenTool, Rocket, ShoppingBag } from "lucide-react";
 import SwipeCarousel from "@/components/ui/SwipeCarousel";
 import ServiceCard from "@/components/ui/ServiceCard";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
@@ -37,27 +37,23 @@ const services = [
   },
 ];
 
-interface AboutValue {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-}
-
-const aboutValues: AboutValue[] = [
+// What is actually true about how the work gets done. No counts and no client
+// logos on purpose: with a young practice those numbers are small, and putting
+// a small number in large type advertises the gap rather than closing it. These
+// three claims cost nothing to state and are worth more, because a studio that
+// hands work to juniors or starts from a template cannot state them at all.
+const aboutFacts = [
   {
-    icon: Target,
-    title: "Results-Driven",
-    description: "אתר יפה זה לא מספיק. אני בונה כלי מכירה שמייצרים תוצאות אמיתיות.",
+    title: "איש אחד, מקצה לקצה",
+    description: "העיצוב והפיתוח באותן ידיים, כך ששום כוונה לא הולכת לאיבוד בדרך.",
   },
   {
-    icon: Code2,
-    title: "Code Quality",
-    description: "קוד נקי, מהיר וניתן להרחבה. אני בונה לטווח הארוך, לא רק להשקה.",
+    title: "הכל נבנה מאפס",
+    description: "בלי תבניות ובלי תוספים. כל פרויקט נבנה בדיוק למה שהוא צריך לעשות.",
   },
   {
-    icon: Paintbrush,
-    title: "Design-First",
-    description: "כל פרויקט מתחיל מעיצוב מדויק. אני לא כותב שורת קוד לפני שהחזון ברור.",
+    title: "מדברים ישירות איתי",
+    description: "בלי מנהל פרויקט באמצע, בלי מתווך, ובלי לחכות בתור.",
   },
 ];
 
@@ -443,27 +439,22 @@ function AboutBlock() {
           <br className="hidden md:block" /> <strong className="font-semibold text-black">אלא עובדות.</strong>
         </p>
 
-        <div className="mt-7 grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
-          {aboutValues.map((value, i) => {
-            const Icon = value.icon;
-            return (
-              <div
-                key={value.title}
-                className="flex flex-col rounded-lg border border-black/10 bg-white/70 p-4 text-right backdrop-blur-[2px]"
-              >
-                <Icon size={17} strokeWidth={1.5} className="self-end text-black/70" />
-                <span className="mt-3 font-display text-[13px] font-bold text-black">{value.title}</span>
-                <span aria-hidden="true" className="mt-2 mb-2 h-px w-6 self-end bg-black/15" />
-                <p className="font-body text-[11.5px] leading-[1.55] text-black/50">{value.description}</p>
-                {/* Index, as in the reference. Purely decorative, so it is kept
-                    out of the accessibility tree rather than read aloud. */}
-                <span aria-hidden="true" className="mt-4 font-display text-[11px] tracking-[0.15em] text-black/25">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+        {/* Not cards, and deliberately not numbers. Every one of these is a
+            plain fact about how the work is actually done, which a studio that
+            subcontracts or assembles templates could not honestly write — where
+            "Design-First" and a project count are things anyone can claim and
+            nobody can check. Set as quiet rules-and-type rather than boxes so
+            they read as substance rather than feature badges. */}
+        <dl className="mt-7 w-full divide-y divide-black/10 border-y border-black/10">
+          {aboutFacts.map((fact) => (
+            <div key={fact.title} className="flex flex-col gap-1 py-3 text-right sm:flex-row-reverse sm:gap-4">
+              <dt className="font-display text-[14px] font-bold whitespace-nowrap text-black sm:w-[150px]">
+                {fact.title}
+              </dt>
+              <dd className="m-0 font-body text-[13px] leading-[1.6] text-black/55">{fact.description}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </div>
   );
