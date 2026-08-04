@@ -404,11 +404,6 @@ function AboutBlock() {
           className="h-[430px] w-[330px] rounded-2xl object-cover shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
           draggable={false}
         />
-        <figcaption className="mt-4 text-right font-body text-[13px] leading-[1.6] text-black/70">
-          אני כאן כדי להפוך את הרעיון שלך
-          <br />
-          <strong className="font-semibold text-black">למוצר דיגיטלי שמייצר אימפקט.</strong>
-        </figcaption>
       </figure>
 
       {/* No items-end: under dir="rtl" the flex END is the LEFT, so it shrank
@@ -453,6 +448,15 @@ function AboutBlock() {
             </div>
           ))}
         </dl>
+
+        {/* The closing line. It used to hang under the portrait at 13px, where
+            it read as a photo credit; sitting at the end of the copy at body
+            size it reads as what it is — the sentence the section is building
+            to. */}
+        <p className="mt-6 font-body text-[15px] leading-[1.7] text-black/70">
+          אני כאן כדי להפוך את הרעיון שלך{" "}
+          <strong className="font-semibold text-black">למוצר דיגיטלי שמייצר אימפקט.</strong>
+        </p>
       </div>
     </div>
   );
