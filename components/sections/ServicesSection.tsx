@@ -243,6 +243,11 @@ function containedPictureSize(elW: number, elH: number) {
 }
 
 function mapRange(value: number, inMin: number, inMax: number, outMin: number, outMax: number) {
+  // A degenerate range divides by zero, and 0/0 is NaN — which then flows all
+  // the way to video.currentTime and throws. That is not hypothetical: on
+  // mount, update() runs once BEFORE measurePinRange() has given the pin its
+  // real bounds, so both ends are still 0.
+  if (inMax === inMin) return outMin;
   const t = clamp01((value - inMin) / (inMax - inMin));
   return outMin + t * (outMax - outMin);
 }
@@ -575,7 +580,10 @@ export default function ServicesSection() {
     // on the frame's own midpoint also keeps the browser from picking the
     // neighbouring frame on a rounding boundary, which is what makes a slow
     // drag flicker between two frames instead of holding one.
-    if (videoReadyRef.current) {
+    // Number.isFinite guards the boundary itself: setting currentTime to a
+    // non-finite value throws a TypeError, and this is the one place a bad
+    // number can reach the media element.
+    if (videoReadyRef.current && Number.isFinite(targetTime)) {
       const frame = Math.round(targetTime * VIDEO_FPS - 0.5);
       const snapped = (frame + 0.5) / VIDEO_FPS;
       if (frame !== lastSeekFrameRef.current) {
