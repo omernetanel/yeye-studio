@@ -156,14 +156,30 @@ export default function HeroSection() {
 
         {/* pointer-events-none so a touch anywhere in the empty space still
             reaches the ink canvas underneath; the controls opt back in. */}
-        <div className="pointer-events-none relative z-10 flex h-full flex-col px-6 pt-[72px] pb-8">
+        {/* No z-index here on purpose. `relative` plus a z-index would open a
+            stacking context, and a blend only ever mixes with the backdrop
+            INSIDE its own context — so the inverted text and button below had
+            nothing but transparency to blend against and vanished. Left at
+            z-auto they share the section's context with the ink canvas, which
+            is what they need to invert against; DOM order still puts them on
+            top of it. */}
+        <div className="pointer-events-none relative flex h-full flex-col px-6 pt-[72px] pb-8">
           <h1 className="sr-only">YEYE</h1>
 
-          {/* 18px, not 19: at 19 the line measures 343px against 342 available,
-              so it wrapped by a single pixel — which is the break that had no
-              business being there. No text-balance either; balancing a line
-              that now fits would only split it again. */}
-          <p className="text-right font-display text-[18px] leading-[1.4] font-semibold whitespace-nowrap text-black">
+          {/* Inverted by BLENDING rather than by being painted into the canvas.
+              mix-blend-mode: difference against whatever is underneath means
+              white source over the white page renders black, and the same white
+              source over dark ink renders white — the exact inversion the
+              desktop gets from the shader, except the glyphs stay real text at
+              the device's own pixel density instead of being drawn into a
+              canvas capped at 2x and stretched to 3x.
+
+              18px, not 19: at 19 the line measured 343px against 342 available
+              and wrapped by a single pixel. */}
+          <p
+            className="text-right font-display text-[18px] leading-[1.4] font-semibold whitespace-nowrap"
+            style={{ color: "#fff", mixBlendMode: "difference" }}
+          >
             {TAGLINE_TEXT}
           </p>
 
@@ -189,24 +205,37 @@ export default function HeroSection() {
           {/* One real button, with the second route as a text link under it.
               Two buttons of equal weight split the attention and read as
               indecision; the studios this is modelled on all commit to one. */}
-          <div className="pointer-events-auto flex w-full flex-col items-center" style={{ touchAction: "pan-y" }}>
+          {/* Same difference blend as the line above, which is why the colours
+              here look inverted in the source: a WHITE fill with BLACK text
+              renders as a black button with white text against the white page,
+              and flips to a white button with black text wherever ink runs
+              under it. */}
+          <div
+            className="pointer-events-auto flex w-full flex-col items-center"
+            style={{ mixBlendMode: "difference" }}
+          >
             <Button
               href="/#contact"
               variant="primary"
-              className="!border-black !bg-none !bg-black !shadow-none w-full justify-center py-4 text-[17px]"
+              className="!border-white !bg-none !bg-white !text-black !shadow-none w-full justify-center py-4 text-[17px]"
             >
               קבעו פגישה
             </Button>
             <Link
               href="/#projects"
-              className="mt-4 inline-flex items-center gap-2 font-display text-[15px] font-medium text-black/70"
+              className="mt-4 inline-flex items-center gap-2 font-display text-[15px] font-medium text-white/70"
             >
               העבודות שלי
               <ArrowIcon />
             </Link>
           </div>
 
-          <span className="mt-7 text-center font-display text-[12px] text-black/45">סטודיו דיגיטלי עצמאי</span>
+          <span
+            className="mt-7 text-center font-display text-[12px]"
+            style={{ color: "rgba(255,255,255,0.45)", mixBlendMode: "difference" }}
+          >
+            סטודיו דיגיטלי עצמאי
+          </span>
         </div>
       </section>
     );
