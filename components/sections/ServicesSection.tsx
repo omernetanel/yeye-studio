@@ -1,11 +1,9 @@
 "use client";
 
-import { forwardRef, useLayoutEffect, useRef } from "react";
+import { forwardRef, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { motion, useMotionValueEvent, useScroll } from "framer-motion";
+import { useMotionValueEvent, useScroll } from "framer-motion";
 import { ArrowLeft, Layers, PenTool, Rocket, ShoppingBag } from "lucide-react";
-import SwipeCarousel from "@/components/ui/SwipeCarousel";
-import ServiceCard from "@/components/ui/ServiceCard";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
 import { cn } from "@/lib/utils";
@@ -154,6 +152,17 @@ const STATEMENT_RISE_PX = 26;
 // and nothing moves at all, so it reads as having settled before the page
 // carries on. Both are viewport-relative, and both are part of the wrapper
 // height below rather than extra range stolen from the clip's own scrub.
+// Which word sits on the paper, and for which slice of the clip. Only ever one
+// word: at 390px the open sheet is about 300x170, which a heading fits and a
+// sentence does not.
+const MOBILE_TITLES = [
+  { text: "מה אני עושה", from: 0, to: 2.0 },
+  { text: "מי אני", from: 3.0, to: 5.0 },
+];
+const MOBILE_TITLE_FADE_SECONDS = 0.35;
+// Enough scroll for the clip to play out without racing, on top of the band.
+const MOBILE_SCRUB_VH = 420;
+
 const STATEMENT_TAIL_VH = 60;
 const STATEMENT_PARK_VH = 25;
 const STATEMENT_TAIL_SCALE = 0.88;
@@ -493,6 +502,13 @@ export default function ServicesSection() {
   const skipDesktopMotion = prefersReducedMotion || isMobile;
 
   const wrapperRef = useRef<HTMLElement>(null);
+  const mobileSeekFrameRef = useRef(-1);
+
+  // --- mobile band (option A) ---
+  const mobileWrapperRef = useRef<HTMLElement>(null);
+  const mobileVideoRef = useRef<HTMLVideoElement>(null);
+  const mobileTitleRef = useRef<HTMLDivElement>(null);
+  const [mobileTitle, setMobileTitle] = useState(MOBILE_TITLES[0].text);
   const spacerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const videoZoneRef = useRef<HTMLDivElement>(null);
@@ -728,6 +744,47 @@ export default function ServicesSection() {
     aboutContent.style.transform = `translateY(${ABOUT_SHIFT_Y_PX}px) scale(${lerp(CONTENT_SHRINK_SCALE, 1, aboutGrowT)})`;
   };
 
+  // Drives the pinned band: scroll through the section maps onto the clip, and
+  // the title on the paper crossfades between the windows in MOBILE_TITLES.
+  // Kept apart from the desktop update() entirely — none of that pin geometry
+  // applies here, and sharing it would mean two sets of conditionals.
+  useMotionValueEvent(scrollY, "change", () => {
+    if (!isMobile) return;
+    const wrapper = mobileWrapperRef.current;
+    const video = mobileVideoRef.current;
+    const title = mobileTitleRef.current;
+    if (!wrapper || !video || !title) return;
+
+    const rect = wrapper.getBoundingClientRect();
+    // 0 when the section's top reaches the viewport top, 1 when its bottom does.
+    const travel = rect.height - window.innerHeight;
+    if (travel <= 0) return;
+    const progress = clamp01(-rect.top / travel);
+
+    const duration = video.duration;
+    if (Number.isFinite(duration) && duration > 0) {
+      const frame = Math.round(progress * duration * VIDEO_FPS - 0.5);
+      if (frame !== mobileSeekFrameRef.current) {
+        mobileSeekFrameRef.current = frame;
+        video.currentTime = (frame + 0.5) / VIDEO_FPS;
+      }
+    }
+
+    const t = progress * (Number.isFinite(duration) && duration > 0 ? duration : VIDEO_DURATION_FALLBACK);
+    const active = MOBILE_TITLES.find((w) => t >= w.from && t <= w.to);
+    if (active) {
+      if (active.text !== mobileTitleRef.current?.dataset.text) {
+        mobileTitleRef.current!.dataset.text = active.text;
+        setMobileTitle(active.text);
+      }
+      // Fade in and out at the edges of each window rather than snapping.
+      const edge = Math.min(t - active.from, active.to - t);
+      title.style.opacity = String(clamp01(edge / MOBILE_TITLE_FADE_SECONDS));
+    } else {
+      title.style.opacity = "0";
+    }
+  });
+
   const measurePinRange = () => {
     const wrapper = wrapperRef.current;
     const spacer = spacerRef.current;
@@ -861,42 +918,50 @@ export default function ServicesSection() {
   }
 
   if (isMobile) {
-    // No pin, no scroll-scrub — the clip just autoplays/loops normally as
-    // ambient background texture (cheap: a real-time decode loop, not a
-    // seek on every scroll tick, which is what's actually janky on
-    // touch/Safari), while the Services list and About block reveal with
-    // plain scroll-into-view fades, stacked normally, same as the rest of
-    // the site's mobile sections.
+    // OPTION A — the clip as a pinned band, with the page's own content
+    // scrolling underneath it.
+    //
+    // The clip is 16:9, so on a 390px-wide phone it is a 219px band: about a
+    // quarter of the screen, occupied for the whole section. That is the cost,
+    // and it is the thing to judge. The alternative was letting the band scroll
+    // away with the page, which frees the space but means the paper unfolds
+    // off-screen — the animation happens where nobody is looking.
+    //
+    // The paper carries ONE word at a time and nothing else. At this size the
+    // open sheet is roughly 300x170, which a heading fits and a paragraph does
+    // not; everything else lives below the band as ordinary page content.
     return (
-      <section id="services" className="relative overflow-hidden bg-white px-6 py-16">
-        <BackgroundVideo autoPlay className="absolute inset-0 h-full w-full bg-white object-contain opacity-25" />
-
-        <div className="relative z-10 mx-auto max-w-[1200px]">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-          >
-            <ServicesListBlock />
-          </motion.div>
-
-          <SwipeCarousel className="mt-4">
-            {services.map((service) => (
-              <ServiceCard key={service.title} {...service} light tone="neutral" />
-            ))}
-          </SwipeCarousel>
+      <section
+        ref={mobileWrapperRef}
+        id="services"
+        className="relative bg-white"
+        style={{ minHeight: `${MOBILE_SCRUB_VH}vh` }}
+      >
+        <div className="sticky top-0 z-20 w-full bg-white">
+          <div className="relative w-full" style={{ aspectRatio: "16 / 9" }}>
+            <BackgroundVideo ref={mobileVideoRef} className="absolute inset-0 h-full w-full bg-white object-contain" />
+            {/* The title sits on the paper as HTML rather than being painted
+                into the clip: sharp at any pixel density, and trivially
+                editable. Painting is only needed where the ink has to invert
+                it, and there is no ink here. */}
+            <div
+              ref={mobileTitleRef}
+              className="pointer-events-none absolute inset-0 flex items-center justify-center"
+              style={{ opacity: 0 }}
+            >
+              <span className="font-display text-[26px] leading-none font-bold text-black">
+                {mobileTitle}
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="relative z-10 mx-auto mt-16 max-w-[1200px]">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-          >
+        <div className="relative z-10 px-6 pt-10 pb-16">
+          <ServicesRowsBlock />
+
+          <div className="mt-14">
             <AboutBlock />
-          </motion.div>
+          </div>
         </div>
       </section>
     );
