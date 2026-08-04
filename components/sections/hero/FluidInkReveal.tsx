@@ -1008,9 +1008,18 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     // live across the entire composition without touching the sim or
     // costing the buttons their own interactivity.
     //
-    // No touch-action: none — a drag across the mark should still let the
-    // page scroll normally; we only ever read pointer position.
+    // touch-action: pan-y, not none.
+    //
+    // The browser has to decide, on the first few pixels of a drag, whether it
+    // is a scroll or something the page wants. Left at its default it claims
+    // every direction, so drawing on the ink dragged the page around at the
+    // same time. `none` would hand every gesture to the canvas — the ink would
+    // be perfectly still, but the hero fills the screen, so there would be
+    // nowhere left to swipe to leave it. `pan-y` splits it: vertical drags
+    // still scroll the page, and everything else goes to the ink and moves
+    // nothing.
     const interactionTarget: HTMLElement = wrapper.closest("section") ?? wrapper;
+    interactionTarget.style.touchAction = "pan-y";
     interactionTarget.addEventListener("pointermove", handlePointerMove);
     interactionTarget.addEventListener("pointerleave", handlePointerLeave);
     interactionTarget.addEventListener("pointercancel", handlePointerLeave);
