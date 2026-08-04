@@ -138,11 +138,16 @@ export default function HeroSection() {
       <section ref={sectionRef} id="hero" className="relative flex h-[100svh] min-h-[560px] flex-col overflow-hidden bg-white">
         {!prefersReducedMotion && (
           <div className="absolute inset-0 overflow-hidden">
+            {/* No taglineElRef on mobile: the canvas is capped at 2x device
+                pixels, and a phone runs at 3x — so canvas-painted text is drawn
+                at 2x and stretched to 3x, which is the soft, doubled-looking
+                edge. The line is rendered as ordinary black text instead, which
+                the device draws at its own density. Only the wordmark still
+                comes from the canvas, because the ink has to reveal it. */}
             <FluidInkReveal
               logoSrc="/images/logo.png"
               videoSrc="/videos/herobg.mp4"
-              taglineText={TAGLINE_TEXT}
-              taglineElRef={taglineRef}
+              taglineText=""
               logoSlotRef={logoSlotRef}
               className="relative h-full w-full select-none"
             />
@@ -154,13 +159,11 @@ export default function HeroSection() {
         <div className="pointer-events-none relative z-10 flex h-full flex-col px-6 pt-[72px] pb-8">
           <h1 className="sr-only">YEYE</h1>
 
-          <p
-            ref={taglineRef}
-            className="text-right font-display text-[19px] leading-[1.4] font-semibold"
-            // Transparent under the ink for the same reason as desktop: the
-            // canvas redraws these glyphs itself so they can invert.
-            style={{ color: prefersReducedMotion ? "#000" : "transparent" }}
-          >
+          {/* 18px, not 19: at 19 the line measures 343px against 342 available,
+              so it wrapped by a single pixel — which is the break that had no
+              business being there. No text-balance either; balancing a line
+              that now fits would only split it again. */}
+          <p className="text-right font-display text-[18px] leading-[1.4] font-semibold whitespace-nowrap text-black">
             {TAGLINE_TEXT}
           </p>
 
@@ -186,7 +189,7 @@ export default function HeroSection() {
           {/* One real button, with the second route as a text link under it.
               Two buttons of equal weight split the attention and read as
               indecision; the studios this is modelled on all commit to one. */}
-          <div className="pointer-events-auto flex w-full flex-col items-center">
+          <div className="pointer-events-auto flex w-full flex-col items-center" style={{ touchAction: "pan-y" }}>
             <Button
               href="/#contact"
               variant="primary"

@@ -57,6 +57,10 @@ html {
 
 body {
   font-family: var(--font-body);
+  /* Also on body, not just html: on iOS the pull-to-refresh gesture is armed
+     from whichever of the two is actually the scrolling element, and which one
+     that is depends on the smooth-scroll layer. Setting both covers it. */
+  overscroll-behavior-y: contain;
 }
 
 ::selection {
