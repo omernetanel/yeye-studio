@@ -429,10 +429,18 @@ function AboutBlock() {
           </h2>
           <HeadingSwash className="mt-2 w-[190px] text-black md:w-[230px]" />
         </div>
+        {/* The line breaks are the author's own. They are kept only from md up
+            — forced at a narrow width they would break in the middle of a
+            phrase, so below that the text wraps naturally. */}
         <p className="mt-6 font-body text-[15px] leading-[1.85] text-black/70">
-          YEYE נולד מתוך אובססיה לפרטים קטנים ואמונה עמוקה שכל עסק ראוי לנוכחות דיגיטלית{" "}
-          <strong className="font-semibold text-black">ברמה הגבוהה ביותר</strong>. אני מעצב ומפתח עם ניסיון של שנים
-          בבניית חוויות דיגיטליות <strong className="font-semibold text-black">שלא רק נראות טוב, אלא עובדות</strong>.
+          YEYE הוקם מתוך אובססיה לפרטים הקטנים ואמונה עמוקה שכל עסק ראוי
+          <br className="hidden md:block" /> לנוכחות דיגיטלית{" "}
+          <strong className="font-semibold text-black">ברמה הגבוהה ביותר</strong>.
+        </p>
+        <p className="mt-4 font-body text-[15px] leading-[1.85] text-black/70">
+          אני עומר, ואני מפתח ומעצב מגיל צעיר עם ניסיון רב של שנים בבניית חוויות דיגיטליות,
+          <br className="hidden md:block" /> <strong className="font-semibold text-black">שלא רק נראות טוב,</strong>
+          <br className="hidden md:block" /> <strong className="font-semibold text-black">אלא עובדות.</strong>
         </p>
 
         <div className="mt-7 grid w-full grid-cols-1 gap-3 sm:grid-cols-3">

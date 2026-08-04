@@ -9,7 +9,7 @@ import { ArrowLeft } from "lucide-react";
 const LINKS = [
   { label: "עבודות", href: "/projects" },
   { label: "שירותים", href: "/#services" },
-  { label: "אודות", href: "/#services" },
+  { label: "מי אני", href: "/#services" },
   { label: "צור קשר", href: "/contact" },
 ];
 
