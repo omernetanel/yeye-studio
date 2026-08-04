@@ -389,7 +389,8 @@ interface FluidInkRevealProps {
   taglineText: string;
   /** The (visually transparent, layout-only) DOM element the tagline's
    * real position/font/size is measured from — see HeroSection. */
-  taglineElRef: React.RefObject<HTMLElement | null>;
+  /** Omit to leave the line to ordinary DOM text — see the mobile hero. */
+  taglineElRef?: React.RefObject<HTMLElement | null>;
   /** An invisible DOM spacer marking exactly where the (cropped) logo
    * should sit — see HeroSection. Measuring this instead of computing a
    * "how big should the logo be" formula is deliberate: a formula is
@@ -678,7 +679,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       // and computed font, matching what would have rendered there as
       // ordinary text (which is now visually transparent — see
       // HeroSection).
-      const taglineEl = taglineElRef.current;
+      const taglineEl = taglineElRef?.current ?? null;
       const currentTaglineText = taglineTextRef.current;
       if (taglineEl) {
         const tRect = taglineEl.getBoundingClientRect();
@@ -1019,7 +1020,17 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     // still scroll the page, and everything else goes to the ink and moves
     // nothing.
     const interactionTarget: HTMLElement = wrapper.closest("section") ?? wrapper;
-    interactionTarget.style.touchAction = "pan-y";
+    // touch-action: none, so a drag here belongs to the ink and moves nothing.
+    //
+    // pan-y was tried first and is actively worse than either extreme: the
+    // moment the browser decides a drag is a vertical pan it takes the gesture
+    // and CANCELS the pointer stream, so the ink stops receiving moves — the
+    // effect appears on first touch and then goes dead, while the page slides.
+    //
+    // The cost is that a swipe on the ink no longer scrolls. The hero's bottom
+    // block sets pan-y back on itself so there is always somewhere to swipe
+    // from, and both of its links are real navigation out of the hero.
+    interactionTarget.style.touchAction = "none";
     interactionTarget.addEventListener("pointermove", handlePointerMove);
     interactionTarget.addEventListener("pointerleave", handlePointerLeave);
     interactionTarget.addEventListener("pointercancel", handlePointerLeave);
