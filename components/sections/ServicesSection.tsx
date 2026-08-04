@@ -377,6 +377,29 @@ function ServicesListBlock() {
  * away — against the centre of the screen. Anything anchored to an edge would
  * slide sideways as it scaled instead of collapsing into the middle.
  */
+/**
+ * The hand-drawn underline that goes beneath a heading — a single brush stroke
+ * that thickens through the middle and tapers at both ends, rather than a rule.
+ * Drawn as a filled outline rather than a stroked line precisely so the weight
+ * can vary along it, which is what makes it read as drawn instead of ruled.
+ */
+function HeadingSwash({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 240 16"
+      fill="none"
+      aria-hidden="true"
+      className={cn("block h-auto", className)}
+      preserveAspectRatio="none"
+    >
+      <path
+        d="M3.5 9.2c34-3.6 68-5.4 102-5.6 34-.2 68 1.2 131.5 4.4-63.4 1.2-97.4 2.9-131.4 4-34 1.1-68 1.8-102 1.6z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 function AboutBlock() {
   return (
     <div className="mx-auto flex w-full max-w-[1120px] items-center justify-center gap-10 lg:gap-14">
@@ -398,9 +421,15 @@ function AboutBlock() {
       </figure>
 
       <div className="flex max-w-[560px] flex-col items-end text-right">
-        <span className="font-display text-xs font-medium tracking-[0.2em] text-black/40 uppercase">Who I Am</span>
-        <h2 className="mt-2 font-display text-[40px] leading-none font-bold text-black sm:text-5xl md:text-[64px]">מי אני?</h2>
-        <p className="mt-5 font-body text-[15px] leading-[1.85] text-black/70">
+        {/* The heading is centred over its own column, with the swash under it
+            — the rest of the column stays right-aligned. */}
+        <div className="mx-auto flex flex-col items-center">
+          <h2 className="font-display text-[40px] leading-none font-bold text-black sm:text-5xl md:text-[64px]">
+            מי אני?
+          </h2>
+          <HeadingSwash className="mt-2 w-[190px] text-black md:w-[230px]" />
+        </div>
+        <p className="mt-6 font-body text-[15px] leading-[1.85] text-black/70">
           YEYE נולד מתוך אובססיה לפרטים קטנים ואמונה עמוקה שכל עסק ראוי לנוכחות דיגיטלית{" "}
           <strong className="font-semibold text-black">ברמה הגבוהה ביותר</strong>. אני מעצב ומפתח עם ניסיון של שנים
           בבניית חוויות דיגיטליות <strong className="font-semibold text-black">שלא רק נראות טוב, אלא עובדות</strong>.
