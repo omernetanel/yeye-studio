@@ -999,6 +999,36 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       lastPointer.has = false;
     };
 
+    // Touch is driven off touch events, not pointer events, and the page keeps
+    // its own scrolling.
+    //
+    // The browser cancels the POINTER stream the moment it decides a drag is a
+    // scroll — which is why the ink lit up on first contact and then went dead.
+    // touchmove is not cancelled that way: it keeps firing for the whole drag,
+    // scrolling or not. So the ink can follow the finger without the page
+    // having to give up the gesture, and touch-action stays out of it
+    // entirely — no trapping the reader on a full-screen hero.
+    //
+    // Passive on purpose: these never preventDefault, so telling the browser
+    // that up front keeps scrolling off the main thread.
+    const handleTouch = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      const rect = wrapper.getBoundingClientRect();
+      if (touch.clientY > rect.bottom - INTERACTIVE_BOTTOM_MARGIN_PX) {
+        lastPointer.has = false;
+        return;
+      }
+      const { x, y } = toUv(touch.clientX, touch.clientY);
+      if (lastPointer.has) {
+        splatAlongStroke(lastPointer.x, lastPointer.y, x, y);
+      }
+      lastPointer = { x, y, has: true };
+    };
+    const handleTouchEnd = () => {
+      lastPointer.has = false;
+    };
+
     // Listen on the whole Hero section, not just the canvas wrapper. The
     // CTA buttons and contact icons are siblings of the wrapper, not
     // descendants, and they carry pointer-events-auto so they stay
@@ -1020,20 +1050,13 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     // still scroll the page, and everything else goes to the ink and moves
     // nothing.
     const interactionTarget: HTMLElement = wrapper.closest("section") ?? wrapper;
-    // touch-action: none, so a drag here belongs to the ink and moves nothing.
-    //
-    // pan-y was tried first and is actively worse than either extreme: the
-    // moment the browser decides a drag is a vertical pan it takes the gesture
-    // and CANCELS the pointer stream, so the ink stops receiving moves — the
-    // effect appears on first touch and then goes dead, while the page slides.
-    //
-    // The cost is that a swipe on the ink no longer scrolls. The hero's bottom
-    // block sets pan-y back on itself so there is always somewhere to swipe
-    // from, and both of its links are real navigation out of the hero.
-    interactionTarget.style.touchAction = "none";
     interactionTarget.addEventListener("pointermove", handlePointerMove);
     interactionTarget.addEventListener("pointerleave", handlePointerLeave);
     interactionTarget.addEventListener("pointercancel", handlePointerLeave);
+    interactionTarget.addEventListener("touchstart", handleTouch, { passive: true });
+    interactionTarget.addEventListener("touchmove", handleTouch, { passive: true });
+    interactionTarget.addEventListener("touchend", handleTouchEnd, { passive: true });
+    interactionTarget.addEventListener("touchcancel", handleTouchEnd, { passive: true });
 
     // ---- resize ----
     const resize = () => {
@@ -1200,6 +1223,10 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       if (rafId !== null) cancelAnimationFrame(rafId);
       ro.disconnect();
       window.removeEventListener("orientationchange", resize);
+      interactionTarget.removeEventListener("touchstart", handleTouch);
+      interactionTarget.removeEventListener("touchmove", handleTouch);
+      interactionTarget.removeEventListener("touchend", handleTouchEnd);
+      interactionTarget.removeEventListener("touchcancel", handleTouchEnd);
       interactionTarget.removeEventListener("pointermove", handlePointerMove);
       interactionTarget.removeEventListener("pointerleave", handlePointerLeave);
       interactionTarget.removeEventListener("pointercancel", handlePointerLeave);
