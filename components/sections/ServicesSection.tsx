@@ -408,7 +408,10 @@ function AboutBlock() {
         </figcaption>
       </figure>
 
-      <div className="flex max-w-[560px] flex-col items-end text-right">
+      {/* No items-end: under dir="rtl" the flex END is the LEFT, so it shrank
+          each paragraph to its own text width and pinned it left, leaving their
+          right edges ragged against the full-width list below. */}
+      <div className="flex max-w-[560px] flex-col text-right">
         {/* The heading is centred over its own column, with the swash under it
             — the rest of the column stays right-aligned. */}
         <div className="mx-auto flex flex-col items-center">
@@ -426,9 +429,9 @@ function AboutBlock() {
           <strong className="font-semibold text-black">ברמה הגבוהה ביותר</strong>.
         </p>
         <p className="mt-4 font-body text-[15px] leading-[1.85] text-black/70">
-          אני עומר, ואני מפתח ומעצב מגיל צעיר עם ניסיון רב של שנים בבניית חוויות דיגיטליות,
-          <br className="hidden md:block" /> <strong className="font-semibold text-black">שלא רק נראות טוב,</strong>
-          <br className="hidden md:block" /> <strong className="font-semibold text-black">אלא עובדות.</strong>
+          אני עומר, מעצב מגיל 15 ומפתח מגיל 17, ואני בונה חוויות דיגיטליות
+          <br className="hidden md:block" />{" "}
+          <strong className="font-semibold text-black">שלא רק נראות טוב, אלא עובדות.</strong>
         </p>
 
         {/* Not cards, and deliberately not numbers. Every one of these is a
@@ -439,7 +442,7 @@ function AboutBlock() {
             they read as substance rather than feature badges. */}
         <dl className="mt-7 w-full divide-y divide-black/10 border-y border-black/10">
           {aboutFacts.map((fact) => (
-            <div key={fact.title} className="flex flex-col gap-1 py-3 text-right sm:flex-row-reverse sm:gap-4">
+            <div key={fact.title} className="flex flex-col gap-1 py-3 text-right sm:flex-row sm:gap-4">
               <dt className="font-display text-[14px] font-bold whitespace-nowrap text-black sm:w-[150px]">
                 {fact.title}
               </dt>
