@@ -56,7 +56,7 @@ export default function Footer({ light = false }: FooterProps) {
               floating navbar mark are deliberately left as they are. */}
           <span
             className={cn(
-              "font-display text-[13px] font-medium tracking-[0.42em] uppercase",
+              "font-display text-[10px] font-medium tracking-[0.42em] uppercase",
               light ? "text-black/35" : "text-white/35"
             )}
           >
