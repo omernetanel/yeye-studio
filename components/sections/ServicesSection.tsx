@@ -249,27 +249,19 @@ interface ServiceRowProps {
   index: number;
 }
 
+// Every row hovers to the same grey. It used to be a different accent per row,
+// which fought the black-and-white section around it; a single neutral reads as
+// a hover state rather than as four unrelated brand colours.
 // Literal class strings (not built from interpolation) so Tailwind's JIT
 // scanner — which only ever detects classes it can see verbatim in the
 // source — actually generates these arbitrary-color utilities.
-const ROW_HOVER_TEXT_CLASSES = [
-  "group-hover:text-[#FF9D3C]",
-  "group-hover:text-[#3CD9FF]",
-  "group-hover:text-[#A7FF3C]",
-  "group-hover:text-[#FF4FD8]",
-];
-
-const ROW_HOVER_BORDER_CLASSES = [
-  "group-hover:border-[#FF9D3C]",
-  "group-hover:border-[#3CD9FF]",
-  "group-hover:border-[#A7FF3C]",
-  "group-hover:border-[#FF4FD8]",
-];
+const ROW_HOVER_TEXT_CLASS = "group-hover:text-[#8A8A8A]";
+const ROW_HOVER_BORDER_CLASS = "group-hover:border-[#8A8A8A]";
 
 function ServiceRow({ service, index }: ServiceRowProps) {
   const Icon = service.icon;
-  const hoverTextClass = ROW_HOVER_TEXT_CLASSES[index];
-  const hoverBorderClass = ROW_HOVER_BORDER_CLASSES[index];
+  const hoverTextClass = ROW_HOVER_TEXT_CLASS;
+  const hoverBorderClass = ROW_HOVER_BORDER_CLASS;
   return (
     <Link
       href={service.href}
