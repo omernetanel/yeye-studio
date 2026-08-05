@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { createContext, useContext, useSyncExternalStore } from "react";
 
 const MOBILE_BREAKPOINT_PX = 768;
 const QUERY = `(max-width: ${MOBILE_BREAKPOINT_PX - 1}px)`;
@@ -15,11 +15,16 @@ function getSnapshot() {
   return window.matchMedia(QUERY).matches;
 }
 
-function getServerSnapshot() {
-  return false;
-}
+/**
+ * What the server guessed from the user agent, for the render that happens
+ * before any media query can run.
+ *
+ * Pages that do not provide it keep the old behaviour of assuming desktop.
+ */
+export const ServerDeviceContext = createContext(false);
 
 /** True below the mobile breakpoint — used to decide whether to mount heavy WebGL scenes. */
 export function useIsMobile() {
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const serverGuess = useContext(ServerDeviceContext);
+  return useSyncExternalStore(subscribe, getSnapshot, () => serverGuess);
 }
