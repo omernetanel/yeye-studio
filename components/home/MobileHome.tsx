@@ -1,8 +1,7 @@
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
-import ServicesSection from "@/components/sections/ServicesSection";
-import StatementSection from "@/components/sections/StatementSection";
+import MobileServices from "@/components/sections/mobile/MobileServices";
 import ContactStage from "@/components/sections/ContactStage";
 import ProcessSection from "@/components/sections/ProcessSection";
 import ProjectsSection from "@/components/sections/ProjectsSection";
@@ -21,8 +20,10 @@ export default function MobileHome() {
     <>
       <Navbar />
       <HeroSection />
-      <ServicesSection />
-      <StatementSection />
+      {/* No StatementSection here. It exists to carry the closing line on the
+          versions whose paper sequence cannot, and this one ends on that line
+          itself — rendering both would show the sentence twice. */}
+      <MobileServices />
       <ContactStage />
       <ProcessSection />
       <ProjectsSection />
