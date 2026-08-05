@@ -6,54 +6,15 @@ import { useMotionValueEvent, useScroll } from "framer-motion";
 import { ArrowLeft, Layers, PenTool, Rocket, ShoppingBag } from "lucide-react";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
+import { services, aboutFacts } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
-const services = [
-  {
-    icon: ShoppingBag,
-    title: "חנויות אונליין",
-    description: "חנויות מעוצבות ומדויקות\nעם חוויית קנייה שמביאה מכירות.",
-    href: "/services/online-stores",
-  },
-  {
-    icon: Rocket,
-    title: "דפי נחיתה ואתרי תדמית",
-    description: "דפים ואתרים ממוקדים שממירים\nגולשים ללקוחות ובונים אמון.",
-    href: "/services/landing-pages",
-  },
-  {
-    icon: Layers,
-    title: "מערכות ניהול",
-    description: "דשבורדים וכלי ניהול פנימיים\nשמסדרים את העסק שלך במקום אחד.",
-    href: "/services/dashboards",
-  },
-  {
-    icon: PenTool,
-    title: "מיתוג עסקי",
-    description: "זהות חזותית מלאה שמבדלת אותך\nמהמתחרים ובונה מותג שנשאר בזיכרון.",
-    href: "/services/branding",
-  },
-];
-
-// What is actually true about how the work gets done. No counts and no client
-// logos on purpose: with a young practice those numbers are small, and putting
-// a small number in large type advertises the gap rather than closing it. These
-// three claims cost nothing to state and are worth more, because a studio that
-// hands work to juniors or starts from a template cannot state them at all.
-const aboutFacts = [
-  {
-    title: "איש אחד, מקצה לקצה",
-    description: "העיצוב והפיתוח באותן ידיים, כך ששום כוונה לא הולכת לאיבוד בדרך.",
-  },
-  {
-    title: "הכל נבנה מאפס",
-    description: "בלי תבניות ובלי תוספים. כל פרויקט נבנה בדיוק למה שהוא צריך לעשות.",
-  },
-  {
-    title: "מדברים ישירות איתי",
-    description: "בלי מנהל פרויקט באמצע, בלי מתווך, ובלי לחכות בתור.",
-  },
-];
+// The words live in lib/content because the mobile page renders the same four
+// services and the same three facts in a layout that shares nothing else with
+// this one. The icons stay here: they belong to this row design, and the mobile
+// squares do not use them, so shipping them through the shared module would put
+// an icon set in a bundle that never draws it.
+const SERVICE_ICONS = [ShoppingBag, Rocket, Layers, PenTool];
 
 const VIDEO_SRC = "/videos/servicesbg.mp4";
 const POSTER_SRC = "/images/servicesbg-poster.jpg";
@@ -276,7 +237,7 @@ const ROW_HOVER_TEXT_CLASS = "group-hover:text-[#8A8A8A]";
 const ROW_HOVER_BORDER_CLASS = "group-hover:border-[#8A8A8A]";
 
 function ServiceRow({ service, index }: ServiceRowProps) {
-  const Icon = service.icon;
+  const Icon = SERVICE_ICONS[index];
   const hoverTextClass = ROW_HOVER_TEXT_CLASS;
   const hoverBorderClass = ROW_HOVER_BORDER_CLASS;
   return (
