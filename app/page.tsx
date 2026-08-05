@@ -1,5 +1,7 @@
+import { headers } from "next/headers";
 import HomeSwitch from "@/components/home/HomeSwitch";
 import MobileHome from "@/components/home/MobileHome";
+import { isMobileUserAgent } from "@/lib/device";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
@@ -10,7 +12,13 @@ import ProcessSection from "@/components/sections/ProcessSection";
 import ProjectsSection from "@/components/sections/ProjectsSection";
 import CTASection from "@/components/sections/CTASection";
 
-export default function Home() {
+/**
+ * Reading the user agent opts this page out of static generation, which is the
+ * price of not sending every phone a desktop page it has to throw away.
+ */
+export default async function Home() {
+  const serverIsMobile = isMobileUserAgent((await headers()).get("user-agent"));
+
   return (
     <main className="relative min-h-screen bg-white">
       {/* Ambient background — fixed, scrolls cinematically underneath every section.
@@ -29,7 +37,7 @@ export default function Home() {
       />
 
       <div className="relative z-10">
-        <HomeSwitch mobile={<MobileHome />}>
+        <HomeSwitch serverIsMobile={serverIsMobile} mobile={<MobileHome />}>
           <Navbar />
           <HeroSection />
           <ServicesSection />
