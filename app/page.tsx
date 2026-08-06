@@ -8,7 +8,7 @@ import HeroSection from "@/components/sections/HeroSection";
 import StatementSection from "@/components/sections/StatementSection";
 import ServicesSection from "@/components/sections/ServicesSection";
 import ContactStage from "@/components/sections/ContactStage";
-import ProcessSection from "@/components/sections/ProcessSection";
+import AboutSection from "@/components/sections/AboutSection";
 import ProjectsSection from "@/components/sections/ProjectsSection";
 import CTASection from "@/components/sections/CTASection";
 
@@ -47,7 +47,7 @@ export default async function Home() {
               the page before anything had happened yet. */}
           <StatementSection />
           <ContactStage />
-          <ProcessSection />
+          <AboutSection />
           <ProjectsSection />
           <CTASection />
           <Footer light />
