@@ -3,7 +3,7 @@ import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
 import MobileServices from "@/components/sections/mobile/MobileServices";
 import ContactStage from "@/components/sections/ContactStage";
-import ProcessSection from "@/components/sections/ProcessSection";
+import AboutSection from "@/components/sections/AboutSection";
 import ProjectsSection from "@/components/sections/ProjectsSection";
 import CTASection from "@/components/sections/CTASection";
 
@@ -25,7 +25,7 @@ export default function MobileHome() {
           itself — rendering both would show the sentence twice. */}
       <MobileServices />
       <ContactStage />
-      <ProcessSection />
+      <AboutSection />
       <ProjectsSection />
       <CTASection />
       <Footer light />
