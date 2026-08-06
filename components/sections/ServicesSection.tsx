@@ -67,6 +67,9 @@ const VIDEO_REST_SHIFT_X_PX = 45;
 // letterboxed element so it can be trimmed (see update()).
 const VIDEO_ASPECT = 16 / 9;
 const VIDEO_EDGE_TRIM_PX = 2;
+// A hair beyond an exact cover, so a fractional viewport height can never
+// leave a one-pixel seam at an edge once the picture opens out.
+const VIDEO_COVER_OVERSCAN = 0.02;
 
 // The closing statement rises into the bottom of the pinned frame while the
 // plane is still in flight, and stays there: the clip's last second is plain
@@ -127,14 +130,17 @@ const HEADING_ZONE_PADDING_BOTTOM_PX = 8;
 // staying at — 88.8vh per second of clip — so the first beat feels exactly as
 // it did. SCRUB_VH below is the sum of every span, and the progress column is
 // each running total divided by it.
-const SCRUB_VH = 1565;
+const SCRUB_VH = 1465;
 const TIMELINE: readonly { progress: number; time: number }[] = [
   { progress: 0.0, time: 0 },
-  { progress: 0.074, time: CUE_PAPER_OPENS },
-  { progress: 0.193, time: CUE_DIAGRAM_FLAT },
-  { progress: 0.321, time: CUE_DIAGRAM_FLAT }, // hold: read the diagram
-  { progress: 0.525, time: CUE_BALL_REFORMED },
-  { progress: 0.599, time: CUE_PLANE_TURN }, // dead air, taken at a quarter rate
+  { progress: 0.0788, time: CUE_PAPER_OPENS },
+  { progress: 0.2061, time: CUE_DIAGRAM_FLAT },
+  // One screen of hold, not two. Two was long enough that reading turned into
+  // waiting: you scroll to get out of it, and arrive at the far side already
+  // moving fast enough to run straight through the crumple.
+  { progress: 0.2744, time: CUE_DIAGRAM_FLAT },
+  { progress: 0.4927, time: CUE_BALL_REFORMED },
+  { progress: 0.5715, time: CUE_PLANE_TURN }, // dead air, taken at a quarter rate
   { progress: 1.0, time: CLIP_SECONDS },
 ];
 
@@ -409,13 +415,17 @@ export default function ServicesSection() {
     // enlarged and shifted right, clear of the row text beside it.
     //
     // Where it eases TO is the part that changed. It used to shrink to a fixed
-    // 0.86 and nudge down 63px, numbers picked by eye against one window — and
-    // the sheet still ran off an edge, because the zone it is contained in is
-    // taller than the screen, so "fits the zone" never meant "fits the screen".
-    // That was tolerable while the paper was a texture. It now carries the
-    // process diagram, which has to be read, so the open state is solved rather
-    // than guessed: the picture ends up exactly contained in the viewport and
-    // centred on it, at any window size. Nothing is ever cropped.
+    // 0.86 and nudge down 63px, numbers picked by eye against one window, and
+    // the sheet still ran off an edge — the zone it sits in is taller than the
+    // screen, so "fits the zone" never meant "fits the screen".
+    //
+    // It now opens to cover the screen exactly: edge to edge, no margin on any
+    // side, solved live from the real boxes rather than guessed, so it holds at
+    // any window size instead of one. Cover and not contain because the clip is
+    // 16:9 and a window rarely is — containing it would leave bands above and
+    // below, which is what this is fixing. On a window that is not 16:9 that
+    // does trim the picture's long edge; the diagram's own content sits well
+    // inside the frame, and the trim falls on the hatching around it.
     const videoZone = videoZoneRef.current;
     let scale = VIDEO_REST_SCALE;
     let shiftY = 0;
@@ -426,8 +436,10 @@ export default function ServicesSection() {
       if (contentW > 0 && contentH > 0) {
         const viewportW = window.innerWidth;
         const viewportH = window.innerHeight;
-        // The largest the picture can be while still whole on screen.
-        const openScale = Math.min(viewportW / contentW, viewportH / contentH);
+        // A hair beyond an exact cover, so a fractional viewport can never
+        // leave a one-pixel seam at an edge.
+        const openScale =
+          Math.max(viewportW / contentW, viewportH / contentH) * (1 + VIDEO_COVER_OVERSCAN);
         // The zone is pulled up above the panel, so the picture's own centre
         // and the screen's centre are not the same point — close the gap, or a
         // correctly sized frame still sits high.
