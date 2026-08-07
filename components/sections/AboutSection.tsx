@@ -34,6 +34,13 @@ const SCALE_WHILE_FLOATING = 1.85;
 // title, and a title crowded against the edge reads as a toolbar.
 const HEADING_PINNED_TOP_PX = 132;
 
+// The band the parked heading sits in, which is opaque black across the full
+// width. Without it the heading floats over copy that is still travelling and
+// the two collide — there is no resting place for a pinned title above moving
+// text unless the text has something to disappear behind. Deep enough to hold
+// the heading and its swash with air under them.
+const BAND_HEIGHT_PX = 252;
+
 // How fast the answer travels compared to the page.
 //
 // The section was passing in a single flick, and the fix for that is NOT to
@@ -96,6 +103,7 @@ export default function AboutSection() {
   const firstLineRef = useRef<HTMLSpanElement>(null);
   const qualifierRef = useRef<HTMLSpanElement>(null);
   const swashRef = useRef<HTMLDivElement>(null);
+  const bandRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Both of these are collapsed to nothing by the morph, so their natural sizes
@@ -137,8 +145,9 @@ export default function AboutSection() {
     const firstLine = firstLineRef.current;
     const qualifier = qualifierRef.current;
     const swash = swashRef.current;
+    const band = bandRef.current;
     const content = contentRef.current;
-    if (!wrapper || !heading || !firstLine || !qualifier || !swash || !content) return;
+    if (!wrapper || !heading || !firstLine || !qualifier || !swash || !band || !content) return;
 
     const screen = window.innerHeight;
     const scrolled = -wrapper.getBoundingClientRect().top;
@@ -183,6 +192,10 @@ export default function AboutSection() {
     // the direction a stroke is made in whichever way the text runs.
     swash.style.clipPath = `inset(0 ${(1 - draw) * 100}% 0 0)`;
     swash.style.opacity = draw > 0 ? "1" : "0";
+
+    // The band appears with the heading it holds, so it is not a black bar
+    // sitting over an empty screen for the whole opening.
+    band.style.opacity = String(travel);
 
     // The answer starts one screen below and comes up at CONTENT_SCROLL_RATE,
     // so it is still travelling the whole time rather than arriving and then
@@ -251,10 +264,18 @@ export default function AboutSection() {
         {/* The answer, travelling. Behind the heading in z order so the parked
             heading stays legible over whatever is passing under it. */}
         <div ref={contentRef} className="absolute inset-x-0 top-0 will-change-transform">
-          <div className="mx-auto max-w-[1040px] px-6 pt-[236px] pb-24">
+          <div className="mx-auto max-w-[1120px] px-6 pt-[312px] pb-24">
             <AboutBody />
           </div>
         </div>
+
+        {/* What the copy disappears behind once the heading has parked. */}
+        <div
+          ref={bandRef}
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 z-5 bg-black"
+          style={{ height: `${BAND_HEIGHT_PX}px`, opacity: 0 }}
+        />
 
         {/* pointer-events-none so the copy travelling underneath stays
             selectable and its links stay clickable. */}
@@ -306,74 +327,78 @@ export default function AboutSection() {
  */
 function AboutBody() {
   return (
-    <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-[1fr_320px] lg:gap-16">
-      <div className="text-right">
-        {/* The claim, and the largest thing in the section after the heading.
-            It was previously the tail of a paragraph, where the sentence the
-            whole block is built to deliver read as an afterthought. */}
-        <p className="font-display text-[26px] leading-[1.3] font-bold text-balance text-white md:text-[32px]">
-          אני בונה חוויות דיגיטליות
-          <br />
-          <span className="text-white/35">שלא רק נראות טוב,</span> אלא עובדות.
-        </p>
+    <div className="text-right">
+      {/* The claim and the face share a bottom edge, so the picture sits beside
+          the sentence it belongs to rather than in a column of its own running
+          down the side of everything. */}
+      <div className="grid grid-cols-1 items-end gap-10 lg:grid-cols-[1fr_300px] lg:gap-14">
+        <div>
+          {/* The largest thing in the section after the heading. It used to be
+              the tail of a paragraph — the sentence the whole block is built to
+              deliver, reading as an afterthought. The concessive half is greyed
+              so the turn lands on "אלא עובדות". */}
+          <p className="font-display text-[28px] leading-[1.28] font-bold text-balance text-white md:text-[36px]">
+            אני בונה חוויות דיגיטליות
+            <br />
+            <span className="text-white/35">שלא רק נראות טוב,</span> אלא עובדות.
+          </p>
 
-        {/* Who is making it. Specific, and the one credential here that cannot
-            be copied off another studio's page. */}
-        <p className="mt-6 font-display text-[16px] leading-[1.6] font-medium text-white/70 md:text-[17px]">
-          אני עומר — מעצב מגיל 15, מפתח מגיל 17.
-        </p>
+          {/* Specific, and the one credential here that cannot be copied off
+              another studio's page. */}
+          <p className="mt-6 font-display text-[16px] leading-[1.6] font-medium text-white/70 md:text-[17px]">
+            אני עומר — מעצב מגיל 15, מפתח מגיל 17.
+          </p>
 
-        <p className="mt-3 max-w-[46ch] font-body text-[15px] leading-[1.75] text-balance text-white/45">
-          YEYE הוקם מתוך אובססיה לפרטים הקטנים ואמונה עמוקה שכל עסק ראוי לנוכחות דיגיטלית{" "}
-          <span className="text-white/80">ברמה הגבוהה ביותר</span>.
-        </p>
+          <p className="mt-3 max-w-[46ch] font-body text-[15px] leading-[1.75] text-balance text-white/45">
+            YEYE הוקם מתוך אובססיה לפרטים הקטנים ואמונה עמוקה שכל עסק ראוי לנוכחות דיגיטלית{" "}
+            <span className="text-white/80">ברמה הגבוהה ביותר</span>.
+          </p>
+        </div>
 
-        {/* Not cards, and deliberately not achievement numbers. Every one of
-            these is a plain fact about how the work is actually done, which a
-            studio that subcontracts or assembles templates could not honestly
-            write — where "Design-First" and a project count are things anyone
-            can claim and nobody can check.
-
-            They are numbered now, and given room. As three lines of small text
-            they read as fine print under the paragraphs; counted out, they read
-            as the three things being promised. */}
-        <ol className="mt-10 divide-y divide-white/10 border-t border-white/10">
-          {aboutFacts.map((fact, index) => (
-            <li key={fact.title} className="grid grid-cols-[auto_1fr] items-baseline gap-5 py-5">
-              <span className="font-display text-[13px] leading-none font-bold text-white/25">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <div>
-                <h3 className="font-display text-[18px] leading-none font-bold text-white md:text-[20px]">
-                  {fact.title}
-                </h3>
-                <p className="mt-2 font-body text-[14px] leading-[1.6] text-white/45">
-                  {fact.description}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ol>
-
-        {/* The invitation, set apart rather than tacked on as one more
-            paragraph — it is the only line here that asks for anything. */}
-        <p className="mt-10 font-display text-[19px] leading-[1.5] font-medium text-balance text-white/50 md:text-[21px]">
-          אני כאן כדי להפוך את הרעיון שלך{" "}
-          <strong className="font-bold text-white">למוצר דיגיטלי שמייצר אימפקט.</strong>
-        </p>
+        <figure className="m-0 w-full max-w-[300px] justify-self-start">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/portrait.webp"
+            alt="עומר, מייסד YEYE Digital"
+            width={430}
+            height={560}
+            className="block h-auto w-full"
+            draggable={false}
+          />
+        </figure>
       </div>
 
-      <figure className="m-0 w-full max-w-[320px] justify-self-start">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/portrait.webp"
-          alt="עומר, מייסד YEYE Digital"
-          width={430}
-          height={560}
-          className="block h-auto w-full"
-          draggable={false}
-        />
-      </figure>
+      {/* Three across rather than three down. They are parallel promises, and a
+          vertical list reads them as a sequence — one after another — where
+          columns read them as three things of equal weight. It also uses the
+          width the two-column block above leaves empty.
+
+          Still rules and type, not cards: every one is a plain fact about how
+          the work is done, which a studio that subcontracts or assembles
+          templates could not honestly write. Boxing them would make them look
+          like feature badges, which is exactly what they are not. */}
+      <ol className="mt-16 grid grid-cols-1 gap-x-12 border-t border-white/12 sm:grid-cols-3">
+        {aboutFacts.map((fact, index) => (
+          <li key={fact.title} className="border-b border-white/12 pt-6 pb-7 sm:border-b-0">
+            <span className="font-display text-[12px] leading-none font-bold tracking-[0.12em] text-white/25">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <h3 className="mt-3 font-display text-[19px] leading-[1.15] font-bold text-balance text-white">
+              {fact.title}
+            </h3>
+            <p className="mt-2 font-body text-[14px] leading-[1.6] text-white/45">
+              {fact.description}
+            </p>
+          </li>
+        ))}
+      </ol>
+
+      {/* Set apart rather than tacked on as one more paragraph — it is the only
+          line in the section that asks for anything. */}
+      <p className="mt-14 font-display text-[20px] leading-[1.5] font-medium text-balance text-white/50 md:text-[23px]">
+        אני כאן כדי להפוך את הרעיון שלך{" "}
+        <strong className="font-bold text-white">למוצר דיגיטלי שמייצר אימפקט.</strong>
+      </p>
     </div>
   );
 }
