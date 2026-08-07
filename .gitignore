@@ -40,3 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 _shot.mjs
+
+# Editor masters for the scroll clips. The encoded files the site actually
+# serves are committed; these are the raw CapCut exports they are made from,
+# and every video that enters git history stays there forever.
+/public/videos/bghiwweb.mp4
+/public/mobile/videos/servicesbgmobile.mp4
