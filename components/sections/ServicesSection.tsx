@@ -49,8 +49,11 @@ const SPACER_PX = 35;
 // means re-measuring it and editing this block, not hunting constants.
 const CUE_PAPER_OPENS = 1.3;
 const CUE_DIAGRAM_FLAT = 3.4;
+const CUE_CRUMPLE_STARTS = 6.3;
 const CUE_BALL_REFORMED = 7.0;
 const CUE_PLANE_TURN = 12.2;
+const CUE_PLANE_FORMED = 13.0;
+const CUE_PLANE_GONE = 18.7;
 const CLIP_SECONDS = 578 / 30;
 
 // The Services list leaves as the paper starts to open, and the same value
@@ -126,21 +129,39 @@ const HEADING_ZONE_PADDING_BOTTOM_PX = 8;
 // Still arithmetic in both directions, so scrolling back up runs the paper
 // backwards through exactly the same frames.
 //
-// The moving stretches are all at the rate the opening was tuned to and is
-// staying at — 88.8vh per second of clip — so the first beat feels exactly as
-// it did. SCRUB_VH below is the sum of every span, and the progress column is
-// each running total divided by it.
-const SCRUB_VH = 1465;
+// Scroll is spent on how much the PICTURE changes, not on how much clip time
+// passes. Splitting it by time was the mistake it replaces: the crumple back
+// into a ball and the turn into a plane are each under a second, so they got
+// about half a screen apiece and went by unnoticed, while the plane receding
+// afterwards is nearly six seconds of very little and got five screens, which
+// is what made it feel stuck in mid-air.
+//
+// So the two transformations get two screens each, and the flight that follows
+// gets less than the stretch before it. The vh figures each span is worth:
+//
+//   115  ball at rest, services list beside it
+//   230  it opens out, the diagram is revealed
+//   100  held flat, to read the diagram
+//    90  still flat, nothing new happening
+//   200  it crumples back into a ball          <- an event, so: room
+//    60  the ball sits there — dead air from the edit, hurried past
+//   200  it turns into a plane                 <- an event, so: room
+//   180  the plane flies out of frame
+//    40  empty white, into the tail
+const SCRUB_VH = 1215;
 const TIMELINE: readonly { progress: number; time: number }[] = [
   { progress: 0.0, time: 0 },
-  { progress: 0.0788, time: CUE_PAPER_OPENS },
-  { progress: 0.2061, time: CUE_DIAGRAM_FLAT },
+  { progress: 0.0947, time: CUE_PAPER_OPENS },
+  { progress: 0.284, time: CUE_DIAGRAM_FLAT },
   // One screen of hold, not two. Two was long enough that reading turned into
   // waiting: you scroll to get out of it, and arrive at the far side already
-  // moving fast enough to run straight through the crumple.
-  { progress: 0.2744, time: CUE_DIAGRAM_FLAT },
-  { progress: 0.4927, time: CUE_BALL_REFORMED },
-  { progress: 0.5715, time: CUE_PLANE_TURN }, // dead air, taken at a quarter rate
+  // moving fast enough to run straight through what comes next.
+  { progress: 0.3663, time: CUE_DIAGRAM_FLAT },
+  { progress: 0.4403, time: CUE_CRUMPLE_STARTS },
+  { progress: 0.6049, time: CUE_BALL_REFORMED },
+  { progress: 0.6543, time: CUE_PLANE_TURN },
+  { progress: 0.8189, time: CUE_PLANE_FORMED },
+  { progress: 0.9671, time: CUE_PLANE_GONE },
   { progress: 1.0, time: CLIP_SECONDS },
 ];
 
