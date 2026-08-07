@@ -8,27 +8,39 @@ import { aboutFacts } from "@/lib/content";
 
 // The opening runs as four beats, each worth this much scrolling, in screens.
 // They are separate constants rather than one duration split up because they
-// are paced differently on purpose: the rise is slow enough to read as an
-// arrival, the float is a pause and nothing else, and the draw is quick — a
-// brush stroke that took its time would look like a loading bar.
-const RISE_VH = 0.55;
-const FLOAT_VH = 0.25;
-const MORPH_VH = 0.55;
-const DRAW_VH = 0.3;
-const SEQUENCE_VH = RISE_VH + FLOAT_VH + MORPH_VH + DRAW_VH;
+// are paced differently on purpose: the rise is slow, because it is the beat
+// that has to be felt; the float is a pause and nothing else; and the draw is
+// quick, since a brush stroke that took its time would look like a progress bar.
+const RISE_VH = 0.95;
+const FLOAT_VH = 0.4;
+const TRAVEL_VH = 0.65;
+const DRAW_VH = 0.25;
+const SEQUENCE_VH = RISE_VH + FLOAT_VH + TRAVEL_VH + DRAW_VH;
 
-// How far below the fold the heading starts, and how out of focus. It comes up
+// How far below the fold the question starts, and how out of focus. It comes up
 // from under the edge of the screen rather than fading in on the spot, so the
 // blur reads as depth — something approaching — instead of as a filter.
 const RISE_FROM_VH = 0.62;
 const RISE_BLUR_PX = 26;
 
-// Full size on arrival, against the size it parks at. The question is asked at
-// a size the answer is not written in.
-const HEADING_OPEN_SCALE = 1.85;
+// It arrives large, then settles a little larger still while it floats, which
+// is what makes the pause read as the question landing rather than as the
+// animation having stopped. Then it shrinks to an ordinary heading.
+const SCALE_ON_ARRIVAL = 1.62;
+const SCALE_WHILE_FLOATING = 1.85;
 
 // Where the shrunk heading comes to rest, measured from the top of the screen.
-const HEADING_PINNED_TOP_PX = 96;
+const HEADING_PINNED_TOP_PX = 88;
+
+// How fast the answer travels compared to the page.
+//
+// The section was passing in a single flick, and the fix for that is NOT to
+// pin it and let scrolling accumulate against a still picture — a page with
+// several sections that each stop dead is a page that feels stuck. So it is
+// slowed instead: the copy moves at this fraction of the scroll, so the
+// section takes about half again as long to cross while everything on it is
+// moving the entire time. Nothing ever holds still, it just holds back.
+const CONTENT_SCROLL_RATE = 0.62;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -54,18 +66,17 @@ function lerp(from: number, to: number, t: number) {
  *
  * The section opens on the question and then becomes a heading:
  *
- *   1. "רגע, מי אני בעצם?" rises from under the bottom edge, out of focus and
- *      oversized, sharpening as it comes up
- *   2. it floats in the middle of an empty screen for a beat
- *   3. "רגע," and "בעצם" are erased — the question mark closes up against
- *      "מי אני" — while the whole thing shrinks toward the top of the screen
- *   4. the swash is drawn underneath it, left to right, like a stroke
+ *   1. "רגע, מי אני בעצם?" rises from under the bottom edge, oversized and out
+ *      of focus, sharpening as it comes up
+ *   2. it floats on an empty screen, growing very slightly and now perfectly
+ *      sharp
+ *   3. "רגע," and "בעצם" are erased — the question mark closing up against
+ *      "מי אני" — while the whole thing shrinks and travels to the top, where
+ *      it stays
+ *   4. the swash is drawn under it, left to right, like a stroke
  *
- * The long form buys the beat the page needs after the paper sequence, where
- * it changes footing and starts talking in the first person. The short one is
- * what a section heading should be once that has landed — and because it is
- * the same words losing two of them rather than a crossfade between two
- * headings, the change reads as a sentence being edited down.
+ * Nothing else is on screen until that has finished. Only then does the answer
+ * start to arrive, and it arrives slowly — see CONTENT_SCROLL_RATE.
  *
  * Same analytical pin the rest of the site uses: sticky positioning plus a
  * number worked out from scrollY. No ScrollTrigger and no scrollYProgress —
@@ -83,17 +94,20 @@ export default function AboutSection() {
   const firstLineRef = useRef<HTMLSpanElement>(null);
   const qualifierRef = useRef<HTMLSpanElement>(null);
   const swashRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  // Both are collapsed to nothing by the morph, so their natural sizes have to
-  // be read while they still have one — once the inline styles are on, the
-  // element only ever reports what was last written to it.
+  // Both of these are collapsed to nothing by the morph, so their natural sizes
+  // have to be read while they still have one — once the inline styles are on,
+  // the element only reports what was last written to it.
   const firstLineHeightRef = useRef(0);
   const qualifierWidthRef = useRef(0);
 
   const measure = () => {
     const firstLine = firstLineRef.current;
     const qualifier = qualifierRef.current;
-    if (!firstLine || !qualifier) return;
+    const wrapper = wrapperRef.current;
+    const content = contentRef.current;
+    if (!firstLine || !qualifier || !wrapper || !content) return;
 
     const prevFirst = firstLine.style.height;
     const prevQualifier = qualifier.style.width;
@@ -103,6 +117,16 @@ export default function AboutSection() {
     qualifierWidthRef.current = qualifier.getBoundingClientRect().width;
     firstLine.style.height = prevFirst;
     qualifier.style.width = prevQualifier;
+
+    // The wrapper has to be tall enough to contain the opening plus however
+    // much scrolling the answer's slowed-down travel actually consumes — which
+    // depends on how tall the answer is, so it is measured rather than guessed.
+    // Guessing it means either a section that ends before its own content has
+    // left, or a stretch of empty black after it has.
+    const screen = window.innerHeight;
+    const contentHeight = content.getBoundingClientRect().height;
+    const travel = (screen + contentHeight) / CONTENT_SCROLL_RATE;
+    wrapper.style.height = `${SEQUENCE_VH * screen + travel}px`;
   };
 
   const update = () => {
@@ -111,50 +135,58 @@ export default function AboutSection() {
     const firstLine = firstLineRef.current;
     const qualifier = qualifierRef.current;
     const swash = swashRef.current;
-    if (!wrapper || !heading || !firstLine || !qualifier || !swash) return;
+    const content = contentRef.current;
+    if (!wrapper || !heading || !firstLine || !qualifier || !swash || !content) return;
 
     const screen = window.innerHeight;
     const scrolled = -wrapper.getBoundingClientRect().top;
 
     const riseEnd = screen * RISE_VH;
     const floatEnd = riseEnd + screen * FLOAT_VH;
-    const morphEnd = floatEnd + screen * MORPH_VH;
-    const drawEnd = morphEnd + screen * DRAW_VH;
+    const travelEnd = floatEnd + screen * TRAVEL_VH;
+    const drawEnd = travelEnd + screen * DRAW_VH;
 
     const rise = smoothstep(scrolled / riseEnd);
-    const morph = smoothstep((scrolled - floatEnd) / (morphEnd - floatEnd));
-    const draw = clamp01((scrolled - morphEnd) / (drawEnd - morphEnd));
+    const float = smoothstep((scrolled - riseEnd) / (floatEnd - riseEnd));
+    const travel = smoothstep((scrolled - floatEnd) / (travelEnd - floatEnd));
+    const draw = clamp01((scrolled - travelEnd) / (drawEnd - travelEnd));
 
-    // Rise: up from under the bottom edge, sharpening on the way. Blur is
-    // cleared slightly ahead of the travel so it arrives already legible
-    // rather than resolving after it has stopped.
+    // Rise: up from under the bottom edge, sharpening on the way. The blur
+    // clears ahead of the travel so it arrives already legible rather than
+    // resolving after it has stopped.
     const y = lerp(screen * RISE_FROM_VH, 0, rise);
     const blur = lerp(RISE_BLUR_PX, 0, clamp01(rise * 1.35));
 
-    // Morph: down to the parked size, and up to the parked position. The
-    // centre it scales about is the centre of the screen, so it shrinks in
-    // place instead of drifting toward a corner, and the travel is applied
-    // separately on top.
+    // Grows a little on arrival, then shrinks to the parked size. Scaled about
+    // the middle of the screen so it never drifts toward a corner; the travel
+    // to the top is applied on top of that.
+    const floatedScale = lerp(SCALE_ON_ARRIVAL, SCALE_WHILE_FLOATING, float);
+    const scale = lerp(floatedScale, 1, travel);
     const parkY = -(screen / 2 - HEADING_PINNED_TOP_PX - heading.offsetHeight / 2);
-    const scale = lerp(HEADING_OPEN_SCALE, 1, morph);
 
     heading.style.filter = blur > 0.05 ? `blur(${blur}px)` : "";
     heading.style.opacity = String(clamp01(rise * 1.6));
-    heading.style.transform = `translate(-50%, -50%) translateY(${y + parkY * morph}px) scale(${scale})`;
+    heading.style.transform = `translate(-50%, -50%) translateY(${y + parkY * travel}px) scale(${scale})`;
 
     // Erased rather than faded: the line's own height and the word's own width
     // go to nothing, so the second line rises to meet the first and the
     // question mark closes up against "מי אני" instead of leaving a hole where
     // the word used to be.
-    firstLine.style.height = `${lerp(firstLineHeightRef.current, 0, morph)}px`;
-    firstLine.style.opacity = String(clamp01(1 - morph * 2.2));
-    qualifier.style.width = `${lerp(qualifierWidthRef.current, 0, morph)}px`;
-    qualifier.style.opacity = String(clamp01(1 - morph * 2.2));
+    firstLine.style.height = `${lerp(firstLineHeightRef.current, 0, travel)}px`;
+    firstLine.style.opacity = String(clamp01(1 - travel * 2.2));
+    qualifier.style.width = `${lerp(qualifierWidthRef.current, 0, travel)}px`;
+    qualifier.style.opacity = String(clamp01(1 - travel * 2.2));
 
     // Drawn, not faded in: revealed from its left end to its right, which is
-    // the direction a stroke is made in regardless of the text's direction.
+    // the direction a stroke is made in whichever way the text runs.
     swash.style.clipPath = `inset(0 ${(1 - draw) * 100}% 0 0)`;
     swash.style.opacity = draw > 0 ? "1" : "0";
+
+    // The answer starts one screen below and comes up at CONTENT_SCROLL_RATE,
+    // so it is still travelling the whole time rather than arriving and then
+    // waiting. Nothing of it is on screen until the heading has parked.
+    const contentScrolled = Math.max(0, scrolled - drawEnd);
+    content.style.transform = `translateY(${screen - contentScrolled * CONTENT_SCROLL_RATE}px)`;
   };
 
   useLayoutEffect(() => {
@@ -178,8 +210,12 @@ export default function AboutSection() {
       update();
     };
     window.addEventListener("resize", handleResize);
+    const observer = new ResizeObserver(handleResize);
+    if (contentRef.current) observer.observe(contentRef.current);
+
     return () => {
       cancelled = true;
+      observer.disconnect();
       window.removeEventListener("resize", handleResize);
     };
   }, [prefersReducedMotion]);
@@ -191,8 +227,8 @@ export default function AboutSection() {
 
   if (prefersReducedMotion) {
     return (
-      <section id="about" data-nav-dark="true" className="relative bg-black pt-28 md:pt-36">
-        <div className="mx-auto max-w-[1120px] px-6">
+      <section id="about" data-nav-dark="true" className="relative bg-black py-28 md:py-36">
+        <div className="mx-auto max-w-[1040px] px-6">
           <div className="flex flex-col items-center">
             <h2 className="font-display text-[40px] leading-none font-bold text-white md:text-[56px]">
               מי אני?
@@ -209,43 +245,44 @@ export default function AboutSection() {
 
   return (
     <section ref={wrapperRef} id="about" data-nav-dark="true" className="relative bg-black">
-      {/* The heading's stage. pointer-events-none so the copy travelling
-          underneath stays selectable and its links stay clickable. */}
-      <div className="pointer-events-none sticky top-0 z-20 h-[100svh]">
+      <div className="sticky top-0 h-[100svh] overflow-clip">
+        {/* The answer, travelling. Behind the heading in z order so the parked
+            heading stays legible over whatever is passing under it. */}
+        <div ref={contentRef} className="absolute inset-x-0 top-0 will-change-transform">
+          <div className="mx-auto max-w-[1040px] px-6 pt-[188px] pb-24">
+            <AboutBody />
+          </div>
+        </div>
+
+        {/* pointer-events-none so the copy travelling underneath stays
+            selectable and its links stay clickable. */}
         <div
           ref={headingRef}
-          className="absolute top-1/2 left-1/2 flex w-full flex-col items-center px-6 will-change-transform"
+          className="pointer-events-none absolute top-1/2 left-1/2 z-10 flex w-full flex-col items-center px-6 will-change-transform"
         >
-          <h2 className="text-center font-display text-[40px] leading-[1.05] font-bold text-white md:text-[56px]">
+          <h2 className="text-center font-display text-[40px] leading-[1.08] font-bold text-white md:text-[52px]">
             {/* Height animated to 0, so it is a block that can collapse rather
                 than a <br> that cannot. */}
             <span ref={firstLineRef} className="block overflow-hidden">
               רגע,
             </span>
+            {/* No line breaks between these three: JSX turns a newline into a
+                space, and with the middle one an inline-block that is two extra
+                word gaps — which the opening scale then multiplies. */}
             <span className="whitespace-nowrap">
-              מי אני
-              {/* inline-block so it has a width of its own to close; the
-                  trailing space is inside it, or the gap outlives the word. */}
+              {"מי אני"}
+              {/* The space belongs INSIDE the part that collapses. Left outside
+                  it, it survives the erase and the finished heading reads
+                  "מי אני ?" with a gap before the question mark. */}
               <span ref={qualifierRef} className="inline-block overflow-hidden align-bottom">
-                &nbsp;בעצם
+                {" בעצם"}
               </span>
-              ?
+              {"?"}
             </span>
           </h2>
           <div ref={swashRef} style={{ opacity: 0 }}>
-            <HeadingSwash className="mt-2 w-[150px] text-white md:w-[190px]" />
+            <HeadingSwash className="mt-3 w-[150px] text-white md:w-[190px]" />
           </div>
-        </div>
-      </div>
-
-      {/* Pulled back up over the stage so the two share the same screen: the
-          heading holds still at the top while this travels past it. The spacer
-          is what keeps the copy below the fold until the question has finished
-          being asked. */}
-      <div className="relative z-10 -mt-[100svh]">
-        <div aria-hidden="true" style={{ height: `${SEQUENCE_VH * 100}svh` }} />
-        <div className="mx-auto max-w-[1120px] px-6">
-          <AboutBody />
         </div>
       </div>
     </section>
@@ -255,21 +292,21 @@ export default function AboutSection() {
 /**
  * The answer.
  *
- * Two columns sharing one bottom edge: the copy on the right where the reading
- * starts, the portrait on the left sitting on the section's own bottom. It is
- * shown at its own proportions — given a width and left to work out its height
- * — rather than cropped to a shape the layout would have preferred. Square
- * corners and no shadow, so it reads as placed rather than pasted on.
+ * Two columns that share a top edge rather than drifting apart: the copy on the
+ * right where the reading starts, the portrait on the left at its own
+ * proportions — given a width and left to work out its height — instead of
+ * cropped to a shape the layout preferred. Square corners and no shadow, so it
+ * reads as placed rather than pasted on.
  */
 function AboutBody() {
   return (
-    <div className="grid grid-cols-1 items-end gap-14 lg:grid-cols-[1fr_430px] lg:gap-20">
-      <div className="max-w-[560px] pb-28 text-right md:pb-40">
-        <p className="font-body text-[16px] leading-[1.85] text-balance text-white/60">
+    <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[1fr_360px] lg:gap-14">
+      <div className="text-right">
+        <p className="font-body text-[16px] leading-[1.8] text-balance text-white/60">
           YEYE הוקם מתוך אובססיה לפרטים הקטנים ואמונה עמוקה שכל עסק ראוי לנוכחות דיגיטלית{" "}
           <strong className="font-semibold text-white">ברמה הגבוהה ביותר</strong>.
         </p>
-        <p className="mt-4 font-body text-[16px] leading-[1.85] text-balance text-white/60">
+        <p className="mt-3 font-body text-[16px] leading-[1.8] text-balance text-white/60">
           אני עומר, מעצב מגיל 15 ומפתח מגיל 17, ואני בונה חוויות דיגיטליות{" "}
           <strong className="font-semibold text-white">שלא רק נראות טוב, אלא עובדות.</strong>
         </p>
@@ -281,24 +318,24 @@ function AboutBody() {
             nobody can check. Title above its line rather than beside it: at a
             fixed term width, RTL left a trough of empty space down the middle
             of the list. */}
-        <dl className="mt-8 w-full divide-y divide-white/12 border-y border-white/12">
+        <dl className="mt-7 w-full divide-y divide-white/12 border-y border-white/12">
           {aboutFacts.map((fact) => (
-            <div key={fact.title} className="py-4">
+            <div key={fact.title} className="py-3">
               <dt className="font-display text-[15px] font-bold text-white">{fact.title}</dt>
-              <dd className="m-0 mt-1 font-body text-[14px] leading-[1.65] text-white/45">
+              <dd className="m-0 mt-0.5 font-body text-[14px] leading-[1.6] text-white/45">
                 {fact.description}
               </dd>
             </div>
           ))}
         </dl>
 
-        <p className="mt-8 font-body text-[16px] leading-[1.7] text-white/60">
+        <p className="mt-7 font-body text-[16px] leading-[1.7] text-white/60">
           אני כאן כדי להפוך את הרעיון שלך{" "}
           <strong className="font-semibold text-white">למוצר דיגיטלי שמייצר אימפקט.</strong>
         </p>
       </div>
 
-      <figure className="m-0 w-full max-w-[430px] justify-self-start">
+      <figure className="m-0 w-full max-w-[360px] justify-self-start">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/portrait.webp"
