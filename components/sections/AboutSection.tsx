@@ -30,7 +30,9 @@ const SCALE_ON_ARRIVAL = 1.62;
 const SCALE_WHILE_FLOATING = 1.85;
 
 // Where the shrunk heading comes to rest, measured from the top of the screen.
-const HEADING_PINNED_TOP_PX = 88;
+// Well clear of the navbar rather than tucked under it: it is the section's
+// title, and a title crowded against the edge reads as a toolbar.
+const HEADING_PINNED_TOP_PX = 132;
 
 // How fast the answer travels compared to the page.
 //
@@ -249,7 +251,7 @@ export default function AboutSection() {
         {/* The answer, travelling. Behind the heading in z order so the parked
             heading stays legible over whatever is passing under it. */}
         <div ref={contentRef} className="absolute inset-x-0 top-0 will-change-transform">
-          <div className="mx-auto max-w-[1040px] px-6 pt-[188px] pb-24">
+          <div className="mx-auto max-w-[1040px] px-6 pt-[236px] pb-24">
             <AboutBody />
           </div>
         </div>
@@ -292,50 +294,76 @@ export default function AboutSection() {
 /**
  * The answer.
  *
- * Two columns that share a top edge rather than drifting apart: the copy on the
- * right where the reading starts, the portrait on the left at its own
- * proportions — given a width and left to work out its height — instead of
- * cropped to a shape the layout preferred. Square corners and no shadow, so it
- * reads as placed rather than pasted on.
+ * Same sentences as before, ordered and weighted rather than poured out at one
+ * size: the claim, then who is making it, then why, then the three things that
+ * back it, then the invitation. Everything used to be set at roughly the same
+ * weight in one right-aligned column, so there was nothing for the eye to land
+ * on and no reason to start at the top.
+ *
+ * The portrait sits at its own proportions — given a width and left to work out
+ * its height — instead of cropped to a shape the layout preferred. Square
+ * corners and no shadow, so it reads as placed rather than pasted on.
  */
 function AboutBody() {
   return (
-    <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[1fr_360px] lg:gap-14">
+    <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-[1fr_320px] lg:gap-16">
       <div className="text-right">
-        <p className="font-body text-[16px] leading-[1.8] text-balance text-white/60">
+        {/* The claim, and the largest thing in the section after the heading.
+            It was previously the tail of a paragraph, where the sentence the
+            whole block is built to deliver read as an afterthought. */}
+        <p className="font-display text-[26px] leading-[1.3] font-bold text-balance text-white md:text-[32px]">
+          אני בונה חוויות דיגיטליות
+          <br />
+          <span className="text-white/35">שלא רק נראות טוב,</span> אלא עובדות.
+        </p>
+
+        {/* Who is making it. Specific, and the one credential here that cannot
+            be copied off another studio's page. */}
+        <p className="mt-6 font-display text-[16px] leading-[1.6] font-medium text-white/70 md:text-[17px]">
+          אני עומר — מעצב מגיל 15, מפתח מגיל 17.
+        </p>
+
+        <p className="mt-3 max-w-[46ch] font-body text-[15px] leading-[1.75] text-balance text-white/45">
           YEYE הוקם מתוך אובססיה לפרטים הקטנים ואמונה עמוקה שכל עסק ראוי לנוכחות דיגיטלית{" "}
-          <strong className="font-semibold text-white">ברמה הגבוהה ביותר</strong>.
-        </p>
-        <p className="mt-3 font-body text-[16px] leading-[1.8] text-balance text-white/60">
-          אני עומר, מעצב מגיל 15 ומפתח מגיל 17, ואני בונה חוויות דיגיטליות{" "}
-          <strong className="font-semibold text-white">שלא רק נראות טוב, אלא עובדות.</strong>
+          <span className="text-white/80">ברמה הגבוהה ביותר</span>.
         </p>
 
-        {/* Not cards, and deliberately not numbers. Every one of these is a
-            plain fact about how the work is actually done, which a studio that
-            subcontracts or assembles templates could not honestly write — where
-            "Design-First" and a project count are things anyone can claim and
-            nobody can check. Title above its line rather than beside it: at a
-            fixed term width, RTL left a trough of empty space down the middle
-            of the list. */}
-        <dl className="mt-7 w-full divide-y divide-white/12 border-y border-white/12">
-          {aboutFacts.map((fact) => (
-            <div key={fact.title} className="py-3">
-              <dt className="font-display text-[15px] font-bold text-white">{fact.title}</dt>
-              <dd className="m-0 mt-0.5 font-body text-[14px] leading-[1.6] text-white/45">
-                {fact.description}
-              </dd>
-            </div>
+        {/* Not cards, and deliberately not achievement numbers. Every one of
+            these is a plain fact about how the work is actually done, which a
+            studio that subcontracts or assembles templates could not honestly
+            write — where "Design-First" and a project count are things anyone
+            can claim and nobody can check.
+
+            They are numbered now, and given room. As three lines of small text
+            they read as fine print under the paragraphs; counted out, they read
+            as the three things being promised. */}
+        <ol className="mt-10 divide-y divide-white/10 border-t border-white/10">
+          {aboutFacts.map((fact, index) => (
+            <li key={fact.title} className="grid grid-cols-[auto_1fr] items-baseline gap-5 py-5">
+              <span className="font-display text-[13px] leading-none font-bold text-white/25">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <div>
+                <h3 className="font-display text-[18px] leading-none font-bold text-white md:text-[20px]">
+                  {fact.title}
+                </h3>
+                <p className="mt-2 font-body text-[14px] leading-[1.6] text-white/45">
+                  {fact.description}
+                </p>
+              </div>
+            </li>
           ))}
-        </dl>
+        </ol>
 
-        <p className="mt-7 font-body text-[16px] leading-[1.7] text-white/60">
+        {/* The invitation, set apart rather than tacked on as one more
+            paragraph — it is the only line here that asks for anything. */}
+        <p className="mt-10 font-display text-[19px] leading-[1.5] font-medium text-balance text-white/50 md:text-[21px]">
           אני כאן כדי להפוך את הרעיון שלך{" "}
-          <strong className="font-semibold text-white">למוצר דיגיטלי שמייצר אימפקט.</strong>
+          <strong className="font-bold text-white">למוצר דיגיטלי שמייצר אימפקט.</strong>
         </p>
       </div>
 
-      <figure className="m-0 w-full max-w-[360px] justify-self-start">
+      <figure className="m-0 w-full max-w-[320px] justify-self-start">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/portrait.webp"
