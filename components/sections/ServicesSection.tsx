@@ -447,32 +447,51 @@ export default function ServicesSection() {
     // below, which is what this is fixing. On a window that is not 16:9 that
     // does trim the picture's long edge; the diagram's own content sits well
     // inside the frame, and the trim falls on the hatching around it.
+    // EVERY layout read the video needs happens here, in one place, before a
+    // single style is written. It used to read the element's box here, write
+    // the transform, and then read the box AGAIN further down to work out the
+    // clip — and a read after a write forces the browser to flush layout on the
+    // spot. Twice per scroll event, on top of the decode a seek already costs,
+    // which is what made the scrub lag behind the finger.
     const videoZone = videoZoneRef.current;
+    const elW = video.clientWidth;
+    const elH = video.clientHeight;
+    const zoneTop = videoZone ? videoZone.getBoundingClientRect().top : 0;
+    const viewportW = window.innerWidth;
+    const viewportH = window.innerHeight;
+    const { contentW, contentH } = containedPictureSize(elW, elH);
+
     let scale = VIDEO_REST_SCALE;
     let shiftY = 0;
     const shiftX = lerp(VIDEO_REST_SHIFT_X_PX, 0, servicesShrinkT);
+    let clipPath = "";
 
-    if (videoZone) {
-      const { contentW, contentH } = containedPictureSize(video.clientWidth, video.clientHeight);
-      if (contentW > 0 && contentH > 0) {
-        const viewportW = window.innerWidth;
-        const viewportH = window.innerHeight;
-        // A hair beyond an exact cover, so a fractional viewport can never
-        // leave a one-pixel seam at an edge.
-        const openScale =
-          Math.max(viewportW / contentW, viewportH / contentH) * (1 + VIDEO_COVER_OVERSCAN);
-        // The zone is pulled up above the panel, so the picture's own centre
-        // and the screen's centre are not the same point — close the gap, or a
-        // correctly sized frame still sits high.
-        const zoneTop = videoZone.getBoundingClientRect().top;
-        const openShiftY = viewportH / 2 - (zoneTop + video.clientHeight / 2);
+    if (contentW > 0 && contentH > 0) {
+      // A hair beyond an exact cover, so a fractional viewport can never leave
+      // a one-pixel seam at an edge.
+      const openScale =
+        Math.max(viewportW / contentW, viewportH / contentH) * (1 + VIDEO_COVER_OVERSCAN);
+      // The zone is pulled up above the panel, so the picture's own centre and
+      // the screen's centre are not the same point — close the gap, or a
+      // correctly sized frame still sits high.
+      const openShiftY = viewportH / 2 - (zoneTop + elH / 2);
 
-        scale = lerp(VIDEO_REST_SCALE, openScale, servicesShrinkT);
-        shiftY = lerp(0, openShiftY, servicesShrinkT);
-      }
+      scale = lerp(VIDEO_REST_SCALE, openScale, servicesShrinkT);
+      shiftY = lerp(0, openShiftY, servicesShrinkT);
+
+      // object-contain letterboxes the picture inside the element, so its own
+      // edge sits well inside the element's box — and scaling the element drags
+      // that edge around with it, which is where a hairline used to show beside
+      // the ball. Clipping a couple of pixels off the picture's bounds removes
+      // the row the browser resamples; the replacement boundary is a plain CSS
+      // clip through flat white, which has nothing to resample.
+      const insetX = (elW - contentW) / 2 + VIDEO_EDGE_TRIM_PX;
+      const insetY = (elH - contentH) / 2 + VIDEO_EDGE_TRIM_PX;
+      clipPath = `inset(${insetY}px ${insetX}px)`;
     }
 
     video.style.transform = `translateX(${shiftX}px) translateY(${shiftY}px) scale(${scale})`;
+    if (clipPath) video.style.clipPath = clipPath;
 
     const statement = statementRef.current;
     if (statement) {
@@ -497,23 +516,6 @@ export default function ServicesSection() {
       const y = lerp(STATEMENT_RISE_PX, 0, statementT) + lerp(0, -STATEMENT_TAIL_RISE_PX, tailT);
       statement.style.opacity = String(statementT);
       statement.style.transform = `translateY(${y}px) scale(${lerp(1, STATEMENT_TAIL_SCALE, tailT)})`;
-    }
-
-    // object-contain letterboxes the frame inside the element, so the picture
-    // has its own edge sitting well inside the element's box — and scaling the
-    // element drags that edge around with it. That edge is where a hairline has
-    // been showing up. Clipping a couple of pixels off the picture's own bounds
-    // removes the edge row the browser resamples, and the replacement boundary
-    // is a plain CSS clip through flat white, which has nothing to resample.
-    // Computed from the live box rather than hardcoded, so it tracks the
-    // element at any viewport and any scale.
-    const elW = video.clientWidth;
-    const elH = video.clientHeight;
-    if (elW > 0 && elH > 0) {
-      const { contentW, contentH } = containedPictureSize(elW, elH);
-      const insetX = (elW - contentW) / 2 + VIDEO_EDGE_TRIM_PX;
-      const insetY = (elH - contentH) / 2 + VIDEO_EDGE_TRIM_PX;
-      video.style.clipPath = `inset(${insetY}px ${insetX}px)`;
     }
 
     // The heading exits as a plain fade — no scale/shrink of its own
