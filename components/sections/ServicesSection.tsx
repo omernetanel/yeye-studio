@@ -135,7 +135,7 @@ const ABOUT_SHIFT_Y_PX = -PANEL_STICKY_TOP_PX;
 // can never be set below its own padding sum, so a fixed pt/pb class
 // would silently floor the "collapse to 0" animation at that sum instead
 // of actually reaching 0.
-const HEADING_ZONE_PADDING_TOP_PX = 44;
+const HEADING_ZONE_PADDING_TOP_PX = 54;
 const HEADING_ZONE_PADDING_BOTTOM_PX = 8;
 
 // Scroll no longer maps straight onto the clip's timeline. At each of these
