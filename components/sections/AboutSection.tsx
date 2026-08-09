@@ -17,15 +17,19 @@ const TRAVEL_VH = 0.65;
 const DRAW_VH = 0.25;
 const SEQUENCE_VH = RISE_VH + FLOAT_VH + TRAVEL_VH + DRAW_VH;
 
-// How far below the fold the question starts, and how out of focus. It comes up
-// from under the edge of the screen rather than fading in on the spot, so the
-// blur reads as depth — something approaching — instead of as a filter.
-const RISE_FROM_VH = 0.62;
-const RISE_BLUR_PX = 26;
+// How the question enters. It does NOT fade in — it starts already at full
+// opacity with its middle exactly on the bottom edge of the screen, so the
+// first thing seen is the top half of it cut by that edge, and the reveal is
+// the travel rather than an opacity ramp. Huge and heavily out of focus at that
+// point, resolving as it comes up: the pair reads as something close to the
+// lens pulling back into focus, where a blur alone reads as a filter.
+const RISE_FROM_VH = 0.5;
+const RISE_BLUR_PX = 48;
 
 // It arrives large, then settles a little larger still while it floats, which
 // is what makes the pause read as the question landing rather than as the
 // animation having stopped. Then it shrinks to an ordinary heading.
+const SCALE_ON_RISE_START = 3.1;
 const SCALE_ON_ARRIVAL = 1.62;
 const SCALE_WHILE_FLOATING = 1.85;
 
@@ -159,19 +163,19 @@ export default function AboutSection() {
     const travel = smoothstep((scrolled - floatEnd) / (travelEnd - floatEnd));
     const draw = clamp01((scrolled - travelEnd) / (drawEnd - travelEnd));
 
-    // Rise: up from under the bottom edge, sharpening on the way. The blur
-    // clears ahead of the travel so it arrives already legible rather than
+    // Rise: up from the bottom edge, shrinking and sharpening on the way. The
+    // blur clears ahead of the travel so it arrives already legible rather than
     // resolving after it has stopped.
     const riseY = lerp(screen * RISE_FROM_VH, 0, rise);
     const blur = lerp(RISE_BLUR_PX, 0, clamp01(rise * 1.35));
+    const risenScale = lerp(SCALE_ON_RISE_START, SCALE_ON_ARRIVAL, rise);
 
-    // Grows a little on arrival, then shrinks on its way to the corner.
-    const floatedScale = lerp(SCALE_ON_ARRIVAL, SCALE_WHILE_FLOATING, float);
+    // Grows a little once it has arrived, then shrinks on its way to the corner.
+    const floatedScale = lerp(risenScale, SCALE_WHILE_FLOATING, float);
     const scale = lerp(floatedScale, 1, travel);
     const end = endOffsetRef.current;
 
     heading.style.filter = blur > 0.05 ? `blur(${blur}px)` : "";
-    heading.style.opacity = String(clamp01(rise * 1.6));
     heading.style.transform =
       `translate(-50%, -50%) translate(${end.x * travel}px, ${riseY + end.y * travel}px) scale(${scale})`;
 
@@ -259,11 +263,12 @@ export default function AboutSection() {
                   extra word gaps — which the opening scale then multiplies. */}
               <span>
                 {"מי אני"}
-                {/* The space belongs INSIDE the part that collapses. Left
-                    outside it, it survives the erase and the finished heading
-                    reads "מי אני ?" with a gap before the question mark. */}
+                {/* No space on either side of it. At this size a word space is
+                    twenty-odd pixels wide, which read as a gap rather than as a
+                    space. Anything that should disappear with the word has to
+                    live INSIDE this span, since it is the span that collapses. */}
                 <span ref={qualifierRef} className="inline-block overflow-hidden align-bottom">
-                  {" בעצם"}
+                  בעצם
                 </span>
                 {"?"}
               </span>
