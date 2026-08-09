@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, type ReactNode } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import HeadingSwash from "@/components/ui/HeadingSwash";
@@ -39,8 +39,12 @@ const SCALE_WHILE_FLOATING = 1.85;
 // tall, giving a centre line at 40.
 const LOGO_LINE_CENTRE_Y_PX = 40;
 
-// How much of the section's last stretch the heading spends fading out.
-const HEADING_EXIT_VH = 0.5;
+// How much of the section's last stretch the heading spends fading out, and how
+// much room is left after the copy for it to do that in. Without the tail the
+// section ended on the same screen the answer is read on, so the heading was
+// already gone by the time there was anything to read under it.
+const HEADING_EXIT_VH = 0.3;
+const SECTION_TAIL_VH = 0.4;
 
 const CONTENT_MAX_W_PX = 1120;
 const CONTENT_PAD_PX = 24;
@@ -331,9 +335,20 @@ export default function AboutSection() {
           two share the same screen rather than stacking. */}
       <div ref={stageRef} aria-hidden="true" className="-mt-[100svh]" style={{ height: `${SEQUENCE_VH * 100}svh` }} />
 
-      <div className="mx-auto max-w-[1120px] px-6 pt-[212px] pb-32 md:pb-40">
-        <AboutBody />
+      {/* One screen, and only one. The answer used to run about 1400px and
+          arrive a block at a time, which is what made it feel like it was
+          streaming past rather than being presented — you were reading it while
+          it moved. It is composed to fit a single screen now and centred in it,
+          so it is simply there when you arrive. */}
+      <div className="flex min-h-[100svh] items-center pt-[96px] pb-12">
+        <div className="mx-auto w-full max-w-[1120px] px-6">
+          <AboutBody />
+        </div>
       </div>
+
+      {/* Room after the answer for the heading to leave in, so it is still on
+          the logo's line for the whole time the answer is on screen. */}
+      <div aria-hidden="true" style={{ height: `${SECTION_TAIL_VH * 100}svh` }} />
     </section>
   );
 }
@@ -350,47 +365,32 @@ export default function AboutSection() {
  * The portrait sits at its own proportions — given a width and left to work out
  * its height — instead of cropped to a shape the layout preferred. Square
  * corners and no shadow, so it reads as placed rather than pasted on.
- */
-/**
- * One block arriving.
- *
- * Framer Motion rather than the section's own scroll maths, deliberately: this
- * is an element appearing when it comes into view, which is exactly the UI-level
- * job the library is kept around for — the same treatment SectionHeading and
- * StatementSection already use. The scroll maths is for things that have to run
- * backwards frame by frame, which this does not.
- */
-function Reveal({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 26 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-120px" }}
-      transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1], delay }}
-    >
-      {children}
-    </motion.div>
-  );
-}
 
+/**
+ * The answer, composed to sit on one screen.
+ *
+ * Three bands down the page rather than a column that scrolls: the claim beside
+ * the face, the three promises across, the invitation under them. Everything is
+ * sized so the whole thing clears a short laptop screen with the pinned heading
+ * above it — which is what decides the type sizes here, not taste.
+ *
+ * It arrives as one piece. Revealing it block by block was what made a section
+ * that is one screen long feel like it was still loading.
+ */
 function AboutBody() {
   return (
-    <div className="text-right">
-      {/* The claim and the face share a bottom edge, so the picture sits beside
-          the sentence it belongs to rather than in a column of its own running
-          down the side of everything.
-
-          The gaps down this section are wide on purpose. The copy arrives a
-          block at a time as it comes into view, and the space between blocks is
-          what gives each arrival room to be seen instead of all of them landing
-          in one flick. */}
-      <div className="grid grid-cols-1 items-end gap-10 lg:grid-cols-[1fr_300px] lg:gap-14">
-        <Reveal>
-          {/* The largest thing in the section after the heading. It used to be
-              the tail of a paragraph — the sentence the whole block is built to
-              deliver, reading as an afterthought. The concessive half is greyed
-              so the turn lands on "אלא עובדות". */}
-          <p className="font-display text-[28px] leading-[1.28] font-bold text-balance text-white md:text-[36px]">
+    <motion.div
+      initial={{ opacity: 0, y: 22 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+      className="text-right"
+    >
+      <div className="grid grid-cols-1 items-center gap-7 lg:grid-cols-[1fr_180px] lg:gap-12">
+        <div>
+          {/* The claim, and the largest thing here. The concessive half is
+              greyed so the turn lands on "אלא עובדות". */}
+          <p className="font-display text-[22px] leading-[1.25] font-bold text-balance text-white md:text-[27px]">
             אני בונה חוויות דיגיטליות
             <br />
             <span className="text-white/35">שלא רק נראות טוב,</span> אלא עובדות.
@@ -398,68 +398,58 @@ function AboutBody() {
 
           {/* Specific, and the one credential here that cannot be copied off
               another studio's page. */}
-          <p className="mt-6 font-display text-[16px] leading-[1.6] font-medium text-white/70 md:text-[17px]">
+          <p className="mt-4 font-display text-[14px] leading-[1.5] font-medium text-white/70 md:text-[15px]">
             אני עומר — מעצב מגיל 15, מפתח מגיל 17.
           </p>
 
-          <p className="mt-3 max-w-[46ch] font-body text-[15px] leading-[1.75] text-balance text-white/45">
+          <p className="mt-2 max-w-[50ch] font-body text-[13px] leading-[1.65] text-balance text-white/45">
             YEYE הוקם מתוך אובססיה לפרטים הקטנים ואמונה עמוקה שכל עסק ראוי לנוכחות דיגיטלית{" "}
             <span className="text-white/80">ברמה הגבוהה ביותר</span>.
           </p>
-        </Reveal>
+        </div>
 
-        <Reveal delay={0.12}>
-          <figure className="m-0 w-full max-w-[300px] justify-self-start">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/portrait.webp"
-              alt="עומר, מייסד YEYE Digital"
-              width={430}
-              height={560}
-              className="block h-auto w-full"
-              draggable={false}
-            />
-          </figure>
-        </Reveal>
+        <figure className="m-0 w-full max-w-[180px] justify-self-start">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/portrait.webp"
+            alt="עומר, מייסד YEYE Digital"
+            width={430}
+            height={560}
+            className="block h-auto w-full"
+            draggable={false}
+          />
+        </figure>
       </div>
 
       {/* Three across rather than three down. They are parallel promises, and a
-          vertical list reads them as a sequence — one after another — where
-          columns read them as three things of equal weight. It also uses the
-          width the two-column block above leaves empty.
+          vertical list reads them as a sequence where columns read them as three
+          things of equal weight — and across is what fits on one screen.
 
           Still rules and type, not cards: every one is a plain fact about how
           the work is done, which a studio that subcontracts or assembles
           templates could not honestly write. Boxing them would make them look
           like feature badges, which is exactly what they are not. */}
-      <ol className="mt-28 grid grid-cols-1 gap-x-12 border-t border-white/12 sm:grid-cols-3">
+      <ol className="mt-8 grid grid-cols-1 gap-x-9 border-t border-white/12 sm:grid-cols-3">
         {aboutFacts.map((fact, index) => (
-          <li key={fact.title} className="border-b border-white/12 pt-6 pb-7 sm:border-b-0">
-            {/* Staggered, so the three arrive in their numbered order rather
-                than snapping in together as one row. */}
-            <Reveal delay={index * 0.1}>
-              <span className="font-display text-[12px] leading-none font-bold tracking-[0.12em] text-white/25">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <h3 className="mt-3 font-display text-[19px] leading-[1.15] font-bold text-balance text-white">
-                {fact.title}
-              </h3>
-              <p className="mt-2 font-body text-[14px] leading-[1.6] text-white/45">
-                {fact.description}
-              </p>
-            </Reveal>
+          <li key={fact.title} className="border-b border-white/12 pt-3.5 pb-4 sm:border-b-0">
+            <span className="font-display text-[11px] leading-none font-bold tracking-[0.12em] text-white/25">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <h3 className="mt-2 font-display text-[15px] leading-[1.2] font-bold text-balance text-white">
+              {fact.title}
+            </h3>
+            <p className="mt-1 font-body text-[12px] leading-[1.5] text-white/45">
+              {fact.description}
+            </p>
           </li>
         ))}
       </ol>
 
-      {/* Set apart rather than tacked on as one more paragraph — it is the only
-          line in the section that asks for anything. */}
-      <Reveal>
-        <p className="mt-24 font-display text-[20px] leading-[1.5] font-medium text-balance text-white/50 md:text-[23px]">
-          אני כאן כדי להפוך את הרעיון שלך{" "}
-          <strong className="font-bold text-white">למוצר דיגיטלי שמייצר אימפקט.</strong>
-        </p>
-      </Reveal>
-    </div>
+      {/* The only line in the section that asks for anything. */}
+      <p className="mt-7 font-display text-[16px] leading-[1.4] font-medium text-balance text-white/50 md:text-[17px]">
+        אני כאן כדי להפוך את הרעיון שלך{" "}
+        <strong className="font-bold text-white">למוצר דיגיטלי שמייצר אימפקט.</strong>
+      </p>
+    </motion.div>
   );
 }
