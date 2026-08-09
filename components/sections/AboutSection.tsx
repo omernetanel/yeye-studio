@@ -29,45 +29,48 @@ import { aboutFacts } from "@/lib/content";
 export default function AboutSection() {
   return (
     <section id="about" data-nav-dark="true" className="relative bg-black">
-      <div className="mx-auto max-w-[1180px] px-6">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_420px] lg:gap-20">
-          <div className="pt-2 pb-24 text-right md:pb-32">
-            <Reveal>
-              <h2 className="font-display text-[46px] leading-[0.95] font-bold text-white md:text-[64px]">
-                אני עומר.
-              </h2>
-              <HeadingSwash className="mt-4 w-[132px] text-white md:w-[164px]" />
-            </Reveal>
+      <div className="mx-auto max-w-[1240px] px-6 md:px-10">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_46%] lg:gap-16">
+          <div>
+            {/* The arrival. A screen of its own, composed and centred in it, so
+                the section opens as a moment rather than as the top of a column
+                that happens to be scrolling past. */}
+            <div className="flex min-h-[86svh] flex-col justify-center py-16 text-right">
+              <Reveal>
+                <h2 className="font-display text-[54px] leading-[0.95] font-bold text-white md:text-[78px]">
+                  אני עומר.
+                </h2>
+                <HeadingSwash className="mt-5 w-[150px] text-white md:w-[190px]" />
+              </Reveal>
 
-            <Reveal delay={0.08}>
-              <p className="mt-8 max-w-[20ch] font-display text-[26px] leading-[1.25] font-bold text-balance text-white md:text-[32px]">
-                אני מעצב ובונה את מה שאתם רואים כאן.
-              </p>
-              <p className="mt-5 max-w-[46ch] font-body text-[15px] leading-[1.75] text-balance text-white/50">
-                הקמתי את YEYE מתוך אובססיה לפרטים הקטנים ואמונה ש
-                <span className="text-white/80">אתר טוב צריך לעבוד טוב בדיוק כמו שהוא נראה</span>.
-              </p>
-            </Reveal>
+              <Reveal delay={0.12}>
+                <p className="mt-9 font-display text-[28px] leading-[1.22] font-bold text-balance text-white md:text-[38px]">
+                  אני מעצב ובונה את מה שאתם רואים כאן.
+                </p>
+                <p className="mt-6 max-w-[58ch] font-body text-[16px] leading-[1.75] text-balance text-white/50 md:text-[17px]">
+                  הקמתי את YEYE מתוך אובססיה לפרטים הקטנים ואמונה ש
+                  <span className="text-white/80">אתר טוב צריך לעבוד טוב בדיוק כמו שהוא נראה</span>.
+                </p>
+              </Reveal>
+            </div>
 
-            {/* The three reasons, spaced far enough apart that each arrives on
-                its own rather than as a list taken in at a glance. They are
-                plain facts about how the work is arranged — a studio that
-                subcontracts or assembles templates could not honestly write any
-                of them, which is exactly why these are the ones worth stating. */}
-            <ol className="mt-20 space-y-16 md:mt-24 md:space-y-20">
+            {/* The three reasons. Each one lands and stays; they are spaced to
+                arrive separately rather than to be taken in as a list, but not
+                so far apart that the space between them reads as emptiness. */}
+            <ol className="space-y-14 pb-24 md:space-y-16 md:pb-32">
               {aboutFacts.map((fact, index) => (
                 <li key={fact.title}>
                   <Reveal>
                     <div className="flex items-baseline gap-4">
-                      <span className="font-display text-[13px] leading-none font-bold tracking-[0.16em] text-white/25">
+                      <span className="font-display text-[13px] leading-none font-bold tracking-[0.16em] text-white/30">
                         {String(index + 1).padStart(2, "0")}
                       </span>
                       <span className="h-px flex-1 bg-white/12" />
                     </div>
-                    <h3 className="mt-5 font-display text-[24px] leading-[1.15] font-bold text-balance text-white md:text-[30px]">
+                    <h3 className="mt-5 font-display text-[26px] leading-[1.15] font-bold text-balance text-white md:text-[32px]">
                       {fact.title}
                     </h3>
-                    <p className="mt-3 max-w-[44ch] font-body text-[15px] leading-[1.7] text-balance text-white/50">
+                    <p className="mt-3 max-w-[56ch] font-body text-[16px] leading-[1.7] text-balance text-white/50 md:text-[17px]">
                       {fact.description}
                     </p>
                   </Reveal>
@@ -84,24 +87,26 @@ export default function AboutSection() {
             </ol>
           </div>
 
-          {/* The face, held for the whole argument: it stays while the reasons
-              to work with me pass beside it, so the person is never off screen
-              while the case for the person is being made. Below lg it simply
-              leads the column. */}
-          <div className="order-first lg:order-none lg:sticky lg:top-[104px] lg:h-fit lg:self-start">
-            <Reveal>
-              <figure className="m-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/portrait.webp"
-                  alt="עומר, מייסד YEYE Digital"
-                  width={430}
-                  height={560}
-                  className="block h-auto w-full max-w-[420px]"
-                  draggable={false}
-                />
-              </figure>
-            </Reveal>
+          {/* The face, held for the whole argument: it arrives with the name and
+              then stays while the reasons pass beside it, so the person is never
+              off screen while the case for the person is being made. Below lg it
+              simply leads the column. */}
+          <div className="order-first lg:order-none lg:sticky lg:top-0 lg:h-[100svh] lg:self-start">
+            <div className="flex h-full items-center">
+              <Reveal>
+                <figure className="m-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/images/portrait.webp"
+                    alt="עומר, מייסד YEYE Digital"
+                    width={430}
+                    height={560}
+                    className="block h-auto w-full"
+                    draggable={false}
+                  />
+                </figure>
+              </Reveal>
+            </div>
           </div>
         </div>
       </div>
@@ -120,10 +125,10 @@ export default function AboutSection() {
 function Reveal({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 44 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-90px" }}
-      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay }}
+      viewport={{ once: true, margin: "-140px" }}
+      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay }}
     >
       {children}
     </motion.div>
