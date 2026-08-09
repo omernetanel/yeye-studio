@@ -95,6 +95,11 @@ const STATEMENT_TAIL_RISE_PX = 72;
 // (a literal Tailwind value, can't reference this constant directly).
 const PANEL_STICKY_TOP_PX = -20;
 
+// How far the video zone is pulled up under the heading. Must stay in sync with
+// the `-mt-[86px]` on the zone's own className below (a literal Tailwind value,
+// which cannot reference this constant).
+const VIDEO_ZONE_PULL_UP_PX = 86;
+
 
 // The heading zone's rest-state padding — must be animated down to 0 in
 // lockstep with its own `height` (see update()), not left as a fixed
@@ -321,6 +326,23 @@ export default function ServicesSection() {
   const headingZoneNaturalHeightRef = useRef(0);
   const headingShineDoneRef = useRef(false);
 
+  // The picture's framing at each end of the opening, worked out once per
+  // layout instead of measured on every frame.
+  //
+  // Measuring it live was a real bug, and an instructive one: the heading zone
+  // above the video collapses to nothing over the SAME span that opens the
+  // picture, so the zone the picture sits in is growing and moving while the
+  // picture is travelling to its mark. Reading that box each frame meant the
+  // target moved every frame, which is what made the open visibly jump. The
+  // version before it survived on hardcoded numbers, which were immune to this
+  // precisely because they were not measured.
+  //
+  // Both ends are known without measuring anything: the panel is one screen
+  // tall stuck at PANEL_STICKY_TOP_PX, and the zone inside it is pulled up by
+  // VIDEO_ZONE_PULL_UP_PX and takes whatever the heading zone leaves.
+  const restFramingRef = useRef({ scale: VIDEO_REST_SCALE, shiftY: 0, insetX: 0, insetY: 0 });
+  const openFramingRef = useRef({ scale: VIDEO_REST_SCALE, shiftY: 0, insetX: 0, insetY: 0 });
+
   // Analytical, not scrollYProgress-derived — same reasoning as the Hero's
   // own pin: a target-scoped scrollYProgress motion value lags an instant
   // or fast scroll jump by a frame or two (its target rect is re-measured
@@ -394,51 +416,22 @@ export default function ServicesSection() {
     // below, which is what this is fixing. On a window that is not 16:9 that
     // does trim the picture's long edge; the diagram's own content sits well
     // inside the frame, and the trim falls on the hatching around it.
-    // EVERY layout read the video needs happens here, in one place, before a
-    // single style is written. It used to read the element's box here, write
-    // the transform, and then read the box AGAIN further down to work out the
-    // clip — and a read after a write forces the browser to flush layout on the
-    // spot. Twice per scroll event, on top of the decode a seek already costs,
-    // which is what made the scrub lag behind the finger.
-    const videoZone = videoZoneRef.current;
-    const elW = video.clientWidth;
-    const elH = video.clientHeight;
-    const zoneTop = videoZone ? videoZone.getBoundingClientRect().top : 0;
-    const viewportW = window.innerWidth;
-    const viewportH = window.innerHeight;
-    const { contentW, contentH } = containedPictureSize(elW, elH);
-
-    let scale = VIDEO_REST_SCALE;
-    let shiftY = 0;
+    // Both ends were worked out in measureVideoFraming(), so this reads no
+    // layout at all — it only mixes between two sets of numbers. That matters
+    // twice over: a read after a style write forces the browser to flush layout
+    // on the spot, and the box this used to read is itself animating (the
+    // heading zone collapses over exactly this span), so the mark the picture
+    // was travelling to moved on every frame.
+    const rest = restFramingRef.current;
+    const open = openFramingRef.current;
+    const scale = lerp(rest.scale, open.scale, servicesShrinkT);
+    const shiftY = lerp(rest.shiftY, open.shiftY, servicesShrinkT);
     const shiftX = lerp(VIDEO_REST_SHIFT_X_PX, 0, servicesShrinkT);
-    let clipPath = "";
-
-    if (contentW > 0 && contentH > 0) {
-      // A hair beyond an exact cover, so a fractional viewport can never leave
-      // a one-pixel seam at an edge.
-      const openScale =
-        Math.max(viewportW / contentW, viewportH / contentH) * (1 + VIDEO_COVER_OVERSCAN);
-      // The zone is pulled up above the panel, so the picture's own centre and
-      // the screen's centre are not the same point — close the gap, or a
-      // correctly sized frame still sits high.
-      const openShiftY = viewportH / 2 - (zoneTop + elH / 2);
-
-      scale = lerp(VIDEO_REST_SCALE, openScale, servicesShrinkT);
-      shiftY = lerp(0, openShiftY, servicesShrinkT);
-
-      // object-contain letterboxes the picture inside the element, so its own
-      // edge sits well inside the element's box — and scaling the element drags
-      // that edge around with it, which is where a hairline used to show beside
-      // the ball. Clipping a couple of pixels off the picture's bounds removes
-      // the row the browser resamples; the replacement boundary is a plain CSS
-      // clip through flat white, which has nothing to resample.
-      const insetX = (elW - contentW) / 2 + VIDEO_EDGE_TRIM_PX;
-      const insetY = (elH - contentH) / 2 + VIDEO_EDGE_TRIM_PX;
-      clipPath = `inset(${insetY}px ${insetX}px)`;
-    }
+    const insetX = lerp(rest.insetX, open.insetX, servicesShrinkT);
+    const insetY = lerp(rest.insetY, open.insetY, servicesShrinkT);
 
     video.style.transform = `translateX(${shiftX}px) translateY(${shiftY}px) scale(${scale})`;
-    if (clipPath) video.style.clipPath = clipPath;
+    video.style.clipPath = `inset(${insetY}px ${insetX}px)`;
 
     const statement = statementRef.current;
     if (statement) {
@@ -558,6 +551,51 @@ export default function ServicesSection() {
     headingZone.style.paddingBottom = prevPaddingBottom;
   };
 
+  // Both ends of the picture's framing, derived from the panel's known geometry
+  // rather than read off a layout that is mid-animation. Depends on the heading
+  // zone's natural height, so it runs after measureHeadingZoneHeight().
+  const measureVideoFraming = () => {
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight;
+    const headingH = headingZoneNaturalHeightRef.current;
+
+    // The zone is the panel minus whatever the heading zone is currently
+    // taking, pulled up under it. At rest the heading is at full height; by the
+    // time the picture is open it has collapsed to nothing.
+    const framing = (zoneTop: number, zoneH: number, cover: boolean) => {
+      const { contentW, contentH } = containedPictureSize(screenW, zoneH);
+      if (contentW <= 0 || contentH <= 0) {
+        return { scale: VIDEO_REST_SCALE, shiftY: 0, insetX: 0, insetY: 0 };
+      }
+      return {
+        // A hair beyond an exact cover, so a fractional viewport can never
+        // leave a one-pixel seam at an edge.
+        scale: cover
+          ? Math.max(screenW / contentW, screenH / contentH) * (1 + VIDEO_COVER_OVERSCAN)
+          : VIDEO_REST_SCALE,
+        // The zone is pulled up above the panel, so the picture's own centre
+        // and the screen's centre are not the same point.
+        shiftY: cover ? screenH / 2 - (zoneTop + zoneH / 2) : 0,
+        // object-contain leaves the picture's own edge inside the element's
+        // box, and scaling drags that edge around — which is the hairline that
+        // used to show beside the ball. Clipped through flat white instead.
+        insetX: (screenW - contentW) / 2 + VIDEO_EDGE_TRIM_PX,
+        insetY: (zoneH - contentH) / 2 + VIDEO_EDGE_TRIM_PX,
+      };
+    };
+
+    restFramingRef.current = framing(
+      PANEL_STICKY_TOP_PX + headingH - VIDEO_ZONE_PULL_UP_PX,
+      screenH - headingH + VIDEO_ZONE_PULL_UP_PX,
+      false,
+    );
+    openFramingRef.current = framing(
+      PANEL_STICKY_TOP_PX - VIDEO_ZONE_PULL_UP_PX,
+      screenH + VIDEO_ZONE_PULL_UP_PX,
+      true,
+    );
+  };
+
   // The rows' *exit* should shrink toward the true center of the panel,
   // not whichever point their own (much smaller/off-center) box happens
   // to center on. (The heading isn't involved — it exits as a plain fade,
@@ -604,12 +642,14 @@ export default function ServicesSection() {
     }
 
     measureHeadingZoneHeight();
+    measureVideoFraming();
     measureShrinkOrigins();
     measurePinRange();
     update();
 
     const handleResize = () => {
       measureHeadingZoneHeight();
+      measureVideoFraming();
       measureShrinkOrigins();
       measurePinRange();
       update();
