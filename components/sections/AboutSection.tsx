@@ -33,9 +33,14 @@ const SCALE_ON_RISE_START = 3.1;
 const SCALE_ON_ARRIVAL = 1.62;
 const SCALE_WHILE_FLOATING = 1.85;
 
-// Where the shrunk heading ends up: top right, at the same right edge
-// everything below it is aligned to.
-const HEADING_END_TOP_PX = 104;
+// Where the shrunk heading ends up: on the navbar logo's own line, at the logo's
+// size, against the right margin — so the two read as one header row, the mark
+// on one side and the section on the other. The logo sits 22px down and is 36px
+// tall, giving a centre line at 40.
+const LOGO_LINE_CENTRE_Y_PX = 40;
+
+// How much of the section's last stretch the heading spends fading out.
+const HEADING_EXIT_VH = 0.5;
 
 const CONTENT_MAX_W_PX = 1120;
 const CONTENT_PAD_PX = 24;
@@ -92,6 +97,7 @@ export default function AboutSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
   const { scrollY } = useScroll();
 
+  const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLDivElement>(null);
   const firstLineRef = useRef<HTMLSpanElement>(null);
@@ -118,37 +124,65 @@ export default function AboutSection() {
     const prevQualifier = qualifier.style.width;
     firstLine.style.height = "auto";
     qualifier.style.width = "auto";
-    firstLineHeightRef.current = firstLine.getBoundingClientRect().height;
-    qualifierWidthRef.current = qualifier.getBoundingClientRect().width;
+    // offsetWidth/offsetHeight, NOT getBoundingClientRect: the rect is the box
+    // AFTER the transform, so measuring while the heading is scaled up returns
+    // a width several times the real one — which then got written back as the
+    // span's width and scaled again, leaving the word floating in a gap much
+    // wider than itself. offsetWidth is layout, which transforms do not touch.
+    firstLineHeightRef.current = firstLine.offsetHeight;
+    qualifierWidthRef.current = qualifier.offsetWidth;
     firstLine.style.height = prevFirst;
     qualifier.style.width = prevQualifier;
 
-    // The heading is centred on the screen at rest, and finishes at the right
-    // edge of the content column — so the offset between the two is measured
-    // off the element's own untransformed box.
-    const prevTransform = heading.style.transform;
-    heading.style.transform = "translate(-50%, -50%)";
-    const box = heading.getBoundingClientRect();
-    heading.style.transform = prevTransform;
+    // The heading is centred on the screen at rest and finishes against the
+    // right margin on the logo's line.
+    //
+    // Measured in the state it FINISHES in, not the one it starts in. It opens
+    // as two long lines and ends as one short one, so the block's width and the
+    // words' position inside it are different numbers at each end — using the
+    // opening ones put the finished heading 56px short of the margin and 32px
+    // above the line. So the end state is applied here, measured, and undone.
+    const restoreFirst = firstLine.style.height;
+    const restoreQualifier = qualifier.style.width;
+    firstLine.style.height = "0px";
+    qualifier.style.width = "0px";
 
-    const screenW = window.innerWidth;
-    const screenH = window.innerHeight;
-    const columnW = Math.min(CONTENT_MAX_W_PX, screenW - CONTENT_PAD_PX * 2);
-    const columnRight = (screenW + columnW) / 2;
+    const words = heading.querySelector("h2");
+    const blockW = heading.offsetWidth;
+    const blockH = heading.offsetHeight;
+    // Aimed at the h2, not at the block: the swash hangs below it, so centring
+    // the pair would sit the words above the line by half a swash.
+    const wordsOffsetFromBlockCentre = words
+      ? words.offsetTop + words.offsetHeight / 2 - blockH / 2
+      : 0;
+
+    firstLine.style.height = restoreFirst;
+    qualifier.style.width = restoreQualifier;
+
+    // Against the panel the heading is centred in, NOT against the window. The
+    // panel is 100svh and one scrollbar narrower than the viewport, and using
+    // innerHeight/innerWidth instead put the finished heading 32px above the
+    // logo line and 8px shy of the margin — exactly those two differences.
+    const panel = heading.offsetParent as HTMLElement | null;
+    const panelW = panel ? panel.clientWidth : window.innerWidth;
+    const panelH = panel ? panel.clientHeight : window.innerHeight;
+    const columnW = Math.min(CONTENT_MAX_W_PX, panelW - CONTENT_PAD_PX * 2);
+    const columnRight = (panelW + columnW) / 2;
 
     endOffsetRef.current = {
-      x: columnRight - (screenW / 2 + box.width / 2),
-      y: HEADING_END_TOP_PX + box.height / 2 - screenH / 2,
+      x: columnRight - (panelW / 2 + blockW / 2),
+      y: LOGO_LINE_CENTRE_Y_PX - wordsOffsetFromBlockCentre - panelH / 2,
     };
   };
 
   const update = () => {
+    const section = sectionRef.current;
     const stage = stageRef.current;
     const heading = headingRef.current;
     const firstLine = firstLineRef.current;
     const qualifier = qualifierRef.current;
     const swash = swashRef.current;
-    if (!stage || !heading || !firstLine || !qualifier || !swash) return;
+    if (!section || !stage || !heading || !firstLine || !qualifier || !swash) return;
 
     const screen = window.innerHeight;
     const scrolled = -stage.getBoundingClientRect().top;
@@ -175,6 +209,14 @@ export default function AboutSection() {
     const scale = lerp(floatedScale, 1, travel);
     const end = endOffsetRef.current;
 
+    // Leaves as the section runs out, instead of being cut off by the sticky
+    // box letting go. Measured from the section's own bottom edge so it is the
+    // section ending that takes it, not a scroll distance that would have to be
+    // kept in step with the copy's length.
+    const bottomGap = section.getBoundingClientRect().bottom - screen;
+    const exit = 1 - clamp01(bottomGap / (screen * HEADING_EXIT_VH));
+
+    heading.style.opacity = String(1 - exit);
     heading.style.filter = blur > 0.05 ? `blur(${blur}px)` : "";
     heading.style.transform =
       `translate(-50%, -50%) translate(${end.x * travel}px, ${riseY + end.y * travel}px) scale(${scale})`;
@@ -245,14 +287,18 @@ export default function AboutSection() {
   }
 
   return (
-    <section id="about" data-nav-dark="true" className="relative bg-black">
-      {/* The stage the question opens in. One screen taller than the sequence,
-          because a sticky child stops sticking that far before its container
-          ends — without the extra screen the heading would let go mid-morph. */}
-      <div ref={stageRef} style={{ height: `${(SEQUENCE_VH + 1) * 100}svh` }}>
-        <div className="sticky top-0 h-[100svh] overflow-clip">
-          <div ref={headingRef} className="absolute top-1/2 left-1/2 will-change-transform">
-            <h2 className="text-center font-display text-[40px] leading-[1.08] font-bold whitespace-nowrap text-white md:text-[52px]">
+    <section ref={sectionRef} id="about" data-nav-dark="true" className="relative bg-black">
+      {/* Sticky against the SECTION, not against the opening's scroll room, so
+          the heading stays on the logo's line for the whole section once it has
+          shrunk to it — and then leaves, on its own fade, as the section ends.
+          pointer-events-none so the copy passing under it stays selectable. */}
+      <div className="pointer-events-none sticky top-0 z-20 h-[100svh]">
+        <div ref={headingRef} className="absolute top-1/2 left-1/2 will-change-transform">
+            {/* Deliberately smaller than the logo it sits level with. Matching
+                its height made the two compete for the same line; set under it,
+                the mark stays the thing in the corner and this reads as the
+                label of the section under it. */}
+            <h2 className="text-center font-display text-[26px] leading-none font-bold whitespace-nowrap text-white">
               {/* Height animated to 0, so it is a block that can collapse
                   rather than a <br> that cannot. */}
               <span ref={firstLineRef} className="block overflow-hidden">
@@ -263,27 +309,29 @@ export default function AboutSection() {
                   extra word gaps — which the opening scale then multiplies. */}
               <span>
                 {"מי אני"}
-                {/* No space on either side of it. At this size a word space is
-                    twenty-odd pixels wide, which read as a gap rather than as a
-                    space. Anything that should disappear with the word has to
-                    live INSIDE this span, since it is the span that collapses. */}
+                {/* The space that belongs before the word lives INSIDE this
+                    span, because the span is what collapses — left outside it,
+                    it survives the erase and the finished heading reads
+                    "מי אני ?" with a gap before the question mark. It looked
+                    like a chasm until the width measurement was fixed; that was
+                    the transform being counted twice, not the space. */}
                 <span ref={qualifierRef} className="inline-block overflow-hidden align-bottom">
-                  בעצם
+                  {" בעצם"}
                 </span>
                 {"?"}
               </span>
             </h2>
-            <div ref={swashRef} className="flex justify-center" style={{ opacity: 0 }}>
-              <HeadingSwash className="mt-3 w-[150px] text-white md:w-[190px]" />
-            </div>
+          <div ref={swashRef} className="flex justify-center" style={{ opacity: 0 }}>
+            <HeadingSwash className="mt-2 w-[62px] text-white" />
           </div>
         </div>
       </div>
 
-      {/* Plain flow from here. Pulled up by one screen so the copy begins as
-          the stage's last screen of sticky scrolling runs out, instead of after
-          a screen of black with nothing in it. */}
-      <div className="mx-auto -mt-[100svh] max-w-[1120px] px-6 pt-[212px] pb-32 md:pb-40">
+      {/* The opening's scroll room. Pulled up over the sticky box above so the
+          two share the same screen rather than stacking. */}
+      <div ref={stageRef} aria-hidden="true" className="-mt-[100svh]" style={{ height: `${SEQUENCE_VH * 100}svh` }} />
+
+      <div className="mx-auto max-w-[1120px] px-6 pt-[212px] pb-32 md:pb-40">
         <AboutBody />
       </div>
     </section>
