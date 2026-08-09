@@ -48,12 +48,6 @@ const SPACER_PX = 35;
 // Everything below is expressed against these numbers, so re-cutting the clip
 // means re-measuring it and editing this block, not hunting constants.
 const CUE_PAPER_OPENS = 1.3;
-const CUE_DIAGRAM_FLAT = 3.4;
-const CUE_CRUMPLE_STARTS = 6.3;
-const CUE_BALL_REFORMED = 7.0;
-const CUE_PLANE_TURN = 12.2;
-const CUE_PLANE_FORMED = 13.0;
-const CUE_PLANE_GONE = 18.7;
 const CLIP_SECONDS = 578 / 30;
 
 // The Services list leaves as the paper starts to open, and the same value
@@ -111,76 +105,29 @@ const PANEL_STICKY_TOP_PX = -20;
 const HEADING_ZONE_PADDING_TOP_PX = 44;
 const HEADING_ZONE_PADDING_BOTTOM_PX = 8;
 
-// Scroll does not map straight onto the clip's timeline. It runs through this
-// table of (progress, clip time) points and interpolates between them, which
-// makes three different things expressible with one mechanism:
+// Scroll runs straight onto the clip: progress 0 to 1 is time 0 to the end,
+// at one constant rate. No holds and no fast stretches.
 //
-//   two points at the same TIME  -> a hold: the clip freezes while scrolling
-//                                   keeps accumulating, so the page stops on
-//                                   the content instead of sliding past it
-//   a wide progress span         -> that stretch reads at normal speed
-//   a narrow one                 -> it passes quickly
+// It was shaped before — two screens on each transformation, a hold on the flat
+// diagram, the dead air hurried past — and the shaping is what wrecked it. Each
+// change of rate is a place where the paper visibly speeds up or slows down
+// under a finger moving at one speed, and the clip is one continuous motion, so
+// every one of those reads as a stutter in the animation rather than as pacing.
+// A recorded motion wants to be played at the speed it was animated at.
 //
-// It replaces a pair of simultaneous equations that could only express holds,
-// and only at one rate. The dead stretch in the middle of this clip is the
-// reason: five seconds of a ball doing nothing would otherwise have cost about
-// four and a half screens of scrolling to sit through.
+// The rate is the one the opening was originally tuned to: 88.8vh per second of
+// clip. SCRUB_VH is that rate times the clip's length.
 //
 // Still arithmetic in both directions, so scrolling back up runs the paper
 // backwards through exactly the same frames.
-//
-// Scroll is spent on how much the PICTURE changes, not on how much clip time
-// passes. Splitting it by time was the mistake it replaces: the crumple back
-// into a ball and the turn into a plane are each under a second, so they got
-// about half a screen apiece and went by unnoticed, while the plane receding
-// afterwards is nearly six seconds of very little and got five screens, which
-// is what made it feel stuck in mid-air.
-//
-// So the two transformations get two screens each, and the flight that follows
-// gets less than the stretch before it. The vh figures each span is worth:
-//
-//   115  ball at rest, services list beside it
-//   230  it opens out, the diagram is revealed
-//   100  held flat, to read the diagram
-//    90  still flat, nothing new happening
-//   200  it crumples back into a ball          <- an event, so: room
-//    60  the ball sits there — dead air from the edit, hurried past
-//   200  it turns into a plane                 <- an event, so: room
-//   180  the plane flies out of frame
-//    40  empty white, into the tail
-const SCRUB_VH = 1215;
-const TIMELINE: readonly { progress: number; time: number }[] = [
-  { progress: 0.0, time: 0 },
-  { progress: 0.0947, time: CUE_PAPER_OPENS },
-  { progress: 0.284, time: CUE_DIAGRAM_FLAT },
-  // One screen of hold, not two. Two was long enough that reading turned into
-  // waiting: you scroll to get out of it, and arrive at the far side already
-  // moving fast enough to run straight through what comes next.
-  { progress: 0.3663, time: CUE_DIAGRAM_FLAT },
-  { progress: 0.4403, time: CUE_CRUMPLE_STARTS },
-  { progress: 0.6049, time: CUE_BALL_REFORMED },
-  { progress: 0.6543, time: CUE_PLANE_TURN },
-  { progress: 0.8189, time: CUE_PLANE_FORMED },
-  { progress: 0.9671, time: CUE_PLANE_GONE },
-  { progress: 1.0, time: CLIP_SECONDS },
-];
-
-function progressToTime(progress: number) {
-  const p = clamp01(progress);
-  for (let i = 1; i < TIMELINE.length; i++) {
-    const from = TIMELINE[i - 1];
-    const to = TIMELINE[i];
-    if (p <= to.progress) {
-      const span = to.progress - from.progress;
-      const t = span <= 0 ? 1 : (p - from.progress) / span;
-      return from.time + (to.time - from.time) * t;
-    }
-  }
-  return CLIP_SECONDS;
-}
+const SCRUB_VH = Math.round(88.8 * CLIP_SECONDS);
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
+}
+
+function progressToTime(progress: number) {
+  return clamp01(progress) * CLIP_SECONDS;
 }
 
 // Where object-contain actually puts the picture inside a box of elW x elH.
