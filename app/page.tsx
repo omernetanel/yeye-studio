@@ -46,9 +46,15 @@ export default async function Home() {
               a summary of what was just shown, where ahead of it it interrupted
               the page before anything had happened yet. */}
           <StatementSection />
-          <ContactStage />
+          {/* Who, then the work, then the ask.
+              The contact stage used to sit here, ahead of both — so the page
+              asked for an enquiry before the visitor knew who was behind the
+              studio or had seen a single thing it made. This section exists to
+              earn that enquiry, so it comes first, and the work comes between
+              them. */}
           <AboutSection />
           <ProjectsSection />
+          <ContactStage />
           <CTASection />
           <Footer light />
         </HomeSwitch>

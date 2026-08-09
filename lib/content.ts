@@ -34,22 +34,25 @@ export const services = [
   },
 ];
 
-// What is actually true about how the work gets done. No counts and no client
-// logos on purpose: with a young practice those numbers are small, and putting
-// a small number in large type advertises the gap rather than closing it. These
-// three claims cost nothing to state and are worth more, because a studio that
-// hands work to juniors or starts from a template cannot state them at all.
+// The three things a client needs to believe before hiring one person instead
+// of a studio. Not achievements and not numbers: each one is a plain fact about
+// how the work is arranged, which an agency that subcontracts or assembles
+// templates could not honestly write — where "Design-First" and a project count
+// are things anyone can claim and nobody can check.
 export const aboutFacts = [
   {
-    title: "איש אחד, מקצה לקצה",
-    description: "העיצוב והפיתוח באותן ידיים, כך ששום כוונה לא הולכת לאיבוד בדרך.",
+    title: "אתם עובדים איתי.",
+    description:
+      "אין מנהל פרויקט או אנשים באמצע. התקשורת, החשיבה והעבודה הן ישירות מולי.",
   },
   {
-    title: "הכל נבנה מאפס",
-    description: "בלי תבניות ובלי תוספים. כל פרויקט נבנה בדיוק למה שהוא צריך לעשות.",
+    title: "אני מעצב וגם בונה.",
+    description:
+      "אני מלווה את הפרויקט מהרעיון והחוויה ועד הפיתוח והמוצר שעולה בפועל לאוויר.",
   },
   {
-    title: "מדברים ישירות איתי",
-    description: "בלי מנהל פרויקט באמצע, בלי מתווך, ובלי לחכות בתור.",
+    title: "שום דבר לא מגיע מתבנית.",
+    description:
+      "כל פרויקט מתחיל מהעסק, מהמטרה ומהבעיה שצריך לפתור — ורק משם מגיעים לעיצוב.",
   },
 ];
