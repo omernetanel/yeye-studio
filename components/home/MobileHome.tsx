@@ -24,9 +24,10 @@ export default function MobileHome() {
           versions whose paper sequence cannot, and this one ends on that line
           itself — rendering both would show the sentence twice. */}
       <MobileServices />
-      <ContactStage />
+      {/* Who, then the work, then the ask — see the note in app/page.tsx. */}
       <AboutSection />
       <ProjectsSection />
+      <ContactStage />
       <CTASection />
       <Footer light />
     </>
