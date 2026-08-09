@@ -9,14 +9,17 @@ import { services } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
 // The words live in lib/content because the mobile page renders the same four
-// services and the same three facts in a layout that shares nothing else with
-// this one. The icons stay here: they belong to this row design, and the mobile
-// squares do not use them, so shipping them through the shared module would put
-// an icon set in a bundle that never draws it.
+// services in a layout that shares nothing else with this one. The icons stay
+// here: they belong to this row design.
 const SERVICE_ICONS = [ShoppingBag, Rocket, Layers, PenTool];
 
 const VIDEO_SRC = "/videos/servicesbg.mp4";
 const POSTER_SRC = "/images/servicesbg-poster.jpg";
+// The source is ~8.15s, but the phase math below always reads the real
+// value off the element once its metadata loads (see videoDurationRef) —
+// this is only what renders before that, and a safety fallback if
+// `loadedmetadata` never fires for some reason.
+const VIDEO_DURATION_FALLBACK = 8.15;
 // The clip's own frame rate. Scroll is quantised onto this grid so the scrub
 // only ever seeks when the frame on screen would actually change.
 const VIDEO_FPS = 30;
@@ -33,29 +36,37 @@ const VIDEO_FPS = 30;
 const SPACER_PX = 35;
 
 
-// What the clip does, measured off the file frame by frame rather than taken
-// from the edit — 578 frames at 30fps:
+// This single clip now carries TWO overlaid content phases across its
+// timeline, converted from the source edit's own 30fps timecodes:
 //
-//   0.0 - 1.3   ball at rest, Services list beside it
-//   1.3 - 3.4   the ball opens out and the process diagram is revealed
-//   3.4 - 6.3   the sheet lies flat: the diagram, readable
-//   6.3 - 7.0   it crumples back into a ball
-//   7.0 - 12.2  the ball just sits there — dead air left over from the edit
-//  12.2 - 13.0  it turns into a paper plane
-//  13.0 - 18.7  the plane flies out of frame
-//  18.7 - 19.27 empty white
+// 0s               -> ball at rest (off-center right), Services list shown
+// 00:00:02:02 (2.07s) -> clip starts playing; Services list shrinks/fades
+//                        out as the paper begins unfolding
+// 00:00:02:29 (2.97s) -> paper is fully open/flat; About fades in on top
+//                        of it
+// 00:00:05:06 (5.2s)  -> About shrinks/fades out as the paper starts
+//                        re-crumpling, taking it with it — same shrink-
+//                        into-the-page treatment as Services
+// ~8.15s (clip end)   -> paper fully re-formed into a small, centered
+//                        ball (CTASection picks up from here as a plain
+//                        static image once the pin releases)
 //
-// Everything below is expressed against these numbers, so re-cutting the clip
-// means re-measuring it and editing this block, not hunting constants.
-const CUE_PAPER_OPENS = 1.3;
-const CLIP_SECONDS = 578 / 30;
-
-// The Services list leaves as the paper starts to open, and the same value
-// carries the picture from its rest framing out to full screen — which is why
-// the two are one constant and not two: the framing is meant to change exactly
-// while the text is going, and to be settled by the time the diagram lands.
-const SERVICES_FADE_START_SECONDS = CUE_PAPER_OPENS;
-const SERVICES_FADE_END_SECONDS = 2.3;
+// video.currentTime maps linearly across the ENTIRE pinned range (progress
+// 0 -> 1), so it's automatically, exactly reversible on scroll-up.
+// A beat where the Services text sits fully visible once the panel pins,
+// before it starts fading at all. Without it the fade begins so early in
+// the pinned range that a single normal scroll flick covers the entire
+// fade window, so the heading reads as vanishing the instant it arrives.
+// Shifts the Services fade and About's entrance together (About's exit is
+// deliberately left where it is), so the gap between the two phases —
+// and About's own fade-in duration — stay exactly as tuned.
+const SERVICES_HOLD_SECONDS = 0.5;
+const SERVICES_FADE_START_SECONDS = 2 + 2 / 30 - 0.8 + SERVICES_HOLD_SECONDS;
+const SERVICES_FADE_END_SECONDS = 2 + 29 / 30 - 1.1 + SERVICES_HOLD_SECONDS;
+const ABOUT_FADE_IN_START_SECONDS = SERVICES_FADE_END_SECONDS + 0.5;
+const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.8 + 0.5 + SERVICES_HOLD_SECONDS;
+const ABOUT_FADE_OUT_START_SECONDS = 5 + 6 / 30 - 0.5;
+const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 const CONTENT_SHRINK_SCALE = 0.6;
 const VIDEO_REST_SCALE = 1.10;
 const VIDEO_REST_SHIFT_X_PX = 45;
@@ -64,16 +75,33 @@ const VIDEO_REST_SHIFT_X_PX = 45;
 // letterboxed element so it can be trimmed (see update()).
 const VIDEO_ASPECT = 16 / 9;
 const VIDEO_EDGE_TRIM_PX = 2;
+
+// The video zone is deliberately TALLER than the viewport (it is pulled up
+// 86px so the resting ball fits the screen), which means object-contain sizes
+// the sheet to the zone rather than to the screen. While the paper is a small
+// ball that is invisible, but the moment it unfolds to fill the frame it runs
+// off an edge — and shifting it only ever trades a cut top for a cut bottom.
+// So the open state also scales down to whatever actually fits the viewport,
+// and shifts to sit centred in it.
+const VIDEO_OPEN_SCALE = 0.86;
+const VIDEO_OPEN_SHIFT_Y_PX = 63;
+
+// The ball starts unfolding into the plane at ~11.1s (measured off the clip),
+// so the frame finishes opening to full bleed just before that and the plane
+// is never anything but edge to edge. The window starts after 8.13s, which is
+// where the old clip ended — so none of the tuning above is touched.
+const PLANE_FULLBLEED_START_SECONDS = 9.3;
+const PLANE_FULLBLEED_END_SECONDS = 11.0;
 // A hair beyond an exact cover, so a fractional viewport height can never
-// leave a one-pixel seam at an edge once the picture opens out.
-const VIDEO_COVER_OVERSCAN = 0.02;
+// leave a one-pixel seam at an edge.
+const VIDEO_FULLBLEED_OVERSCAN = 0.02;
 
 // The closing statement rises into the bottom of the pinned frame while the
 // plane is still in flight, and stays there: the clip's last second is plain
 // white, so once scrolling reaches the end the whole screen is the sentence on
 // white, held until the pin releases into the contact stage.
-const STATEMENT_FADE_IN_START_SECONDS = 15.0;
-const STATEMENT_FADE_IN_END_SECONDS = 16.8;
+const STATEMENT_FADE_IN_START_SECONDS = 13.0;
+const STATEMENT_FADE_IN_END_SECONDS = 14.4;
 const STATEMENT_RISE_PX = 26;
 
 // Once the clip has run out, the pin does NOT release straight away. There is
@@ -95,11 +123,11 @@ const STATEMENT_TAIL_RISE_PX = 72;
 // (a literal Tailwind value, can't reference this constant directly).
 const PANEL_STICKY_TOP_PX = -20;
 
-// How far the video zone is pulled up under the heading. Must stay in sync with
-// the `-mt-[86px]` on the zone's own className below (a literal Tailwind value,
-// which cannot reference this constant).
-const VIDEO_ZONE_PULL_UP_PX = 86;
-
+// The panel is stuck slightly ABOVE the viewport top, so its own centre sits
+// PANEL_STICKY_TOP_PX above the screen's. Cancelling that exactly is what puts
+// the block on the centre of the SCREEN rather than the centre of the panel —
+// which matters because that same point is what it scales into on the way out.
+const ABOUT_SHIFT_Y_PX = -PANEL_STICKY_TOP_PX;
 
 // The heading zone's rest-state padding — must be animated down to 0 in
 // lockstep with its own `height` (see update()), not left as a fixed
@@ -110,29 +138,42 @@ const VIDEO_ZONE_PULL_UP_PX = 86;
 const HEADING_ZONE_PADDING_TOP_PX = 44;
 const HEADING_ZONE_PADDING_BOTTOM_PX = 8;
 
-// Scroll runs straight onto the clip: progress 0 to 1 is time 0 to the end,
-// at one constant rate. No holds and no fast stretches.
-//
-// It was shaped before — two screens on each transformation, a hold on the flat
-// diagram, the dead air hurried past — and the shaping is what wrecked it. Each
-// change of rate is a place where the paper visibly speeds up or slows down
-// under a finger moving at one speed, and the clip is one continuous motion, so
-// every one of those reads as a stutter in the animation rather than as pacing.
-// A recorded motion wants to be played at the speed it was animated at.
-//
-// The rate is the one the opening was originally tuned to: 88.8vh per second of
-// clip. SCRUB_VH is that rate times the clip's length.
-//
-// Still arithmetic in both directions, so scrolling back up runs the paper
-// backwards through exactly the same frames.
-const SCRUB_VH = Math.round(88.8 * CLIP_SECONDS);
+// Scroll no longer maps straight onto the clip's timeline. At each of these
+// moments the clip FREEZES while scrolling keeps accumulating, so the page
+// genuinely stops on the content instead of sliding past it — and because it
+// is still scroll-driven, it stays exactly reversible on the way back up.
+// `share` is the fraction of the whole pinned range spent held.
+// The share is derived, not eyeballed. It and the wrapper height below are
+// solved together from two constraints, so that lengthening the clip changes
+// nothing about how the opening 8.13s feel:
+//   scroll-per-second equal:  (1 - Sn)/Dn * Hn = (1 - So)/Do * Ho
+//   hold length equal:        Sn * Hn          = So * Ho
+// With Do = 8.133s, So = 0.13 and Dn = 18.467s that gives Hn = 2.1053 * Ho
+// and Sn = 0.13 / 2.1053. Both numbers below are those results.
+const TIME_HOLDS: { at: number; share: number }[] = [
+  { at: 3.7, share: 0.0617 }, // "מי אני" fully up, paper flat
+];
+const TOTAL_HOLD_SHARE = TIME_HOLDS.reduce((sum, h) => sum + h.share, 0);
+
+function progressToTime(progress: number, duration: number) {
+  // Scroll-per-second for the moving stretches, once the holds have taken
+  // their share of the range.
+  const rate = (1 - TOTAL_HOLD_SHARE) / duration;
+  let consumed = 0;
+  let fromTime = 0;
+  for (const hold of TIME_HOLDS) {
+    const span = (hold.at - fromTime) * rate;
+    if (progress <= consumed + span) return fromTime + (progress - consumed) / rate;
+    consumed += span;
+    if (progress <= consumed + hold.share) return hold.at;
+    consumed += hold.share;
+    fromTime = hold.at;
+  }
+  return fromTime + (progress - consumed) / rate;
+}
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
-}
-
-function progressToTime(progress: number) {
-  return clamp01(progress) * CLIP_SECONDS;
 }
 
 // Where object-contain actually puts the picture inside a box of elW x elH.
@@ -279,6 +320,81 @@ function ServicesListBlock() {
   );
 }
 
+
+/**
+ * The process, drawn on the open sheet.
+ *
+ * It sits in the slot the "who I am" block used to occupy, on the same cues and
+ * with the same grow-and-shrink, because that slot is exactly "whatever is
+ * printed on the paper while it is open" — and a diagram is a better use of an
+ * open page than a column of prose was, since it is a thing to look at rather
+ * than to read around.
+ *
+ * Drawn in the browser rather than burned into the clip: it stays sharp at any
+ * size, the wording is editable, and it does not cost a re-export and a
+ * re-measure of every timing in this file to change a word.
+ */
+const PROCESS_STEPS = [
+  { number: "01", title: "מכירים את העסק" },
+  { number: "02", title: "מעצבים את החוויה" },
+  { number: "03", title: "בונים את זה נכון" },
+  { number: "04", title: "עולים לאוויר" },
+];
+
+function ProcessDiagram() {
+  return (
+    <div className="mx-auto w-full max-w-[760px] px-6 text-black">
+      <div className="relative aspect-[4/3] w-full">
+        {/* The ring the four steps sit on. Stroked thin and dashed so it reads
+            as a sketch on the page rather than as a UI element printed over it. */}
+        <svg viewBox="0 0 400 300" className="absolute inset-0 h-full w-full" aria-hidden="true">
+          <ellipse
+            cx="200"
+            cy="150"
+            rx="150"
+            ry="112"
+            fill="none"
+            stroke="currentColor"
+            strokeOpacity="0.22"
+            strokeWidth="1"
+            strokeDasharray="4 6"
+          />
+        </svg>
+
+        {/* The wordmark at the centre, which is what the four steps are around. */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+          <span className="font-display text-[26px] leading-none font-bold tracking-[0.14em] text-black/70 md:text-[32px]">
+            YEYE
+          </span>
+          <span className="mt-1 block font-body text-[10px] tracking-[0.3em] text-black/35 uppercase">
+            process
+          </span>
+        </div>
+
+        {PROCESS_STEPS.map((step, index) => (
+          <div
+            key={step.number}
+            className={cn(
+              "absolute w-[38%] text-center",
+              index === 0 && "top-0 left-1/2 -translate-x-1/2",
+              index === 1 && "top-1/2 left-0 -translate-y-1/2",
+              index === 2 && "bottom-0 left-1/2 -translate-x-1/2",
+              index === 3 && "top-1/2 right-0 -translate-y-1/2",
+            )}
+          >
+            <span className="font-display text-[13px] leading-none font-bold tracking-[0.14em] text-black/30">
+              {step.number}
+            </span>
+            <h3 className="mt-2 font-display text-[17px] leading-[1.2] font-bold text-balance text-black md:text-[20px]">
+              {step.title}
+            </h3>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const BackgroundVideo = forwardRef<HTMLVideoElement, { className?: string; autoPlay?: boolean }>(
   function BackgroundVideo({ className, autoPlay = false }, ref) {
     return (
@@ -302,9 +418,9 @@ const BackgroundVideo = forwardRef<HTMLVideoElement, { className?: string; autoP
 );
 
 export default function ServicesSection() {
-  // Only ever rendered on desktop — HomeSwitch hands phones MobileServices
-  // instead, which is a design of its own rather than this one narrowed.
-  const skipDesktopMotion = usePrefersReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  // Only ever rendered on desktop — HomeSwitch hands phones MobileServices.
+  const skipDesktopMotion = prefersReducedMotion;
 
   const wrapperRef = useRef<HTMLElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
@@ -315,6 +431,7 @@ export default function ServicesSection() {
   const headingZoneRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLDivElement>(null);
   const servicesContentRef = useRef<HTMLDivElement>(null);
+  const aboutContentRef = useRef<HTMLDivElement>(null);
   // About's exit-phase transform-origin (screen center, in pixels relative
   // to its own box) — measured live in update() while About is fully
   // visible. "50% 50%" (its own center, which sits near screen center
@@ -325,23 +442,6 @@ export default function ServicesSection() {
   // driving that same height down toward 0 as the Services text fades.
   const headingZoneNaturalHeightRef = useRef(0);
   const headingShineDoneRef = useRef(false);
-
-  // The picture's framing at each end of the opening, worked out once per
-  // layout instead of measured on every frame.
-  //
-  // Measuring it live was a real bug, and an instructive one: the heading zone
-  // above the video collapses to nothing over the SAME span that opens the
-  // picture, so the zone the picture sits in is growing and moving while the
-  // picture is travelling to its mark. Reading that box each frame meant the
-  // target moved every frame, which is what made the open visibly jump. The
-  // version before it survived on hardcoded numbers, which were immune to this
-  // precisely because they were not measured.
-  //
-  // Both ends are known without measuring anything: the panel is one screen
-  // tall stuck at PANEL_STICKY_TOP_PX, and the zone inside it is pulled up by
-  // VIDEO_ZONE_PULL_UP_PX and takes whatever the heading zone leaves.
-  const restFramingRef = useRef({ scale: VIDEO_REST_SCALE, shiftY: 0, insetX: 0, insetY: 0 });
-  const openFramingRef = useRef({ scale: VIDEO_REST_SCALE, shiftY: 0, insetX: 0, insetY: 0 });
 
   // Analytical, not scrollYProgress-derived — same reasoning as the Hero's
   // own pin: a target-scoped scrollYProgress motion value lags an instant
@@ -354,6 +454,7 @@ export default function ServicesSection() {
   // Where the clip's own scrub finishes. Everything between here and pinEnd is
   // the statement's tail, so the clip must not be mapped across it.
   const clipEndScrollYRef = useRef(0);
+  const videoDurationRef = useRef(VIDEO_DURATION_FALLBACK);
   const videoReadyRef = useRef(false);
   // Which video frame was last asked for, so an unchanged frame costs nothing.
   const lastSeekFrameRef = useRef(-1);
@@ -366,7 +467,8 @@ export default function ServicesSection() {
     const headingZone = headingZoneRef.current;
     const heading = headingRef.current;
     const servicesContent = servicesContentRef.current;
-    if (!wrapper || !video || !headingZone || !heading || !servicesContent) return;
+    const aboutContent = aboutContentRef.current;
+    if (!wrapper || !video || !headingZone || !heading || !servicesContent || !aboutContent) return;
 
     const rawScrollY = scrollY.get();
     // Against clipEnd, not pinEnd — the statement's tail past clipEnd is not
@@ -377,7 +479,7 @@ export default function ServicesSection() {
     // video.currentTime is a pure linear function of scroll progress
     // across the whole pinned range, so it's automatically, exactly
     // reversible on scroll-up; no separate "rewind" logic needed.
-    const targetTime = progressToTime(progress);
+    const targetTime = progressToTime(progress, videoDurationRef.current);
     // Seek to the FRAME the target time falls in, not to the exact time, and
     // only when that frame actually changes.
     //
@@ -401,37 +503,45 @@ export default function ServicesSection() {
 
     const servicesShrinkT = smoothstep(mapRange(targetTime, SERVICES_FADE_START_SECONDS, SERVICES_FADE_END_SECONDS, 0, 1));
 
-    // The rest state is left exactly as it was tuned: the ball slightly
-    // enlarged and shifted right, clear of the row text beside it.
-    //
-    // Where it eases TO is the part that changed. It used to shrink to a fixed
-    // 0.86 and nudge down 63px, numbers picked by eye against one window, and
-    // the sheet still ran off an edge — the zone it sits in is taller than the
-    // screen, so "fits the zone" never meant "fits the screen".
-    //
-    // It now opens to cover the screen exactly: edge to edge, no margin on any
-    // side, solved live from the real boxes rather than guessed, so it holds at
-    // any window size instead of one. Cover and not contain because the clip is
-    // 16:9 and a window rarely is — containing it would leave bands above and
-    // below, which is what this is fixing. On a window that is not 16:9 that
-    // does trim the picture's long edge; the diagram's own content sits well
-    // inside the frame, and the trim falls on the hatching around it.
-    // Both ends were worked out in measureVideoFraming(), so this reads no
-    // layout at all — it only mixes between two sets of numbers. That matters
-    // twice over: a read after a style write forces the browser to flush layout
-    // on the spot, and the box this used to read is itself animating (the
-    // heading zone collapses over exactly this span), so the mark the picture
-    // was travelling to moved on every frame.
-    const rest = restFramingRef.current;
-    const open = openFramingRef.current;
-    const scale = lerp(rest.scale, open.scale, servicesShrinkT);
-    const shiftY = lerp(rest.shiftY, open.shiftY, servicesShrinkT);
-    const shiftX = lerp(VIDEO_REST_SHIFT_X_PX, 0, servicesShrinkT);
-    const insetX = lerp(rest.insetX, open.insetX, servicesShrinkT);
-    const insetY = lerp(rest.insetY, open.insetY, servicesShrinkT);
+    // The ball sits slightly enlarged and shifted right at rest — clear
+    // of the row text beside it — easing back to its natural scale/
+    // position as the paper starts unfolding, same span as everything
+    // else fading out.
+    let scale = lerp(VIDEO_REST_SCALE, VIDEO_OPEN_SCALE, servicesShrinkT);
+    let shiftX = lerp(VIDEO_REST_SHIFT_X_PX, 0, servicesShrinkT);
+    let shiftY = lerp(0, VIDEO_OPEN_SHIFT_Y_PX, servicesShrinkT);
+
+    // Then, once the ball is about to unfold into the plane, the frame opens
+    // out to full bleed. Up to here the picture is deliberately smaller than
+    // the panel, which is right for the ball but wrong for the plane: it would
+    // fly off the picture's own edge with white page still around it, and read
+    // as being cut in mid-air rather than leaving the screen. Everything is
+    // measured live rather than hardcoded, so it covers at any viewport.
+    const panel = panelRef.current;
+    const videoZone = videoZoneRef.current;
+    const fullBleedT = smoothstep(
+      mapRange(targetTime, PLANE_FULLBLEED_START_SECONDS, PLANE_FULLBLEED_END_SECONDS, 0, 1),
+    );
+    if (fullBleedT > 0 && panel && videoZone) {
+      const { contentW, contentH } = containedPictureSize(video.clientWidth, video.clientHeight);
+      if (contentW > 0 && contentH > 0) {
+        const panelW = panel.clientWidth;
+        const panelH = panel.clientHeight;
+        // Cover, not contain — the clip's own background is the same flat
+        // white as the page, so cropping its long edge costs nothing.
+        const coverScale =
+          Math.max(panelW / contentW, panelH / contentH) * (1 + VIDEO_FULLBLEED_OVERSCAN);
+        // The zone is pulled up above the panel, so the picture's centre and
+        // the panel's centre are not the same point; close the gap or the
+        // grown frame sits off-centre.
+        const centreShiftY = panelH / 2 - (videoZone.offsetTop + video.clientHeight / 2);
+        scale = lerp(scale, coverScale, fullBleedT);
+        shiftX = lerp(shiftX, 0, fullBleedT);
+        shiftY = lerp(shiftY, centreShiftY, fullBleedT);
+      }
+    }
 
     video.style.transform = `translateX(${shiftX}px) translateY(${shiftY}px) scale(${scale})`;
-    video.style.clipPath = `inset(${insetY}px ${insetX}px)`;
 
     const statement = statementRef.current;
     if (statement) {
@@ -456,6 +566,23 @@ export default function ServicesSection() {
       const y = lerp(STATEMENT_RISE_PX, 0, statementT) + lerp(0, -STATEMENT_TAIL_RISE_PX, tailT);
       statement.style.opacity = String(statementT);
       statement.style.transform = `translateY(${y}px) scale(${lerp(1, STATEMENT_TAIL_SCALE, tailT)})`;
+    }
+
+    // object-contain letterboxes the frame inside the element, so the picture
+    // has its own edge sitting well inside the element's box — and scaling the
+    // element drags that edge around with it. That edge is where a hairline has
+    // been showing up. Clipping a couple of pixels off the picture's own bounds
+    // removes the edge row the browser resamples, and the replacement boundary
+    // is a plain CSS clip through flat white, which has nothing to resample.
+    // Computed from the live box rather than hardcoded, so it tracks the
+    // element at any viewport and any scale.
+    const elW = video.clientWidth;
+    const elH = video.clientHeight;
+    if (elW > 0 && elH > 0) {
+      const { contentW, contentH } = containedPictureSize(elW, elH);
+      const insetX = (elW - contentW) / 2 + VIDEO_EDGE_TRIM_PX;
+      const insetY = (elH - contentH) / 2 + VIDEO_EDGE_TRIM_PX;
+      video.style.clipPath = `inset(${insetY}px ${insetX}px)`;
     }
 
     // The heading exits as a plain fade — no scale/shrink of its own
@@ -506,6 +633,32 @@ export default function ServicesSection() {
     // swallow a click/hover.
     servicesContent.style.pointerEvents = servicesShrinkT > 0.5 ? "none" : "auto";
 
+    const aboutFadeInT = smoothstep(mapRange(targetTime, ABOUT_FADE_IN_START_SECONDS, ABOUT_FADE_IN_END_SECONDS, 0, 1));
+    const aboutShrinkT = smoothstep(mapRange(targetTime, ABOUT_FADE_OUT_START_SECONDS, ABOUT_FADE_OUT_END_SECONDS, 0, 1));
+    // Same combined curve drives both opacity and scale — small and
+    // invisible before it starts, growing to full size as it fades in,
+    // then shrinking back down as it fades out, instead of popping in at
+    // full size the instant opacity starts rising.
+    const aboutGrowT = aboutFadeInT * (1 - aboutShrinkT);
+    // Both the entrance and the exit scale about the centre of the screen, so
+    // the block grows out of that point and collapses straight back into it
+    // rather than drifting toward a corner on the way out.
+    //
+    // The origin is recomputed on every frame where the block is at its own
+    // full size, from its live box: the element is centred by flex, but the
+    // panel it sits in is only one screen tall while the block's own box is
+    // not necessarily the same height, so "the middle of the element" and
+    // "the middle of the screen" are not the same point and the difference
+    // moves with the viewport. Measuring it live also means a fast flick that
+    // skips the fully-grown frame entirely cannot leave a stale origin behind
+    // — the fallback below is already screen-centre in element terms.
+    // The block is centred on the screen, so its own centre IS the screen
+    // centre and a plain 50% 50% origin grows it out of that point and
+    // collapses it straight back into it. Nothing measured, so there is no
+    // origin that can go stale when a fast flick skips a frame.
+    aboutContent.style.transformOrigin = "50% 50%";
+    aboutContent.style.opacity = String(aboutGrowT);
+    aboutContent.style.transform = `translateY(${ABOUT_SHIFT_Y_PX}px) scale(${lerp(CONTENT_SHRINK_SCALE, 1, aboutGrowT)})`;
   };
 
   const measurePinRange = () => {
@@ -551,51 +704,6 @@ export default function ServicesSection() {
     headingZone.style.paddingBottom = prevPaddingBottom;
   };
 
-  // Both ends of the picture's framing, derived from the panel's known geometry
-  // rather than read off a layout that is mid-animation. Depends on the heading
-  // zone's natural height, so it runs after measureHeadingZoneHeight().
-  const measureVideoFraming = () => {
-    const screenW = window.innerWidth;
-    const screenH = window.innerHeight;
-    const headingH = headingZoneNaturalHeightRef.current;
-
-    // The zone is the panel minus whatever the heading zone is currently
-    // taking, pulled up under it. At rest the heading is at full height; by the
-    // time the picture is open it has collapsed to nothing.
-    const framing = (zoneTop: number, zoneH: number, cover: boolean) => {
-      const { contentW, contentH } = containedPictureSize(screenW, zoneH);
-      if (contentW <= 0 || contentH <= 0) {
-        return { scale: VIDEO_REST_SCALE, shiftY: 0, insetX: 0, insetY: 0 };
-      }
-      return {
-        // A hair beyond an exact cover, so a fractional viewport can never
-        // leave a one-pixel seam at an edge.
-        scale: cover
-          ? Math.max(screenW / contentW, screenH / contentH) * (1 + VIDEO_COVER_OVERSCAN)
-          : VIDEO_REST_SCALE,
-        // The zone is pulled up above the panel, so the picture's own centre
-        // and the screen's centre are not the same point.
-        shiftY: cover ? screenH / 2 - (zoneTop + zoneH / 2) : 0,
-        // object-contain leaves the picture's own edge inside the element's
-        // box, and scaling drags that edge around — which is the hairline that
-        // used to show beside the ball. Clipped through flat white instead.
-        insetX: (screenW - contentW) / 2 + VIDEO_EDGE_TRIM_PX,
-        insetY: (zoneH - contentH) / 2 + VIDEO_EDGE_TRIM_PX,
-      };
-    };
-
-    restFramingRef.current = framing(
-      PANEL_STICKY_TOP_PX + headingH - VIDEO_ZONE_PULL_UP_PX,
-      screenH - headingH + VIDEO_ZONE_PULL_UP_PX,
-      false,
-    );
-    openFramingRef.current = framing(
-      PANEL_STICKY_TOP_PX - VIDEO_ZONE_PULL_UP_PX,
-      screenH + VIDEO_ZONE_PULL_UP_PX,
-      true,
-    );
-  };
-
   // The rows' *exit* should shrink toward the true center of the panel,
   // not whichever point their own (much smaller/off-center) box happens
   // to center on. (The heading isn't involved — it exits as a plain fade,
@@ -630,6 +738,9 @@ export default function ServicesSection() {
     // — priming it here (safe without a user gesture since it's muted)
     // is what makes every seek afterward actually paint.
     const handleLoadedMetadata = () => {
+      if (Number.isFinite(video.duration) && video.duration > 0) {
+        videoDurationRef.current = video.duration;
+      }
       video.play().then(() => video.pause()).catch(() => {});
       videoReadyRef.current = true;
       update();
@@ -642,14 +753,12 @@ export default function ServicesSection() {
     }
 
     measureHeadingZoneHeight();
-    measureVideoFraming();
     measureShrinkOrigins();
     measurePinRange();
     update();
 
     const handleResize = () => {
       measureHeadingZoneHeight();
-      measureVideoFraming();
       measureShrinkOrigins();
       measurePinRange();
       update();
@@ -671,8 +780,6 @@ export default function ServicesSection() {
     if (!skipDesktopMotion) update();
   });
 
-  // No AboutBlock here any more: "who I am" is its own section now, and it
-  // renders on the page either way.
   if (skipDesktopMotion) {
     return (
       <section id="services" className="relative bg-white px-6 py-16 md:py-20">
@@ -684,16 +791,13 @@ export default function ServicesSection() {
   }
 
   return (
-    // Derived rather than written out, so the scrub range and the height that
-    // has to contain it cannot drift apart: SCRUB_VH of clip, plus the
-    // statement's own tail and park after the clip has finished. The 547px is
-    // the fixed lead-in and pin offset, which are in pixels rather than vh.
-    <section
-      ref={wrapperRef}
-      id="services"
-      className="relative bg-white"
-      style={{ height: `calc(${SCRUB_VH + STATEMENT_TAIL_VH + STATEMENT_PARK_VH}vh + 547px)` }}
-    >
+    // 790vh+260px scaled by the 2.1053 solved for at TIME_HOLDS. The clip is
+    // 2.27x longer than the one this range was tuned against, so leaving the
+    // height alone would have handed the opening 8.13s less than half the
+    // scroll they had and run the whole thing at 2.27x speed.
+    // 1663vh+547px of clip scrub, plus STATEMENT_TAIL_VH + STATEMENT_PARK_VH
+    // for the statement's own tail after the clip has finished.
+    <section ref={wrapperRef} id="services" className="relative h-[calc(1748vh+547px)] bg-white">
       {/* SPACER_PX of perfectly ordinary scrolling before the panel below
           goes sticky — see its own comment up top. */}
       <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />
@@ -764,6 +868,18 @@ export default function ServicesSection() {
             </div>
 
           </div>
+        </div>
+
+        {/* On the PANEL, not inside the video zone. The zone is pulled up 86px
+            and runs taller than a screen, so a box filling it is not centred on
+            the screen — and the screen's centre is exactly the point this block
+            has to grow out of and collapse back into. */}
+        <div
+          ref={aboutContentRef}
+          className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-6"
+          style={{ opacity: 0 }}
+        >
+          <ProcessDiagram />
         </div>
 
         {/* The closing statement, delivered inside the pinned frame rather than
