@@ -46,15 +46,16 @@ export default async function Home() {
               a summary of what was just shown, where ahead of it it interrupted
               the page before anything had happened yet. */}
           <StatementSection />
-          {/* Who, then the work, then the ask.
-              The contact stage used to sit here, ahead of both — so the page
-              asked for an enquiry before the visitor knew who was behind the
-              studio or had seen a single thing it made. This section exists to
-              earn that enquiry, so it comes first, and the work comes between
-              them. */}
+          {/* The contact stage sits between the closing statement and "who I
+              am" rather than after the work. On paper the argument for the
+              other order is better — know the person, see the work, then be
+              asked — but watched end to end this one is simply more alive: the
+              zoom out to the room lands while the paper sequence is still
+              ringing, and the black of it hands straight over to the black of
+              the next section. */}
+          <ContactStage />
           <AboutSection />
           <ProjectsSection />
-          <ContactStage />
           <CTASection />
           <Footer light />
         </HomeSwitch>
