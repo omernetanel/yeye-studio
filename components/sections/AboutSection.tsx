@@ -38,7 +38,24 @@ const NAME_EXIT_VH = 0.45;
 const CLOSER_IN_VH = 0.45;
 const CLOSER_HOLD_VH = 0.3;
 const CLOSER_DRAW_VH = 0.5;
-const CLOSER_STAGE_VH = 1 + CLOSER_IN_VH + CLOSER_HOLD_VH + CLOSER_DRAW_VH;
+// A beat after the stroke finishes, before the pin lets go. Without it the page
+// was released on the exact frame the drawing completed, so the moment it was
+// built for got thrown off screen by the same scroll that finished it.
+const CLOSER_SETTLE_VH = 0.6;
+const CLOSER_STAGE_VH =
+  1 + CLOSER_IN_VH + CLOSER_HOLD_VH + CLOSER_DRAW_VH + CLOSER_SETTLE_VH;
+
+// The bar the parked name sits in. Black on black, so it is invisible — its
+// only job is to give the copy travelling underneath somewhere to disappear.
+// A pinned heading over moving text has no scroll position where the two do not
+// overlap: either the text gets an opaque edge to vanish behind, or the heading
+// cannot be pinned. This is the section that asked for it to be pinned.
+const NAME_BAR_H_PX = 86;
+
+// The three reasons are held while they land, one at a time, and stay. They
+// cannot be revealed on entering view, because they sit side by side and so
+// enter it together — scroll position is the only thing that can space them.
+const FACTS_STAGE_VH = 2.1;
 
 const CONTENT_MAX_W_PX = 1240;
 const CONTENT_PAD_PX = 24;
@@ -89,6 +106,9 @@ export default function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLDivElement>(null);
+  const nameBarRef = useRef<HTMLDivElement>(null);
+  const factsStageRef = useRef<HTMLDivElement>(null);
+  const factsRef = useRef<(HTMLLIElement | null)[]>([]);
   const closerStageRef = useRef<HTMLDivElement>(null);
   const closerLineRef = useRef<HTMLParagraphElement>(null);
   const closerSwashRef = useRef<HTMLDivElement>(null);
@@ -156,6 +176,26 @@ export default function AboutSection() {
     name.style.transform =
       `translate(-50%, -50%) translate(${end.x * shrink}px, ${riseY + end.y * shrink}px)`;
 
+    // The bar arrives with the parked name and leaves with it. It is only ever
+    // there while there is something to hide behind it.
+    const nameBar = nameBarRef.current;
+    if (nameBar) nameBar.style.opacity = String(shrink * (1 - exit));
+
+    // The three reasons, landing one at a time across their own held stage.
+    // Each gets a third of the travel, and each stays once it is down.
+    const factsStage = factsStageRef.current;
+    if (factsStage) {
+      const held = -factsStage.getBoundingClientRect().top;
+      const perFact = (screen * (FACTS_STAGE_VH - 1)) / 3;
+      for (let i = 0; i < factsRef.current.length; i++) {
+        const item = factsRef.current[i];
+        if (!item) continue;
+        const t = smoothstep((held - i * perFact) / perFact);
+        item.style.opacity = String(t);
+        item.style.transform = `translateY(${lerp(48, 0, t)}px)`;
+      }
+    }
+
     // The close. Position-driven rather than fired once, because the page is
     // held still here — an arrival that cannot be scrolled back into is a
     // one-way door, and this one has scroll on both sides of it.
@@ -212,6 +252,15 @@ export default function AboutSection() {
           with the black at the end. pointer-events-none so the copy passing
           under it stays selectable. */}
       <div className="pointer-events-none sticky top-0 z-30 h-[100svh]">
+        {/* What the copy disappears behind once the name has parked. Black on
+            black — the only thing it changes is that text stops running through
+            the name. */}
+        <div
+          ref={nameBarRef}
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 bg-black"
+          style={{ height: `${NAME_BAR_H_PX}px`, opacity: 0 }}
+        />
         <div
           ref={nameRef}
           className="absolute top-1/2 left-1/2 font-display leading-none font-bold whitespace-nowrap text-white will-change-transform"
@@ -266,29 +315,48 @@ export default function AboutSection() {
           </Reveal>
         </div>
 
-        {/* THE THREE REASONS. They land one at a time and stay put, ending up
-            side by side in a row — three things of equal weight, which is what
-            they are. A screen each would have made them a sequence, and a
-            sequence is what the paper diagram already is. */}
-        <ol className="grid grid-cols-1 gap-8 pb-28 sm:grid-cols-3 lg:gap-10 lg:pb-40">
-          {aboutFacts.map((fact, index) => (
-            <li key={fact.title}>
-              <Reveal delay={index * 0.18}>
-                <div className="flex h-full flex-col border-t border-white/15 pt-6 text-right">
-                  <span className="font-display text-[13px] leading-none font-bold tracking-[0.18em] text-white/30">
+      </div>
+
+      {/* THE THREE REASONS. The page is held while they land, one at a time,
+          and each stays down — ending up side by side, three things of equal
+          weight, which is what they are.
+
+          Held rather than revealed on entering view, because side by side they
+          enter it together: a stagger of delays would fire them all off the
+          same trigger and land them in a tenth of a second, which is what "it
+          happens badly" was. Scroll position is the only thing that can space
+          them out. A screen each would have made them a sequence instead, and a
+          sequence is what the paper diagram already is. */}
+      <div ref={factsStageRef} style={{ height: `${FACTS_STAGE_VH * 100}svh` }}>
+        <div className="sticky top-0 flex h-[100svh] items-center">
+          <ol className="mx-auto grid w-full max-w-[1240px] grid-cols-1 gap-8 px-6 sm:grid-cols-3 md:px-10 lg:gap-12">
+            {aboutFacts.map((fact, index) => (
+              <li
+                key={fact.title}
+                ref={(el) => {
+                  factsRef.current[index] = el;
+                }}
+                className="will-change-transform"
+                style={{ opacity: 0 }}
+              >
+                <div className="flex h-full flex-col border-t border-white/20 pt-7 text-right">
+                  <span className="font-display text-[13px] leading-none font-bold tracking-[0.18em] text-white/35">
                     {String(index + 1).padStart(2, "0")}
                   </span>
-                  <h3 className="mt-5 font-display text-[23px] leading-[1.15] font-bold text-balance text-white md:text-[27px]">
+                  <h3 className="mt-6 font-display text-[26px] leading-[1.12] font-bold text-balance text-white md:text-[32px]">
                     {fact.title}
                   </h3>
-                  <p className="mt-3 font-body text-[15px] leading-[1.7] text-balance text-white/45 md:text-[16px]">
+                  <p className="mt-4 font-body text-[16px] leading-[1.7] text-balance text-white/45 md:text-[17px]">
                     {fact.description}
                   </p>
                 </div>
-              </Reveal>
-            </li>
-          ))}
-        </ol>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-[1240px] px-6 md:px-10">
 
         {/* THE SKETCH, with its line beside it. Show rather than tell, and the
             thing shown is from this site — which is what closes the distance
