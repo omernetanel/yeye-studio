@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
-import { services, aboutFacts } from "@/lib/content";
+import { services } from "@/lib/content";
 
 const CLIP_SRC = "/mobile/videos/servicesbg-mobile.mp4";
 const CLIP_POSTER = "/mobile/images/servicesbg-mobile-poster.jpg";
@@ -183,7 +183,7 @@ export default function MobileServices() {
         <ServicesHeading />
         <ServiceGrid className="mt-8" />
         <div className="mt-20">
-          <AboutBlock />
+          <ProcessDiagram />
         </div>
         <Statement className="mt-20" />
       </section>
@@ -235,7 +235,7 @@ export default function MobileServices() {
           ref={aboutLayerRef}
           className="absolute inset-0 flex flex-col justify-center px-7 opacity-0"
         >
-          <AboutBlock />
+          <ProcessDiagram />
         </div>
 
         <div ref={statementLayerRef} className="absolute inset-x-0 bottom-[11%] px-6 opacity-0">
@@ -282,38 +282,41 @@ function ServiceGrid({ className }: { className?: string }) {
   );
 }
 
-function AboutBlock() {
+/**
+ * The process, drawn on the open sheet — the same four steps the desktop draws,
+ * at phone sizes.
+ *
+ * It sits in the slot the "who I am" block used to occupy, on the same cues:
+ * that slot is "whatever is printed on the paper while it is open", and a
+ * diagram uses an open page better than a column of prose did. "Who I am" is a
+ * section of its own now, so leaving it here as well showed it twice on the
+ * phone — and it is the wrong thing to print on a sheet of paper anyway.
+ */
+const PROCESS_STEPS = [
+  "מכירים את העסק",
+  "מעצבים את החוויה",
+  "בונים את זה נכון",
+  "עולים לאוויר",
+];
+
+function ProcessDiagram() {
   return (
-    <div className="text-right">
-      <h2 className="font-display text-[34px] leading-none font-bold text-black">מי אני?</h2>
-
-      <p className="mt-5 font-body text-[14px] leading-[1.8] text-balance text-black/70">
-        YEYE הוקם מתוך אובססיה לפרטים הקטנים ואמונה עמוקה שכל עסק ראוי לנוכחות דיגיטלית{" "}
-        <strong className="font-semibold text-black">ברמה הגבוהה ביותר</strong>.
-      </p>
-      <p className="mt-3 font-body text-[14px] leading-[1.8] text-balance text-black/70">
-        אני עומר, מעצב מגיל 15 ומפתח מגיל 17, ואני בונה חוויות דיגיטליות{" "}
-        <strong className="font-semibold text-black">שלא רק נראות טוב, אלא עובדות.</strong>
-      </p>
-
-      {/* Rules and type rather than boxes, the same reasoning as the desktop:
-          these are plain facts about how the work is done, and setting them as
-          cards would read as feature badges instead. */}
-      <dl className="mt-5 w-full divide-y divide-black/10 border-y border-black/10">
-        {aboutFacts.map((fact) => (
-          <div key={fact.title} className="py-2.5">
-            <dt className="font-display text-[13px] font-bold text-black">{fact.title}</dt>
-            <dd className="m-0 mt-0.5 font-body text-[12px] leading-[1.55] text-black/55">
-              {fact.description}
-            </dd>
-          </div>
+    <div className="text-center text-black">
+      <span className="font-display text-[11px] leading-none font-bold tracking-[0.28em] text-black/40 uppercase">
+        process
+      </span>
+      <ol className="mt-6 space-y-5">
+        {PROCESS_STEPS.map((step, index) => (
+          <li key={step} className="flex items-baseline justify-center gap-3">
+            <span className="font-display text-[12px] leading-none font-bold text-black/30">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <span className="font-display text-[19px] leading-[1.15] font-bold text-black">
+              {step}
+            </span>
+          </li>
         ))}
-      </dl>
-
-      <p className="mt-5 font-body text-[14px] leading-[1.7] text-black/70">
-        אני כאן כדי להפוך את הרעיון שלך{" "}
-        <strong className="font-semibold text-black">למוצר דיגיטלי שמייצר אימפקט.</strong>
-      </p>
+      </ol>
     </div>
   );
 }
