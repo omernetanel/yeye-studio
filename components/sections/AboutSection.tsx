@@ -151,8 +151,17 @@ export default function AboutSection() {
 
     // The greeting: up from under the bottom edge into focus at the centre of
     // the screen, then back to its own line in the column, shrinking as it goes.
-    const rise = beat("greetRise", BEATS.greetRise);
-    const settle = beat("greetSettle", BEATS.greetSettle);
+    //
+    // The ONE part of this section that is not latched. Everything else stays
+    // put once it has arrived, because a reader scrolling back up is re-reading
+    // and should not have the page taken apart around them — but the greeting
+    // is the way in, and a way in that only works once means the second pass
+    // through the site is missing its opening. It runs backwards with the
+    // scroll, and forwards again on the way down.
+    const rise = smoothstep((progress - BEATS.greetRise[0]) / (BEATS.greetRise[1] - BEATS.greetRise[0]));
+    const settle = smoothstep(
+      (progress - BEATS.greetSettle[0]) / (BEATS.greetSettle[1] - BEATS.greetSettle[0]),
+    );
     const off = greetOffsetRef.current;
     const away = 1 - settle;
 
@@ -240,10 +249,15 @@ export default function AboutSection() {
               a section arguing for confidence should not label itself "a bit". */}
           <div
             ref={labelRef}
-            className="pointer-events-none absolute top-0 right-0 left-0 z-10 mx-auto flex h-[80px] max-w-[1240px] items-center justify-start px-6 will-change-transform md:px-10"
+            className="pointer-events-none absolute top-[22px] right-6 z-10 will-change-transform"
             style={{ opacity: 0 }}
           >
-            <span className="font-display text-[15px] leading-none font-bold tracking-[0.14em] text-white/45">
+            {/* Mirrored on the logo, which is fixed at left-6 / top-[22px]:
+                same inset from its own edge of the screen, same line. The two
+                read as one header row — the mark on one side, where you are on
+                the other — which only works if the margins match, so this is
+                pinned to the screen edge rather than to the content column. */}
+            <span className="font-display text-[20px] leading-none font-bold text-white md:text-[24px]">
               מי אני
             </span>
           </div>
@@ -255,26 +269,36 @@ export default function AboutSection() {
                     carries it back from the middle of the screen. */}
                 <div
                   ref={greetRef}
-                  className="origin-center font-display text-[30px] leading-[1.08] font-bold whitespace-nowrap text-white will-change-transform md:text-[44px]"
+                  className="origin-center font-display leading-[1.06] font-bold whitespace-nowrap text-white will-change-transform"
                   style={{ opacity: 0 }}
                 >
-                  נעים מאוד,
-                  <br />
-                  אני עומר.
+                  {/* The greeting is the smaller half of its own heading: it is
+                      the throat-clear before the name, and the name is the
+                      thing being said. */}
+                  <span className="block text-[20px] text-white/70 md:text-[26px]">נעים מאוד,</span>
+                  <span className="block text-[36px] md:text-[54px]">אני עומר.</span>
                 </div>
 
                 <div ref={claimRef} className="will-change-transform" style={{ opacity: 0 }}>
-                  {/* Two claims that cannot be copied off another studio's
+                  {/* Both sentences are set identically — same face, size,
+                      weight, colour, measure and spacing. They were a bold
+                      25px over a light 16px before, which made the block look
+                      like it was stepping down to fill a space rather than
+                      saying two things of equal weight. The only difference
+                      left between them is which words are lifted, and that is
+                      the difference that should be doing the work.
+
+                      Two claims here cannot be copied off another studio's
                       page: the years, which give the age of the practice
-                      without giving an age, and the past tense — this site, the
-                      one being read, is the exhibit. */}
-                  <p className="mt-7 max-w-[46ch] font-display text-[20px] leading-[1.4] font-bold text-balance text-white md:text-[25px]">
+                      without giving an age, and the past tense — this site,
+                      the one being read, is the exhibit. */}
+                  <p className="mt-8 max-w-[44ch] font-display text-[19px] leading-[1.55] font-medium text-balance text-white/60 md:text-[22px]">
                     אני מעצב מגיל 15, מפתח מגיל 17, ואני{" "}
-                    <span className="text-white">עיצבתי ובניתי את מה שאתם רואים כאן</span>.
+                    <span className="font-bold text-white">עיצבתי ובניתי את מה שאתם רואים כאן</span>.
                   </p>
-                  <p className="mt-5 max-w-[52ch] font-body text-[15px] leading-[1.8] text-balance text-white/50 md:text-[16px]">
+                  <p className="mt-6 max-w-[44ch] font-display text-[19px] leading-[1.55] font-medium text-balance text-white/60 md:text-[22px]">
                     הקמתי את YEYE מתוך אובססיה לפרטים הקטנים ואמונה ש
-                    <span className="text-white/80">אתר טוב צריך לעבוד טוב בדיוק כמו שהוא נראה</span>.
+                    <span className="font-bold text-white">אתר טוב צריך לעבוד טוב בדיוק כמו שהוא נראה</span>.
                   </p>
                 </div>
               </div>
