@@ -14,15 +14,19 @@ import { aboutFacts } from "@/lib/content";
 // then the label, then the face, then what he does, then the three reasons — so
 // the screen fills in the order it would be explained in.
 const BEATS = {
-  greetRise: [0.0, 0.18],
-  greetSettle: [0.24, 0.42],
-  label: [0.26, 0.38],
-  portrait: [0.34, 0.5],
-  claim: [0.44, 0.58],
+  greetRise: [0.0, 0.2],
+  // The settle finishes BEFORE the portrait starts. They used to overlap, and
+  // for those few frames the greeting was still at arrival size on top of a
+  // picture arriving underneath it — which read as the heading being broken
+  // rather than as two things overlapping on purpose.
+  greetSettle: [0.26, 0.44],
+  label: [0.3, 0.42],
+  portrait: [0.46, 0.6],
+  claim: [0.56, 0.7],
   facts: [
-    [0.6, 0.74],
-    [0.69, 0.83],
-    [0.78, 0.92],
+    [0.72, 0.84],
+    [0.8, 0.92],
+    [0.88, 1.0],
   ],
 } as const;
 
@@ -37,6 +41,10 @@ const GREET_BLUR_PX = 44;
 // size, so it is measured against whatever the heading's own type scale is and
 // does not have to be re-tuned when that changes.
 const GREET_SCALE_ON_ARRIVAL = 2.6;
+// The margin the arrival size has to leave either side of it. measure() caps
+// the multiplier above against this, so the greeting can never arrive wider
+// than the screen it is arriving on.
+const GREET_ARRIVAL_MARGIN_PX = 56;
 
 // The closing line stops the page on its own: it arrives, it is held, the
 // stroke is drawn, and then a beat before the pin releases — without that last
@@ -103,8 +111,10 @@ export default function AboutSection() {
   const closerSwashRef = useRef<HTMLDivElement>(null);
 
   // How far the greeting has to travel from the centre of the screen back to
-  // its own place in the column.
+  // its own place in the column, and how much bigger it is allowed to be when
+  // it gets there — see measure().
   const greetOffsetRef = useRef({ x: 0, y: 0 });
+  const greetArrivalScaleRef = useRef(1);
   // The high-water mark of every beat. Assembly is one-way: a piece that has
   // arrived does not come apart when the page is scrolled back through it.
   const reachedRef = useRef<Record<string, number>>({});
@@ -127,6 +137,14 @@ export default function AboutSection() {
       x: panelBox.left + panel.clientWidth / 2 - (box.left + box.width / 2),
       y: panelBox.top + panel.clientHeight / 2 - (box.top + box.height / 2),
     };
+
+    // How big it is allowed to get, rather than how big it was asked to get.
+    // A flat multiplier took a 672px line to 1747px on a 1440px screen and cut
+    // the ends off it — the arrival size has to be answerable to the width it
+    // has to fit in, so it is capped to leave a margin either side.
+    const room = panel.clientWidth - GREET_ARRIVAL_MARGIN_PX * 2;
+    greetArrivalScaleRef.current =
+      box.width > 0 ? Math.min(GREET_SCALE_ON_ARRIVAL, room / box.width) : 1;
   };
 
   const update = () => {
@@ -164,12 +182,18 @@ export default function AboutSection() {
     );
     const off = greetOffsetRef.current;
     const away = 1 - settle;
+    const scale = lerp(1, greetArrivalScaleRef.current, away);
+
+    // Divided by the scale, because filter is applied in the element's own
+    // coordinates and then magnified with it: 44px through a 2.6x scale
+    // arrived on screen as 114px, which is not a blur, it is an absence.
+    const blur = lerp(GREET_BLUR_PX, 0, clamp01(rise * 1.4)) / scale;
 
     greet.style.opacity = String(rise);
-    greet.style.filter = rise < 0.98 ? `blur(${lerp(GREET_BLUR_PX, 0, clamp01(rise * 1.4))}px)` : "";
+    greet.style.filter = blur > 0.15 ? `blur(${blur}px)` : "";
     greet.style.transform =
       `translate(${off.x * away}px, ${off.y * away + lerp(screen * GREET_FROM_VH, 0, rise) * away}px)` +
-      ` scale(${lerp(1, GREET_SCALE_ON_ARRIVAL, away)})`;
+      ` scale(${scale})`;
 
     const arrive = (el: HTMLElement, t: number, dy: number) => {
       el.style.opacity = String(t);
