@@ -10,34 +10,33 @@ import { aboutFacts } from "@/lib/content";
 //
 // They overlap on purpose: a piece begins moving while the one before it is
 // still settling, so the screen is always mid-assembly rather than ticking
-// through a queue. And they are ordered the way the argument is — the name,
-// then the face, then what he does, then the three reasons — so the screen
-// fills in the order it would be explained in.
+// through a queue. And they run in the order the argument does — the greeting,
+// then the label, then the face, then what he does, then the three reasons — so
+// the screen fills in the order it would be explained in.
 const BEATS = {
-  nameRise: [0.0, 0.16],
-  nameSettle: [0.2, 0.34],
-  portrait: [0.3, 0.46],
-  claim: [0.4, 0.54],
+  greetRise: [0.0, 0.18],
+  greetSettle: [0.24, 0.42],
+  label: [0.26, 0.38],
+  portrait: [0.34, 0.5],
+  claim: [0.44, 0.58],
   facts: [
-    [0.56, 0.7],
-    [0.65, 0.79],
-    [0.74, 0.88],
+    [0.6, 0.74],
+    [0.69, 0.83],
+    [0.78, 0.92],
   ],
 } as const;
 
 const STAGE_VH = 4;
 
-// The name lands with its middle on the bottom edge — the first thing on screen
-// is the top half of it, cut — and heavily out of focus. Size and blur together
-// read as something coming into focus; blur alone reads as a filter.
-const NAME_FROM_VH = 0.5;
-const NAME_BLUR_PX = 44;
-const NAME_SIZE_BIG_VW = 9.5;
-const NAME_SIZE_SMALL_PX = 26;
-
-// Where the name ends: the navbar logo's own line, against the right margin.
-// The logo sits 22px down and is 36px tall, so its centre line is at 40.
-const LOGO_LINE_CENTRE_Y_PX = 40;
+// The greeting lands with its middle on the bottom edge — the first thing on
+// screen is the top half of it, cut — and heavily out of focus. Size and blur
+// together read as something coming into focus; blur alone reads as a filter.
+const GREET_FROM_VH = 0.5;
+const GREET_BLUR_PX = 44;
+// How much bigger it is on arrival than at rest. A multiplier rather than a
+// size, so it is measured against whatever the heading's own type scale is and
+// does not have to be re-tuned when that changes.
+const GREET_SCALE_ON_ARRIVAL = 2.6;
 
 // The closing line stops the page on its own: it arrives, it is held, the
 // stroke is drawn, and then a beat before the pin releases — without that last
@@ -49,9 +48,6 @@ const CLOSER_DRAW_VH = 0.5;
 const CLOSER_SETTLE_VH = 0.6;
 const CLOSER_STAGE_VH =
   1 + CLOSER_IN_VH + CLOSER_HOLD_VH + CLOSER_DRAW_VH + CLOSER_SETTLE_VH;
-
-const CONTENT_MAX_W_PX = 1240;
-const CONTENT_PAD_PX = 24;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -74,24 +70,20 @@ function lerp(from: number, to: number, t: number) {
  * first person, so it is staged rather than laid out.
  *
  * The screen ASSEMBLES. It is held while each piece arrives onto the place the
- * layout already gives it, and none of them leave — the name, then the face,
- * then the claim, then the three reasons one at a time. By the last of them the
- * whole argument is standing there at once.
+ * layout already gives it, and none of them leave: the greeting, then the
+ * section's own label on the navbar's line, then the face, then what he does,
+ * then the three reasons one at a time. By the last of them the whole argument
+ * is standing there at once, which is what removes the dead black — a screen
+ * that only ever fills has none.
  *
- * That is the answer to two separate faults at the same time. Bands of copy
- * scrolling past each other left wide stretches of black that read as
- * emptiness rather than as room, and nothing ever accumulated, so the section
- * was never more than whatever happened to be in the viewport. A screen that
- * only ever fills has neither problem.
+ * It assembles once. Every beat latches at its high-water mark, so scrolling
+ * back leaves the section built rather than taking it apart to be read again.
  *
- * It assembles once: every beat latches at its high-water mark, so scrolling
- * back up leaves the section built rather than taking it apart to be read
- * again.
- *
- * The final layout is ordinary CSS. Scroll only carries each piece from an
- * offset into the place it already has, which is what keeps this maintainable —
- * the composition can be redesigned without touching the timing, and the timing
- * without touching the composition.
+ * The greeting is the one piece that is not simply faded into place: it lives
+ * in the layout, and scroll carries it BACK from the middle of the screen into
+ * the slot it already owns. That is why the layout stays authoritative — the
+ * composition can be redesigned without touching the timing, because the
+ * timing only ever describes a journey to a position CSS decided.
  *
  * data-nav-dark tells the navbar to invert the logo while this is behind it.
  */
@@ -100,7 +92,8 @@ export default function AboutSection() {
   const { scrollY } = useScroll();
 
   const stageRef = useRef<HTMLDivElement>(null);
-  const nameRef = useRef<HTMLDivElement>(null);
+  const greetRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLDivElement>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
   const claimRef = useRef<HTMLDivElement>(null);
   const factsRef = useRef<(HTMLLIElement | null)[]>([]);
@@ -109,40 +102,40 @@ export default function AboutSection() {
   const closerLineRef = useRef<HTMLParagraphElement>(null);
   const closerSwashRef = useRef<HTMLDivElement>(null);
 
-  const nameEndRef = useRef({ x: 0, y: 0 });
+  // How far the greeting has to travel from the centre of the screen back to
+  // its own place in the column.
+  const greetOffsetRef = useRef({ x: 0, y: 0 });
   // The high-water mark of every beat. Assembly is one-way: a piece that has
   // arrived does not come apart when the page is scrolled back through it.
   const reachedRef = useRef<Record<string, number>>({});
 
   const measure = () => {
-    const name = nameRef.current;
-    if (!name) return;
+    const greet = greetRef.current;
+    const panel = greet?.offsetParent as HTMLElement | null;
+    if (!greet || !panel) return;
 
-    // Measured at the size it ENDS at, and against the panel it is centred in
-    // rather than against the window — the panel is 100svh and one scrollbar
-    // narrower, and using the window instead lands it short of the margin.
-    const previous = name.style.fontSize;
-    name.style.fontSize = `${NAME_SIZE_SMALL_PX}px`;
-    const width = name.offsetWidth;
-    name.style.fontSize = previous;
+    // Measured with the transform off, so this is the resting box the layout
+    // gives it — reading it while transformed would return wherever the last
+    // frame happened to put it.
+    const previous = greet.style.transform;
+    greet.style.transform = "";
+    const box = greet.getBoundingClientRect();
+    greet.style.transform = previous;
 
-    const panel = name.offsetParent as HTMLElement | null;
-    const panelW = panel ? panel.clientWidth : window.innerWidth;
-    const panelH = panel ? panel.clientHeight : window.innerHeight;
-    const columnW = Math.min(CONTENT_MAX_W_PX, panelW - CONTENT_PAD_PX * 2);
-
-    nameEndRef.current = {
-      x: (panelW + columnW) / 2 - (panelW / 2 + width / 2),
-      y: LOGO_LINE_CENTRE_Y_PX - panelH / 2,
+    const panelBox = panel.getBoundingClientRect();
+    greetOffsetRef.current = {
+      x: panelBox.left + panel.clientWidth / 2 - (box.left + box.width / 2),
+      y: panelBox.top + panel.clientHeight / 2 - (box.top + box.height / 2),
     };
   };
 
   const update = () => {
     const stage = stageRef.current;
-    const name = nameRef.current;
+    const greet = greetRef.current;
+    const label = labelRef.current;
     const portrait = portraitRef.current;
     const claim = claimRef.current;
-    if (!stage || !name || !portrait || !claim) return;
+    if (!stage || !greet || !label || !portrait || !claim) return;
 
     const screen = window.innerHeight;
     const travel = stage.getBoundingClientRect().height - screen;
@@ -156,20 +149,25 @@ export default function AboutSection() {
       return reached[key];
     };
 
-    const rise = beat("nameRise", BEATS.nameRise);
-    const settle = beat("nameSettle", BEATS.nameSettle);
-    const end = nameEndRef.current;
+    // The greeting: up from under the bottom edge into focus at the centre of
+    // the screen, then back to its own line in the column, shrinking as it goes.
+    const rise = beat("greetRise", BEATS.greetRise);
+    const settle = beat("greetSettle", BEATS.greetSettle);
+    const off = greetOffsetRef.current;
+    const away = 1 - settle;
 
-    name.style.fontSize = `${lerp((NAME_SIZE_BIG_VW * window.innerWidth) / 100, NAME_SIZE_SMALL_PX, settle)}px`;
-    name.style.filter = rise < 0.98 ? `blur(${lerp(NAME_BLUR_PX, 0, clamp01(rise * 1.4))}px)` : "";
-    name.style.transform =
-      `translate(-50%, -50%) translate(${end.x * settle}px, ${lerp(screen * NAME_FROM_VH, 0, rise) + end.y * settle}px)`;
+    greet.style.opacity = String(rise);
+    greet.style.filter = rise < 0.98 ? `blur(${lerp(GREET_BLUR_PX, 0, clamp01(rise * 1.4))}px)` : "";
+    greet.style.transform =
+      `translate(${off.x * away}px, ${off.y * away + lerp(screen * GREET_FROM_VH, 0, rise) * away}px)` +
+      ` scale(${lerp(1, GREET_SCALE_ON_ARRIVAL, away)})`;
 
     const arrive = (el: HTMLElement, t: number, dy: number) => {
       el.style.opacity = String(t);
       el.style.transform = `translateY(${lerp(dy, 0, t)}px)`;
     };
 
+    arrive(label, beat("label", BEATS.label), -14);
     arrive(portrait, beat("portrait", BEATS.portrait), 60);
     arrive(claim, beat("claim", BEATS.claim), 44);
     BEATS.facts.forEach((range, index) => {
@@ -204,6 +202,9 @@ export default function AboutSection() {
     measure();
     update();
 
+    // Measured again once the display font has loaded: the first pass runs
+    // against the fallback face, and the greeting's resting box — which is what
+    // the whole journey is aimed at — is a different size in it.
     let cancelled = false;
     document.fonts.ready.then(() => {
       if (cancelled) return;
@@ -232,34 +233,60 @@ export default function AboutSection() {
       {/* THE ASSEMBLY. One screen, held, filling up — and staying full. */}
       <div ref={stageRef} style={{ height: `${STAGE_VH * 100}svh` }}>
         <div className="sticky top-0 h-[100svh] overflow-clip">
+          {/* The section's own label, on the navbar logo's line and against the
+              right margin, so the two read as one header row: the mark on one
+              side, where you are on the other. "מי אני" rather than "קצת עלי"
+              — it is what the sub-page nav already calls this destination, and
+              a section arguing for confidence should not label itself "a bit". */}
+          <div
+            ref={labelRef}
+            className="pointer-events-none absolute top-0 right-0 left-0 z-10 mx-auto flex h-[80px] max-w-[1240px] items-center justify-start px-6 will-change-transform md:px-10"
+            style={{ opacity: 0 }}
+          >
+            <span className="font-display text-[15px] leading-none font-bold tracking-[0.14em] text-white/45">
+              מי אני
+            </span>
+          </div>
+
           <div className="mx-auto flex h-full max-w-[1240px] flex-col justify-center px-6 pt-24 pb-14 md:px-10">
-            {/* The face and what he does, side by side. Under lg the picture
-                leads the column instead. */}
             <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_30vw] lg:gap-14">
-              <div ref={claimRef} className="text-right will-change-transform" style={{ opacity: 0 }}>
-                <p className="font-display text-[30px] leading-[1.12] font-bold text-balance text-white md:text-[44px]">
-                  אני מעצב ובונה את מה שאתם רואים כאן.
-                </p>
-                {/* The one credential on this page that cannot be copied off
-                    another studio's site: it gives the age of the practice
-                    without giving an age. */}
-                <p className="mt-6 font-display text-[18px] leading-[1.45] font-medium text-white/75 md:text-[21px]">
-                  מעצב מגיל 15, מפתח מגיל 17.
-                </p>
-                <p className="mt-3 max-w-[50ch] font-body text-[15px] leading-[1.75] text-balance text-white/45 md:text-[16px]">
-                  הקמתי את YEYE מתוך אובססיה לפרטים הקטנים ואמונה ש
-                  <span className="text-white/80">אתר טוב צריך לעבוד טוב בדיוק כמו שהוא נראה</span>.
-                </p>
+              <div className="text-right">
+                {/* The greeting. It lives here, in the column, and scroll only
+                    carries it back from the middle of the screen. */}
+                <div
+                  ref={greetRef}
+                  className="origin-center font-display text-[30px] leading-[1.08] font-bold whitespace-nowrap text-white will-change-transform md:text-[44px]"
+                  style={{ opacity: 0 }}
+                >
+                  נעים מאוד,
+                  <br />
+                  אני עומר.
+                </div>
+
+                <div ref={claimRef} className="will-change-transform" style={{ opacity: 0 }}>
+                  {/* Two claims that cannot be copied off another studio's
+                      page: the years, which give the age of the practice
+                      without giving an age, and the past tense — this site, the
+                      one being read, is the exhibit. */}
+                  <p className="mt-7 max-w-[46ch] font-display text-[20px] leading-[1.4] font-bold text-balance text-white md:text-[25px]">
+                    אני מעצב מגיל 15, מפתח מגיל 17, ואני{" "}
+                    <span className="text-white">עיצבתי ובניתי את מה שאתם רואים כאן</span>.
+                  </p>
+                  <p className="mt-5 max-w-[52ch] font-body text-[15px] leading-[1.8] text-balance text-white/50 md:text-[16px]">
+                    הקמתי את YEYE מתוך אובססיה לפרטים הקטנים ואמונה ש
+                    <span className="text-white/80">אתר טוב צריך לעבוד טוב בדיוק כמו שהוא נראה</span>.
+                  </p>
+                </div>
               </div>
 
+              {/* Kept portrait-shaped. Capping only the height let a 432-wide
+                  box crop a 430x560 photograph into a 378-tall landscape slot,
+                  which squashed the face. */}
               <div
                 ref={portraitRef}
                 className="order-first will-change-transform lg:order-none"
                 style={{ opacity: 0 }}
               >
-                {/* Kept portrait-shaped. Capping only the height let a
-                    432-wide box crop a 430x560 photograph into a 378-tall
-                    landscape slot, which squashed the face. */}
                 <figure className="m-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -300,16 +327,6 @@ export default function AboutSection() {
                 </li>
               ))}
             </ol>
-          </div>
-
-          {/* Above the assembly, so the pieces arriving underneath pass behind
-              it rather than through it. */}
-          <div
-            ref={nameRef}
-            className="pointer-events-none absolute top-1/2 left-1/2 z-10 font-display leading-none font-bold whitespace-nowrap text-white will-change-transform"
-            style={{ fontSize: `${NAME_SIZE_BIG_VW}vw` }}
-          >
-            אני עומר.
           </div>
         </div>
       </div>
