@@ -40,11 +40,13 @@ const GREET_BLUR_PX = 44;
 // How much bigger it is on arrival than at rest. A multiplier rather than a
 // size, so it is measured against whatever the heading's own type scale is and
 // does not have to be re-tuned when that changes.
-const GREET_SCALE_ON_ARRIVAL = 2.6;
-// The margin the arrival size has to leave either side of it. measure() caps
-// the multiplier above against this, so the greeting can never arrive wider
-// than the screen it is arriving on.
-const GREET_ARRIVAL_MARGIN_PX = 56;
+const GREET_SIZE_CENTRED_VW = 5.4;
+// Where it parks: the navbar logo's own line, mirrored across the screen — the
+// logo is fixed at left-6 / top-[22px], so this is the same inset from the
+// other edge and the same line. Sized so the two read as one header row.
+const GREET_SIZE_PARKED_PX = 22;
+const GREET_PARKED_TOP_PX = 22;
+const GREET_PARKED_INSET_PX = 24;
 
 // The closing line stops the page on its own: it arrives, it is held, the
 // stroke is drawn, and then a beat before the pin releases — without that last
@@ -101,7 +103,6 @@ export default function AboutSection() {
 
   const stageRef = useRef<HTMLDivElement>(null);
   const greetRef = useRef<HTMLDivElement>(null);
-  const labelRef = useRef<HTMLDivElement>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
   const claimRef = useRef<HTMLDivElement>(null);
   const factsRef = useRef<(HTMLLIElement | null)[]>([]);
@@ -114,7 +115,6 @@ export default function AboutSection() {
   // its own place in the column, and how much bigger it is allowed to be when
   // it gets there — see measure().
   const greetOffsetRef = useRef({ x: 0, y: 0 });
-  const greetArrivalScaleRef = useRef(1);
   // The high-water mark of every beat. Assembly is one-way: a piece that has
   // arrived does not come apart when the page is scrolled back through it.
   const reachedRef = useRef<Record<string, number>>({});
@@ -124,36 +124,30 @@ export default function AboutSection() {
     const panel = greet?.offsetParent as HTMLElement | null;
     if (!greet || !panel) return;
 
-    // Measured with the transform off, so this is the resting box the layout
-    // gives it — reading it while transformed would return wherever the last
-    // frame happened to put it.
-    const previous = greet.style.transform;
+    // Measured at the size it PARKS at, and against the panel it is centred in
+    // rather than against the window — the panel is 100svh and one scrollbar
+    // narrower, and measuring against the window lands it short of the margin.
+    const previousSize = greet.style.fontSize;
+    const previousTransform = greet.style.transform;
+    greet.style.fontSize = `${GREET_SIZE_PARKED_PX}px`;
     greet.style.transform = "";
-    const box = greet.getBoundingClientRect();
-    greet.style.transform = previous;
+    const width = greet.offsetWidth;
+    const height = greet.offsetHeight;
+    greet.style.fontSize = previousSize;
+    greet.style.transform = previousTransform;
 
-    const panelBox = panel.getBoundingClientRect();
     greetOffsetRef.current = {
-      x: panelBox.left + panel.clientWidth / 2 - (box.left + box.width / 2),
-      y: panelBox.top + panel.clientHeight / 2 - (box.top + box.height / 2),
+      x: panel.clientWidth / 2 - GREET_PARKED_INSET_PX - width / 2,
+      y: GREET_PARKED_TOP_PX + height / 2 - panel.clientHeight / 2,
     };
-
-    // How big it is allowed to get, rather than how big it was asked to get.
-    // A flat multiplier took a 672px line to 1747px on a 1440px screen and cut
-    // the ends off it — the arrival size has to be answerable to the width it
-    // has to fit in, so it is capped to leave a margin either side.
-    const room = panel.clientWidth - GREET_ARRIVAL_MARGIN_PX * 2;
-    greetArrivalScaleRef.current =
-      box.width > 0 ? Math.min(GREET_SCALE_ON_ARRIVAL, room / box.width) : 1;
   };
 
   const update = () => {
     const stage = stageRef.current;
     const greet = greetRef.current;
-    const label = labelRef.current;
     const portrait = portraitRef.current;
     const claim = claimRef.current;
-    if (!stage || !greet || !label || !portrait || !claim) return;
+    if (!stage || !greet || !portrait || !claim) return;
 
     const screen = window.innerHeight;
     const travel = stage.getBoundingClientRect().height - screen;
@@ -181,31 +175,39 @@ export default function AboutSection() {
       (progress - BEATS.greetSettle[0]) / (BEATS.greetSettle[1] - BEATS.greetSettle[0]),
     );
     const off = greetOffsetRef.current;
-    const away = 1 - settle;
-    const scale = lerp(1, greetArrivalScaleRef.current, away);
+    const blur = lerp(GREET_BLUR_PX, 0, clamp01(rise * 1.4));
 
-    // Divided by the scale, because filter is applied in the element's own
-    // coordinates and then magnified with it: 44px through a 2.6x scale
-    // arrived on screen as 114px, which is not a blur, it is an absence.
-    const blur = lerp(GREET_BLUR_PX, 0, clamp01(rise * 1.4)) / scale;
-
+    // Driven by font size rather than by a scale transform. A transform
+    // magnifies the blur with it — 44px through a 2.6x arrives as 114px, which
+    // is not a blur but an absence — and it also leaves the element's layout
+    // box at its small size, so nothing about the composition can be reasoned
+    // about from it.
+    greet.style.fontSize = `${lerp((GREET_SIZE_CENTRED_VW * window.innerWidth) / 100, GREET_SIZE_PARKED_PX, settle)}px`;
     greet.style.opacity = String(rise);
     greet.style.filter = blur > 0.15 ? `blur(${blur}px)` : "";
     greet.style.transform =
-      `translate(${off.x * away}px, ${off.y * away + lerp(screen * GREET_FROM_VH, 0, rise) * away}px)` +
-      ` scale(${scale})`;
+      `translate(-50%, -50%) translate(${off.x * settle}px, ${lerp(screen * GREET_FROM_VH, 0, rise) + off.y * settle}px)`;
 
-    const arrive = (el: HTMLElement, t: number, dy: number) => {
-      el.style.opacity = String(t);
-      el.style.transform = `translateY(${lerp(dy, 0, t)}px)`;
+    // Position is reversible; the reveal is not.
+    //
+    // Two different things were being asked of one number. Scrolling back up
+    // should carry the copy back down with the greeting and bring it up again
+    // on the way forward — that is the movement, and it belongs to wherever the
+    // page is. But the fade in is an arrival, and an arrival that replays every
+    // time the page is scrolled past is not an arrival, it is a flicker. So the
+    // transform reads live and the opacity reads the high-water mark: the copy
+    // travels on every pass and only ever appears once, on the first.
+    const arrive = (el: HTMLElement, key: string, range: readonly [number, number], dy: number) => {
+      const live = smoothstep((progress - range[0]) / (range[1] - range[0]));
+      el.style.opacity = String(beat(key, range));
+      el.style.transform = `translateY(${lerp(dy, 0, live)}px)`;
     };
 
-    arrive(label, beat("label", BEATS.label), -14);
-    arrive(portrait, beat("portrait", BEATS.portrait), 60);
-    arrive(claim, beat("claim", BEATS.claim), 44);
+    arrive(portrait, "portrait", BEATS.portrait, 60);
+    arrive(claim, "claim", BEATS.claim, 44);
     BEATS.facts.forEach((range, index) => {
       const item = factsRef.current[index];
-      if (item) arrive(item, beat(`fact${index}`, range), 40);
+      if (item) arrive(item, `fact${index}`, range, 40);
     });
 
     // The close, on its own stage. Position-driven rather than latched: the
@@ -266,43 +268,29 @@ export default function AboutSection() {
       {/* THE ASSEMBLY. One screen, held, filling up — and staying full. */}
       <div ref={stageRef} style={{ height: `${STAGE_VH * 100}svh` }}>
         <div className="sticky top-0 h-[100svh] overflow-clip">
-          {/* The section's own label, on the navbar logo's line and against the
-              right margin, so the two read as one header row: the mark on one
-              side, where you are on the other. "מי אני" rather than "קצת עלי"
-              — it is what the sub-page nav already calls this destination, and
-              a section arguing for confidence should not label itself "a bit". */}
+          {/* THE GREETING. Out of the flow entirely, floating over the panel.
+              It used to live inside the column so it could shrink into it, and
+              that was the mistake: an element in the flow still occupies its
+              slot while it is transformed elsewhere, so on the way back up it
+              was a half-transparent heading shrinking on top of the paragraphs
+              that had latched into place beside it. Nothing it does can disturb
+              the composition from out here. */}
           <div
-            ref={labelRef}
-            className="pointer-events-none absolute top-[22px] right-6 z-10 will-change-transform"
-            style={{ opacity: 0 }}
+            ref={greetRef}
+            className="pointer-events-none absolute top-1/2 left-1/2 z-20 font-display leading-[1.06] font-bold whitespace-nowrap text-white will-change-transform"
+            style={{ opacity: 0, fontSize: `${GREET_SIZE_CENTRED_VW}vw` }}
           >
-            {/* Mirrored on the logo, which is fixed at left-6 / top-[22px]:
-                same inset from its own edge of the screen, same line. The two
-                read as one header row — the mark on one side, where you are on
-                the other — which only works if the margins match, so this is
-                pinned to the screen edge rather than to the content column. */}
-            <span className="font-display text-[20px] leading-none font-bold text-white md:text-[24px]">
-              מי אני
-            </span>
+            {/* The greeting is the smaller half of its own heading: the
+                throat-clear before the name, and the name is what is being
+                said. Both in em, so the pair keeps its proportions through
+                every size it passes through on the way to the corner. */}
+            <span className="block text-[0.48em] text-white/70">נעים מאוד,</span>
+            <span className="block">אני עומר.</span>
           </div>
 
           <div className="mx-auto flex h-full max-w-[1240px] flex-col justify-center px-6 pt-24 pb-14 md:px-10">
             <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_30vw] lg:gap-14">
               <div className="text-right">
-                {/* The greeting. It lives here, in the column, and scroll only
-                    carries it back from the middle of the screen. */}
-                <div
-                  ref={greetRef}
-                  className="origin-center font-display leading-[1.06] font-bold whitespace-nowrap text-white will-change-transform"
-                  style={{ opacity: 0 }}
-                >
-                  {/* The greeting is the smaller half of its own heading: it is
-                      the throat-clear before the name, and the name is the
-                      thing being said. */}
-                  <span className="block text-[20px] text-white/70 md:text-[26px]">נעים מאוד,</span>
-                  <span className="block text-[36px] md:text-[54px]">אני עומר.</span>
-                </div>
-
                 <div ref={claimRef} className="will-change-transform" style={{ opacity: 0 }}>
                   {/* Both sentences are set identically — same face, size,
                       weight, colour, measure and spacing. They were a bold
