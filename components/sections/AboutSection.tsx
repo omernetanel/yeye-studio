@@ -6,22 +6,30 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import HeadingSwash from "@/components/ui/HeadingSwash";
 import { aboutFacts } from "@/lib/content";
 
-// The section assembles on one held screen: every piece arrives, takes the
-// place the layout already gives it, and stays. These are the points along the
-// stage's travel where each piece starts and finishes arriving.
+// Where each piece starts and finishes arriving, along the stage's travel.
+//
+// They overlap on purpose: a piece begins moving while the one before it is
+// still settling, so the screen is always mid-assembly rather than ticking
+// through a queue. And they are ordered the way the argument is — the name,
+// then the face, then what he does, then the three reasons — so the screen
+// fills in the order it would be explained in.
 const BEATS = {
-  nameRise: [0.0, 0.18],
-  nameSettle: [0.22, 0.36],
-  portrait: [0.34, 0.5],
-  copy: [0.42, 0.58],
-  facts: [0.6, 0.82],
+  nameRise: [0.0, 0.16],
+  nameSettle: [0.2, 0.34],
+  portrait: [0.3, 0.46],
+  claim: [0.4, 0.54],
+  facts: [
+    [0.56, 0.7],
+    [0.65, 0.79],
+    [0.74, 0.88],
+  ],
 } as const;
 
-const STAGE_VH = 3.6;
+const STAGE_VH = 4;
 
-// The name lands with its middle on the bottom edge — so the first thing on
-// screen is the top half of it, cut — and heavily out of focus. Size and blur
-// together read as something coming into focus; blur alone reads as a filter.
+// The name lands with its middle on the bottom edge — the first thing on screen
+// is the top half of it, cut — and heavily out of focus. Size and blur together
+// read as something coming into focus; blur alone reads as a filter.
 const NAME_FROM_VH = 0.5;
 const NAME_BLUR_PX = 44;
 const NAME_SIZE_BIG_VW = 9.5;
@@ -31,11 +39,10 @@ const NAME_SIZE_SMALL_PX = 26;
 // The logo sits 22px down and is 36px tall, so its centre line is at 40.
 const LOGO_LINE_CENTRE_Y_PX = 40;
 
-// The closing line stops the page on its own. It is the one line in the section
-// that asks for anything and the handover to the work, so it is held rather
-// than scrolled past: it arrives, it is held, the stroke is drawn, and then a
-// beat before the pin releases — without that last one the page was let go on
-// the exact frame the drawing finished, throwing the moment off screen.
+// The closing line stops the page on its own: it arrives, it is held, the
+// stroke is drawn, and then a beat before the pin releases — without that last
+// one the page was let go on the exact frame the drawing finished, throwing the
+// moment off screen with the scroll that completed it.
 const CLOSER_IN_VH = 0.45;
 const CLOSER_HOLD_VH = 0.3;
 const CLOSER_DRAW_VH = 0.5;
@@ -43,7 +50,7 @@ const CLOSER_SETTLE_VH = 0.6;
 const CLOSER_STAGE_VH =
   1 + CLOSER_IN_VH + CLOSER_HOLD_VH + CLOSER_DRAW_VH + CLOSER_SETTLE_VH;
 
-const CONTENT_MAX_W_PX = 1120;
+const CONTENT_MAX_W_PX = 1240;
 const CONTENT_PAD_PX = 24;
 
 function clamp01(value: number) {
@@ -64,23 +71,27 @@ function lerp(from: number, to: number, t: number) {
  *
  * One person, doing both halves of the job, with a way of working. It is the
  * only place on the page with a face on it and the only one that speaks in the
- * first person.
+ * first person, so it is staged rather than laid out.
  *
- * The composition is the one this section had when it lived on the open sheet
- * of paper, brought back deliberately: portrait beside a single 560px column,
- * the copy right-aligned against one edge, and the three facts as ruled type
- * rather than cards. Several attempts at something more elaborate were made and
- * all of them were worse — wide bands of black with paragraphs floating in
- * them, which read as emptiness rather than as room. This one is legible at a
- * glance and holds a shape, which is what it needed to be.
+ * The screen ASSEMBLES. It is held while each piece arrives onto the place the
+ * layout already gives it, and none of them leave — the name, then the face,
+ * then the claim, then the three reasons one at a time. By the last of them the
+ * whole argument is standing there at once.
  *
- * What is new is that it ASSEMBLES. The screen is held while each piece arrives
- * onto it and none of them leave, so by the end the whole argument is standing
- * there at once and there is no dead black between parts.
+ * That is the answer to two separate faults at the same time. Bands of copy
+ * scrolling past each other left wide stretches of black that read as
+ * emptiness rather than as room, and nothing ever accumulated, so the section
+ * was never more than whatever happened to be in the viewport. A screen that
+ * only ever fills has neither problem.
  *
- * And it only assembles once. Every beat latches at its high-water mark, so
- * scrolling back up leaves the section built — the way in is a way in, not a
- * thing to be taken apart by reading it again.
+ * It assembles once: every beat latches at its high-water mark, so scrolling
+ * back up leaves the section built rather than taking it apart to be read
+ * again.
+ *
+ * The final layout is ordinary CSS. Scroll only carries each piece from an
+ * offset into the place it already has, which is what keeps this maintainable —
+ * the composition can be redesigned without touching the timing, and the timing
+ * without touching the composition.
  *
  * data-nav-dark tells the navbar to invert the logo while this is behind it.
  */
@@ -91,8 +102,8 @@ export default function AboutSection() {
   const stageRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLDivElement>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
-  const copyRef = useRef<HTMLDivElement>(null);
-  const factsRef = useRef<HTMLDListElement>(null);
+  const claimRef = useRef<HTMLDivElement>(null);
+  const factsRef = useRef<(HTMLLIElement | null)[]>([]);
 
   const closerStageRef = useRef<HTMLDivElement>(null);
   const closerLineRef = useRef<HTMLParagraphElement>(null);
@@ -101,7 +112,7 @@ export default function AboutSection() {
   const nameEndRef = useRef({ x: 0, y: 0 });
   // The high-water mark of every beat. Assembly is one-way: a piece that has
   // arrived does not come apart when the page is scrolled back through it.
-  const reachedRef = useRef({ nameRise: 0, nameSettle: 0, portrait: 0, copy: 0, facts: 0 });
+  const reachedRef = useRef<Record<string, number>>({});
 
   const measure = () => {
     const name = nameRef.current;
@@ -130,9 +141,8 @@ export default function AboutSection() {
     const stage = stageRef.current;
     const name = nameRef.current;
     const portrait = portraitRef.current;
-    const copy = copyRef.current;
-    const facts = factsRef.current;
-    if (!stage || !name || !portrait || !copy || !facts) return;
+    const claim = claimRef.current;
+    if (!stage || !name || !portrait || !claim) return;
 
     const screen = window.innerHeight;
     const travel = stage.getBoundingClientRect().height - screen;
@@ -140,9 +150,9 @@ export default function AboutSection() {
     const progress = clamp01(-stage.getBoundingClientRect().top / travel);
 
     const reached = reachedRef.current;
-    const beat = (key: keyof typeof reached, range: readonly [number, number]) => {
+    const beat = (key: string, range: readonly [number, number]) => {
       const now = smoothstep((progress - range[0]) / (range[1] - range[0]));
-      reached[key] = Math.max(reached[key], now);
+      reached[key] = Math.max(reached[key] ?? 0, now);
       return reached[key];
     };
 
@@ -160,9 +170,12 @@ export default function AboutSection() {
       el.style.transform = `translateY(${lerp(dy, 0, t)}px)`;
     };
 
-    arrive(portrait, beat("portrait", BEATS.portrait), 56);
-    arrive(copy, beat("copy", BEATS.copy), 44);
-    arrive(facts, beat("facts", BEATS.facts), 36);
+    arrive(portrait, beat("portrait", BEATS.portrait), 60);
+    arrive(claim, beat("claim", BEATS.claim), 44);
+    BEATS.facts.forEach((range, index) => {
+      const item = factsRef.current[index];
+      if (item) arrive(item, beat(`fact${index}`, range), 40);
+    });
 
     // The close, on its own stage. Position-driven rather than latched: the
     // page is held still here, and a one-way arrival inside a held frame is a
@@ -219,12 +232,34 @@ export default function AboutSection() {
       {/* THE ASSEMBLY. One screen, held, filling up — and staying full. */}
       <div ref={stageRef} style={{ height: `${STAGE_VH * 100}svh` }}>
         <div className="sticky top-0 h-[100svh] overflow-clip">
-          <div className="flex h-full items-center px-6 pt-20 pb-12 md:px-10">
-            {/* No items-end: under dir="rtl" the flex END is the LEFT, which
-                shrank each paragraph to its own text width and pinned it left,
-                leaving the right edges ragged against the list below. */}
-            <div className="mx-auto flex w-full max-w-[1120px] items-center justify-center gap-10 lg:gap-14">
-              <div ref={portraitRef} className="hidden shrink-0 will-change-transform lg:block" style={{ opacity: 0 }}>
+          <div className="mx-auto flex h-full max-w-[1240px] flex-col justify-center px-6 pt-24 pb-14 md:px-10">
+            {/* The face and what he does, side by side. Under lg the picture
+                leads the column instead. */}
+            <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_30vw] lg:gap-14">
+              <div ref={claimRef} className="text-right will-change-transform" style={{ opacity: 0 }}>
+                <p className="font-display text-[30px] leading-[1.12] font-bold text-balance text-white md:text-[44px]">
+                  אני מעצב ובונה את מה שאתם רואים כאן.
+                </p>
+                {/* The one credential on this page that cannot be copied off
+                    another studio's site: it gives the age of the practice
+                    without giving an age. */}
+                <p className="mt-6 font-display text-[18px] leading-[1.45] font-medium text-white/75 md:text-[21px]">
+                  מעצב מגיל 15, מפתח מגיל 17.
+                </p>
+                <p className="mt-3 max-w-[50ch] font-body text-[15px] leading-[1.75] text-balance text-white/45 md:text-[16px]">
+                  הקמתי את YEYE מתוך אובססיה לפרטים הקטנים ואמונה ש
+                  <span className="text-white/80">אתר טוב צריך לעבוד טוב בדיוק כמו שהוא נראה</span>.
+                </p>
+              </div>
+
+              <div
+                ref={portraitRef}
+                className="order-first will-change-transform lg:order-none"
+                style={{ opacity: 0 }}
+              >
+                {/* Kept portrait-shaped. Capping only the height let a
+                    432-wide box crop a 430x560 photograph into a 378-tall
+                    landscape slot, which squashed the face. */}
                 <figure className="m-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -232,59 +267,43 @@ export default function AboutSection() {
                     alt="עומר, מייסד YEYE Digital"
                     width={430}
                     height={560}
-                    className="h-[430px] w-[330px] rounded-2xl object-cover"
+                    className="mx-auto block aspect-[3/4] max-h-[46svh] w-auto object-cover"
                     draggable={false}
                   />
                 </figure>
               </div>
+            </div>
 
-              <div className="flex max-w-[560px] flex-col text-right">
-                <div ref={copyRef} className="will-change-transform" style={{ opacity: 0 }}>
-                  {/* text-balance rather than hand-placed breaks: a fixed break
-                      only holds at one width, and the browser evens the lines
-                      out at every width without splitting a phrase to do it. */}
-                  <p className="font-body text-[15px] leading-[1.85] text-balance text-white/60">
-                    YEYE הוקם מתוך אובססיה לפרטים הקטנים ואמונה עמוקה שכל עסק ראוי לנוכחות דיגיטלית{" "}
-                    <strong className="font-semibold text-white">ברמה הגבוהה ביותר</strong>.
-                  </p>
-                  <p className="mt-4 font-body text-[15px] leading-[1.85] text-balance text-white/60">
-                    אני עומר, מעצב מגיל 15 ומפתח מגיל 17, ואני בונה חוויות דיגיטליות{" "}
-                    <strong className="font-semibold text-white">שלא רק נראות טוב, אלא עובדות.</strong>
-                  </p>
-                </div>
-
-                {/* Not cards, and deliberately not numbers. Every one of these
-                    is a plain fact about how the work is actually done, which a
-                    studio that subcontracts or assembles templates could not
-                    honestly write — where "Design-First" and a project count
-                    are things anyone can claim and nobody can check. Set as
-                    quiet rules and type so they read as substance rather than
-                    as feature badges. */}
-                <dl
-                  ref={factsRef}
-                  className="mt-7 w-full divide-y divide-white/12 border-y border-white/12 will-change-transform"
+            {/* The three join along the bottom, one at a time, and stay. By the
+                last one the whole argument is standing on one screen. */}
+            <ol className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3 lg:mt-14 lg:gap-10">
+              {aboutFacts.map((fact, index) => (
+                <li
+                  key={fact.title}
+                  ref={(el) => {
+                    factsRef.current[index] = el;
+                  }}
+                  className="will-change-transform"
                   style={{ opacity: 0 }}
                 >
-                  {aboutFacts.map((fact) => (
-                    <div
-                      key={fact.title}
-                      className="flex flex-col gap-1 py-3 text-right sm:flex-row sm:gap-4"
-                    >
-                      <dt className="font-display text-[14px] font-bold whitespace-nowrap text-white sm:w-[150px]">
-                        {fact.title}
-                      </dt>
-                      <dd className="m-0 font-body text-[13px] leading-[1.6] text-white/50">
-                        {fact.description}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            </div>
+                  <div className="border-t border-white/20 pt-4 text-right">
+                    <span className="font-display text-[12px] leading-none font-bold tracking-[0.18em] text-white/35">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <h3 className="mt-3 font-display text-[19px] leading-[1.15] font-bold text-balance text-white md:text-[23px]">
+                      {fact.title}
+                    </h3>
+                    <p className="mt-2 font-body text-[14px] leading-[1.65] text-balance text-white/45 md:text-[15px]">
+                      {fact.description}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
 
-          {/* Above the assembly, so the pieces arriving pass behind it rather
-              than through it. */}
+          {/* Above the assembly, so the pieces arriving underneath pass behind
+              it rather than through it. */}
           <div
             ref={nameRef}
             className="pointer-events-none absolute top-1/2 left-1/2 z-10 font-display leading-none font-bold whitespace-nowrap text-white will-change-transform"
@@ -298,7 +317,7 @@ export default function AboutSection() {
       {/* THE CLOSE. The page stops here. */}
       <div ref={closerStageRef} style={{ height: `${CLOSER_STAGE_VH * 100}svh` }}>
         <div className="sticky top-0 flex h-[100svh] items-center">
-          <div className="mx-auto w-full max-w-[1120px] px-6 text-right md:px-10">
+          <div className="mx-auto w-full max-w-[1240px] px-6 text-right md:px-10">
             <p
               ref={closerLineRef}
               className="font-display text-[36px] leading-[1.12] font-bold text-balance text-white will-change-transform md:text-[60px]"
