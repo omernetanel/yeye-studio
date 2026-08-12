@@ -10,19 +10,29 @@ import { aboutFacts } from "@/lib/content";
 // The greeting finishes settling before the copy starts, so that reversed —
 // which runs these backwards — the copy has cleared the screen before the
 // greeting begins growing back out of its slot.
+//
+// Nothing arrives while the column is still travelling. The portrait used to:
+// it lit at 0.50, four hundredths after the greeting landed and in the middle
+// of the column's flight, so it read as arriving with the heading rather than
+// after it — and a photograph is legible at fifteen percent opacity where a
+// line of text at the same opacity is still invisible.
 const BEATS = {
   greetRise: [0.0, 0.22],
   greetSettle: [0.28, 0.46],
   label: [0.3, 0.42],
-  content: [0.48, 0.66],
-  portrait: [0.5, 0.64],
-  claim: [0.58, 0.72],
+  content: [0.48, 0.62],
+  portrait: [0.62, 0.74],
+  claim: [0.7, 0.82],
   facts: [
-    [0.74, 0.85],
-    [0.81, 0.92],
-    [0.88, 0.99],
+    [0.8, 0.88],
+    [0.85, 0.93],
+    [0.9, 0.99],
   ],
 } as const;
+
+// How far the portrait lifts as it arrives. It is the only picture in the
+// section, so it gets an entrance of its own rather than only an opacity ramp.
+const PORTRAIT_LIFT_PX = 56;
 
 const STAGE_VH = 4;
 
@@ -34,8 +44,11 @@ const GREET_BLUR_PX = 52;
 // the section that is only a name.
 const GREET_SIZE_ALONE_VW = 8.6;
 // And in the column, where it ends up as the heading of the copy. Bounded so it
-// stays a heading on a phone and does not become one on a billboard.
-const GREET_SIZE_IN_COLUMN = { min: 30, max: 50, ofWidth: 0.034 };
+// stays a heading on a phone and does not become one on a billboard. Set well
+// above the 22px body copy: at the previous size the greeting's small line came
+// out the same size as a paragraph line and the pair stopped reading as a
+// heading at all.
+const GREET_SIZE_IN_COLUMN = { min: 44, max: 76, ofWidth: 0.055 };
 
 // How far the copy travels. Far enough that reversing carries it off the bottom
 // of the screen rather than parking it there — the section should come apart
@@ -110,7 +123,6 @@ export default function AboutSection() {
 
   const stageRef = useRef<HTMLDivElement>(null);
   const greetRef = useRef<HTMLDivElement>(null);
-  const greetLinesRef = useRef<(HTMLSpanElement | null)[]>([]);
   const slotRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -122,9 +134,9 @@ export default function AboutSection() {
   const closerLineRef = useRef<HTMLParagraphElement>(null);
   const closerSwashRef = useRef<HTMLDivElement>(null);
 
-  // Where the greeting has to land, how big it is when it gets there, and how
-  // far each of its lines has to slide to go from centred to right-aligned.
-  const landingRef = useRef({ x: 0, y: 0, size: 30, lineShift: [0, 0] });
+  // Where the greeting has to land and how big it is when it gets there. One
+  // box, one motion — see the note on the greeting's markup.
+  const landingRef = useRef({ x: 0, y: 0, size: 30 });
   // The high-water mark of every fade. Arrival is one-way.
   const reachedRef = useRef<Record<string, number>>({});
 
@@ -155,23 +167,8 @@ export default function AboutSection() {
     greet.style.transform = "";
     if (content) content.style.transform = "";
 
-    const greetBox = greet.getBoundingClientRect();
     const slotBox = slot.getBoundingClientRect();
     const panelBox = panel.getBoundingClientRect();
-
-    // Each line slides from centred within the block to flush with its right
-    // edge. Right-aligned is the resting state, so the offset is what centring
-    // would add — per line, because the two are different lengths.
-    //
-    // Kept as a RATIO of the font size it was measured at, not as pixels. The
-    // greeting is three times bigger while it is alone on the screen than it is
-    // when it lands, so a fixed pixel offset centres it at the landing size and
-    // leaves it visibly off-centre at the size it actually arrives in.
-    const lineShift = greetLinesRef.current.map((line) => {
-      if (!line) return 0;
-      const lineBox = line.getBoundingClientRect();
-      return -(greetBox.width - lineBox.width) / 2 / size;
-    });
 
     greet.style.fontSize = previousSize;
     greet.style.transform = previousTransform;
@@ -181,7 +178,6 @@ export default function AboutSection() {
       x: slotBox.left + slotBox.width / 2 - (panelBox.left + panel.clientWidth / 2),
       y: slotBox.top + slotBox.height / 2 - (panelBox.top + panel.clientHeight / 2),
       size,
-      lineShift: [lineShift[0] ?? 0, lineShift[1] ?? 0],
     };
   };
 
@@ -218,14 +214,6 @@ export default function AboutSection() {
     greet.style.transform =
       `translate(-50%, -50%) translate(${land.x * settle}px, ${lerp(screen * GREET_FROM_VH, 0, rise) + land.y * settle}px)`;
 
-    // Centred while it is alone, right-aligned once it is a heading. The block
-    // is right-aligned, so each line is pushed out to centre it and slides back
-    // as it settles — which is the alignment changing as a movement rather than
-    // as a jump.
-    greetLinesRef.current.forEach((line, index) => {
-      if (line) line.style.transform = `translateX(${land.lineShift[index] * greetSize * (1 - settle)}px)`;
-    });
-
     // THE COPY — movement live, arrival latched.
     const contentTravel = span(progress, BEATS.content);
     content.style.transform = `translateY(${lerp(screen * CONTENT_TRAVEL_VH, 0, contentTravel)}px)`;
@@ -236,7 +224,12 @@ export default function AboutSection() {
 
     label.style.opacity = String(arrived("label", BEATS.label));
     label.style.transform = `translateY(${lerp(-14, 0, span(progress, BEATS.label))}px)`;
-    fade(portrait, "portrait", BEATS.portrait);
+    // Eased, not linear: a linear ramp on a photograph spends its first third
+    // as a grey shape sitting there before it is properly on screen.
+    const portraitIn = smoothstep(arrived("portrait", BEATS.portrait));
+    portrait.style.opacity = String(portraitIn);
+    portrait.style.transform = `translateY(${lerp(PORTRAIT_LIFT_PX, 0, portraitIn)}px)`;
+
     fade(claim, "claim", BEATS.claim);
     BEATS.facts.forEach((range, index) => {
       const item = factsRef.current[index];
@@ -317,37 +310,24 @@ export default function AboutSection() {
               reserves below, so the layout still decides where it ends up. */}
           <div
             ref={greetRef}
-            className="pointer-events-none absolute top-1/2 left-1/2 z-20 text-right font-display leading-[1.06] font-bold whitespace-nowrap text-white will-change-transform"
+            className="pointer-events-none absolute top-1/2 left-1/2 z-20 text-center font-display leading-[1.06] font-bold whitespace-nowrap text-white will-change-transform"
             style={{ opacity: 0, fontSize: `${GREET_SIZE_ALONE_VW}vw` }}
           >
-            {/* In em, so the pair keeps its proportions through every size it
-                passes through on the way down to the column. */}
-            {/* Each line is a block that stacks, wrapping an inline-block that
-                is only as wide as its own words. The measurement that centres
-                them is the difference between the two widths, and a block span
-                is always the full width of its parent — so measured on the
-                outer span it came out zero for both lines and nothing ever
-                moved. */}
-            <span className="block text-[0.46em] text-white/70">
-              <span
-                ref={(el) => {
-                  greetLinesRef.current[0] = el;
-                }}
-                className="inline-block will-change-transform"
-              >
-                נעים מאוד,
-              </span>
-            </span>
-            <span className="block">
-              <span
-                ref={(el) => {
-                  greetLinesRef.current[1] = el;
-                }}
-                className="inline-block will-change-transform"
-              >
-                אני עומר.
-              </span>
-            </span>
+            {/* ONE box, ONE motion. The two lines are centred on each other by
+                text-align and never move independently.
+
+                They used to: the block was right-aligned and each line carried
+                its own translateX that decayed as the greeting settled, so that
+                the pair went from centred to right-aligned as it landed. On
+                screen that read as two separate entrances — the short line
+                sliding in sideways while the long one rose — because that is
+                exactly what it was. The alignment does not change any more, so
+                there is nothing left to animate but the box itself.
+
+                Sizes in em, so the pair keeps its proportions through every
+                size it passes through on the way down to the column. */}
+            <span className="block text-[0.38em] text-white/70">נעים מאוד,</span>
+            <span className="block">אני עומר.</span>
           </div>
 
           <div ref={contentRef} className="h-full will-change-transform">
@@ -361,9 +341,9 @@ export default function AboutSection() {
                   <div
                     ref={slotRef}
                     aria-hidden="true"
-                    className="invisible font-display leading-[1.06] font-bold whitespace-nowrap"
+                    className="invisible inline-block text-center font-display leading-[1.06] font-bold whitespace-nowrap"
                   >
-                    <span className="block text-[0.46em]">נעים מאוד,</span>
+                    <span className="block text-[0.38em]">נעים מאוד,</span>
                     <span className="block">אני עומר.</span>
                   </div>
 
