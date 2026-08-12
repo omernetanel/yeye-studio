@@ -20,17 +20,17 @@ const BEATS = {
   // The two lines of the greeting arrive one after the other, not together:
   // the salutation first, and only once it is standing does the name come up
   // under it. They overlap by a hair so the pair still reads as one gesture.
-  greetLine1: [0.0, 0.13],
-  greetLine2: [0.16, 0.3],
-  greetSettle: [0.36, 0.52],
-  label: [0.36, 0.48],
-  content: [0.54, 0.66],
-  portrait: [0.66, 0.78],
-  claim: [0.72, 0.84],
+  greetLine1: [0.0, 0.17],
+  greetLine2: [0.21, 0.38],
+  greetSettle: [0.44, 0.62],
+  label: [0.46, 0.58],
+  content: [0.64, 0.76],
+  portrait: [0.74, 0.85],
+  claim: [0.78, 0.88],
   facts: [
-    [0.82, 0.89],
-    [0.87, 0.94],
-    [0.92, 0.99],
+    [0.86, 0.92],
+    [0.9, 0.95],
+    [0.94, 0.99],
   ],
 } as const;
 
@@ -38,7 +38,11 @@ const BEATS = {
 // section, so it gets an entrance of its own rather than only an opacity ramp.
 const PORTRAIT_LIFT_PX = 56;
 
-const STAGE_VH = 4;
+// The beats above are fractions of this, so the two numbers together decide how
+// fast anything moves. Six screens rather than four: at four the greeting's two
+// lines were each done inside forty screen-heights of scroll, which on a
+// trackpad is a flick.
+const STAGE_VH = 6;
 
 // The greeting lands with its middle on the bottom edge — the first thing on
 // screen is the top half of it, cut — and heavily out of focus.
@@ -52,7 +56,7 @@ const GREET_SIZE_ALONE_VW = 8.6;
 // above the 22px body copy: at the previous size the greeting's small line came
 // out the same size as a paragraph line and the pair stopped reading as a
 // heading at all.
-const GREET_SIZE_IN_COLUMN = { min: 44, max: 76, ofWidth: 0.055 };
+const GREET_SIZE_IN_COLUMN = { min: 34, max: 58, ofWidth: 0.042 };
 
 // How far the copy travels. Far enough that reversing carries it off the bottom
 // of the screen rather than parking it there — the section should come apart
@@ -349,7 +353,7 @@ export default function AboutSection() {
               ref={(el) => {
                 greetLinesRef.current[0] = el;
               }}
-              className="block text-[0.34em] text-white/70 will-change-transform"
+              className="block text-[0.4em] text-white/70 will-change-transform"
             >
               נעים מאוד,
             </span>
@@ -376,7 +380,7 @@ export default function AboutSection() {
                     aria-hidden="true"
                     className="invisible inline-block text-center font-display leading-[1.06] font-bold whitespace-nowrap"
                   >
-                    <span className="block text-[0.34em]">נעים מאוד,</span>
+                    <span className="block text-[0.4em]">נעים מאוד,</span>
                     <span className="block text-[1.34em]">אני עומר.</span>
                   </div>
 
