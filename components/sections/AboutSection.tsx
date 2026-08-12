@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import HeadingSwash from "@/components/ui/HeadingSwash";
+import BalloonDrop, { type DropState } from "@/components/sections/about/BalloonDrop";
 import { aboutFacts } from "@/lib/content";
 
 // Where each piece starts and finishes arriving, along the stage's travel.
@@ -20,22 +21,33 @@ const BEATS = {
   // The two lines of the greeting arrive one after the other, not together:
   // the salutation first, and only once it is standing does the name come up
   // under it. They overlap by a hair so the pair still reads as one gesture.
-  greetLine1: [0.0, 0.17],
-  greetLine2: [0.21, 0.38],
-  greetSettle: [0.44, 0.62],
+//
+// Every fraction here was multiplied by 5/6 when the stage grew from six
+// screens to seven, so that each beat lands on the exact scroll distance it
+// landed on before. The factor is 5/6 and not 6/7 because a beat is a fraction
+// of the TRAVEL, which is the stage minus one screen: 500vh became 600vh.
+  greetLine1: [0.0, 0.1417],
+  greetLine2: [0.175, 0.3167],
+  greetSettle: [0.3667, 0.5167],
   // With the section, not with the copy. It names where you are, so it belongs
   // on screen from the moment the black arrives — waiting until the column
   // landed meant the header row sat empty through the whole opening.
-  label: [0.02, 0.12],
-  content: [0.64, 0.76],
-  portrait: [0.74, 0.85],
-  claim: [0.78, 0.88],
+  label: [0.0167, 0.1],
+  content: [0.5333, 0.6333],
+  portrait: [0.6167, 0.7083],
+  claim: [0.65, 0.7333],
   facts: [
-    [0.86, 0.92],
-    [0.9, 0.95],
-    [0.94, 0.99],
+    [0.7167, 0.7667],
+    [0.75, 0.7917],
+    [0.7833, 0.825],
   ],
 } as const;
+
+// Past the last fact the stage still has 105vh to run and nothing left to move.
+// That stretch is the balloons': the page keeps answering the wheel the whole
+// way through it, so it is a slow passage rather than a stop, but nothing else
+// is competing for the eye while they come down.
+const DROP_AT = 0.83;
 
 // How far the portrait lifts as it arrives. It is the only picture in the
 // section, so it gets an entrance of its own rather than only an opacity ramp.
@@ -44,8 +56,8 @@ const PORTRAIT_LIFT_PX = 56;
 // The beats above are fractions of this, so the two numbers together decide how
 // fast anything moves. Six screens rather than four: at four the greeting's two
 // lines were each done inside forty screen-heights of scroll, which on a
-// trackpad is a flick.
-const STAGE_VH = 6;
+// trackpad is a flick. The seventh is the balloons' — see DROP_AT.
+const STAGE_VH = 7;
 
 // The greeting lands with its middle on the bottom edge — the first thing on
 // screen is the top half of it, cut — and heavily out of focus.
@@ -141,6 +153,12 @@ export default function AboutSection() {
   const portraitRef = useRef<HTMLDivElement>(null);
   const claimRef = useRef<HTMLDivElement>(null);
   const factsRef = useRef<(HTMLLIElement | null)[]>([]);
+
+  const sectionRef = useRef<HTMLElement>(null);
+  // Handed to the balloon layer once per scroll frame. A ref rather than state
+  // on purpose: this changes on almost every frame and must not re-render the
+  // section, which would tear down the whole scroll pipeline underneath it.
+  const dropStateRef = useRef<DropState>({ armed: false, wallLive: false });
 
   const closerStageRef = useRef<HTMLDivElement>(null);
   const closerLineRef = useRef<HTMLParagraphElement>(null);
@@ -274,6 +292,8 @@ export default function AboutSection() {
       if (item) fade(item, `fact${index}`, range);
     });
 
+    dropStateRef.current.armed = progress >= DROP_AT;
+
     // The close, on its own stage. Position-driven rather than latched: the
     // page is held still here, and a one-way arrival inside a held frame is a
     // trapdoor — scroll back into it and it has already happened.
@@ -291,6 +311,11 @@ export default function AboutSection() {
 
       closerLine.style.opacity = String(arriveT);
       closerLine.style.transform = `translateY(${lerp(38, 0, arriveT)}px)`;
+      // The balloons may only collide with the line once it has stopped moving
+      // of its own accord. A collider read off a box that is mid-entrance
+      // shifts every frame, and the balloons would judder against a wall that
+      // is not where it appears to be.
+      dropStateRef.current.wallLive = arriveT >= 1;
 
       closerSwash.style.clipPath = `inset(0 ${(1 - draw) * 100}% 0 0)`;
 
@@ -336,7 +361,7 @@ export default function AboutSection() {
   });
 
   return (
-    <section id="about" data-nav-dark="true" className="relative bg-black">
+    <section id="about" ref={sectionRef} data-nav-dark="true" className="relative bg-black">
       {/* The section's label, mirrored on the logo: the logo is fixed at
           left-6 / top-[22px], so this is the same inset from the other edge and
           the same line. The two read as one header row — the mark on one side,
@@ -402,7 +427,11 @@ export default function AboutSection() {
             </span>
           </div>
 
-          <div ref={contentRef} className="h-full will-change-transform">
+          {/* relative z-10 so the rear balloon layer, which sits at z-[5], can
+              actually pass BEHIND this. Without a stacking level of its own,
+              in-flow text is painted below every positioned element and the
+              balloons would all be in front. */}
+          <div ref={contentRef} className="relative z-10 h-full will-change-transform">
             <div className="mx-auto flex h-full max-w-[1240px] flex-col justify-center px-6 pt-24 pb-14 md:px-10">
               <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_30vw] lg:gap-14">
                 <div className="text-right">
@@ -497,6 +526,12 @@ export default function AboutSection() {
           </div>
         </div>
       </div>
+
+      {/* The balloons. Mounted here, as a child of the section rather than of
+          a stage, because their layers are fixed and the stage panels clip. */}
+      {!prefersReducedMotion && (
+        <BalloonDrop sectionRef={sectionRef} lineRef={closerLineRef} stateRef={dropStateRef} />
+      )}
 
       {/* THE CLOSE. The page stops here. */}
       <div ref={closerStageRef} style={{ height: `${CLOSER_STAGE_VH * 100}svh` }}>
