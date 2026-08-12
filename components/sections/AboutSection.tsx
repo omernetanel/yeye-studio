@@ -23,7 +23,10 @@ const BEATS = {
   greetLine1: [0.0, 0.17],
   greetLine2: [0.21, 0.38],
   greetSettle: [0.44, 0.62],
-  label: [0.46, 0.58],
+  // With the section, not with the copy. It names where you are, so it belongs
+  // on screen from the moment the black arrives — waiting until the column
+  // landed meant the header row sat empty through the whole opening.
+  label: [0.02, 0.12],
   content: [0.64, 0.76],
   portrait: [0.74, 0.85],
   claim: [0.78, 0.88],
@@ -143,9 +146,9 @@ export default function AboutSection() {
   const closerLineRef = useRef<HTMLParagraphElement>(null);
   const closerSwashRef = useRef<HTMLDivElement>(null);
 
-  // Where the greeting has to land and how big it is when it gets there. One
-  // box, one motion — see the note on the greeting's markup.
-  const landingRef = useRef({ x: 0, y: 0, size: 30 });
+  // Where the greeting has to land, how big it is when it gets there, and how
+  // far each line has to travel sideways to go from centred to right-aligned.
+  const landingRef = useRef({ x: 0, y: 0, size: 30, alignShift: [0, 0] });
   // The high-water mark of every fade. Arrival is one-way.
   const reachedRef = useRef<Record<string, number>>({});
 
@@ -176,8 +179,17 @@ export default function AboutSection() {
     greet.style.transform = "";
     if (content) content.style.transform = "";
 
+    const greetBox = greet.getBoundingClientRect();
     const slotBox = slot.getBoundingClientRect();
     const panelBox = panel.getBoundingClientRect();
+
+    // How far right each line sits when right-aligned rather than centred: half
+    // the slack between it and the widest line. Kept as a RATIO of the size it
+    // was measured at, because the greeting is nearly twice this size on its
+    // way down and a fixed pixel offset would align it at one size only.
+    const alignShift = greetLinesRef.current.map((line) =>
+      line ? (greetBox.width - line.getBoundingClientRect().width) / 2 / size : 0,
+    );
 
     greet.style.fontSize = previousSize;
     greet.style.transform = previousTransform;
@@ -187,6 +199,7 @@ export default function AboutSection() {
       x: slotBox.left + slotBox.width / 2 - (panelBox.left + panel.clientWidth / 2),
       y: slotBox.top + slotBox.height / 2 - (panelBox.top + panel.clientHeight / 2),
       size,
+      alignShift: [alignShift[0] ?? 0, alignShift[1] ?? 0],
     };
   };
 
@@ -219,15 +232,11 @@ export default function AboutSection() {
     greet.style.opacity = "1";
     greet.style.transform =
       `translate(-50%, -50%) translate(${land.x * settle}px, ${land.y * settle}px)`;
-    // Centred while it is moving, flush right once it has arrived. Switched at
-    // the end rather than eased across the settle: easing it means giving each
-    // line its own sideways travel, and that is what made the two lines read as
-    // two separate entrances.
-    greet.style.textAlign = settle >= 1 ? "right" : "center";
-
-    // Each line rises on its own beat. The rise is carried per line rather than
-    // on the box, so the second can still be climbing while the first is
-    // already standing — the box itself only ever carries the settle.
+    // Each line rises on its own beat, and slides from centred to right-aligned
+    // across the settle. The slide is eased over the same span the box uses to
+    // descend, so the alignment arrives as part of the landing rather than as a
+    // jump on the frame it completes.
+    const glide = smoothstep(settle);
     ([BEATS.greetLine1, BEATS.greetLine2] as const).forEach((range, index) => {
       const line = greetLinesRef.current[index];
       if (!line) return;
@@ -235,7 +244,8 @@ export default function AboutSection() {
       line.style.opacity = String(rise);
       const blur = lerp(GREET_BLUR_PX, 0, clamp01(rise * 1.4));
       line.style.filter = blur > 0.15 ? `blur(${blur}px)` : "";
-      line.style.transform = `translateY(${lerp(screen * GREET_FROM_VH, 0, rise)}px)`;
+      line.style.transform =
+        `translate(${land.alignShift[index] * greetSize * glide}px, ${lerp(screen * GREET_FROM_VH, 0, rise)}px)`;
     });
 
     // THE COPY — movement live, arrival latched.
@@ -341,29 +351,37 @@ export default function AboutSection() {
             className="pointer-events-none absolute top-1/2 left-1/2 z-20 text-center font-display leading-[1.06] font-bold whitespace-nowrap text-white will-change-transform"
             style={{ opacity: 0, fontSize: `${GREET_SIZE_ALONE_VW}vw` }}
           >
-            {/* The lines rise one after the other, so each is its own animated
-                box. What they must NOT do is move sideways independently: the
-                alignment is handled by text-align on the parent, switched once
-                at the end. An eased horizontal offset per line is what made the
-                pair read as two unrelated entrances rather than one greeting.
+            {/* Each line is a block that stacks, holding an inline-block only
+                as wide as its own words — the outer one is always the full
+                width of the box, so anything measured on it comes out zero.
+
+                The inner box carries both motions: the rise, on its own beat,
+                and the sideways travel from centred to right-aligned. The two
+                never overlap. The rises finish well before the settle starts,
+                so at no point is one line climbing while the other slides, and
+                the pair still reads as one greeting rather than two arrivals.
 
                 Sizes in em, so the pair keeps its proportions through every
                 size it passes through on the way down to the column. */}
-            <span
-              ref={(el) => {
-                greetLinesRef.current[0] = el;
-              }}
-              className="block text-[0.4em] text-white/70 will-change-transform"
-            >
-              נעים מאוד,
+            <span className="block text-[0.4em] text-white/70">
+              <span
+                ref={(el) => {
+                  greetLinesRef.current[0] = el;
+                }}
+                className="inline-block will-change-transform"
+              >
+                נעים מאוד,
+              </span>
             </span>
-            <span
-              ref={(el) => {
-                greetLinesRef.current[1] = el;
-              }}
-              className="block text-[1.34em] will-change-transform"
-            >
-              אני עומר.
+            <span className="block text-[1.34em]">
+              <span
+                ref={(el) => {
+                  greetLinesRef.current[1] = el;
+                }}
+                className="inline-block will-change-transform"
+              >
+                אני עומר.
+              </span>
             </span>
           </div>
 
@@ -398,12 +416,12 @@ export default function AboutSection() {
                         which on a two-line paragraph leaves a word hanging on
                         its own at the end of the first line; letting the lines
                         fill keeps the block's edge straight. */}
-                    <p className="mt-8 max-w-[40ch] font-display text-[19px] leading-[1.55] font-medium text-white md:text-[22px]">
+                    <p className="mt-8 max-w-[40ch] font-display text-[19px] leading-[1.55] font-light text-white md:text-[22px]">
                       אני מעצב מגיל 15, מפתח מגיל 17, ואני עיצבתי ובניתי את מה שאתם רואים כאן.
                     </p>
                     {/* Half a line, not a full one. The two sentences are one
                         thought and were reading as two paragraphs. */}
-                    <p className="mt-[0.78em] max-w-[40ch] font-display text-[19px] leading-[1.55] font-medium text-white md:text-[22px]">
+                    <p className="mt-[0.78em] max-w-[40ch] font-display text-[19px] leading-[1.55] font-light text-white md:text-[22px]">
                       הקמתי את YEYE מתוך אובססיה לפרטים הקטנים ואמונה שאתר טוב צריך לעבוד טוב בדיוק
                       כמו שהוא נראה.
                     </p>
