@@ -323,21 +323,31 @@ export default function AboutSection() {
           >
             {/* In em, so the pair keeps its proportions through every size it
                 passes through on the way down to the column. */}
-            <span
-              ref={(el) => {
-                greetLinesRef.current[0] = el;
-              }}
-              className="block text-[0.46em] text-white/70 will-change-transform"
-            >
-              נעים מאוד,
+            {/* Each line is a block that stacks, wrapping an inline-block that
+                is only as wide as its own words. The measurement that centres
+                them is the difference between the two widths, and a block span
+                is always the full width of its parent — so measured on the
+                outer span it came out zero for both lines and nothing ever
+                moved. */}
+            <span className="block text-[0.46em] text-white/70">
+              <span
+                ref={(el) => {
+                  greetLinesRef.current[0] = el;
+                }}
+                className="inline-block will-change-transform"
+              >
+                נעים מאוד,
+              </span>
             </span>
-            <span
-              ref={(el) => {
-                greetLinesRef.current[1] = el;
-              }}
-              className="block will-change-transform"
-            >
-              אני עומר.
+            <span className="block">
+              <span
+                ref={(el) => {
+                  greetLinesRef.current[1] = el;
+                }}
+                className="inline-block will-change-transform"
+              >
+                אני עומר.
+              </span>
             </span>
           </div>
 
