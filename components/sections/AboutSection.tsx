@@ -213,6 +213,11 @@ export default function AboutSection() {
     greet.style.filter = blur > 0.15 ? `blur(${blur}px)` : "";
     greet.style.transform =
       `translate(-50%, -50%) translate(${land.x * settle}px, ${lerp(screen * GREET_FROM_VH, 0, rise) + land.y * settle}px)`;
+    // Centred while it is moving, flush left once it has arrived. Switched at
+    // the end rather than eased across the settle: easing it means giving each
+    // line its own sideways travel, and that is what made the two lines read as
+    // two separate entrances.
+    greet.style.textAlign = settle >= 1 ? "right" : "center";
 
     // THE COPY — movement live, arrival latched.
     const contentTravel = span(progress, BEATS.content);
@@ -326,7 +331,7 @@ export default function AboutSection() {
 
                 Sizes in em, so the pair keeps its proportions through every
                 size it passes through on the way down to the column. */}
-            <span className="block text-[0.38em] text-white/70">נעים מאוד,</span>
+            <span className="block text-[0.38em] leading-[0.53] text-white/70">נעים מאוד,</span>
             <span className="block">אני עומר.</span>
           </div>
 
@@ -343,15 +348,15 @@ export default function AboutSection() {
                     aria-hidden="true"
                     className="invisible inline-block text-center font-display leading-[1.06] font-bold whitespace-nowrap"
                   >
-                    <span className="block text-[0.38em]">נעים מאוד,</span>
+                    <span className="block text-[0.38em] leading-[0.53]">נעים מאוד,</span>
                     <span className="block">אני עומר.</span>
                   </div>
 
                   <div ref={claimRef} className="will-change-transform" style={{ opacity: 0 }}>
-                    {/* Both sentences are set identically — same face, size,
-                        weight, colour, measure and spacing. The only difference
-                        left between them is which words are lifted, and that is
-                        the difference that should be doing the work.
+                    {/* One weight, one colour, all the way through. Lifting the
+                        second half of each sentence in bold white against a
+                        dimmed first half split both sentences in two and made
+                        the page look like it was shouting the punchline.
 
                         Two claims here cannot be copied off another studio's
                         page: the years, which give the age of the practice
@@ -361,13 +366,12 @@ export default function AboutSection() {
                         which on a two-line paragraph leaves a word hanging on
                         its own at the end of the first line; letting the lines
                         fill keeps the block's edge straight. */}
-                    <p className="mt-8 max-w-[40ch] font-display text-[19px] leading-[1.55] font-medium text-white/60 md:text-[22px]">
-                      אני מעצב מגיל 15, מפתח מגיל 17, ואני{" "}
-                      <span className="font-bold text-white">עיצבתי ובניתי את מה שאתם רואים כאן</span>.
+                    <p className="mt-8 max-w-[40ch] font-display text-[19px] leading-[1.55] font-medium text-white md:text-[22px]">
+                      אני מעצב מגיל 15, מפתח מגיל 17, ואני עיצבתי ובניתי את מה שאתם רואים כאן.
                     </p>
-                    <p className="mt-6 max-w-[40ch] font-display text-[19px] leading-[1.55] font-medium text-white/60 md:text-[22px]">
-                      הקמתי את YEYE מתוך אובססיה לפרטים הקטנים ואמונה ש
-                      <span className="font-bold text-white">אתר טוב צריך לעבוד טוב בדיוק כמו שהוא נראה</span>.
+                    <p className="mt-6 max-w-[40ch] font-display text-[19px] leading-[1.55] font-medium text-white md:text-[22px]">
+                      הקמתי את YEYE מתוך אובססיה לפרטים הקטנים ואמונה שאתר טוב צריך לעבוד טוב בדיוק
+                      כמו שהוא נראה.
                     </p>
                   </div>
                 </div>
