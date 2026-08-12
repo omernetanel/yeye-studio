@@ -256,7 +256,7 @@ export default function AboutSection() {
       el.style.opacity = String(arrived(key, range));
     };
 
-    label.style.opacity = String(arrived("label", BEATS.label));
+    const labelIn = arrived("label", BEATS.label);
     label.style.transform = `translateY(${lerp(-14, 0, span(progress, BEATS.label))}px)`;
     // Live, not latched. Latched it stayed lit on the way back up, sitting on
     // the black while the greeting was still coming apart above it — the one
@@ -293,6 +293,15 @@ export default function AboutSection() {
       closerLine.style.transform = `translateY(${lerp(38, 0, arriveT)}px)`;
 
       closerSwash.style.clipPath = `inset(0 ${(1 - draw) * 100}% 0 0)`;
+
+      // The label leaves with the section rather than being carried out of it.
+      // It holds all the way through the close and only lets go over the last
+      // settle, so the header row stays whole until there is no section left to
+      // name.
+      const exit = clamp01((held - drawEnd) / (screen * CLOSER_SETTLE_VH));
+      label.style.opacity = String(labelIn * (1 - smoothstep(exit)));
+    } else {
+      label.style.opacity = String(labelIn);
     }
   };
 
@@ -328,22 +337,30 @@ export default function AboutSection() {
 
   return (
     <section id="about" data-nav-dark="true" className="relative bg-black">
+      {/* The section's label, mirrored on the logo: the logo is fixed at
+          left-6 / top-[22px], so this is the same inset from the other edge and
+          the same line. The two read as one header row — the mark on one side,
+          where you are on the other.
+
+          Pinned to the SECTION, in a sticky box of its own, not to the first
+          stage's panel. Inside that panel it was released the moment the stage
+          ended and scrolled away up the page while the fixed logo stayed put —
+          the header row losing one half of itself with the close still to come.
+          Zero height so it costs the layout nothing. */}
+      <div className="pointer-events-none sticky top-0 z-30 h-0">
+        <div
+          ref={labelRef}
+          className="absolute top-[22px] right-6 will-change-transform"
+          style={{ opacity: 0 }}
+        >
+          <span className="font-display text-[20px] leading-none font-bold text-white md:text-[24px]">
+            מי אני
+          </span>
+        </div>
+      </div>
+
       <div ref={stageRef} style={{ height: `${STAGE_VH * 100}svh` }}>
         <div className="sticky top-0 h-[100svh] overflow-clip">
-          {/* The section's label, mirrored on the logo: the logo is fixed at
-              left-6 / top-[22px], so this is the same inset from the other edge
-              and the same line. The two read as one header row — the mark on
-              one side, where you are on the other. */}
-          <div
-            ref={labelRef}
-            className="pointer-events-none absolute top-[22px] right-6 z-30 will-change-transform"
-            style={{ opacity: 0 }}
-          >
-            <span className="font-display text-[20px] leading-none font-bold text-white md:text-[24px]">
-              מי אני
-            </span>
-          </div>
-
           {/* THE GREETING, floating. It lands exactly on the slot the column
               reserves below, so the layout still decides where it ends up. */}
           <div
@@ -416,12 +433,12 @@ export default function AboutSection() {
                         which on a two-line paragraph leaves a word hanging on
                         its own at the end of the first line; letting the lines
                         fill keeps the block's edge straight. */}
-                    <p className="mt-8 max-w-[40ch] font-display text-[19px] leading-[1.55] font-light text-white md:text-[22px]">
+                    <p className="mt-8 max-w-[40ch] font-display text-[19px] leading-[1.55] font-light text-accent-light md:text-[22px]">
                       אני מעצב מגיל 15, מפתח מגיל 17, ואני עיצבתי ובניתי את מה שאתם רואים כאן.
                     </p>
                     {/* Half a line, not a full one. The two sentences are one
                         thought and were reading as two paragraphs. */}
-                    <p className="mt-[0.78em] max-w-[40ch] font-display text-[19px] leading-[1.55] font-light text-white md:text-[22px]">
+                    <p className="mt-[0.78em] max-w-[40ch] font-display text-[19px] leading-[1.55] font-light text-accent-light md:text-[22px]">
                       הקמתי את YEYE מתוך אובססיה לפרטים הקטנים ואמונה שאתר טוב צריך לעבוד טוב בדיוק
                       כמו שהוא נראה.
                     </p>
