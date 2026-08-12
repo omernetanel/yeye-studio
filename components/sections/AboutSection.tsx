@@ -147,12 +147,18 @@ export default function AboutSection() {
     );
     slot.style.fontSize = `${size}px`;
 
-    // Measured with the transform off and at the size it lands at, so this is
-    // the box the layout gives it rather than wherever the last frame put it.
+    // Measured with EVERY transform off — the greeting's own, and the content
+    // wrapper's, which the slot lives inside. The wrapper starts translated
+    // most of a screen down and only scroll brings it back, so measuring the
+    // slot through it aimed the greeting at a landing place that low and it
+    // simply descended off the bottom.
+    const content = contentRef.current;
     const previousSize = greet.style.fontSize;
     const previousTransform = greet.style.transform;
+    const previousContent = content?.style.transform ?? "";
     greet.style.fontSize = `${size}px`;
     greet.style.transform = "";
+    if (content) content.style.transform = "";
 
     const greetBox = greet.getBoundingClientRect();
     const slotBox = slot.getBoundingClientRect();
@@ -169,6 +175,7 @@ export default function AboutSection() {
 
     greet.style.fontSize = previousSize;
     greet.style.transform = previousTransform;
+    if (content) content.style.transform = previousContent;
 
     landingRef.current = {
       x: slotBox.left + slotBox.width / 2 - (panelBox.left + panel.clientWidth / 2),
