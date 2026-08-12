@@ -17,16 +17,20 @@ import { aboutFacts } from "@/lib/content";
 // after it — and a photograph is legible at fifteen percent opacity where a
 // line of text at the same opacity is still invisible.
 const BEATS = {
-  greetRise: [0.0, 0.22],
-  greetSettle: [0.28, 0.46],
-  label: [0.3, 0.42],
-  content: [0.48, 0.62],
-  portrait: [0.62, 0.74],
-  claim: [0.7, 0.82],
+  // The two lines of the greeting arrive one after the other, not together:
+  // the salutation first, and only once it is standing does the name come up
+  // under it. They overlap by a hair so the pair still reads as one gesture.
+  greetLine1: [0.0, 0.13],
+  greetLine2: [0.16, 0.3],
+  greetSettle: [0.36, 0.52],
+  label: [0.36, 0.48],
+  content: [0.54, 0.66],
+  portrait: [0.66, 0.78],
+  claim: [0.72, 0.84],
   facts: [
-    [0.8, 0.88],
-    [0.85, 0.93],
-    [0.9, 0.99],
+    [0.82, 0.89],
+    [0.87, 0.94],
+    [0.92, 0.99],
   ],
 } as const;
 
@@ -123,6 +127,7 @@ export default function AboutSection() {
 
   const stageRef = useRef<HTMLDivElement>(null);
   const greetRef = useRef<HTMLDivElement>(null);
+  const greetLinesRef = useRef<(HTMLSpanElement | null)[]>([]);
   const slotRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -202,22 +207,32 @@ export default function AboutSection() {
     };
 
     // THE GREETING — entirely live, in both directions.
-    const rise = span(progress, BEATS.greetRise);
     const settle = span(progress, BEATS.greetSettle);
     const land = landingRef.current;
 
     const greetSize = lerp((GREET_SIZE_ALONE_VW * window.innerWidth) / 100, land.size, settle);
     greet.style.fontSize = `${greetSize}px`;
-    greet.style.opacity = String(rise);
-    const blur = lerp(GREET_BLUR_PX, 0, clamp01(rise * 1.4));
-    greet.style.filter = blur > 0.15 ? `blur(${blur}px)` : "";
+    greet.style.opacity = "1";
     greet.style.transform =
-      `translate(-50%, -50%) translate(${land.x * settle}px, ${lerp(screen * GREET_FROM_VH, 0, rise) + land.y * settle}px)`;
-    // Centred while it is moving, flush left once it has arrived. Switched at
+      `translate(-50%, -50%) translate(${land.x * settle}px, ${land.y * settle}px)`;
+    // Centred while it is moving, flush right once it has arrived. Switched at
     // the end rather than eased across the settle: easing it means giving each
     // line its own sideways travel, and that is what made the two lines read as
     // two separate entrances.
     greet.style.textAlign = settle >= 1 ? "right" : "center";
+
+    // Each line rises on its own beat. The rise is carried per line rather than
+    // on the box, so the second can still be climbing while the first is
+    // already standing — the box itself only ever carries the settle.
+    ([BEATS.greetLine1, BEATS.greetLine2] as const).forEach((range, index) => {
+      const line = greetLinesRef.current[index];
+      if (!line) return;
+      const rise = span(progress, range);
+      line.style.opacity = String(rise);
+      const blur = lerp(GREET_BLUR_PX, 0, clamp01(rise * 1.4));
+      line.style.filter = blur > 0.15 ? `blur(${blur}px)` : "";
+      line.style.transform = `translateY(${lerp(screen * GREET_FROM_VH, 0, rise)}px)`;
+    });
 
     // THE COPY — movement live, arrival latched.
     const contentTravel = span(progress, BEATS.content);
@@ -229,9 +244,13 @@ export default function AboutSection() {
 
     label.style.opacity = String(arrived("label", BEATS.label));
     label.style.transform = `translateY(${lerp(-14, 0, span(progress, BEATS.label))}px)`;
+    // Live, not latched. Latched it stayed lit on the way back up, sitting on
+    // the black while the greeting was still coming apart above it — the one
+    // element big enough to spoil the reverse on its own.
+    //
     // Eased, not linear: a linear ramp on a photograph spends its first third
     // as a grey shape sitting there before it is properly on screen.
-    const portraitIn = smoothstep(arrived("portrait", BEATS.portrait));
+    const portraitIn = smoothstep(span(progress, BEATS.portrait));
     portrait.style.opacity = String(portraitIn);
     portrait.style.transform = `translateY(${lerp(PORTRAIT_LIFT_PX, 0, portraitIn)}px)`;
 
@@ -318,21 +337,30 @@ export default function AboutSection() {
             className="pointer-events-none absolute top-1/2 left-1/2 z-20 text-center font-display leading-[1.06] font-bold whitespace-nowrap text-white will-change-transform"
             style={{ opacity: 0, fontSize: `${GREET_SIZE_ALONE_VW}vw` }}
           >
-            {/* ONE box, ONE motion. The two lines are centred on each other by
-                text-align and never move independently.
-
-                They used to: the block was right-aligned and each line carried
-                its own translateX that decayed as the greeting settled, so that
-                the pair went from centred to right-aligned as it landed. On
-                screen that read as two separate entrances — the short line
-                sliding in sideways while the long one rose — because that is
-                exactly what it was. The alignment does not change any more, so
-                there is nothing left to animate but the box itself.
+            {/* The lines rise one after the other, so each is its own animated
+                box. What they must NOT do is move sideways independently: the
+                alignment is handled by text-align on the parent, switched once
+                at the end. An eased horizontal offset per line is what made the
+                pair read as two unrelated entrances rather than one greeting.
 
                 Sizes in em, so the pair keeps its proportions through every
                 size it passes through on the way down to the column. */}
-            <span className="block text-[0.38em] leading-[0.53] text-white/70">נעים מאוד,</span>
-            <span className="block">אני עומר.</span>
+            <span
+              ref={(el) => {
+                greetLinesRef.current[0] = el;
+              }}
+              className="block text-[0.34em] text-white/70 will-change-transform"
+            >
+              נעים מאוד,
+            </span>
+            <span
+              ref={(el) => {
+                greetLinesRef.current[1] = el;
+              }}
+              className="block text-[1.34em] will-change-transform"
+            >
+              אני עומר.
+            </span>
           </div>
 
           <div ref={contentRef} className="h-full will-change-transform">
@@ -348,8 +376,8 @@ export default function AboutSection() {
                     aria-hidden="true"
                     className="invisible inline-block text-center font-display leading-[1.06] font-bold whitespace-nowrap"
                   >
-                    <span className="block text-[0.38em] leading-[0.53]">נעים מאוד,</span>
-                    <span className="block">אני עומר.</span>
+                    <span className="block text-[0.34em]">נעים מאוד,</span>
+                    <span className="block text-[1.34em]">אני עומר.</span>
                   </div>
 
                   <div ref={claimRef} className="will-change-transform" style={{ opacity: 0 }}>
@@ -369,15 +397,19 @@ export default function AboutSection() {
                     <p className="mt-8 max-w-[40ch] font-display text-[19px] leading-[1.55] font-medium text-white md:text-[22px]">
                       אני מעצב מגיל 15, מפתח מגיל 17, ואני עיצבתי ובניתי את מה שאתם רואים כאן.
                     </p>
-                    <p className="mt-6 max-w-[40ch] font-display text-[19px] leading-[1.55] font-medium text-white md:text-[22px]">
+                    {/* Half a line, not a full one. The two sentences are one
+                        thought and were reading as two paragraphs. */}
+                    <p className="mt-[0.78em] max-w-[40ch] font-display text-[19px] leading-[1.55] font-medium text-white md:text-[22px]">
                       הקמתי את YEYE מתוך אובססיה לפרטים הקטנים ואמונה שאתר טוב צריך לעבוד טוב בדיוק
                       כמו שהוא נראה.
                     </p>
                   </div>
                 </div>
 
-                {/* Kept portrait-shaped. Capping only the height let a wide box
-                    crop a 430x560 photograph into a landscape slot. */}
+                {/* The photograph is shown whole — its own aspect ratio, no
+                    crop, no rounding. Bounded by height only, so the width
+                    follows from the file rather than the file being cut to fit
+                    a width. */}
                 <div
                   ref={portraitRef}
                   className="order-first will-change-transform lg:order-none"
@@ -390,7 +422,7 @@ export default function AboutSection() {
                       alt="עומר, מייסד YEYE Digital"
                       width={430}
                       height={560}
-                      className="mx-auto block aspect-[3/4] max-h-[42svh] w-auto object-cover"
+                      className="mx-auto block h-auto max-h-[42svh] w-auto max-w-full"
                       draggable={false}
                     />
                   </figure>
