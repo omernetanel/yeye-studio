@@ -52,11 +52,6 @@ const CLOSER_SETTLE_VH = 0.6;
 const CLOSER_STAGE_VH =
   1 + CLOSER_IN_VH + CLOSER_HOLD_VH + CLOSER_DRAW_VH + CLOSER_SETTLE_VH;
 
-// How wide the stroke's leading edge is, as a percentage of its own length.
-// This is the difference between a stroke being drawn and a rectangle being
-// slid across it.
-const SWASH_TIP_SOFTNESS_PCT = 16;
-
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
 }
@@ -166,11 +161,16 @@ export default function AboutSection() {
 
     // Each line slides from centred within the block to flush with its right
     // edge. Right-aligned is the resting state, so the offset is what centring
-    // would add — and it is per line, because the two are different lengths.
+    // would add — per line, because the two are different lengths.
+    //
+    // Kept as a RATIO of the font size it was measured at, not as pixels. The
+    // greeting is three times bigger while it is alone on the screen than it is
+    // when it lands, so a fixed pixel offset centres it at the landing size and
+    // leaves it visibly off-centre at the size it actually arrives in.
     const lineShift = greetLinesRef.current.map((line) => {
       if (!line) return 0;
       const lineBox = line.getBoundingClientRect();
-      return -(greetBox.width - lineBox.width) / 2;
+      return -(greetBox.width - lineBox.width) / 2 / size;
     });
 
     greet.style.fontSize = previousSize;
@@ -210,7 +210,8 @@ export default function AboutSection() {
     const settle = span(progress, BEATS.greetSettle);
     const land = landingRef.current;
 
-    greet.style.fontSize = `${lerp((GREET_SIZE_ALONE_VW * window.innerWidth) / 100, land.size, settle)}px`;
+    const greetSize = lerp((GREET_SIZE_ALONE_VW * window.innerWidth) / 100, land.size, settle);
+    greet.style.fontSize = `${greetSize}px`;
     greet.style.opacity = String(rise);
     const blur = lerp(GREET_BLUR_PX, 0, clamp01(rise * 1.4));
     greet.style.filter = blur > 0.15 ? `blur(${blur}px)` : "";
@@ -222,7 +223,7 @@ export default function AboutSection() {
     // as it settles — which is the alignment changing as a movement rather than
     // as a jump.
     greetLinesRef.current.forEach((line, index) => {
-      if (line) line.style.transform = `translateX(${land.lineShift[index] * (1 - settle)}px)`;
+      if (line) line.style.transform = `translateX(${land.lineShift[index] * greetSize * (1 - settle)}px)`;
     });
 
     // THE COPY — movement live, arrival latched.
@@ -260,16 +261,7 @@ export default function AboutSection() {
       closerLine.style.opacity = String(arriveT);
       closerLine.style.transform = `translateY(${lerp(38, 0, arriveT)}px)`;
 
-      // Drawn with a soft leading edge rather than clipped with a hard one. A
-      // clip reveals the stroke as a rectangle sliding across it, which reads
-      // as a wipe; a gradient mask lets the tip come in over a width, which is
-      // how a loaded brush actually puts paint down.
-      const drawn = draw * (100 + SWASH_TIP_SOFTNESS_PCT);
-      const mask =
-        `linear-gradient(to right, #000 0%, #000 ${Math.max(0, drawn - SWASH_TIP_SOFTNESS_PCT)}%,` +
-        ` transparent ${drawn}%, transparent 100%)`;
-      closerSwash.style.maskImage = mask;
-      closerSwash.style.webkitMaskImage = mask;
+      closerSwash.style.clipPath = `inset(0 ${(1 - draw) * 100}% 0 0)`;
     }
   };
 
@@ -385,11 +377,15 @@ export default function AboutSection() {
                         page: the years, which give the age of the practice
                         without giving an age, and the past tense — this site,
                         the one being read, is the exhibit. */}
-                    <p className="mt-8 max-w-[44ch] font-display text-[19px] leading-[1.55] font-medium text-balance text-white/60 md:text-[22px]">
+                    {/* No text-balance here. Balancing evens the line lengths,
+                        which on a two-line paragraph leaves a word hanging on
+                        its own at the end of the first line; letting the lines
+                        fill keeps the block's edge straight. */}
+                    <p className="mt-8 max-w-[40ch] font-display text-[19px] leading-[1.55] font-medium text-white/60 md:text-[22px]">
                       אני מעצב מגיל 15, מפתח מגיל 17, ואני{" "}
                       <span className="font-bold text-white">עיצבתי ובניתי את מה שאתם רואים כאן</span>.
                     </p>
-                    <p className="mt-6 max-w-[44ch] font-display text-[19px] leading-[1.55] font-medium text-balance text-white/60 md:text-[22px]">
+                    <p className="mt-6 max-w-[40ch] font-display text-[19px] leading-[1.55] font-medium text-white/60 md:text-[22px]">
                       הקמתי את YEYE מתוך אובססיה לפרטים הקטנים ואמונה ש
                       <span className="font-bold text-white">אתר טוב צריך לעבוד טוב בדיוק כמו שהוא נראה</span>.
                     </p>
@@ -460,15 +456,8 @@ export default function AboutSection() {
               <br />
               למוצר שמייצר אימפקט.
             </p>
-            <div
-              ref={closerSwashRef}
-              className="mt-10"
-              style={{
-                maskImage: "linear-gradient(to right, #000 0%, transparent 0%)",
-                WebkitMaskImage: "linear-gradient(to right, #000 0%, transparent 0%)",
-              }}
-            >
-              <HeadingSwash className="w-[440px] text-white md:w-[680px]" />
+            <div ref={closerSwashRef} className="mt-8" style={{ clipPath: "inset(0 100% 0 0)" }}>
+              <HeadingSwash className="w-[260px] text-white md:w-[360px]" />
             </div>
           </div>
         </div>
