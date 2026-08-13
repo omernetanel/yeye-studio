@@ -169,7 +169,7 @@ export default function AboutSection() {
   // Handed to the balloon layer once per scroll frame. A ref rather than state
   // on purpose: this changes on almost every frame and must not re-render the
   // section, which would tear down the whole scroll pipeline underneath it.
-  const dropStateRef = useRef<DropState>({ armed: false, wallLive: false });
+  const dropStateRef = useRef<DropState>({ armed: false, wallLive: false, leaving: false });
 
   const closerStageRef = useRef<HTMLDivElement>(null);
   const closerLineRef = useRef<HTMLParagraphElement>(null);
@@ -304,6 +304,10 @@ export default function AboutSection() {
     });
 
     dropStateRef.current.armed = progress >= DROP_AT;
+    // The hold is over and the assembled section is on its way off the top.
+    // The back half of the cast is cued off this rather than off a delay,
+    // because how long the reader spends in the hold is up to the reader.
+    dropStateRef.current.leaving = progress >= 1;
 
     // The close, on its own stage. Position-driven rather than latched: the
     // page is held still here, and a one-way arrival inside a held frame is a
