@@ -53,21 +53,24 @@ const SOURCES = ["/images/ball1.webp", "/images/ball2.webp"];
  * them, so that at any moment one or two are in the air and never a shower.
  */
 const CAST = [
-  { at: 0, x: 0.62, depth: 1, type: 0, drift: -14, leaves: false },
-  { at: 620, x: 0.25, depth: 0, type: 1, drift: 11, leaves: true },
-  { at: 1180, x: 0.81, depth: 0, type: 1, drift: -9, leaves: false },
-  { at: 1900, x: 0.44, depth: 0.5, type: 1, drift: 16, leaves: true },
-  { at: 2520, x: 0.12, depth: 1, type: 0, drift: 13, leaves: false },
-  { at: 3080, x: 0.69, depth: 0, type: 1, drift: -12, leaves: true },
-  { at: 3820, x: 0.37, depth: 0, type: 1, drift: 8, leaves: false },
-  { at: 4460, x: 0.93, depth: 0.5, type: 0, drift: -18, leaves: true },
-  { at: 5180, x: 0.56, depth: 1, type: 0, drift: 10, leaves: false },
-  { at: 5800, x: 0.06, depth: 0, type: 1, drift: 15, leaves: true },
-  { at: 6520, x: 0.75, depth: 0.5, type: 1, drift: -11, leaves: false },
-  { at: 7180, x: 0.31, depth: 0, type: 1, drift: 9, leaves: true },
-  { at: 7900, x: 0.87, depth: 1, type: 0, drift: -15, leaves: false },
-  { at: 8560, x: 0.5, depth: 0, type: 1, drift: -8, leaves: true },
-  { at: 9280, x: 0.19, depth: 0.5, type: 0, drift: 12, leaves: false },
+  { at: 0, x: 0.62, depth: 1, type: 0, drift: -14, leaves: false, front: true },
+  { at: 470, x: 0.25, depth: 0, type: 1, drift: 11, leaves: true, front: false },
+  { at: 890, x: 0.81, depth: 0, type: 1, drift: -9, leaves: false, front: false },
+  { at: 1430, x: 0.44, depth: 0.5, type: 1, drift: 16, leaves: true, front: false },
+  { at: 1890, x: 0.12, depth: 1, type: 0, drift: 13, leaves: false, front: true },
+  { at: 2310, x: 0.69, depth: 0, type: 1, drift: -12, leaves: true, front: false },
+  { at: 2870, x: 0.37, depth: 0, type: 1, drift: 8, leaves: false, front: false },
+  { at: 3350, x: 0.93, depth: 0.5, type: 0, drift: -18, leaves: true, front: false },
+  { at: 3890, x: 0.56, depth: 1, type: 0, drift: 10, leaves: false, front: true },
+  { at: 4350, x: 0.06, depth: 0, type: 1, drift: 15, leaves: true, front: false },
+  // The one blue balloon up front, so the line is not exclusively a silver
+  // event. Middle depth, so it is visibly smaller than the three it shares the
+  // bounce with.
+  { at: 4890, x: 0.75, depth: 0.5, type: 1, drift: -11, leaves: false, front: true },
+  { at: 5390, x: 0.31, depth: 0, type: 1, drift: 9, leaves: true, front: false },
+  { at: 5930, x: 0.87, depth: 1, type: 0, drift: -15, leaves: false, front: true },
+  { at: 6420, x: 0.5, depth: 0, type: 1, drift: -8, leaves: true, front: false },
+  { at: 6960, x: 0.19, depth: 0.5, type: 0, drift: 12, leaves: false, front: false },
 ] as const;
 
 // Headroom on the push given to a leaver, over the distance it actually has to
@@ -138,7 +141,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
           tilt: 0,
           tiltVelocity: 0,
           depth: entry.depth,
-          front: entry.depth >= 1,
+          front: entry.front,
           type: entry.type,
           swayPhase: index % 2 === 0 ? 1 : -1,
           contained: !entry.leaves,
@@ -291,7 +294,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
   const layer = (front: boolean, z: string) => (
     <div className={`pointer-events-none fixed inset-0 ${z}`} aria-hidden="true">
       {CAST.map((entry, index) =>
-        entry.depth >= 1 === front ? (
+        entry.front === front ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={index}
