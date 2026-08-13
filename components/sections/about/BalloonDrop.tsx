@@ -73,6 +73,28 @@ const CAST = [
   { at: 6960, x: 0.19, depth: 0.5, type: 0, drift: 12, leaves: false, front: false },
 ] as const;
 
+/**
+ * Two more, released off the impact line rather than off the clock.
+ *
+ * The line only becomes solid once it has finished arriving, and by then the
+ * balloons cued at the start of the hold have already fallen past the height it
+ * appears at. Timing these from the drop cannot fix that: how long the reader
+ * takes to get from one to the other is up to the reader. So these two wait for
+ * the line itself and fall onto it while it is there.
+ *
+ * `at` is milliseconds after the line goes solid, not after the drop. Both are
+ * in front, one silver at the near size and one blue at the far one — the same
+ * event at two distances, with the logo as the larger of them.
+ */
+const WALL_CAST = [
+  { at: 120, x: 0.42, depth: 1, type: 0, drift: -10, leaves: false, front: true },
+  { at: 860, x: 0.66, depth: 0, type: 1, drift: 8, leaves: false, front: true },
+] as const;
+
+const ALL = [...CAST, ...WALL_CAST];
+// Everything from this index on waits for the line instead of the clock.
+const WALL_CUED_FROM = CAST.length;
+
 // Headroom on the push given to a leaver, over the distance it actually has to
 // cover. Drag is exponential, so the theoretical figure only just reaches the
 // edge and only after a long time; a third again gets it out of frame while it
@@ -117,6 +139,9 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
 
     let frame = 0;
     let started = 0;
+    // When the impact line first went solid. The second pair is cued off this
+    // rather than off the drop.
+    let wallSince = 0;
     let carry = 0;
     let previous = 0;
     let lastFloor = 0;
@@ -126,7 +151,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
 
     const build = () => {
       const short = Math.min(window.innerWidth, window.innerHeight);
-      balloonsRef.current = CAST.map((entry, index) => {
+      balloonsRef.current = ALL.map((entry, index) => {
         const size = sizeFor(entry.depth, short);
         return {
           x: entry.x * window.innerWidth,
@@ -156,8 +181,8 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
       // one starting at 0.06 is not fired across the whole screen and the one
       // in the middle actually makes it out.
       balloonsRef.current.forEach((balloon, index) => {
-        if (CAST[index].leaves) {
-          const outward = Math.sign(CAST[index].drift) || 1;
+        if (ALL[index].leaves) {
+          const outward = Math.sign(ALL[index].drift) || 1;
           const distance =
             outward > 0 ? window.innerWidth - balloon.x + balloon.r : balloon.x + balloon.r;
           balloon.vx = outward * distance * ESCAPE_DRAG * ESCAPE_MARGIN;
@@ -168,6 +193,11 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
         node.style.opacity = "0";
       });
       started = 0;
+      wallSince = 0;
+      // Cleared too, or the frame after a reset computes a floor velocity out
+      // of the gap between two unrelated positions and launches the heap.
+      lastFloor = 0;
+      lastWallTop = 0;
     };
 
     build();
@@ -249,9 +279,12 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
         sway: Math.max(-SWAY_LIMIT, Math.min(SWAY_LIMIT, scrolled)),
       };
 
+      if (wallBox && wallSince === 0) wallSince = now;
       const since = now - started;
+      const sinceWall = wallSince === 0 ? -1 : now - wallSince;
       balloonsRef.current.forEach((balloon, index) => {
-        if (since >= CAST[index].at) balloon.released = true;
+        const clock = index >= WALL_CUED_FROM ? sinceWall : since;
+        if (clock >= 0 && clock >= ALL[index].at) balloon.released = true;
       });
 
       carry = Math.min(carry + elapsed, TIMESTEP * MAX_SUBSTEPS);
@@ -293,7 +326,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
 
   const layer = (front: boolean, z: string) => (
     <div className={`pointer-events-none fixed inset-0 ${z}`} aria-hidden="true">
-      {CAST.map((entry, index) =>
+      {ALL.map((entry, index) =>
         entry.front === front ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
