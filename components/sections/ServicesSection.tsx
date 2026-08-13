@@ -346,7 +346,7 @@ function ProcessDiagram() {
         alt="איך אני עובד: מכירים את העסק, מעצבים את החוויה, בונים את זה נכון, עולים לאוויר"
         width={1920}
         height={1080}
-        className="mx-auto block h-auto w-[88%]"
+        className="mx-auto block h-auto w-[79%]"
         draggable={false}
       />
     </div>
