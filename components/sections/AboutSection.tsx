@@ -18,38 +18,43 @@ import { aboutFacts } from "@/lib/content";
 // after it — and a photograph is legible at fifteen percent opacity where a
 // line of text at the same opacity is still invisible.
 const BEATS = {
+// Every fraction here has been rescaled each time the stage grew, so that a
+// beat lands on the exact scroll distance it landed on the first time. The
+// factor is never n/(n+1), because a beat is a fraction of the TRAVEL, which is
+// the stage minus one screen.
   // The two lines of the greeting arrive one after the other, not together:
   // the salutation first, and only once it is standing does the name come up
   // under it. They overlap by a hair so the pair still reads as one gesture.
-//
-// Every fraction here has been rescaled twice, as the stage grew from six
-// screens to seven and then to nine, so that each beat lands on the exact
-// scroll distance it landed on the first time. The factor is never n/(n+1),
-// because a beat is a fraction of the TRAVEL, which is the stage minus one
-// screen: 500vh became 600vh became 800vh.
-  greetLine1: [0.0, 0.1278],
-  greetLine2: [0.1579, 0.2857],
-  greetSettle: [0.3308, 0.4662],
+  greetLine1: [0.0, 0.1024],
+  greetLine2: [0.1265, 0.2289],
+  greetSettle: [0.2651, 0.3735],
   // With the section, not with the copy. It names where you are, so it belongs
   // on screen from the moment the black arrives — waiting until the column
   // landed meant the header row sat empty through the whole opening.
-  label: [0.015, 0.0902],
-  content: [0.4812, 0.5714],
+  label: [0.012, 0.0723],
+  content: [0.3855, 0.4578],
   // The portrait arrives on the SAME beat the greeting starts settling, not
   // after the column has landed. That is the whole point of it: "אני עומר."
   // stops being a line of type at the moment there is a face beside it, and it
   // has to happen while the name is still the thing being read.
-  portrait: [0.3308, 0.4],
+  portrait: [0.2651, 0.3205],
   // And starts down the moment it has finished appearing — the two ranges
   // touch, with no pause at full size in between. Held big for even a fraction
   // it reads as two events, an entrance and then a separate departure, rather
   // than as one picture that arrives and settles.
-  portraitLand: [0.4, 0.5714],
-  claim: [0.5865, 0.6617],
+  portraitLand: [0.3205, 0.4578],
+  claim: [0.4699, 0.5301],
+  // 70vh each, where they used to get 30, 25 and 25. They are the argument of
+  // the section and they were going past faster than anything else in it.
+  //
+  // They still arrive HERE, onto the standing screen, alongside everything
+  // else. Moving them onto a screen of their own was tried and taken back out:
+  // it turned one moment into three, and the point was to make the moment
+  // longer, not to break it up.
   facts: [
-    [0.6466, 0.6917],
-    [0.6767, 0.7143],
-    [0.7068, 0.7444],
+    [0.5663, 0.6506],
+    [0.6386, 0.7229],
+    [0.7108, 0.7952],
   ],
 } as const;
 
@@ -67,7 +72,7 @@ const BEATS = {
 // The trigger sits just BEFORE the last fact finishes rather than after it, so
 // the first balloon is already on its way down while the section finishes
 // assembling instead of after a beat of nothing.
-const DROP_AT = 0.7218;
+const DROP_AT = 0.7831;
 
 // The portrait's opening state: tall, and out on the left, clear of the
 // shrinking name. Height as a fraction of the screen and centre as a fraction
@@ -79,7 +84,7 @@ const PORTRAIT_BIG_X = 0.34;
 // fast anything moves. Six screens rather than four: at four the greeting's two
 // lines were each done inside forty screen-heights of scroll, which on a
 // trackpad is a flick. The tail is the balloons' — see DROP_AT.
-const STAGE_VH = 7.65;
+const STAGE_VH = 9.3;
 
 // The greeting lands with its middle on the bottom edge — the first thing on
 // screen is the top half of it, cut — and heavily out of focus.
