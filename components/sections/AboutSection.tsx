@@ -40,9 +40,11 @@ const BEATS = {
   // stops being a line of type at the moment there is a face beside it, and it
   // has to happen while the name is still the thing being read.
   portrait: [0.3308, 0.4],
-  // And travels to its slot across the end of the settle and the rise of the
-  // copy, so it is one movement with them rather than a fourth arrival.
-  portraitLand: [0.44, 0.5714],
+  // And starts down the moment it has finished appearing — the two ranges
+  // touch, with no pause at full size in between. Held big for even a fraction
+  // it reads as two events, an entrance and then a separate departure, rather
+  // than as one picture that arrives and settles.
+  portraitLand: [0.4, 0.5714],
   claim: [0.5865, 0.6617],
   facts: [
     [0.6466, 0.6917],
@@ -71,7 +73,7 @@ const DROP_AT = 0.7218;
 // shrinking name. Height as a fraction of the screen and centre as a fraction
 // of the panel's width, so it holds its framing at any size.
 const PORTRAIT_BIG_H = 0.78;
-const PORTRAIT_BIG_X = 0.27;
+const PORTRAIT_BIG_X = 0.34;
 
 // The beats above are fractions of this, so the two numbers together decide how
 // fast anything moves. Six screens rather than four: at four the greeting's two
