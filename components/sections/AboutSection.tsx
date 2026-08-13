@@ -59,10 +59,14 @@ const BEATS = {
   //
   // Live, not latched, and symmetric — each swells and subsides — so going back
   // up walks the eye across them in reverse rather than leaving one lit.
+  // Separated by a gap, not butted together. Adjacent windows hand straight
+  // over from one claim to the next, which reads as a single light sliding
+  // down the block; with a gap between them each is lifted, set back down, and
+  // only then is the next one picked up.
   focus: [
-    [0.765, 0.83],
-    [0.83, 0.895],
-    [0.895, 0.96],
+    [0.765, 0.815],
+    [0.8375, 0.8875],
+    [0.91, 0.96],
   ],
 } as const;
 
@@ -70,8 +74,9 @@ const BEATS = {
 // fall back while it is. Scale, not size: a transform does not touch the
 // layout, so nothing moves, nothing reflows and the panel's height budget is
 // not involved at all.
-const FOCUS_SCALE = 0.07;
-const FOCUS_DIM = 0.42;
+// Small on purpose. This is a claim being noticed, not a claim being announced.
+const FOCUS_SCALE = 0.035;
+const FOCUS_DIM = 0.62;
 
 // The first balloons come down over the sweep, not over an empty hold. The two
 // share the stretch on purpose: one is a slow read across three lines of type,
