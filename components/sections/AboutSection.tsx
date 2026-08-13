@@ -25,29 +25,29 @@ const BEATS = {
   // The two lines of the greeting arrive one after the other, not together:
   // the salutation first, and only once it is standing does the name come up
   // under it. They overlap by a hair so the pair still reads as one gesture.
-  greetLine1: [0.0, 0.1024],
-  greetLine2: [0.1265, 0.2289],
-  greetSettle: [0.2651, 0.3735],
+  greetLine1: [0.0, 0.1133],
+  greetLine2: [0.14, 0.2533],
+  greetSettle: [0.2933, 0.4133],
   // With the section, not with the copy. It names where you are, so it belongs
   // on screen from the moment the black arrives — waiting until the column
   // landed meant the header row sat empty through the whole opening.
-  label: [0.012, 0.0723],
-  content: [0.3855, 0.4578],
+  label: [0.0133, 0.08],
+  content: [0.4267, 0.5067],
   // The portrait arrives on the SAME beat the greeting starts settling, not
   // after the column has landed. That is the whole point of it: "אני עומר."
   // stops being a line of type at the moment there is a face beside it, and it
   // has to happen while the name is still the thing being read.
-  portrait: [0.2651, 0.3205],
+  portrait: [0.2933, 0.3547],
   // And starts down the moment it has finished appearing — the two ranges
   // touch, with no pause at full size in between. Held big for even a fraction
   // it reads as two events, an entrance and then a separate departure, rather
   // than as one picture that arrives and settles.
-  portraitLand: [0.3205, 0.4578],
-  claim: [0.4699, 0.5301],
+  portraitLand: [0.3547, 0.5067],
+  claim: [0.52, 0.5867],
   // The strip arrives whole, all three at once, in the shape it has always had.
   // Nobody reads it here and that is the point — it is the thing you have
   // glanced at and not taken in.
-  factsIn: [0.5301, 0.5663],
+  factsIn: [0.5867, 0.6267],
   // And then it is taken apart, 70vh a claim where the whole strip used to get
   // 30. They are the argument of the section and they were going past faster
   // than anything else in it.
@@ -57,13 +57,13 @@ const BEATS = {
   // turned one moment into three, and the point was to make the moment longer,
   // not to break it up.
   facts: [
-    [0.5663, 0.6506],
-    [0.655, 0.72],
-    [0.725, 0.7952],
+    [0.6267, 0.72],
+    [0.7248, 0.7968],
+    [0.8024, 0.88],
   ],
 } as const;
 
-// Past the last fact the stage still has 170vh to run and nothing left to move.
+// Past the last fact the stage still has 90vh to run and nothing left to move.
 // That stretch is the balloons': the page keeps answering the wheel the whole
 // way through it, so it is a slow passage rather than a stop, but nothing else
 // is competing for the eye while they come down.
@@ -77,7 +77,7 @@ const BEATS = {
 // The trigger sits just BEFORE the last fact finishes rather than after it, so
 // the first balloon is already on its way down while the section finishes
 // assembling instead of after a beat of nothing.
-const DROP_AT = 0.7831;
+const DROP_AT = 0.8667;
 
 // The portrait's opening state: tall, and out on the left, clear of the
 // shrinking name. Height as a fraction of the screen and centre as a fraction
@@ -89,7 +89,7 @@ const PORTRAIT_BIG_X = 0.34;
 // fast anything moves. Six screens rather than four: at four the greeting's two
 // lines were each done inside forty screen-heights of scroll, which on a
 // trackpad is a flick. The tail is the balloons' — see DROP_AT.
-const STAGE_VH = 9.3;
+const STAGE_VH = 8.5;
 
 // The greeting lands with its middle on the bottom edge — the first thing on
 // screen is the top half of it, cut — and heavily out of focus.
