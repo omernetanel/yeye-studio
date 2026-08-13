@@ -336,7 +336,7 @@ function ServicesListBlock() {
  */
 function ProcessDiagram() {
   return (
-    <div className="mx-auto w-full max-w-[980px] px-6">
+    <div className="mx-auto w-full max-w-[1500px] px-6">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/images/whatidopng.png"
