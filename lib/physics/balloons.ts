@@ -37,10 +37,13 @@ export type Balloon = {
       against each other rather than all drifting as a block. */
   swayPhase: number;
   released: boolean;
-  alive: boolean;
 };
 
 export type World = {
+  /** Both the right-hand wall and the culling edge. Nothing leaves: a balloon
+      thrown off the impact line bounces back in off the side of the screen and
+      keeps whatever is left of its energy in the new direction, so all fifteen
+      end up in the heap at the bottom of the black. */
   width: number;
   /** Viewport y the balloons come to rest on — the lower of the screen's
       bottom edge and the section's, so they never leave the black. */
@@ -53,20 +56,27 @@ export type World = {
       and that reads as the balloon juddering rather than as a collision. */
   wall: Rect | null;
   wallVelocity: number;
-  /** Sideways nudge from scrolling, px/s². */
+  /** Raw scroll velocity in px/s, signed. Not a force — the gains that turn it
+      into one live below, because what scrolling does to a balloon depends
+      entirely on whether that balloon is resting or still in the air. */
   sway: number;
 };
 
-// Roughly 40% of the pull a solid ball of this size would feel.
-const GRAVITY = 760;
+// A quarter of the pull a solid ball of this size would feel. Together with the
+// drag below this puts terminal velocity around 210px/s, so a balloon takes
+// something over three seconds to cross a laptop screen. At twice that they
+// read as painted rocks: the slowness IS the lightness, there is no other cue.
+const GRAVITY = 480;
 // High, and the whole reason these read as light: terminal velocity is
 // GRAVITY / DRAG, so they stop accelerating about a third of a second in.
-const DRAG = 1.9;
-const RESTITUTION = 0.5;
-const FLOOR_FRICTION = 2.6;
+const DRAG = 2.25;
+const RESTITUTION = 0.62;
+const FLOOR_FRICTION = 2;
 // Below this, a bounce is not worth having — it becomes a rest instead, which
-// is what stops a balloon buzzing against the floor forever.
-const REST_SPEED = 30;
+// is what stops a balloon buzzing against the floor forever. Deliberately low:
+// a foil balloon does not land, it touches down and lifts two or three more
+// times, each smaller than the last, and that decay is most of what sells it.
+const REST_SPEED = 12;
 
 // The rock. A spring back to upright with heavy damping, hard-limited, so the
 // logo and the face are always the right way up.
@@ -74,6 +84,26 @@ const TILT_LIMIT = 12;
 const TILT_SPRING = 44;
 const TILT_DAMPING = 5.4;
 const TILT_PER_IMPACT = 26;
+
+// How many times the heap is relaxed per step. Three is enough for fifteen
+// bodies and cheap; one is visibly not enough.
+const RELAXATION_PASSES = 3;
+
+// What scrolling does to the heap. This is a SHAKE, not a shove: the jolt is
+// mostly upward, so a resting balloon hops in place and drifts a little as it
+// comes down, and only balloons that are actually touching the floor feel it.
+//
+// It used to be a steady sideways acceleration applied to everything, which
+// meant that scrolling slid the whole row across the screen for as long as the
+// wheel turned. Nothing light behaves that way — you cannot push a balloon
+// along the ground by walking past it.
+const HOP_PER_SCROLL = 0.85;
+const DRIFT_PER_SCROLL = 0.22;
+// Below this the page is drifting to a stop under Lenis, not being scrolled,
+// and the heap should be still.
+const SCROLL_DEADZONE = 45;
+// Distance from the floor still counted as resting on it.
+const CONTACT_SLOP = 2;
 
 // Depth's effect on the fall. Not applied to drag as well: scaling both leaves
 // terminal velocity unchanged, and terminal velocity is the thing the eye
@@ -89,11 +119,19 @@ function clamp(value: number, low: number, high: number) {
 /** Advance the world by one fixed timestep. */
 export function stepBalloons(balloons: Balloon[], dt: number, world: World) {
   for (const b of balloons) {
-    if (!b.released || !b.alive) continue;
+    if (!b.released) continue;
 
     const lift = pull(b.depth);
     b.vy += GRAVITY * lift * dt;
-    b.vx += world.sway * b.swayPhase * lift * dt;
+
+    // The shake, and only for the ones on the ground. A balloon still falling
+    // is not touching anything the page can transmit through.
+    const shake = Math.abs(world.sway) > SCROLL_DEADZONE ? world.sway : 0;
+    if (shake !== 0 && b.y >= world.floorY - b.r - CONTACT_SLOP) {
+      b.vy -= HOP_PER_SCROLL * Math.abs(shake) * lift * dt;
+      b.vx += DRIFT_PER_SCROLL * shake * b.swayPhase * lift * dt;
+    }
+
     b.vx -= b.vx * DRAG * dt;
     b.vy -= b.vy * DRAG * dt;
     b.x += b.vx * dt;
@@ -101,11 +139,7 @@ export function stepBalloons(balloons: Balloon[], dt: number, world: World) {
 
     if (world.wall && b.front) hitWall(b, world.wall, world.wallVelocity);
     hitFloor(b, world.floorY, world.floorVelocity, dt);
-
-    // Off the side is gone for good. There are no side walls by design: a
-    // balloon knocked sideways off the impact line leaves and does not come
-    // back. Nothing culls vertically, because they start above the screen.
-    if (b.x + b.r < 0 || b.x - b.r > world.width) b.alive = false;
+    hitSides(b, world.width);
 
     b.tiltVelocity += (-TILT_SPRING * b.tilt - TILT_DAMPING * b.tiltVelocity) * dt;
     b.tilt += b.tiltVelocity * dt;
@@ -115,7 +149,26 @@ export function stepBalloons(balloons: Balloon[], dt: number, world: World) {
     }
   }
 
-  resolveContacts(balloons);
+  // Several passes, not one. A single pass separates each pair in isolation and
+  // immediately pushes half of them back into their other neighbour, which in a
+  // heap this size never converges — the pile shivers instead of settling.
+  for (let pass = 0; pass < RELAXATION_PASSES; pass += 1) resolveContacts(balloons);
+}
+
+function hitSides(b: Balloon, width: number) {
+  if (b.x - b.r < 0) {
+    b.x = b.r;
+    if (b.vx < 0) {
+      b.vx = -b.vx * (Math.abs(b.vx) > REST_SPEED ? RESTITUTION : 0);
+      b.tiltVelocity -= TILT_PER_IMPACT;
+    }
+  } else if (b.x + b.r > width) {
+    b.x = width - b.r;
+    if (b.vx > 0) {
+      b.vx = -b.vx * (b.vx > REST_SPEED ? RESTITUTION : 0);
+      b.tiltVelocity += TILT_PER_IMPACT;
+    }
+  }
 }
 
 function hitFloor(b: Balloon, floorY: number, floorVelocity: number, dt: number) {
@@ -172,11 +225,11 @@ function hitWall(b: Balloon, wall: Rect, wallVelocity: number) {
 function resolveContacts(balloons: Balloon[]) {
   for (let i = 0; i < balloons.length; i += 1) {
     const a = balloons[i];
-    if (!a.released || !a.alive) continue;
+    if (!a.released) continue;
 
     for (let j = i + 1; j < balloons.length; j += 1) {
       const b = balloons[j];
-      if (!b.released || !b.alive) continue;
+      if (!b.released) continue;
       // Only within a depth band. Two balloons drawn at different distances
       // that collide because they cross on screen would look like a mistake.
       if (Math.abs(a.depth - b.depth) > 0.25) continue;
@@ -199,8 +252,11 @@ function resolveContacts(balloons: Balloon[]) {
       const approach = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
       if (approach >= 0) continue;
 
-      // Equal mass, so the exchange is symmetric.
-      const impulse = ((1 + RESTITUTION) * approach) / 2;
+      // Equal mass, so the exchange is symmetric. A slow contact is settled
+      // dead rather than bounced: two balloons resting against each other in a
+      // heap must stop trading the last of the energy back and forth.
+      const bounce = -approach > REST_SPEED ? RESTITUTION : 0;
+      const impulse = ((1 + bounce) * approach) / 2;
       a.vx += impulse * nx;
       a.vy += impulse * ny;
       b.vx -= impulse * nx;

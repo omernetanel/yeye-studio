@@ -42,25 +42,43 @@ const SOURCES = ["/images/ball1.webp", "/images/ball2.webp"];
  * corrected, only reshuffled.
  *
  * `at` is milliseconds from the first release; `x` is a fraction of the screen
- * width. Depth runs the three bands, and the near band is the silver one with
- * the logo — it is the readable object, it is drawn over the copy, and it is
- * the only band the impact line can throw.
+ * width; `drift` is the sideways speed it leaves with, because nothing this
+ * light falls in a straight line. Depth runs the three bands, and the near band
+ * is the silver one with the logo — it is the readable object, it is drawn over
+ * the copy, and it is the only band the impact line can throw.
+ *
+ * The x values are spread across the full width and then SHUFFLED in time. Laid
+ * out in order they read as a wipe across the screen; clustered, they land in a
+ * heap in the middle. Neither looks like weather. Ten seconds for fifteen of
+ * them, so that at any moment one or two are in the air and never a shower.
  */
 const CAST = [
-  { at: 0, x: 0.62, depth: 1, type: 0 },
-  { at: 520, x: 0.29, depth: 0, type: 1 },
-  { at: 980, x: 0.79, depth: 0, type: 1 },
-  { at: 1420, x: 0.45, depth: 0.5, type: 1 },
-  { at: 1900, x: 0.17, depth: 1, type: 0 },
-  { at: 2380, x: 0.88, depth: 0, type: 1 },
-  { at: 2830, x: 0.36, depth: 0.5, type: 0 },
-  { at: 3310, x: 0.71, depth: 0, type: 1 },
-  { at: 3790, x: 0.54, depth: 1, type: 0 },
+  { at: 0, x: 0.62, depth: 1, type: 0, drift: -14 },
+  { at: 620, x: 0.25, depth: 0, type: 1, drift: 11 },
+  { at: 1180, x: 0.81, depth: 0, type: 1, drift: -9 },
+  { at: 1900, x: 0.44, depth: 0.5, type: 1, drift: 16 },
+  { at: 2520, x: 0.12, depth: 1, type: 0, drift: 13 },
+  { at: 3080, x: 0.69, depth: 0, type: 1, drift: -12 },
+  { at: 3820, x: 0.37, depth: 0, type: 1, drift: 8 },
+  { at: 4460, x: 0.93, depth: 0.5, type: 0, drift: -18 },
+  { at: 5180, x: 0.56, depth: 1, type: 0, drift: 10 },
+  { at: 5800, x: 0.06, depth: 0, type: 1, drift: 15 },
+  { at: 6520, x: 0.75, depth: 0.5, type: 1, drift: -11 },
+  { at: 7180, x: 0.31, depth: 0, type: 1, drift: 9 },
+  { at: 7900, x: 0.87, depth: 1, type: 0, drift: -15 },
+  { at: 8560, x: 0.5, depth: 0, type: 1, drift: -8 },
+  { at: 9280, x: 0.19, depth: 0.5, type: 0, drift: 12 },
 ] as const;
 
 // Rendered width, as a fraction of the screen's short side. Sized off the short
 // side so a balloon is the same share of the picture on a phone as on a laptop.
-const SIZE_BY_DEPTH = { far: 0.085, mid: 0.118, near: 0.163 };
+//
+// The near band is twice the far band, not one and a half times. That ratio is
+// the depth: three sizes bunched together read as three balloons that happen to
+// differ, where a clear doubling reads as distance. Big enough that the near
+// ones carry their printing at a glance — a logo you have to look for is not a
+// logo, and at the first pass at these sizes they were beads.
+const SIZE_BY_DEPTH = { far: 0.13, mid: 0.185, near: 0.26 };
 
 // The physics runs at a fixed rate regardless of the display's. Without this
 // the balloons bounce visibly higher on a 144Hz screen than on a 60Hz one.
@@ -69,9 +87,10 @@ const TIMESTEP = 1 / 120;
 // back and try to simulate a minute of falling in one frame.
 const MAX_SUBSTEPS = 5;
 
-// How hard scrolling jostles the ones already at rest, and the ceiling on it.
-const SWAY_GAIN = 26;
-const SWAY_LIMIT = 900;
+// Ceiling on the scroll velocity handed to the simulation. A trackpad flick or
+// a jump to an anchor can register thousands of pixels in a frame, and the heap
+// should not be launched off the screen because someone hit End.
+const SWAY_LIMIT = 2400;
 
 function sizeFor(depth: number, short: number) {
   const fraction =
@@ -104,7 +123,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
           x: entry.x * window.innerWidth,
           // Staged above the fold, spread out so they do not enter in a line.
           y: -size * (1.2 + (index % 3) * 0.9),
-          vx: 0,
+          vx: entry.drift,
           vy: 0,
           r: size / 2,
           tilt: 0,
@@ -114,7 +133,6 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
           type: entry.type,
           swayPhase: index % 2 === 0 ? 1 : -1,
           released: false,
-          alive: true,
         } satisfies Balloon;
       });
 
@@ -133,7 +151,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
       balloonsRef.current.forEach((balloon, index) => {
         const node = nodesRef.current[index];
         if (!node) return;
-        if (!balloon.released || !balloon.alive) {
+        if (!balloon.released) {
           node.style.opacity = "0";
           return;
         }
@@ -195,7 +213,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
           ? { left: wallBox.left, top: wallBox.top, right: wallBox.right, bottom: wallBox.bottom }
           : null,
         wallVelocity,
-        sway: Math.max(-SWAY_LIMIT, Math.min(SWAY_LIMIT, scrolled * SWAY_GAIN)),
+        sway: Math.max(-SWAY_LIMIT, Math.min(SWAY_LIMIT, scrolled)),
       };
 
       const since = now - started;
