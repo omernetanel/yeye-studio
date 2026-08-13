@@ -67,18 +67,23 @@ const BEATS = {
   ],
 } as const;
 
-// The lift given to whichever claim is being read. Scale, not size: a transform
-// does not touch the layout, so nothing moves, nothing reflows and the panel's
-// height budget is not involved. Small on purpose — this is a claim being
-// noticed, not a claim being announced.
-const FOCUS_SCALE = 0.035;
+// What being read does to a claim: it grows, and it rises off the line. Both
+// are transforms, so the layout never hears about it — nothing reflows and the
+// panel's height budget is not involved.
+//
+// Bigger than the first pass at this. That one was cut right back after the
+// effect read as a strobe, but the flashing was never a question of size: it
+// was brightness going down again and three cycles crammed into 129vh. With
+// those fixed, a small effect is just a small effect.
+const FOCUS_SCALE = 0.075;
+const FOCUS_RISE_PX = 10;
 // And where a claim sits BEFORE its turn comes. It brightens to full as it is
 // read and then simply stays there: dimmed, lit, done.
 //
 // Brightness used to return to dim afterwards, which is what actually made this
 // flash. Whatever the pacing, an element that goes dark, bright, dark, three
 // times over, is blinking. "Back to normal" is not back to dim.
-const FOCUS_DIM = 0.62;
+const FOCUS_DIM = 0.35;
 
 // The first balloons come down over the sweep, not over an empty hold. The two
 // share the stretch on purpose: one is a slow read across three lines of type,
@@ -376,7 +381,8 @@ export default function AboutSection() {
       const read = sweep[index];
       item.style.opacity = String(arrived(`fact${index}`, range) * lerp(FOCUS_DIM, 1, read));
       const lift = Math.sin(Math.PI * read);
-      item.style.transform = `scale(${(1 + FOCUS_SCALE * lift).toFixed(4)})`;
+      item.style.transform =
+        `translateY(${(-FOCUS_RISE_PX * lift).toFixed(2)}px) scale(${(1 + FOCUS_SCALE * lift).toFixed(4)})`;
     });
 
     dropStateRef.current.armed = progress >= DROP_AT;
