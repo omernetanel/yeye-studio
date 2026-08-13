@@ -46,15 +46,23 @@ export default async function Home() {
               a summary of what was just shown, where ahead of it it interrupted
               the page before anything had happened yet. */}
           <StatementSection />
-          {/* The contact stage sits between the closing statement and "who I
-              am" rather than after the work. On paper the argument for the
-              other order is better — know the person, see the work, then be
-              asked — but watched end to end this one is simply more alive: the
-              zoom out to the room lands while the paper sequence is still
-              ringing, and the black of it hands straight over to the black of
-              the next section. */}
-          <ContactStage />
           <AboutSection />
+          {/* The contact stage carries a real form, so where it sits is a
+              question of when the page has earned the right to ask. Ahead of
+              "who I am" it was asking a stranger for their phone number on the
+              strength of a film: they had seen WHAT is made here and nothing
+              about who makes it. After it, the request leans on the section
+              that was written to be leaned on.
+
+              Not after the work, though — that would be the stronger pitch, but
+              the page closes on a second form by design, and moving this one to
+              the end would stack the two asks together and leave no early exit
+              for anyone already convinced.
+
+              It also happens to be the cleaner run of colour: the black of "who
+              I am" hands straight to the dark footage this opens on, and the
+              white room it ends in hands to the white of the work. */}
+          <ContactStage />
           <ProjectsSection />
           <CTASection />
           <Footer light />

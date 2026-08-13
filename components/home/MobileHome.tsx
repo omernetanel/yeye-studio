@@ -24,10 +24,10 @@ export default function MobileHome() {
           versions whose paper sequence cannot, and this one ends on that line
           itself — rendering both would show the sentence twice. */}
       <MobileServices />
-      {/* Contact stage between the statement and "who I am" — see the note in
+      <AboutSection />
+      {/* Contact stage after "who I am" and before the work — see the note in
           app/page.tsx. */}
       <ContactStage />
-      <AboutSection />
       <ProjectsSection />
       <CTASection />
       <Footer light />
