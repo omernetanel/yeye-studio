@@ -334,63 +334,18 @@ function ServicesListBlock() {
  * size, the wording is editable, and it does not cost a re-export and a
  * re-measure of every timing in this file to change a word.
  */
-const PROCESS_STEPS = [
-  { number: "01", title: "מכירים את העסק" },
-  { number: "02", title: "מעצבים את החוויה" },
-  { number: "03", title: "בונים את זה נכון" },
-  { number: "04", title: "עולים לאוויר" },
-];
-
 function ProcessDiagram() {
   return (
-    <div className="mx-auto w-full max-w-[760px] px-6 text-black">
-      <div className="relative aspect-[4/3] w-full">
-        {/* The ring the four steps sit on. Stroked thin and dashed so it reads
-            as a sketch on the page rather than as a UI element printed over it. */}
-        <svg viewBox="0 0 400 300" className="absolute inset-0 h-full w-full" aria-hidden="true">
-          <ellipse
-            cx="200"
-            cy="150"
-            rx="150"
-            ry="112"
-            fill="none"
-            stroke="currentColor"
-            strokeOpacity="0.22"
-            strokeWidth="1"
-            strokeDasharray="4 6"
-          />
-        </svg>
-
-        {/* The wordmark at the centre, which is what the four steps are around. */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-          <span className="font-display text-[26px] leading-none font-bold tracking-[0.14em] text-black/70 md:text-[32px]">
-            YEYE
-          </span>
-          <span className="mt-1 block font-body text-[10px] tracking-[0.3em] text-black/35 uppercase">
-            process
-          </span>
-        </div>
-
-        {PROCESS_STEPS.map((step, index) => (
-          <div
-            key={step.number}
-            className={cn(
-              "absolute w-[38%] text-center",
-              index === 0 && "top-0 left-1/2 -translate-x-1/2",
-              index === 1 && "top-1/2 left-0 -translate-y-1/2",
-              index === 2 && "bottom-0 left-1/2 -translate-x-1/2",
-              index === 3 && "top-1/2 right-0 -translate-y-1/2",
-            )}
-          >
-            <span className="font-display text-[13px] leading-none font-bold tracking-[0.14em] text-black/30">
-              {step.number}
-            </span>
-            <h3 className="mt-2 font-display text-[17px] leading-[1.2] font-bold text-balance text-black md:text-[20px]">
-              {step.title}
-            </h3>
-          </div>
-        ))}
-      </div>
+    <div className="mx-auto w-full max-w-[980px] px-6">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/whatidopng.png"
+        alt="איך אני עובד: מכירים את העסק, מעצבים את החוויה, בונים את זה נכון, עולים לאוויר"
+        width={1920}
+        height={1080}
+        className="mx-auto block h-auto w-full"
+        draggable={false}
+      />
     </div>
   );
 }
