@@ -36,9 +36,11 @@ export type Balloon = {
   /** Which way this one leans when the page is scrolled, so they jostle
       against each other rather than all drifting as a block. */
   swayPhase: number;
-  /** Whether the sides of the screen are walls for this one. About half are
-      penned in and end up in the heap; the rest glide out of frame and are
-      gone. Fifteen balloons all staying put reads as a pile of props. */
+  /** Whether the world is solid for this one — floor underfoot, walls at the
+      sides. Almost none of them are: the rest fall straight through the bottom
+      of the black and out of the simulation. A heap of seventeen is a pile of
+      props, where two left sitting under the line that just knocked them about
+      is the evidence that it happened. */
   contained: boolean;
   released: boolean;
   alive: boolean;
@@ -77,7 +79,7 @@ export type World = {
 // drag below this puts terminal velocity around 210px/s, so a balloon takes
 // something over three seconds to cross a laptop screen. At twice that they
 // read as painted rocks: the slowness IS the lightness, there is no other cue.
-const GRAVITY = 640;
+const GRAVITY = 520;
 // Terminal velocity is GRAVITY / DRAG. Pulled back from the very light setting
 // it started at: these want to read as balls that happen to be balloon-shaped,
 // with real weight behind a bounce, not as something drifting down on the air.
@@ -125,14 +127,6 @@ const CONTACT_SLOP = 2;
 // the point of the line — the shed is only there so the bouncing ends.
 const WALL_SHED = 85;
 
-/**
- * Sideways drag for the ones that leave. A tenth of the normal figure, which is
- * what turns a sideways push into a glide instead of a lunge: at full drag a
- * balloon would need to be fired at 1100px/s to cross the screen before it
- * stopped, and that reads as a projectile rather than as something drifting
- * away on the air. Exported because the layer sizes the initial push off it.
- */
-export const ESCAPE_DRAG = 0.3;
 
 // Depth's effect on the fall. Not applied to drag as well: scaling both leaves
 // terminal velocity unchanged, and terminal velocity is the thing the eye
@@ -161,15 +155,21 @@ export function stepBalloons(balloons: Balloon[], dt: number, world: World) {
       b.vx += DRIFT_PER_SCROLL * shake * b.swayPhase * lift * dt;
     }
 
-    b.vx -= b.vx * (b.contained ? DRAG : ESCAPE_DRAG) * dt;
+    b.vx -= b.vx * DRAG * dt;
     b.vy -= b.vy * DRAG * dt;
     b.x += b.vx * dt;
     b.y += b.vy * dt;
 
     if (world.wall && b.front) hitWall(b, world.wall, world.wallVelocity, dt);
-    hitFloor(b, world.floorY, world.floorVelocity, dt);
-    if (b.contained) hitSides(b, world.width);
-    else if (b.x + b.r < 0 || b.x - b.r > world.width) b.alive = false;
+    if (b.contained) {
+      hitFloor(b, world.floorY, world.floorVelocity, dt);
+      hitSides(b, world.width);
+    } else if (b.y - b.r > world.floorY) {
+      // Through the bottom of the black and gone. Nothing is faded out: the
+      // layer is clipped to the section, so the last of it is hidden by the
+      // edge it falls past rather than dissolving in mid-air.
+      b.alive = false;
+    }
 
     b.tiltVelocity += (-TILT_SPRING * b.tilt - TILT_DAMPING * b.tiltVelocity) * dt;
     b.tilt += b.tiltVelocity * dt;

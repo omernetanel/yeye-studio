@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type RefObject } from "react";
-import { ESCAPE_DRAG, stepBalloons, type Balloon, type World } from "@/lib/physics/balloons";
+import { stepBalloons, type Balloon, type World } from "@/lib/physics/balloons";
 
 /**
  * The balloons that fall through the closing half of "who I am".
@@ -25,6 +25,8 @@ export type DropState = {
   armed: boolean;
   /** The impact line has finished its own entrance and can be collided with. */
   wallLive: boolean;
+  /** The assembled section has started scrolling away towards the close. */
+  leaving: boolean;
 };
 
 type Props = {
@@ -41,65 +43,54 @@ const SOURCES = ["/images/ball1.webp", "/images/ball2.webp"];
  * the same choreography and it can be directed. Randomised drops can never be
  * corrected, only reshuffled.
  *
- * `at` is milliseconds from the first release; `x` is a fraction of the screen
- * width; `drift` is the sideways speed it leaves with, because nothing this
- * light falls in a straight line. Depth runs the three bands, and the near band
- * is the silver one with the logo — it is the readable object, it is drawn over
- * the copy, and it is the only band the impact line can throw.
+ * `x` is a fraction of the screen width and `at` is milliseconds — but from
+ * WHICH moment depends on the cue, and only the first group runs off a clock
+ * that starts with the drop. The other two wait for something on the page,
+ * because how long a reader takes to get from one part of the section to the
+ * next is not something a delay can predict.
  *
  * The x values are spread across the full width and then SHUFFLED in time. Laid
  * out in order they read as a wipe across the screen; clustered, they land in a
- * heap in the middle. Neither looks like weather. Ten seconds for fifteen of
- * them, so that at any moment one or two are in the air and never a shower.
+ * heap in the middle. Neither looks like weather.
  */
 const CAST = [
-  { at: 0, x: 0.62, depth: 1, type: 0, drift: -14, leaves: false, front: true },
-  { at: 470, x: 0.25, depth: 0, type: 1, drift: 11, leaves: true, front: false },
-  { at: 890, x: 0.81, depth: 0, type: 1, drift: -9, leaves: false, front: false },
-  { at: 1430, x: 0.44, depth: 0.5, type: 1, drift: 16, leaves: true, front: false },
-  { at: 1890, x: 0.12, depth: 1, type: 0, drift: 13, leaves: false, front: true },
-  { at: 2310, x: 0.69, depth: 0, type: 1, drift: -12, leaves: true, front: false },
-  { at: 2870, x: 0.37, depth: 0, type: 1, drift: 8, leaves: false, front: false },
-  { at: 3350, x: 0.93, depth: 0.5, type: 0, drift: -18, leaves: true, front: false },
-  { at: 3890, x: 0.56, depth: 1, type: 0, drift: 10, leaves: false, front: true },
-  { at: 4350, x: 0.06, depth: 0, type: 1, drift: 15, leaves: true, front: false },
-  // The one blue balloon up front, so the line is not exclusively a silver
-  // event. Middle depth, so it is visibly smaller than the three it shares the
-  // bounce with.
-  { at: 4890, x: 0.75, depth: 0.5, type: 1, drift: -11, leaves: false, front: true },
-  { at: 5390, x: 0.31, depth: 0, type: 1, drift: 9, leaves: true, front: false },
-  { at: 5930, x: 0.87, depth: 1, type: 0, drift: -15, leaves: false, front: true },
-  { at: 6420, x: 0.5, depth: 0, type: 1, drift: -8, leaves: true, front: false },
-  { at: 6960, x: 0.19, depth: 0.5, type: 0, drift: 12, leaves: false, front: false },
+  // OVER THE COPY, while the section is still standing. Spaced wide: with
+  // nothing else moving, one balloon a second is an event and three a second is
+  // a shower. Five is all this stretch can hold at that spacing.
+  { cue: "drop", at: 0, x: 0.62, depth: 1, type: 0, settles: false, front: true },
+  { cue: "drop", at: 1150, x: 0.25, depth: 0, type: 1, settles: false, front: false },
+  { cue: "drop", at: 2250, x: 0.81, depth: 0.5, type: 1, settles: false, front: false },
+  { cue: "drop", at: 3400, x: 0.44, depth: 0, type: 1, settles: false, front: false },
+  { cue: "drop", at: 4500, x: 0.12, depth: 1, type: 0, settles: false, front: true },
+
+  // ON THE WAY OUT. Released once the section starts leaving, so the back half
+  // of the cast falls through a screen that is already travelling towards the
+  // impact line rather than piling into the one being read.
+  { cue: "leaving", at: 0, x: 0.69, depth: 0, type: 1, settles: false, front: false },
+  { cue: "leaving", at: 780, x: 0.37, depth: 0.5, type: 1, settles: false, front: false },
+  { cue: "leaving", at: 1500, x: 0.93, depth: 1, type: 0, settles: false, front: true },
+  { cue: "leaving", at: 2300, x: 0.56, depth: 0, type: 1, settles: false, front: false },
+  { cue: "leaving", at: 3050, x: 0.06, depth: 0.5, type: 1, settles: false, front: false },
+  { cue: "leaving", at: 3800, x: 0.75, depth: 0, type: 1, settles: false, front: false },
+  { cue: "leaving", at: 4600, x: 0.31, depth: 1, type: 0, settles: false, front: true },
+  { cue: "leaving", at: 5350, x: 0.87, depth: 0, type: 1, settles: false, front: false },
+  { cue: "leaving", at: 6100, x: 0.5, depth: 0.5, type: 1, settles: false, front: false },
+  { cue: "leaving", at: 6900, x: 0.19, depth: 0, type: 1, settles: false, front: false },
+
+  // ON THE LINE, and the only two the world is solid for.
+  //
+  // The line only becomes collidable once it has finished arriving, and by then
+  // anything cued earlier has long fallen past the height it appears at. No
+  // fixed delay can fix that — how long the reader takes to get from one to the
+  // other is up to the reader — so these two wait for the line itself.
+  //
+  // They are also the only two that land: everything before them falls straight
+  // through the bottom of the black. What is left at the end is the pair that
+  // the line just knocked around, sitting under it, rather than a heap of
+  // seventeen that arrived by gravity alone.
+  { cue: "wall", at: 120, x: 0.42, depth: 1, type: 0, settles: true, front: true },
+  { cue: "wall", at: 900, x: 0.66, depth: 0, type: 1, settles: true, front: true },
 ] as const;
-
-/**
- * Two more, released off the impact line rather than off the clock.
- *
- * The line only becomes solid once it has finished arriving, and by then the
- * balloons cued at the start of the hold have already fallen past the height it
- * appears at. Timing these from the drop cannot fix that: how long the reader
- * takes to get from one to the other is up to the reader. So these two wait for
- * the line itself and fall onto it while it is there.
- *
- * `at` is milliseconds after the line goes solid, not after the drop. Both are
- * in front, one silver at the near size and one blue at the far one — the same
- * event at two distances, with the logo as the larger of them.
- */
-const WALL_CAST = [
-  { at: 120, x: 0.42, depth: 1, type: 0, drift: -10, leaves: false, front: true },
-  { at: 860, x: 0.66, depth: 0, type: 1, drift: 8, leaves: false, front: true },
-] as const;
-
-const ALL = [...CAST, ...WALL_CAST];
-// Everything from this index on waits for the line instead of the clock.
-const WALL_CUED_FROM = CAST.length;
-
-// Headroom on the push given to a leaver, over the distance it actually has to
-// cover. Drag is exponential, so the theoretical figure only just reaches the
-// edge and only after a long time; a third again gets it out of frame while it
-// is still worth watching.
-const ESCAPE_MARGIN = 1.35;
 
 // Rendered width, as a fraction of the screen's short side. Sized off the short
 // side so a balloon is the same share of the picture on a phone as on a laptop.
@@ -131,6 +122,7 @@ function sizeFor(depth: number, short: number) {
 
 export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
   const nodesRef = useRef<(HTMLImageElement | null)[]>([]);
+  const layersRef = useRef<(HTMLDivElement | null)[]>([]);
   const balloonsRef = useRef<Balloon[]>([]);
 
   useEffect(() => {
@@ -139,8 +131,9 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
 
     let frame = 0;
     let started = 0;
-    // When the impact line first went solid. The second pair is cued off this
-    // rather than off the drop.
+    // The two clocks that are not the drop's: when the section began leaving,
+    // and when the impact line first went solid.
+    let leavingSince = 0;
     let wallSince = 0;
     let carry = 0;
     let previous = 0;
@@ -151,7 +144,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
 
     const build = () => {
       const short = Math.min(window.innerWidth, window.innerHeight);
-      balloonsRef.current = ALL.map((entry, index) => {
+      balloonsRef.current = CAST.map((entry, index) => {
         const size = sizeFor(entry.depth, short);
         return {
           x: entry.x * window.innerWidth,
@@ -160,7 +153,9 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
           // 213px/s meant two and a half seconds of falling before the first
           // one was even visible — the entire hold spent on an empty screen.
           y: -size * (0.6 + (index % 3) * 0.22),
-          vx: entry.drift,
+          // A little sideways to start with, alternating, because nothing this
+          // light falls in a straight line.
+          vx: index % 2 === 0 ? -13 : 11,
           vy: 0,
           r: size / 2,
           tilt: 0,
@@ -169,30 +164,21 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
           front: entry.front,
           type: entry.type,
           swayPhase: index % 2 === 0 ? 1 : -1,
-          contained: !entry.leaves,
+          contained: entry.settles,
           released: false,
           alive: true,
           resting: false,
         } satisfies Balloon;
       });
 
-      // The push a leaver needs to clear the edge it is aimed at. Sized from
-      // its own distance to that edge rather than picked as a number, so the
-      // one starting at 0.06 is not fired across the whole screen and the one
-      // in the middle actually makes it out.
       balloonsRef.current.forEach((balloon, index) => {
-        if (ALL[index].leaves) {
-          const outward = Math.sign(ALL[index].drift) || 1;
-          const distance =
-            outward > 0 ? window.innerWidth - balloon.x + balloon.r : balloon.x + balloon.r;
-          balloon.vx = outward * distance * ESCAPE_DRAG * ESCAPE_MARGIN;
-        }
         const node = nodesRef.current[index];
         if (!node) return;
         node.style.width = `${balloon.r * 2}px`;
         node.style.opacity = "0";
       });
       started = 0;
+      leavingSince = 0;
       wallSince = 0;
       // Cleared too, or the frame after a reset computes a floor velocity out
       // of the gap between two unrelated positions and launches the heap.
@@ -202,7 +188,18 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
 
     build();
 
-    const draw = () => {
+    const draw = (sectionBottom: number) => {
+      // Both layers are clipped to the section's bottom edge. This is what lets
+      // a balloon leave without being faded out: it falls past the boundary and
+      // is hidden BY it, the way it would be by anything solid, instead of
+      // dissolving in open air. It is also the guarantee that nothing ever
+      // appears over the section below, whatever the simulation does.
+      const below = Math.max(0, window.innerHeight - sectionBottom);
+      const clip = below > 0 ? `inset(0 0 ${below}px 0)` : "";
+      layersRef.current.forEach((layer) => {
+        if (layer) layer.style.clipPath = clip;
+      });
+
       balloonsRef.current.forEach((balloon, index) => {
         const node = nodesRef.current[index];
         if (!node) return;
@@ -234,7 +231,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
       if (sectionBox.top > screen) {
         if (started !== 0) {
           build();
-          draw();
+          draw(sectionBox.bottom);
         }
         previous = now;
         lastScroll = scroll;
@@ -280,11 +277,19 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
       };
 
       if (wallBox && wallSince === 0) wallSince = now;
-      const since = now - started;
-      const sinceWall = wallSince === 0 ? -1 : now - wallSince;
+      if (stateRef.current.leaving && leavingSince === 0) leavingSince = now;
+
+      // Three clocks. Only the first is a stopwatch; the other two start when
+      // the page reaches somewhere, and read as -1 until it has.
+      const clocks = {
+        drop: now - started,
+        leaving: leavingSince === 0 ? -1 : now - leavingSince,
+        wall: wallSince === 0 ? -1 : now - wallSince,
+      };
       balloonsRef.current.forEach((balloon, index) => {
-        const clock = index >= WALL_CUED_FROM ? sinceWall : since;
-        if (clock >= 0 && clock >= ALL[index].at) balloon.released = true;
+        const entry = CAST[index];
+        const clock = clocks[entry.cue];
+        if (clock >= 0 && clock >= entry.at) balloon.released = true;
       });
 
       carry = Math.min(carry + elapsed, TIMESTEP * MAX_SUBSTEPS);
@@ -296,7 +301,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
       lastFloor = floorY;
       lastWallTop = wallTop;
       lastScroll = scroll;
-      draw();
+      draw(sectionBox.bottom);
     };
 
     // Nothing simulates while the section is off screen. It is six screens tall
@@ -312,7 +317,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
 
     const onResize = () => {
       build();
-      draw();
+      draw(section.getBoundingClientRect().bottom);
     };
     window.addEventListener("resize", onResize);
     frame = requestAnimationFrame(tick);
@@ -325,8 +330,14 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
   }, [sectionRef, lineRef, stateRef]);
 
   const layer = (front: boolean, z: string) => (
-    <div className={`pointer-events-none fixed inset-0 ${z}`} aria-hidden="true">
-      {ALL.map((entry, index) =>
+    <div
+      ref={(el) => {
+        layersRef.current[front ? 1 : 0] = el;
+      }}
+      className={`pointer-events-none fixed inset-0 ${z}`}
+      aria-hidden="true"
+    >
+      {CAST.map((entry, index) =>
         entry.front === front ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
