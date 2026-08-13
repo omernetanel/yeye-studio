@@ -27,47 +27,57 @@ const BEATS = {
 // scroll distance it landed on the first time. The factor is never n/(n+1),
 // because a beat is a fraction of the TRAVEL, which is the stage minus one
 // screen: 500vh became 600vh became 800vh.
-  greetLine1: [0.0, 0.1405],
-  greetLine2: [0.1736, 0.3140],
-  greetSettle: [0.3636, 0.5124],
+  greetLine1: [0.0, 0.1288],
+  greetLine2: [0.1591, 0.2879],
+  greetSettle: [0.3333, 0.4697],
   // With the section, not with the copy. It names where you are, so it belongs
   // on screen from the moment the black arrives — waiting until the column
   // landed meant the header row sat empty through the whole opening.
-  label: [0.0165, 0.0992],
-  content: [0.5289, 0.6281],
+  label: [0.0152, 0.0909],
+  content: [0.4848, 0.5758],
   // The portrait arrives on the SAME beat the greeting starts settling, not
   // after the column has landed. That is the whole point of it: "אני עומר."
   // stops being a line of type at the moment there is a face beside it, and it
   // has to happen while the name is still the thing being read.
-  portrait: [0.3636, 0.4397],
+  portrait: [0.3333, 0.4030],
   // And starts down the moment it has finished appearing — the two ranges
   // touch, with no pause at full size in between. Held big for even a fraction
   // it reads as two events, an entrance and then a separate departure, rather
   // than as one picture that arrives and settles.
-  portraitLand: [0.4397, 0.6281],
-  claim: [0.6446, 0.7273],
+  portraitLand: [0.4030, 0.5758],
+  claim: [0.5909, 0.6667],
   facts: [
-    [0.7107, 0.7603],
-    [0.7438, 0.7851],
-    [0.7769, 0.8182],
+    [0.6515, 0.697],
+    [0.6818, 0.7197],
+    [0.7121, 0.75],
+  ],
+  // And then the eye is walked across them, one at a time. This is what the
+  // stretch after the last arrival is FOR: it used to be an empty hold that
+  // existed only to give the balloons a quiet screen, and a passage where
+  // nothing changes reads as a page that has stopped answering however good the
+  // reason for it. Now the same scroll does the reading.
+  //
+  // Live, not latched, and symmetric — each swells and subsides — so going back
+  // up walks the eye across them in reverse rather than leaving one lit.
+  focus: [
+    [0.765, 0.83],
+    [0.83, 0.895],
+    [0.895, 0.96],
   ],
 } as const;
 
-// Past the last fact the stage still has 110vh to run and nothing left to move.
-// That stretch is the balloons': the page keeps answering the wheel the whole
-// way through it, so it is a slow passage rather than a stop, but nothing else
-// is competing for the eye while they come down.
-//
-// It was 105vh first, which sounds generous and is not — scrolling covers a
-// screen height in about a second, so the hold was over before two balloons had
-// landed. Three screens fixed that and overshot: with nothing else moving, a
-// stretch that long stops reading as a passage and starts reading as a page
-// that has stopped answering. 170vh is the middle of those two.
-//
-// The trigger sits just BEFORE the last fact finishes rather than after it, so
-// the first balloon is already on its way down while the section finishes
-// assembling instead of after a beat of nothing.
-const DROP_AT = 0.7934;
+// The lift given to whichever claim is being read, and how far the other two
+// fall back while it is. Scale, not size: a transform does not touch the
+// layout, so nothing moves, nothing reflows and the panel's height budget is
+// not involved at all.
+const FOCUS_SCALE = 0.07;
+const FOCUS_DIM = 0.42;
+
+// The first balloons come down over the sweep, not over an empty hold. The two
+// share the stretch on purpose: one is a slow read across three lines of type,
+// the other is something falling past it, and neither needs the screen to
+// itself. The remaining ten wait for the closing panel — see `leaving`.
+const DROP_AT = 0.7273;
 
 // The portrait's opening state: tall, and out on the left, clear of the
 // shrinking name. Height as a fraction of the screen and centre as a fraction
@@ -79,7 +89,7 @@ const PORTRAIT_BIG_X = 0.34;
 // fast anything moves. Six screens rather than four: at four the greeting's two
 // lines were each done inside forty screen-heights of scroll, which on a
 // trackpad is a flick. The tail is the balloons' — see DROP_AT.
-const STAGE_VH = 7.05;
+const STAGE_VH = 7.6;
 
 // The greeting lands with its middle on the bottom edge — the first thing on
 // screen is the top half of it, cut — and heavily out of focus.
@@ -340,9 +350,24 @@ export default function AboutSection() {
       `translate(-50%, -50%) translate(${lerp(bigX, pLand.x, portraitDown)}px, ${lerp(0, pLand.y, portraitDown)}px) scale(${lerp(bigScale, 1, portraitDown).toFixed(4)})`;
 
     fade(claim, "claim", BEATS.claim);
+    // Arrival is latched and one-way; the sweep that follows is neither. A half
+    // sine over each window means the claim swells to full and settles back on
+    // its own, so there is never one left standing brighter than the rest and
+    // the whole pass reverses with the scroll.
+    const sweep = BEATS.focus.map((range) =>
+      Math.max(0, Math.sin(Math.PI * clamp01((progress - range[0]) / (range[1] - range[0])))),
+    );
+    const reading = Math.max(...sweep);
     BEATS.facts.forEach((range, index) => {
       const item = factsRef.current[index];
-      if (item) fade(item, `fact${index}`, range);
+      if (!item) return;
+      const here = sweep[index];
+      // `reading` scales the whole effect, so before the sweep starts and after
+      // it has passed all three sit at their resting weight.
+      item.style.opacity = String(
+        arrived(`fact${index}`, range) * lerp(1, lerp(FOCUS_DIM, 1, here), reading),
+      );
+      item.style.transform = `scale(${(1 + FOCUS_SCALE * here).toFixed(4)})`;
     });
 
     dropStateRef.current.armed = progress >= DROP_AT;
