@@ -36,7 +36,16 @@ export type Balloon = {
   /** Which way this one leans when the page is scrolled, so they jostle
       against each other rather than all drifting as a block. */
   swayPhase: number;
+  /** Whether the sides of the screen are walls for this one. About half are
+      penned in and end up in the heap; the rest glide out of frame and are
+      gone. Fifteen balloons all staying put reads as a pile of props. */
+  contained: boolean;
   released: boolean;
+  alive: boolean;
+  /** Sitting on the floor as of the last step. A body in contact travels WITH
+      the surface it is on, which is the difference between a heap that belongs
+      to the section and one that happens to be near the bottom of the screen. */
+  resting: boolean;
 };
 
 export type World = {
@@ -45,8 +54,10 @@ export type World = {
       keeps whatever is left of its energy in the new direction, so all fifteen
       end up in the heap at the bottom of the black. */
   width: number;
-  /** Viewport y the balloons come to rest on — the lower of the screen's
-      bottom edge and the section's, so they never leave the black. */
+  /** Viewport y the balloons come to rest on: the section's bottom edge, and
+      only ever that. The screen's bottom is not a floor — it is the edge of
+      what is visible, and a body resting on it would be left standing on a
+      void the moment the page scrolled. */
   floorY: number;
   /** How fast that floor is itself moving, in px/s. A floor rising into a
       resting balloon has to lift it, not slide through it. */
@@ -105,6 +116,21 @@ const SCROLL_DEADZONE = 45;
 // Distance from the floor still counted as resting on it.
 const CONTACT_SLOP = 2;
 
+// Sideways acceleration applied to anything sitting on the impact line, aimed
+// at whichever end is nearer. The line is a shelf a balloon can land flat on,
+// and the closing panel holds it still for over a screen of scroll, so without
+// this they park on it.
+const WALL_SHED = 220;
+
+/**
+ * Sideways drag for the ones that leave. A tenth of the normal figure, which is
+ * what turns a sideways push into a glide instead of a lunge: at full drag a
+ * balloon would need to be fired at 1100px/s to cross the screen before it
+ * stopped, and that reads as a projectile rather than as something drifting
+ * away on the air. Exported because the layer sizes the initial push off it.
+ */
+export const ESCAPE_DRAG = 0.3;
+
 // Depth's effect on the fall. Not applied to drag as well: scaling both leaves
 // terminal velocity unchanged, and terminal velocity is the thing the eye
 // reads as distance.
@@ -119,7 +145,7 @@ function clamp(value: number, low: number, high: number) {
 /** Advance the world by one fixed timestep. */
 export function stepBalloons(balloons: Balloon[], dt: number, world: World) {
   for (const b of balloons) {
-    if (!b.released) continue;
+    if (!b.released || !b.alive) continue;
 
     const lift = pull(b.depth);
     b.vy += GRAVITY * lift * dt;
@@ -132,14 +158,15 @@ export function stepBalloons(balloons: Balloon[], dt: number, world: World) {
       b.vx += DRIFT_PER_SCROLL * shake * b.swayPhase * lift * dt;
     }
 
-    b.vx -= b.vx * DRAG * dt;
+    b.vx -= b.vx * (b.contained ? DRAG : ESCAPE_DRAG) * dt;
     b.vy -= b.vy * DRAG * dt;
     b.x += b.vx * dt;
     b.y += b.vy * dt;
 
-    if (world.wall && b.front) hitWall(b, world.wall, world.wallVelocity);
+    if (world.wall && b.front) hitWall(b, world.wall, world.wallVelocity, dt);
     hitFloor(b, world.floorY, world.floorVelocity, dt);
-    hitSides(b, world.width);
+    if (b.contained) hitSides(b, world.width);
+    else if (b.x + b.r < 0 || b.x - b.r > world.width) b.alive = false;
 
     b.tiltVelocity += (-TILT_SPRING * b.tilt - TILT_DAMPING * b.tiltVelocity) * dt;
     b.tilt += b.tiltVelocity * dt;
@@ -173,9 +200,24 @@ function hitSides(b: Balloon, width: number) {
 
 function hitFloor(b: Balloon, floorY: number, floorVelocity: number, dt: number) {
   const rest = floorY - b.r;
-  if (b.y <= rest) return;
+
+  // The floor is the section's bottom edge, so scrolling moves it. When it
+  // drops away — scrolling back up the page — a balloon already sitting on it
+  // is carried down with it rather than left hanging while gravity slowly
+  // catches up. Without this the heap detaches on the way back up and appears
+  // to stay pinned to the bottom of the screen while the section slides out
+  // from under it.
+  if (b.resting && b.y < rest && floorVelocity > 0) {
+    b.y = Math.min(rest, b.y + floorVelocity * dt);
+  }
+
+  if (b.y <= rest) {
+    b.resting = b.y > rest - CONTACT_SLOP;
+    return;
+  }
 
   b.y = rest;
+  b.resting = true;
   // Measured against the floor rather than against the page. When the section's
   // bottom edge rises into a balloon that is already at rest, the balloon is
   // not moving but the floor is, and it is that difference that throws it.
@@ -189,7 +231,7 @@ function hitFloor(b: Balloon, floorY: number, floorVelocity: number, dt: number)
   b.vx -= b.vx * FLOOR_FRICTION * dt;
 }
 
-function hitWall(b: Balloon, wall: Rect, wallVelocity: number) {
+function hitWall(b: Balloon, wall: Rect, wallVelocity: number, dt: number) {
   // Nearest point on the line's box to the balloon's centre. Where that point
   // is decides everything the brief asked for without any of it being special
   // cased: land on the top face and the normal points up, so it bounces; catch
@@ -213,6 +255,17 @@ function hitWall(b: Balloon, wall: Rect, wallVelocity: number) {
   b.x = nearX + nx * b.r;
   b.y = nearY + ny * b.r;
 
+  // Nothing settles on the line. Landing square on the top face leaves a
+  // balloon with nowhere to go, and because the closing panel is pinned for
+  // over a screen of scroll it then sits there in mid-air for a long time —
+  // three of them in a row, parked on a shelf that is not drawn. A steady push
+  // out towards the nearer end walks it off within a second or so, which is
+  // also what a real balloon does on a surface that thin.
+  // Weighted by how square-on the contact is: full push when sitting on the top
+  // face, none at all on a side hit, which is already leaving.
+  const middle = (wall.left + wall.right) / 2;
+  b.vx += (b.x < middle ? -WALL_SHED : WALL_SHED) * Math.abs(ny) * dt;
+
   const approach = b.vx * nx + (b.vy - wallVelocity) * ny;
   if (approach >= 0) return;
 
@@ -225,11 +278,11 @@ function hitWall(b: Balloon, wall: Rect, wallVelocity: number) {
 function resolveContacts(balloons: Balloon[]) {
   for (let i = 0; i < balloons.length; i += 1) {
     const a = balloons[i];
-    if (!a.released) continue;
+    if (!a.released || !a.alive) continue;
 
     for (let j = i + 1; j < balloons.length; j += 1) {
       const b = balloons[j];
-      if (!b.released) continue;
+      if (!b.released || !b.alive) continue;
       // Only within a depth band. Two balloons drawn at different distances
       // that collide because they cross on screen would look like a mistake.
       if (Math.abs(a.depth - b.depth) > 0.25) continue;

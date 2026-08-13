@@ -22,32 +22,43 @@ const BEATS = {
   // the salutation first, and only once it is standing does the name come up
   // under it. They overlap by a hair so the pair still reads as one gesture.
 //
-// Every fraction here was multiplied by 5/6 when the stage grew from six
-// screens to seven, so that each beat lands on the exact scroll distance it
-// landed on before. The factor is 5/6 and not 6/7 because a beat is a fraction
-// of the TRAVEL, which is the stage minus one screen: 500vh became 600vh.
-  greetLine1: [0.0, 0.1417],
-  greetLine2: [0.175, 0.3167],
-  greetSettle: [0.3667, 0.5167],
+// Every fraction here has been rescaled twice, as the stage grew from six
+// screens to seven and then to nine, so that each beat lands on the exact
+// scroll distance it landed on the first time. The factor is never n/(n+1),
+// because a beat is a fraction of the TRAVEL, which is the stage minus one
+// screen: 500vh became 600vh became 800vh.
+  greetLine1: [0.0, 0.1063],
+  greetLine2: [0.1313, 0.2375],
+  greetSettle: [0.275, 0.3875],
   // With the section, not with the copy. It names where you are, so it belongs
   // on screen from the moment the black arrives — waiting until the column
   // landed meant the header row sat empty through the whole opening.
-  label: [0.0167, 0.1],
-  content: [0.5333, 0.6333],
-  portrait: [0.6167, 0.7083],
-  claim: [0.65, 0.7333],
+  label: [0.0125, 0.075],
+  content: [0.4, 0.475],
+  portrait: [0.4625, 0.5313],
+  claim: [0.4875, 0.55],
   facts: [
-    [0.7167, 0.7667],
-    [0.75, 0.7917],
-    [0.7833, 0.825],
+    [0.5375, 0.575],
+    [0.5625, 0.5938],
+    [0.5875, 0.6188],
   ],
 } as const;
 
-// Past the last fact the stage still has 105vh to run and nothing left to move.
+// Past the last fact the stage still has 305vh to run and nothing left to move.
 // That stretch is the balloons': the page keeps answering the wheel the whole
 // way through it, so it is a slow passage rather than a stop, but nothing else
 // is competing for the eye while they come down.
-const DROP_AT = 0.83;
+//
+// It was 105vh, which sounds generous and is not. Scrolling covers a screen
+// height in about a second, so the whole hold was over before two balloons had
+// landed and the drop was something glimpsed while the text slid away upwards.
+// Three screens is the first figure that buys the three seconds this was always
+// supposed to be.
+//
+// The trigger sits just BEFORE the last fact finishes rather than after it, so
+// the first balloon is already on its way down while the section finishes
+// assembling instead of after a beat of nothing.
+const DROP_AT = 0.6;
 
 // How far the portrait lifts as it arrives. It is the only picture in the
 // section, so it gets an entrance of its own rather than only an opacity ramp.
@@ -56,8 +67,8 @@ const PORTRAIT_LIFT_PX = 56;
 // The beats above are fractions of this, so the two numbers together decide how
 // fast anything moves. Six screens rather than four: at four the greeting's two
 // lines were each done inside forty screen-heights of scroll, which on a
-// trackpad is a flick. The seventh is the balloons' — see DROP_AT.
-const STAGE_VH = 7;
+// trackpad is a flick. The last three are the balloons' — see DROP_AT.
+const STAGE_VH = 9;
 
 // The greeting lands with its middle on the bottom edge — the first thing on
 // screen is the top half of it, cut — and heavily out of focus.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type RefObject } from "react";
-import { stepBalloons, type Balloon, type World } from "@/lib/physics/balloons";
+import { ESCAPE_DRAG, stepBalloons, type Balloon, type World } from "@/lib/physics/balloons";
 
 /**
  * The balloons that fall through the closing half of "who I am".
@@ -53,32 +53,38 @@ const SOURCES = ["/images/ball1.webp", "/images/ball2.webp"];
  * them, so that at any moment one or two are in the air and never a shower.
  */
 const CAST = [
-  { at: 0, x: 0.62, depth: 1, type: 0, drift: -14 },
-  { at: 620, x: 0.25, depth: 0, type: 1, drift: 11 },
-  { at: 1180, x: 0.81, depth: 0, type: 1, drift: -9 },
-  { at: 1900, x: 0.44, depth: 0.5, type: 1, drift: 16 },
-  { at: 2520, x: 0.12, depth: 1, type: 0, drift: 13 },
-  { at: 3080, x: 0.69, depth: 0, type: 1, drift: -12 },
-  { at: 3820, x: 0.37, depth: 0, type: 1, drift: 8 },
-  { at: 4460, x: 0.93, depth: 0.5, type: 0, drift: -18 },
-  { at: 5180, x: 0.56, depth: 1, type: 0, drift: 10 },
-  { at: 5800, x: 0.06, depth: 0, type: 1, drift: 15 },
-  { at: 6520, x: 0.75, depth: 0.5, type: 1, drift: -11 },
-  { at: 7180, x: 0.31, depth: 0, type: 1, drift: 9 },
-  { at: 7900, x: 0.87, depth: 1, type: 0, drift: -15 },
-  { at: 8560, x: 0.5, depth: 0, type: 1, drift: -8 },
-  { at: 9280, x: 0.19, depth: 0.5, type: 0, drift: 12 },
+  { at: 0, x: 0.62, depth: 1, type: 0, drift: -14, leaves: false },
+  { at: 620, x: 0.25, depth: 0, type: 1, drift: 11, leaves: true },
+  { at: 1180, x: 0.81, depth: 0, type: 1, drift: -9, leaves: false },
+  { at: 1900, x: 0.44, depth: 0.5, type: 1, drift: 16, leaves: true },
+  { at: 2520, x: 0.12, depth: 1, type: 0, drift: 13, leaves: false },
+  { at: 3080, x: 0.69, depth: 0, type: 1, drift: -12, leaves: true },
+  { at: 3820, x: 0.37, depth: 0, type: 1, drift: 8, leaves: false },
+  { at: 4460, x: 0.93, depth: 0.5, type: 0, drift: -18, leaves: true },
+  { at: 5180, x: 0.56, depth: 1, type: 0, drift: 10, leaves: false },
+  { at: 5800, x: 0.06, depth: 0, type: 1, drift: 15, leaves: true },
+  { at: 6520, x: 0.75, depth: 0.5, type: 1, drift: -11, leaves: false },
+  { at: 7180, x: 0.31, depth: 0, type: 1, drift: 9, leaves: true },
+  { at: 7900, x: 0.87, depth: 1, type: 0, drift: -15, leaves: false },
+  { at: 8560, x: 0.5, depth: 0, type: 1, drift: -8, leaves: true },
+  { at: 9280, x: 0.19, depth: 0.5, type: 0, drift: 12, leaves: false },
 ] as const;
+
+// Headroom on the push given to a leaver, over the distance it actually has to
+// cover. Drag is exponential, so the theoretical figure only just reaches the
+// edge and only after a long time; a third again gets it out of frame while it
+// is still worth watching.
+const ESCAPE_MARGIN = 1.35;
 
 // Rendered width, as a fraction of the screen's short side. Sized off the short
 // side so a balloon is the same share of the picture on a phone as on a laptop.
 //
-// The near band is twice the far band, not one and a half times. That ratio is
-// the depth: three sizes bunched together read as three balloons that happen to
-// differ, where a clear doubling reads as distance. Big enough that the near
-// ones carry their printing at a glance — a logo you have to look for is not a
-// logo, and at the first pass at these sizes they were beads.
-const SIZE_BY_DEPTH = { far: 0.13, mid: 0.185, near: 0.26 };
+// The near band is only a hair above the middle one. It was half again as big,
+// which made the silver balloons in front dominate the screen and swallow the
+// headings behind them — the depth was reading, but at the cost of the section.
+// Distance is carried by the far band, which stays clearly smaller, and by the
+// fall speed, which is the cue that does not cost any screen.
+const SIZE_BY_DEPTH = { far: 0.13, mid: 0.185, near: 0.195 };
 
 // The physics runs at a fixed rate regardless of the display's. Without this
 // the balloons bounce visibly higher on a 144Hz screen than on a 60Hz one.
@@ -121,8 +127,11 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
         const size = sizeFor(entry.depth, short);
         return {
           x: entry.x * window.innerWidth,
-          // Staged above the fold, spread out so they do not enter in a line.
-          y: -size * (1.2 + (index % 3) * 0.9),
+          // Staged JUST above the fold. They used to start up to three
+          // balloon-heights clear of it, which at a terminal velocity of
+          // 213px/s meant two and a half seconds of falling before the first
+          // one was even visible — the entire hold spent on an empty screen.
+          y: -size * (0.6 + (index % 3) * 0.22),
           vx: entry.drift,
           vy: 0,
           r: size / 2,
@@ -132,11 +141,24 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
           front: entry.depth >= 1,
           type: entry.type,
           swayPhase: index % 2 === 0 ? 1 : -1,
+          contained: !entry.leaves,
           released: false,
+          alive: true,
+          resting: false,
         } satisfies Balloon;
       });
 
+      // The push a leaver needs to clear the edge it is aimed at. Sized from
+      // its own distance to that edge rather than picked as a number, so the
+      // one starting at 0.06 is not fired across the whole screen and the one
+      // in the middle actually makes it out.
       balloonsRef.current.forEach((balloon, index) => {
+        if (CAST[index].leaves) {
+          const outward = Math.sign(CAST[index].drift) || 1;
+          const distance =
+            outward > 0 ? window.innerWidth - balloon.x + balloon.r : balloon.x + balloon.r;
+          balloon.vx = outward * distance * ESCAPE_DRAG * ESCAPE_MARGIN;
+        }
         const node = nodesRef.current[index];
         if (!node) return;
         node.style.width = `${balloon.r * 2}px`;
@@ -151,7 +173,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
       balloonsRef.current.forEach((balloon, index) => {
         const node = nodesRef.current[index];
         if (!node) return;
-        if (!balloon.released) {
+        if (!balloon.released || !balloon.alive) {
           node.style.opacity = "0";
           return;
         }
@@ -197,9 +219,17 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
         started = now;
       }
 
-      // The balloons never leave the black: their floor is whichever is higher,
-      // the bottom of the screen or the bottom of the section.
-      const floorY = Math.min(screen, sectionBox.bottom);
+      // The one real floor is the bottom of the black. The bottom of the SCREEN
+      // is not a surface — it is the edge of what is currently visible, and
+      // resting a balloon on it means that scrolling down opens a void beneath
+      // something already at rest. Stopping to read would leave balloons
+      // standing on nothing, and moving on again would have them hanging there
+      // rather than falling into the space that just appeared.
+      //
+      // So they keep falling the whole way down and the heap gathers at the end
+      // of the section, which is also the only place it can gather without ever
+      // crossing into the next one.
+      const floorY = sectionBox.bottom;
       const wallTop = wallBox ? wallBox.top : 0;
       const floorVelocity = elapsed > 0 ? (floorY - lastFloor) / elapsed : 0;
       const wallVelocity = wallBox && lastWallTop !== 0 && elapsed > 0 ? (wallTop - lastWallTop) / elapsed : 0;
