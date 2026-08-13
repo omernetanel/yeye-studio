@@ -385,7 +385,12 @@ export default function AboutSection() {
       </div>
 
       <div ref={stageRef} style={{ height: `${STAGE_VH * 100}svh` }}>
-        <div className="sticky top-0 h-[100svh] overflow-clip">
+        {/* z-10 is load-bearing. `position: sticky` creates a stacking context
+            of its own, so the copy's z-10 INSIDE this panel is sealed in here
+            and never competes with the balloon layers outside it — both of them
+            would paint over the whole panel. The level has to be declared on
+            the panel itself, between the two layers: 5 < 10 < 25. */}
+        <div className="sticky top-0 z-10 h-[100svh] overflow-clip">
           {/* THE GREETING, floating. It lands exactly on the slot the column
               reserves below, so the layout still decides where it ends up. */}
           <div
@@ -535,7 +540,8 @@ export default function AboutSection() {
 
       {/* THE CLOSE. The page stops here. */}
       <div ref={closerStageRef} style={{ height: `${CLOSER_STAGE_VH * 100}svh` }}>
-        <div className="sticky top-0 flex h-[100svh] items-center">
+        {/* Same level as the first stage's panel, for the same reason. */}
+        <div className="sticky top-0 z-10 flex h-[100svh] items-center">
           <div className="mx-auto w-full max-w-[1240px] px-6 text-right md:px-10">
             <p
               ref={closerLineRef}
