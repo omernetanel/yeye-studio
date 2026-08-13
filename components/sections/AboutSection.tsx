@@ -17,67 +17,39 @@ import { aboutFacts } from "@/lib/content";
 // of the column's flight, so it read as arriving with the heading rather than
 // after it — and a photograph is legible at fifteen percent opacity where a
 // line of text at the same opacity is still invisible.
+// Every fraction here has been rescaled each time the stage changed length, so
+// that a beat lands on the same scroll distance it always has. The factor is
+// never n/(n+1), because a beat is a fraction of the TRAVEL, which is the stage
+// minus one screen.
 const BEATS = {
-// Every fraction here has been rescaled each time the stage grew, so that a
-// beat lands on the exact scroll distance it landed on the first time. The
-// factor is never n/(n+1), because a beat is a fraction of the TRAVEL, which is
-// the stage minus one screen.
   // The two lines of the greeting arrive one after the other, not together:
   // the salutation first, and only once it is standing does the name come up
   // under it. They overlap by a hair so the pair still reads as one gesture.
-  greetLine1: [0.0, 0.1133],
-  greetLine2: [0.14, 0.2533],
-  greetSettle: [0.2933, 0.4133],
+  greetLine1: [0.0, 0.1848],
+  greetLine2: [0.2283, 0.413],
+  greetSettle: [0.4783, 0.6739],
   // With the section, not with the copy. It names where you are, so it belongs
   // on screen from the moment the black arrives — waiting until the column
   // landed meant the header row sat empty through the whole opening.
-  label: [0.0133, 0.08],
-  content: [0.4267, 0.5067],
+  label: [0.0217, 0.1304],
+  content: [0.6957, 0.8261],
   // The portrait arrives on the SAME beat the greeting starts settling, not
   // after the column has landed. That is the whole point of it: "אני עומר."
   // stops being a line of type at the moment there is a face beside it, and it
   // has to happen while the name is still the thing being read.
-  portrait: [0.2933, 0.3547],
+  portrait: [0.4783, 0.5783],
   // And starts down the moment it has finished appearing — the two ranges
   // touch, with no pause at full size in between. Held big for even a fraction
   // it reads as two events, an entrance and then a separate departure, rather
   // than as one picture that arrives and settles.
-  portraitLand: [0.3547, 0.5067],
-  claim: [0.52, 0.5867],
-  // The strip arrives whole, all three at once, in the shape it has always had.
-  // Nobody reads it here and that is the point — it is the thing you have
-  // glanced at and not taken in.
-  factsIn: [0.5867, 0.6267],
-  // And then it is taken apart, 70vh a claim where the whole strip used to get
-  // 30. They are the argument of the section and they were going past faster
-  // than anything else in it.
-  //
-  // All of this happens on the standing screen, alongside everything else.
-  // Moving them onto a screen of their own was tried and taken back out: it
-  // turned one moment into three, and the point was to make the moment longer,
-  // not to break it up.
-  facts: [
-    [0.6267, 0.72],
-    [0.7248, 0.7968],
-    [0.8024, 0.88],
-  ],
+  portraitLand: [0.5783, 0.8261],
+  claim: [0.8478, 0.9565],
 } as const;
 
-// Past the last fact the stage still has 90vh to run and nothing left to move.
-// That stretch is the balloons': the page keeps answering the wheel the whole
-// way through it, so it is a slow passage rather than a stop, but nothing else
-// is competing for the eye while they come down.
-//
-// It was 105vh first, which sounds generous and is not — scrolling covers a
-// screen height in about a second, so the hold was over before two balloons had
-// landed. Three screens fixed that and overshot: with nothing else moving, a
-// stretch that long stops reading as a passage and starts reading as a page
-// that has stopped answering. 170vh is the middle of those two.
-//
-// The trigger sits just BEFORE the last fact finishes rather than after it, so
-// the first balloon is already on its way down while the section finishes
-// assembling instead of after a beat of nothing.
-const DROP_AT = 0.8667;
+// The balloons start just before the pin lets go, so the first is already on
+// its way down as the section begins to move off — they fall through the claims
+// and on towards the close rather than into a held frame.
+const DROP_AT = 0.9;
 
 // The portrait's opening state: tall, and out on the left, clear of the
 // shrinking name. Height as a fraction of the screen and centre as a fraction
@@ -85,11 +57,18 @@ const DROP_AT = 0.8667;
 const PORTRAIT_BIG_H = 0.78;
 const PORTRAIT_BIG_X = 0.34;
 
-// The beats above are fractions of this, so the two numbers together decide how
-// fast anything moves. Six screens rather than four: at four the greeting's two
-// lines were each done inside forty screen-heights of scroll, which on a
-// trackpad is a flick. The tail is the balloons' — see DROP_AT.
-const STAGE_VH = 8.5;
+// The pinned part covers the ASSEMBLY and nothing else: the name arriving, the
+// face arriving, the copy arriving. Then the pin lets go and the section scrolls
+// like any other, which is where the three claims live.
+//
+// It used to run on to hold the claims and then hold again for the balloons, and
+// that was the mistake. A pinned panel is one screen tall whatever the stage is
+// worth, so every extra beat inside it was competing for 568 usable pixels that
+// were already 14px short — the claims came out at 23px with no space around
+// them, and the run to the closing line became 360vh of a screen that barely
+// changed. Length was never the problem; trying to fit a second act into a
+// frame that cannot grow was.
+const STAGE_VH = 5.6;
 
 // The greeting lands with its middle on the bottom edge — the first thing on
 // screen is the top half of it, cut — and heavily out of focus.
@@ -187,7 +166,6 @@ export default function AboutSection() {
   const claimRef = useRef<HTMLDivElement>(null);
   const factsRef = useRef<(HTMLLIElement | null)[]>([]);
   const factsListRef = useRef<HTMLOListElement>(null);
-  const factTitlesRef = useRef<(HTMLHeadingElement | null)[]>([]);
 
   const sectionRef = useRef<HTMLElement>(null);
   // Handed to the balloon layer once per scroll frame. A ref rather than state
@@ -353,49 +331,6 @@ export default function AboutSection() {
 
     fade(claim, "claim", BEATS.claim);
 
-    // THE THREE CLAIMS. The strip arrives as one thing, then each in turn takes
-    // a line of its own.
-    //
-    // The first grows in place. The other two are hidden while whatever is
-    // above them opens — their width is switched to full on a frame where their
-    // opacity is zero, so the reflow that would otherwise be a jump is never
-    // seen — and then they come back, already a row, opening right to left.
-    const list = factsListRef.current;
-    if (list) {
-      const strip = arrived("factsIn", BEATS.factsIn);
-      const gap = parseFloat(getComputedStyle(list).columnGap) || 0;
-      const columnWidth = (list.clientWidth - gap * 2) / 3;
-      const opens = BEATS.facts.map((range, index) =>
-        smoothstep(arrived(`fact${index}`, range)),
-      );
-
-      factsRef.current.forEach((item, index) => {
-        if (!item) return;
-        // Index 0 is opened by its own beat; the others are REPLACED by the one
-        // before them, so they fade on that beat and return on their own.
-        const open = opens[index];
-        // Both of the waiting claims clear on the FIRST one opening, not each on
-        // the one directly above it. The moment the first goes full width the
-        // strip is broken anyway — and clearing them one at a time leaves a
-        // window with two full rows and a narrow column still standing, which
-        // is the tallest the block ever gets and the one arrangement that does
-        // not fit the panel.
-        const clearing = index === 0 ? 1 : clamp01(1 - opens[0] * 2.2);
-        const shown = index === 0 ? strip : Math.max(strip * clearing, open);
-        const full = index === 0 ? open > 0 : opens[index - 1] > 0.99;
-
-        // Out of the flow entirely once invisible, so the block is only ever as
-        // tall as what can actually be seen.
-        item.style.display = shown < 0.01 && strip > 0.99 ? "none" : "";
-        item.style.opacity = String(shown);
-        item.style.width = full ? "100%" : `${columnWidth}px`;
-        item.style.clipPath = open > 0 && open < 1 ? `inset(0 0 0 ${(1 - open) * 100}%)` : "";
-
-        const title = factTitlesRef.current[index];
-        if (title) title.style.fontSize = `${lerp(23, 30, open)}px`;
-      });
-    }
-
     dropStateRef.current.armed = progress >= DROP_AT;
     // The hold is over and the assembled section is on its way off the top.
     // The back half of the cast is cued off this rather than off a delay,
@@ -461,6 +396,31 @@ export default function AboutSection() {
       cancelled = true;
       window.removeEventListener("resize", onResize);
     };
+  }, [prefersReducedMotion]);
+
+  // The claims open once, when they come into view, and stay open. They are not
+  // pinned and nothing about them is derived from a scroll position, so there is
+  // no reason to touch them on a scroll frame — an observer and a CSS transition
+  // do the whole thing and cost nothing while the page is moving.
+  useLayoutEffect(() => {
+    const items = factsRef.current.filter(Boolean) as HTMLLIElement[];
+    if (items.length === 0) return;
+    if (prefersReducedMotion) {
+      items.forEach((item) => item.setAttribute("data-in", ""));
+      return;
+    }
+    const watcher = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.setAttribute("data-in", "");
+          watcher.unobserve(entry.target);
+        });
+      },
+      { rootMargin: "0px 0px -18% 0px" },
+    );
+    items.forEach((item) => watcher.observe(item));
+    return () => watcher.disconnect();
   }, [prefersReducedMotion]);
 
   useMotionValueEvent(scrollY, "change", () => {
@@ -640,59 +600,53 @@ export default function AboutSection() {
                 </div>
               </div>
 
-              {/* The three arrive as a strip of narrow columns — the shape the
-                  section has always had — and are then taken apart one at a
-                  time, each becoming a full-width line of its own.
-
-                  ONE set of markup for both states. The row is a flex line that
-                  WRAPS: at a third of the width the number, the claim and the
-                  gloss stack, which is the strip as it looks today; at full
-                  width they fall onto a single baseline. So the only thing
-                  animated is the width, and the browser does the rest — no
-                  second copy of the content, and no layout to keep in step.
-
-                  The two still waiting are hidden while the one above them
-                  grows, and come back already full-width. That is not a
-                  shortcut around the reflow, it is the sequence: the first
-                  opens, and the other two arrive after it. It also means the
-                  block is never taller than what is actually on screen, which
-                  is what keeps everything above it still. */}
-              <ol
-                ref={factsListRef}
-                className="mt-8 flex flex-wrap items-start gap-x-6 gap-y-2 lg:mt-10 lg:gap-x-10"
-              >
-                {aboutFacts.map((fact, index) => (
-                  <li
-                    key={fact.title}
-                    ref={(el) => {
-                      factsRef.current[index] = el;
-                    }}
-                    className="will-change-[width,opacity]"
-                    style={{ opacity: 0 }}
-                  >
-                    <div className="flex flex-wrap items-baseline gap-x-6 border-t border-white/20 pt-3 text-right md:gap-x-10">
-                      <span className="font-display text-[12px] leading-none font-bold tracking-[0.18em] text-white/35">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-                      <h3
-                        ref={(el) => {
-                          factTitlesRef.current[index] = el;
-                        }}
-                        className="mt-3 font-display leading-[1.15] font-bold text-balance text-white"
-                      >
-                        {fact.title}
-                      </h3>
-                      <p className="mt-2 font-body text-[14px] leading-[1.65] text-white/45 md:text-[15px] md:ms-auto md:mt-3 md:max-w-[46ch]">
-                        {fact.description}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
             </div>
           </div>
         </div>
       </div>
+
+      {/* THE THREE CLAIMS — the second of the section's three parts, and the
+          only one that is not pinned.
+
+          They spent a long time inside the panel above, fighting for room in a
+          frame that cannot grow: 568 usable pixels already holding a name, a
+          face and two paragraphs, with the claims taking whatever was left at
+          23px. Out here there is no budget at all. Each takes a full line, the
+          claim large enough to be read as a statement and the gloss beside it
+          rather than crushed underneath.
+
+          Each is drawn on from the right-hand edge leftwards — the direction
+          Hebrew is read, so the rule and the words arrive the way a line is
+          written rather than the way a box fades in. Driven by a transition off
+          an observer, not by scroll: nothing here needs to reverse, and this
+          costs nothing per frame. */}
+      <ol
+        ref={factsListRef}
+        className="mx-auto w-full max-w-[1240px] px-6 pt-8 pb-24 md:px-10 lg:pb-32"
+      >
+        {aboutFacts.map((fact, index) => (
+          <li
+            key={fact.title}
+            ref={(el) => {
+              factsRef.current[index] = el;
+            }}
+            className="border-t border-white/15 py-7 opacity-0 [clip-path:inset(0_0_0_100%)] transition-[clip-path,opacity] duration-[900ms] ease-out data-[in]:opacity-100 data-[in]:[clip-path:inset(0_0_0_0)] lg:py-9"
+            style={{ transitionDelay: `${index * 140}ms` }}
+          >
+            <div className="flex flex-wrap items-baseline gap-x-8 gap-y-3 text-right md:gap-x-12">
+              <span className="font-display text-[12px] leading-none font-bold tracking-[0.18em] text-white/35">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <h3 className="font-display text-[30px] leading-[1.1] font-bold text-white md:text-[44px]">
+                {fact.title}
+              </h3>
+              <p className="font-body text-[15px] leading-[1.65] text-white/45 md:ms-auto md:max-w-[42ch] md:text-[17px]">
+                {fact.description}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ol>
 
       {/* The balloons. Mounted here, as a child of the section rather than of
           a stage, because their layers are fixed and the stage panels clip. */}
