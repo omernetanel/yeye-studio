@@ -141,6 +141,9 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
     let lastWallTop = 0;
     let lastScroll = window.scrollY;
     let visible = false;
+    // Made once and re-pointed each frame. Creating a Range per frame is a
+    // needless allocation in the hot loop.
+    const textRange = document.createRange();
 
     const build = () => {
       const short = Math.min(window.innerWidth, window.innerHeight);
@@ -222,7 +225,16 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
       // between this being free and this being the reason the page stutters.
       const sectionBox = section.getBoundingClientRect();
       const line = lineRef.current;
-      const wallBox = stateRef.current?.wallLive && line ? line.getBoundingClientRect() : null;
+      // The GLYPHS, not the paragraph. A Range over the element's contents
+      // yields one rect per line box, each only as wide as the words actually
+      // on it — where the element's own box is the full width of the column and
+      // would have balloons resting on empty black beside the text.
+      let wallBox: DOMRect[] | null = null;
+      if (stateRef.current?.wallLive && line) {
+        textRange.selectNodeContents(line);
+        wallBox = [...textRange.getClientRects()].filter((r) => r.width > 1 && r.height > 1);
+        if (wallBox.length === 0) wallBox = null;
+      }
       const scroll = window.scrollY;
       const screen = window.innerHeight;
 
@@ -260,7 +272,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
       // of the section, which is also the only place it can gather without ever
       // crossing into the next one.
       const floorY = sectionBox.bottom;
-      const wallTop = wallBox ? wallBox.top : 0;
+      const wallTop = wallBox ? wallBox[0].top : 0;
       const floorVelocity = elapsed > 0 ? (floorY - lastFloor) / elapsed : 0;
       const wallVelocity = wallBox && lastWallTop !== 0 && elapsed > 0 ? (wallTop - lastWallTop) / elapsed : 0;
       const scrolled = elapsed > 0 ? (scroll - lastScroll) / elapsed : 0;
@@ -269,9 +281,9 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
         width: window.innerWidth,
         floorY,
         floorVelocity,
-        wall: wallBox
-          ? { left: wallBox.left, top: wallBox.top, right: wallBox.right, bottom: wallBox.bottom }
-          : null,
+        wall:
+          wallBox?.map((r) => ({ left: r.left, top: r.top, right: r.right, bottom: r.bottom })) ??
+          null,
         wallVelocity,
         sway: Math.max(-SWAY_LIMIT, Math.min(SWAY_LIMIT, scrolled)),
       };
