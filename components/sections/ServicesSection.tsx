@@ -337,13 +337,16 @@ function ServicesListBlock() {
 function ProcessDiagram() {
   return (
     <div className="mx-auto w-full max-w-[1500px] px-6">
+      {/* Held a little inside the sheet's width. At full bleed the drawing runs
+          to the edges of the page it is printed on, which reads as a background
+          rather than as something drawn there. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/images/whatidopng.png"
         alt="איך אני עובד: מכירים את העסק, מעצבים את החוויה, בונים את זה נכון, עולים לאוויר"
         width={1920}
         height={1080}
-        className="mx-auto block h-auto w-full"
+        className="mx-auto block h-auto w-[88%]"
         draggable={false}
       />
     </div>
