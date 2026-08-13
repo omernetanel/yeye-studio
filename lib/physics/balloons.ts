@@ -64,10 +64,17 @@ export type World = {
   /** How fast that floor is itself moving, in px/s. A floor rising into a
       resting balloon has to lift it, not slide through it. */
   floorVelocity: number;
-  /** The impact line, in viewport coordinates. Null while it is still arriving
-      — a collider measured off a box that is mid-animation moves every frame,
-      and that reads as the balloon juddering rather than as a collision. */
-  wall: Rect | null;
+  /** The impact line, in viewport coordinates: ONE RECT PER LINE OF TEXT, not
+      the paragraph's box. The box runs the full width of the column, so most of
+      it is empty black to the left of a right-aligned line — and a balloon
+      landing out there sits on nothing at all. Two lines of different lengths
+      also means a balloon can fall through the gap beside the shorter one,
+      which is only true if each is its own collider.
+
+      Null while the line is still arriving: a collider measured off a box that
+      is mid-animation moves every frame, and that reads as the balloon
+      juddering rather than as a collision. */
+  wall: Rect[] | null;
   wallVelocity: number;
   /** Raw scroll velocity in px/s, signed. Not a force — the gains that turn it
       into one live below, because what scrolling does to a balloon depends
@@ -160,7 +167,9 @@ export function stepBalloons(balloons: Balloon[], dt: number, world: World) {
     b.x += b.vx * dt;
     b.y += b.vy * dt;
 
-    if (world.wall && b.front) hitWall(b, world.wall, world.wallVelocity, dt);
+    if (world.wall && b.front) {
+      for (const rect of world.wall) hitWall(b, rect, world.wallVelocity, dt);
+    }
     if (b.contained) {
       hitFloor(b, world.floorY, world.floorVelocity, dt);
       hitSides(b, world.width);
