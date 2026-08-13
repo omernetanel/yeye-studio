@@ -330,9 +330,10 @@ function ServicesListBlock() {
  * open page than a column of prose was, since it is a thing to look at rather
  * than to read around.
  *
- * Drawn in the browser rather than burned into the clip: it stays sharp at any
- * size, the wording is editable, and it does not cost a re-export and a
- * re-measure of every timing in this file to change a word.
+ * The drawing itself is a file rather than markup — it is line work, not a
+ * layout — but the heading over it is type, so it stays type: it scales with
+ * the sheet, stays sharp at any size, and changing the wording costs an edit
+ * rather than a re-export.
  */
 function ProcessDiagram() {
   return (
@@ -340,15 +341,26 @@ function ProcessDiagram() {
       {/* Held a little inside the sheet's width. At full bleed the drawing runs
           to the edges of the page it is printed on, which reads as a background
           rather than as something drawn there. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/images/whatidopng.png"
-        alt="איך אני עובד: מכירים את העסק, מעצבים את החוויה, בונים את זה נכון, עולים לאוויר"
-        width={1920}
-        height={1080}
-        className="mx-auto block h-auto w-[79%]"
-        draggable={false}
-      />
+      <div className="relative mx-auto w-[79%]">
+        {/* Top right, which under RTL is where a page begins. right-0 rather
+            than a logical property on purpose: this is pinned to the physical
+            corner of the sheet, not to the start of a line of text. */}
+        <h3 className="absolute top-0 right-0 z-10 font-display text-[26px] leading-[1.05] font-bold text-black md:text-[40px]">
+          איך אני
+          <br />
+          עובד?
+        </h3>
+
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/whatidopng.png"
+          alt="מכירים את העסק, מעצבים את החוויה, בונים את זה נכון, עולים לאוויר"
+          width={1920}
+          height={1080}
+          className="block h-auto w-full"
+          draggable={false}
+        />
+      </div>
     </div>
   );
 }
