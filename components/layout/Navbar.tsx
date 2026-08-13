@@ -62,8 +62,33 @@ export default function Navbar() {
     img.style.filter = onDark ? DARK_FILTER : LIGHT_FILTER;
   };
 
+  // Arriving from another page on a hash link — /#services from a sub-page's
+  // menu — the router renders first and jumps to the anchor afterwards. A
+  // single check here therefore samples the page at the TOP, decides the white
+  // hero is behind the logo, paints it black, and never looks again: the jump
+  // that follows is not a gesture and produces no scroll the subscription
+  // below reacts to. That is the logo stuck black on a dark section.
+  //
+  // So the check is repeated across the frames the jump lands in. Three frames
+  // and a backstop, not a fixed delay, because how long the router takes is not
+  // ours to know.
   useEffect(() => {
     checkTheme();
+    const frames: number[] = [];
+    const again = (left: number) => {
+      frames.push(
+        requestAnimationFrame(() => {
+          checkTheme();
+          if (left > 0) again(left - 1);
+        }),
+      );
+    };
+    again(3);
+    const backstop = window.setTimeout(checkTheme, 250);
+    return () => {
+      frames.forEach(cancelAnimationFrame);
+      window.clearTimeout(backstop);
+    };
   }, [pathname]);
 
   // Deferred a frame on purpose. Sections that compute their own darkness
@@ -82,9 +107,17 @@ export default function Navbar() {
   };
 
   useEffect(() => {
+    // The motion value tracks scrolling; this catches the page being MOVED —
+    // an anchor jump, a restored position, anything that repositions the
+    // document without a gesture behind it.
+    window.addEventListener("scroll", scheduleCheck, { passive: true });
+    window.addEventListener("hashchange", scheduleCheck);
     return () => {
+      window.removeEventListener("scroll", scheduleCheck);
+      window.removeEventListener("hashchange", scheduleCheck);
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useMotionValueEvent(scrollY, "change", scheduleCheck);
