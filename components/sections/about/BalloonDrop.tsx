@@ -163,6 +163,10 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
           r: size / 2,
           tilt: 0,
           tiltVelocity: 0,
+          // Spread around the circle by an irrational step, so no two of the
+          // seventeen share a phase and the pattern never repeats down the cast.
+          phase: index * 2.39996,
+          age: 0,
           depth: entry.depth,
           front: entry.front,
           type: entry.type,

@@ -25,6 +25,11 @@ export type Balloon = {
   /** Degrees off vertical, and how fast that is changing. */
   tilt: number;
   tiltVelocity: number;
+  /** Where this one is in its own rocking cycle, and how long it has been
+      falling. Every balloon is given a different phase, so they are never
+      caught leaning the same way at the same moment. */
+  phase: number;
+  age: number;
   /** 0 is furthest, 1 is nearest. Scales gravity, so far ones fall slower —
       the channel that actually sells depth, more than size or z-order do. */
   depth: number;
@@ -99,12 +104,25 @@ const FLOOR_FRICTION = 2;
 // times, each smaller than the last, and that decay is most of what sells it.
 const REST_SPEED = 12;
 
-// The rock. A spring back to upright with heavy damping, hard-limited, so the
-// logo and the face are always the right way up.
-const TILT_LIMIT = 12;
+// The rock. A spring, but not towards upright — towards a slowly swinging
+// target, so a balloon falling through open air with nothing touching it still
+// turns. Before this the spring pulled to zero and the only thing that ever
+// disturbed it was a collision, which meant the entire descent was dead
+// straight: the balloons read as images being moved rather than as objects.
+//
+// The limit stays hard so the logo and the face never end up upside down.
+const TILT_LIMIT = 45;
 const TILT_SPRING = 44;
 const TILT_DAMPING = 5.4;
 const TILT_PER_IMPACT = 26;
+// How far the swing carries on its own, and how fast. Well inside the limit,
+// which leaves the rest of the range for impacts to borrow. A shade over five
+// seconds a cycle — slow enough to notice rather than to watch.
+const ROCK_DEGREES = 30;
+const ROCK_SPEED = 1.05;
+// A swinging body moves sideways as well as turning, in phase with the lean.
+// Small: this is a drift off the straight line, not a slalom.
+const ROCK_DRIFT = 30;
 
 // How many times the heap is relaxed per step. Three is enough for fifteen
 // bodies and cheap; one is visibly not enough.
@@ -180,7 +198,11 @@ export function stepBalloons(balloons: Balloon[], dt: number, world: World) {
       b.alive = false;
     }
 
-    b.tiltVelocity += (-TILT_SPRING * b.tilt - TILT_DAMPING * b.tiltVelocity) * dt;
+    b.age += dt;
+    const lean = Math.sin(b.age * ROCK_SPEED + b.phase);
+    b.vx += lean * ROCK_DRIFT * lift * dt;
+    b.tiltVelocity +=
+      (TILT_SPRING * (lean * ROCK_DEGREES - b.tilt) - TILT_DAMPING * b.tiltVelocity) * dt;
     b.tilt += b.tiltVelocity * dt;
     if (b.tilt > TILT_LIMIT || b.tilt < -TILT_LIMIT) {
       b.tilt = clamp(b.tilt, -TILT_LIMIT, TILT_LIMIT);
