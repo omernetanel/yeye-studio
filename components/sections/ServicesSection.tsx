@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useLayoutEffect, useRef } from "react";
+import { forwardRef, useLayoutEffect, useRef, type RefObject } from "react";
 import Link from "next/link";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { ArrowLeft, Layers, PenTool, Rocket, ShoppingBag } from "lucide-react";
@@ -67,6 +67,23 @@ const ABOUT_FADE_IN_START_SECONDS = SERVICES_FADE_END_SECONDS + 0.5;
 const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.8 + 0.5 + SERVICES_HOLD_SECONDS;
 const ABOUT_FADE_OUT_START_SECONDS = 5 + 6 / 30 - 0.5;
 const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
+
+// The heading on the sheet runs on its own clock, inside the drawing's: it
+// comes up after the drawing has started arriving, and it leaves a full second
+// before the drawing does.
+//
+// Those two pull against each other. The drawing is not fully in until 3.60s
+// and the heading has to be gone from 3.70s, so the entrance has to finish
+// inside that gap — the heading stands at full strength for about a tenth of a
+// second before it starts going again. If it wants a life of its own, the
+// second below is the number to reduce.
+const HEADING_LEAD_SECONDS = 1;
+const HEADING_IN_START_SECONDS = ABOUT_FADE_IN_START_SECONDS + 0.3;
+const HEADING_IN_END_SECONDS = ABOUT_FADE_IN_END_SECONDS;
+const HEADING_OUT_START_SECONDS = ABOUT_FADE_OUT_START_SECONDS - HEADING_LEAD_SECONDS;
+const HEADING_OUT_END_SECONDS = ABOUT_FADE_OUT_END_SECONDS - HEADING_LEAD_SECONDS;
+// How far it lifts as it comes up, in the diagram's own pixels.
+const HEADING_RISE_PX = 26;
 const CONTENT_SHRINK_SCALE = 0.6;
 const VIDEO_REST_SCALE = 1.10;
 const VIDEO_REST_SHIFT_X_PX = 45;
@@ -335,7 +352,7 @@ function ServicesListBlock() {
  * the sheet, stays sharp at any size, and changing the wording costs an edit
  * rather than a re-export.
  */
-function ProcessDiagram() {
+function ProcessDiagram({ headingRef }: { headingRef: RefObject<HTMLHeadingElement | null> }) {
   return (
     <div className="mx-auto w-full max-w-[1500px] px-6">
       {/* Held a little inside the sheet's width. At full bleed the drawing runs
@@ -345,7 +362,11 @@ function ProcessDiagram() {
         {/* Top right, which under RTL is where a page begins. right-0 rather
             than a logical property on purpose: this is pinned to the physical
             corner of the sheet, not to the start of a line of text. */}
-        <h3 className="absolute top-0 right-0 z-10 font-display text-[26px] leading-[1.05] font-bold text-black md:text-[40px]">
+        <h3
+          ref={headingRef}
+          className="absolute top-0 right-0 z-10 font-display text-[26px] leading-[1.05] font-bold text-black will-change-transform md:text-[40px]"
+          style={{ opacity: 0 }}
+        >
           איך אני
           <br />
           עובד?
@@ -402,6 +423,7 @@ export default function ServicesSection() {
   const headingRef = useRef<HTMLDivElement>(null);
   const servicesContentRef = useRef<HTMLDivElement>(null);
   const aboutContentRef = useRef<HTMLDivElement>(null);
+  const processHeadingRef = useRef<HTMLHeadingElement>(null);
   // About's exit-phase transform-origin (screen center, in pixels relative
   // to its own box) — measured live in update() while About is fully
   // visible. "50% 50%" (its own center, which sits near screen center
@@ -629,6 +651,23 @@ export default function ServicesSection() {
     aboutContent.style.transformOrigin = "50% 50%";
     aboutContent.style.opacity = String(aboutGrowT);
     aboutContent.style.transform = `translateY(${ABOUT_SHIFT_Y_PX}px) scale(${lerp(CONTENT_SHRINK_SCALE, 1, aboutGrowT)})`;
+
+    // The heading over the drawing, on its own clock inside the block's. Its
+    // opacity multiplies with the block's, so this is only ever a fraction of
+    // whatever the sheet is already showing — it can come up later and leave
+    // earlier, but it can never outlive the page it is printed on.
+    const processHeading = processHeadingRef.current;
+    if (processHeading) {
+      const headingIn = smoothstep(
+        mapRange(targetTime, HEADING_IN_START_SECONDS, HEADING_IN_END_SECONDS, 0, 1),
+      );
+      const headingOut = smoothstep(
+        mapRange(targetTime, HEADING_OUT_START_SECONDS, HEADING_OUT_END_SECONDS, 0, 1),
+      );
+      const headingT = headingIn * (1 - headingOut);
+      processHeading.style.opacity = String(headingT);
+      processHeading.style.transform = `translateY(${lerp(HEADING_RISE_PX, 0, headingIn).toFixed(2)}px)`;
+    }
   };
 
   const measurePinRange = () => {
@@ -849,7 +888,7 @@ export default function ServicesSection() {
           className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-6"
           style={{ opacity: 0 }}
         >
-          <ProcessDiagram />
+          <ProcessDiagram headingRef={processHeadingRef} />
         </div>
 
         {/* The closing statement, delivered inside the pinned frame rather than
