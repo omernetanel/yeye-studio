@@ -27,29 +27,39 @@ const BEATS = {
 // scroll distance it landed on the first time. The factor is never n/(n+1),
 // because a beat is a fraction of the TRAVEL, which is the stage minus one
 // screen: 500vh became 600vh became 800vh.
-  greetLine1: [0.0, 0.1278],
-  greetLine2: [0.1579, 0.2857],
-  greetSettle: [0.3308, 0.4662],
+  greetLine1: [0.0, 0.0876],
+  greetLine2: [0.1082, 0.1959],
+  greetSettle: [0.2268, 0.3196],
   // With the section, not with the copy. It names where you are, so it belongs
   // on screen from the moment the black arrives — waiting until the column
   // landed meant the header row sat empty through the whole opening.
-  label: [0.015, 0.0902],
-  content: [0.4812, 0.5714],
+  label: [0.0103, 0.0619],
+  content: [0.3299, 0.3918],
   // The portrait arrives on the SAME beat the greeting starts settling, not
   // after the column has landed. That is the whole point of it: "אני עומר."
   // stops being a line of type at the moment there is a face beside it, and it
   // has to happen while the name is still the thing being read.
-  portrait: [0.3308, 0.4],
+  portrait: [0.2268, 0.2742],
   // And starts down the moment it has finished appearing — the two ranges
   // touch, with no pause at full size in between. Held big for even a fraction
   // it reads as two events, an entrance and then a separate departure, rather
   // than as one picture that arrives and settles.
-  portraitLand: [0.4, 0.5714],
-  claim: [0.5865, 0.6617],
+  portraitLand: [0.2742, 0.3918],
+  claim: [0.4021, 0.4536],
+  // THE COLUMN LEAVES. Assembled, it holds still for 70vh — long enough to be
+  // read as standing rather than as passing through — and then keeps going up
+  // and off the top. The name, the face and the copy travel together, so the
+  // greeting and the portrait carry this offset too.
+  //
+  // This is what buys the claims a screen without anything being cut. The panel
+  // is pinned at one screen height whatever the stage is worth, so extra scroll
+  // only ever buys TIME; the only way it buys ROOM is for something already on
+  // screen to leave.
+  contentExit: [0.5258, 0.6392],
   facts: [
-    [0.6466, 0.6917],
-    [0.6767, 0.7143],
-    [0.7068, 0.7444],
+    [0.6186, 0.701],
+    [0.6804, 0.7629],
+    [0.7423, 0.8247],
   ],
 } as const;
 
@@ -67,7 +77,7 @@ const BEATS = {
 // The trigger sits just BEFORE the last fact finishes rather than after it, so
 // the first balloon is already on its way down while the section finishes
 // assembling instead of after a beat of nothing.
-const DROP_AT = 0.7218;
+const DROP_AT = 0.8144;
 
 // The portrait's opening state: tall, and out on the left, clear of the
 // shrinking name. Height as a fraction of the screen and centre as a fraction
@@ -79,7 +89,11 @@ const PORTRAIT_BIG_X = 0.34;
 // fast anything moves. Six screens rather than four: at four the greeting's two
 // lines were each done inside forty screen-heights of scroll, which on a
 // trackpad is a flick. The tail is the balloons' — see DROP_AT.
-const STAGE_VH = 7.65;
+const STAGE_VH = 10.7;
+
+// How far the assembled column travels up and off the top. One screen clears
+// it completely.
+const CONTENT_EXIT_VH = 1;
 
 // The greeting lands with its middle on the bottom edge — the first thing on
 // screen is the top half of it, cut — and heavily out of focus.
@@ -285,6 +299,12 @@ export default function AboutSection() {
       return reached[key];
     };
 
+    // The column's exit, shared by everything that belongs to it. The greeting
+    // and the portrait float over the panel rather than sitting inside the
+    // wrapper, so they have to be given the same offset by hand or the section
+    // comes apart on the way out.
+    const exit = -screen * CONTENT_EXIT_VH * smoothstep(span(progress, BEATS.contentExit));
+
     // THE GREETING — entirely live, in both directions.
     const settle = span(progress, BEATS.greetSettle);
     const land = landingRef.current;
@@ -293,7 +313,7 @@ export default function AboutSection() {
     greet.style.fontSize = `${greetSize}px`;
     greet.style.opacity = "1";
     greet.style.transform =
-      `translate(-50%, -50%) translate(${land.x * settle}px, ${land.y * settle}px)`;
+      `translate(-50%, -50%) translate(${land.x * settle}px, ${land.y * settle + exit}px)`;
     // Each line rises on its own beat, and slides from centred to right-aligned
     // across the settle. The slide is eased over the same span the box uses to
     // descend, so the alignment arrives as part of the landing rather than as a
@@ -312,7 +332,8 @@ export default function AboutSection() {
 
     // THE COPY — movement live, arrival latched.
     const contentTravel = span(progress, BEATS.content);
-    content.style.transform = `translateY(${lerp(screen * CONTENT_TRAVEL_VH, 0, contentTravel)}px)`;
+    content.style.transform =
+      `translateY(${lerp(screen * CONTENT_TRAVEL_VH, 0, contentTravel) + exit}px)`;
 
     const fade = (el: HTMLElement, key: string, range: readonly [number, number]) => {
       el.style.opacity = String(arrived(key, range));
@@ -337,12 +358,20 @@ export default function AboutSection() {
     const bigX = (PORTRAIT_BIG_X - 0.5) * panel.clientWidth;
     portrait.style.opacity = String(portraitIn);
     portrait.style.transform =
-      `translate(-50%, -50%) translate(${lerp(bigX, pLand.x, portraitDown)}px, ${lerp(0, pLand.y, portraitDown)}px) scale(${lerp(bigScale, 1, portraitDown).toFixed(4)})`;
+      `translate(-50%, -50%) translate(${lerp(bigX, pLand.x, portraitDown)}px, ${lerp(0, pLand.y, portraitDown) + exit}px) scale(${lerp(bigScale, 1, portraitDown).toFixed(4)})`;
 
     fade(claim, "claim", BEATS.claim);
+
+    // Each claim is drawn on from the right-hand edge leftwards: the inset on
+    // the LEFT side of the clip retreats from full to nothing, so the rule and
+    // the words are uncovered together, in the direction the line is read.
+    // Latched with everything else — it is an arrival, not a position.
     BEATS.facts.forEach((range, index) => {
       const item = factsRef.current[index];
-      if (item) fade(item, `fact${index}`, range);
+      if (!item) return;
+      const open = smoothstep(arrived(`fact${index}`, range));
+      item.style.opacity = open > 0 ? "1" : "0";
+      item.style.clipPath = `inset(0 0 0 ${(1 - open) * 100}%)`;
     });
 
     dropStateRef.current.armed = progress >= DROP_AT;
@@ -589,32 +618,45 @@ export default function AboutSection() {
                 </div>
               </div>
 
-              {/* The three join along the bottom, one at a time, and stay. By
-                  the last one the whole argument is standing on one screen. */}
-              <ol className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3 lg:mt-14 lg:gap-10">
-                {aboutFacts.map((fact, index) => (
-                  <li
-                    key={fact.title}
-                    ref={(el) => {
-                      factsRef.current[index] = el;
-                    }}
-                    style={{ opacity: 0 }}
-                  >
-                    <div className="border-t border-white/20 pt-4 text-right">
-                      <span className="font-display text-[12px] leading-none font-bold tracking-[0.18em] text-white/35">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-                      <h3 className="mt-3 font-display text-[19px] leading-[1.15] font-bold text-balance text-white md:text-[23px]">
-                        {fact.title}
-                      </h3>
-                      <p className="mt-2 font-body text-[14px] leading-[1.65] text-balance text-white/45 md:text-[15px]">
-                        {fact.description}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
             </div>
+          </div>
+
+          {/* THE THREE CLAIMS, on the screen the column vacates.
+
+              They used to be a strip of three narrow columns along the bottom:
+              137px of a 720px screen, 360px wide each, set at 15px. That is the
+              whole argument of the section — one person, end to end, nothing
+              from a template — laid out as captions under a photograph.
+
+              Now each takes a full-width line of its own and opens RIGHTWARDS
+              TO LEFT, which in Hebrew is the direction of reading: the rule and
+              the words arrive together, the way a line is written rather than
+              the way a box fades in. */}
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 z-10 -translate-y-1/2">
+            <ol className="mx-auto w-full max-w-[1240px] px-6 md:px-10">
+              {aboutFacts.map((fact, index) => (
+                <li
+                  key={fact.title}
+                  ref={(el) => {
+                    factsRef.current[index] = el;
+                  }}
+                  className="border-t border-white/20 py-6 will-change-[clip-path] lg:py-8"
+                  style={{ opacity: 0, clipPath: "inset(0 0 0 100%)" }}
+                >
+                  <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 text-right md:gap-x-10">
+                    <span className="font-display text-[12px] leading-none font-bold tracking-[0.18em] text-white/35">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <h3 className="font-display text-[28px] leading-[1.1] font-bold text-white md:text-[42px]">
+                      {fact.title}
+                    </h3>
+                    <p className="ms-auto max-w-[44ch] font-body text-[15px] leading-[1.6] text-white/45 md:text-[17px]">
+                      {fact.description}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </div>
