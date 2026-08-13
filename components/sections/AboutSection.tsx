@@ -18,38 +18,37 @@ import { aboutFacts } from "@/lib/content";
 // after it — and a photograph is legible at fifteen percent opacity where a
 // line of text at the same opacity is still invisible.
 const BEATS = {
+  // Every fraction here is rescaled whenever the stage changes length, so that
+  // a beat keeps landing on the same scroll distance it always has. The factor
+  // is never n/(n+1): a beat is a fraction of the TRAVEL, which is the stage
+  // minus one screen.
+  //
   // The two lines of the greeting arrive one after the other, not together:
   // the salutation first, and only once it is standing does the name come up
   // under it. They overlap by a hair so the pair still reads as one gesture.
-//
-// Every fraction here has been rescaled twice, as the stage grew from six
-// screens to seven and then to nine, so that each beat lands on the exact
-// scroll distance it landed on the first time. The factor is never n/(n+1),
-// because a beat is a fraction of the TRAVEL, which is the stage minus one
-// screen: 500vh became 600vh became 800vh.
-  greetLine1: [0.0, 0.1288],
-  greetLine2: [0.1591, 0.2879],
-  greetSettle: [0.3333, 0.4697],
+  greetLine1: [0.0, 0.1063],
+  greetLine2: [0.1313, 0.2375],
+  greetSettle: [0.2750, 0.3875],
   // With the section, not with the copy. It names where you are, so it belongs
   // on screen from the moment the black arrives — waiting until the column
   // landed meant the header row sat empty through the whole opening.
-  label: [0.0152, 0.0909],
-  content: [0.4848, 0.5758],
+  label: [0.0125, 0.0750],
+  content: [0.4000, 0.4750],
   // The portrait arrives on the SAME beat the greeting starts settling, not
   // after the column has landed. That is the whole point of it: "אני עומר."
   // stops being a line of type at the moment there is a face beside it, and it
   // has to happen while the name is still the thing being read.
-  portrait: [0.3333, 0.4030],
+  portrait: [0.2750, 0.3325],
   // And starts down the moment it has finished appearing — the two ranges
   // touch, with no pause at full size in between. Held big for even a fraction
   // it reads as two events, an entrance and then a separate departure, rather
   // than as one picture that arrives and settles.
-  portraitLand: [0.4030, 0.5758],
-  claim: [0.5909, 0.6667],
+  portraitLand: [0.3325, 0.4750],
+  claim: [0.4875, 0.5500],
   facts: [
-    [0.6515, 0.697],
-    [0.6818, 0.7197],
-    [0.7121, 0.75],
+    [0.5375, 0.5750],
+    [0.5625, 0.5938],
+    [0.5875, 0.6188],
   ],
   // And then the eye is walked across them, one at a time. This is what the
   // stretch after the last arrival is FOR: it used to be an empty hold that
@@ -57,32 +56,35 @@ const BEATS = {
   // nothing changes reads as a page that has stopped answering however good the
   // reason for it. Now the same scroll does the reading.
   //
-  // Live, not latched, and symmetric — each swells and subsides — so going back
-  // up walks the eye across them in reverse rather than leaving one lit.
-  // Separated by a gap, not butted together. Adjacent windows hand straight
-  // over from one claim to the next, which reads as a single light sliding
-  // down the block; with a gap between them each is lifted, set back down, and
-  // only then is the next one picked up.
+  // 70vh a claim with 25vh between, where the first attempt gave each 33vh and
+  // ran all three inside 129vh. Normal scrolling crosses 33vh in a fraction of
+  // a second, so three swells and three settles happened inside a second and a
+  // half: it did not read as attention moving down a list, it read as a strobe.
   focus: [
-    [0.765, 0.815],
-    [0.8375, 0.8875],
-    [0.91, 0.96],
+    [0.6313, 0.7188],
+    [0.75, 0.8375],
+    [0.8688, 0.9563],
   ],
 } as const;
 
-// The lift given to whichever claim is being read, and how far the other two
-// fall back while it is. Scale, not size: a transform does not touch the
-// layout, so nothing moves, nothing reflows and the panel's height budget is
-// not involved at all.
-// Small on purpose. This is a claim being noticed, not a claim being announced.
+// The lift given to whichever claim is being read. Scale, not size: a transform
+// does not touch the layout, so nothing moves, nothing reflows and the panel's
+// height budget is not involved. Small on purpose — this is a claim being
+// noticed, not a claim being announced.
 const FOCUS_SCALE = 0.035;
+// And where a claim sits BEFORE its turn comes. It brightens to full as it is
+// read and then simply stays there: dimmed, lit, done.
+//
+// Brightness used to return to dim afterwards, which is what actually made this
+// flash. Whatever the pacing, an element that goes dark, bright, dark, three
+// times over, is blinking. "Back to normal" is not back to dim.
 const FOCUS_DIM = 0.62;
 
 // The first balloons come down over the sweep, not over an empty hold. The two
 // share the stretch on purpose: one is a slow read across three lines of type,
 // the other is something falling past it, and neither needs the screen to
 // itself. The remaining ten wait for the closing panel — see `leaving`.
-const DROP_AT = 0.7273;
+const DROP_AT = 0.6;
 
 // The portrait's opening state: tall, and out on the left, clear of the
 // shrinking name. Height as a fraction of the screen and centre as a fraction
@@ -94,7 +96,7 @@ const PORTRAIT_BIG_X = 0.34;
 // fast anything moves. Six screens rather than four: at four the greeting's two
 // lines were each done inside forty screen-heights of scroll, which on a
 // trackpad is a flick. The tail is the balloons' — see DROP_AT.
-const STAGE_VH = 7.6;
+const STAGE_VH = 9;
 
 // The greeting lands with its middle on the bottom edge — the first thing on
 // screen is the top half of it, cut — and heavily out of focus.
@@ -355,24 +357,26 @@ export default function AboutSection() {
       `translate(-50%, -50%) translate(${lerp(bigX, pLand.x, portraitDown)}px, ${lerp(0, pLand.y, portraitDown)}px) scale(${lerp(bigScale, 1, portraitDown).toFixed(4)})`;
 
     fade(claim, "claim", BEATS.claim);
-    // Arrival is latched and one-way; the sweep that follows is neither. A half
-    // sine over each window means the claim swells to full and settles back on
-    // its own, so there is never one left standing brighter than the rest and
-    // the whole pass reverses with the scroll.
-    const sweep = BEATS.focus.map((range) =>
-      Math.max(0, Math.sin(Math.PI * clamp01((progress - range[0]) / (range[1] - range[0])))),
-    );
-    const reading = Math.max(...sweep);
+    // TWO CURVES, doing two different jobs.
+    //
+    // Brightness is MONOTONE: dim until its turn, up to full as it is read, and
+    // full from then on. Nothing ever darkens again, which is the difference
+    // between attention moving down a list and three lights blinking.
+    //
+    // The lift is the one thing that comes back, once, in the middle of the
+    // claim's own window — a claim is picked up and set down. It is a 3.5%
+    // scale, so even that is a breath rather than a move.
+    //
+    // Both live rather than latched: scrolling back up walks the eye across
+    // them in reverse, which is reading in the other direction.
+    const sweep = BEATS.focus.map((range) => span(progress, range));
     BEATS.facts.forEach((range, index) => {
       const item = factsRef.current[index];
       if (!item) return;
-      const here = sweep[index];
-      // `reading` scales the whole effect, so before the sweep starts and after
-      // it has passed all three sit at their resting weight.
-      item.style.opacity = String(
-        arrived(`fact${index}`, range) * lerp(1, lerp(FOCUS_DIM, 1, here), reading),
-      );
-      item.style.transform = `scale(${(1 + FOCUS_SCALE * here).toFixed(4)})`;
+      const read = sweep[index];
+      item.style.opacity = String(arrived(`fact${index}`, range) * lerp(FOCUS_DIM, 1, read));
+      const lift = Math.sin(Math.PI * read);
+      item.style.transform = `scale(${(1 + FOCUS_SCALE * lift).toFixed(4)})`;
     });
 
     dropStateRef.current.armed = progress >= DROP_AT;
