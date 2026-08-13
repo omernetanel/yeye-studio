@@ -71,6 +71,19 @@ export default function HeroSection() {
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
+    // Settled from geometry before the observer is attached. The flag lives in
+    // a module-level store that outlives this component, so arriving on the
+    // homepage from a sub-page inherits whatever it was last set to — and
+    // arriving on a hash link puts the Hero out of view before this even runs.
+    // Measuring first means the mark is right on the frame it appears rather
+    // than on whichever frame the observer gets round to.
+    const measure = () => {
+      const rect = section.getBoundingClientRect();
+      const shown = Math.max(0, Math.min(window.innerHeight, rect.bottom) - Math.max(0, rect.top));
+      setDocked(rect.height > 0 && shown / rect.height < 0.35);
+    };
+    measure();
+
     const io = new IntersectionObserver(([entry]) => setDocked(entry.intersectionRatio < 0.35), {
       threshold: [0, 0.35, 1],
     });
@@ -95,7 +108,7 @@ export default function HeroSection() {
     // factor keeps the aspect ratio and the centring intact.
     // On mobile the mark and the button beneath it share one column and have to
     // line up on the same two edges, so it fills its box exactly.
-    const LOGO_FIT_SCALE = isMobile ? 1 : 0.96;
+    const LOGO_FIT_SCALE = isMobile ? 1 : 0.93;
     // A flat trim off the fitted width, not another ratio: a ratio would
     // take a different number of pixels off at every viewport, and this is
     // meant to be exactly 10px wherever it renders.
