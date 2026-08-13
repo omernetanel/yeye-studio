@@ -44,17 +44,22 @@ const BEATS = {
   // than as one picture that arrives and settles.
   portraitLand: [0.3205, 0.4578],
   claim: [0.4699, 0.5301],
-  // 70vh each, where they used to get 30, 25 and 25. They are the argument of
-  // the section and they were going past faster than anything else in it.
+  // The strip arrives whole, all three at once, in the shape it has always had.
+  // Nobody reads it here and that is the point — it is the thing you have
+  // glanced at and not taken in.
+  factsIn: [0.5301, 0.5663],
+  // And then it is taken apart, 70vh a claim where the whole strip used to get
+  // 30. They are the argument of the section and they were going past faster
+  // than anything else in it.
   //
-  // They still arrive HERE, onto the standing screen, alongside everything
-  // else. Moving them onto a screen of their own was tried and taken back out:
-  // it turned one moment into three, and the point was to make the moment
-  // longer, not to break it up.
+  // All of this happens on the standing screen, alongside everything else.
+  // Moving them onto a screen of their own was tried and taken back out: it
+  // turned one moment into three, and the point was to make the moment longer,
+  // not to break it up.
   facts: [
     [0.5663, 0.6506],
-    [0.6386, 0.7229],
-    [0.7108, 0.7952],
+    [0.655, 0.72],
+    [0.725, 0.7952],
   ],
 } as const;
 
@@ -181,6 +186,8 @@ export default function AboutSection() {
   const portraitSlotRef = useRef<HTMLDivElement>(null);
   const claimRef = useRef<HTMLDivElement>(null);
   const factsRef = useRef<(HTMLLIElement | null)[]>([]);
+  const factsListRef = useRef<HTMLOListElement>(null);
+  const factTitlesRef = useRef<(HTMLHeadingElement | null)[]>([]);
 
   const sectionRef = useRef<HTMLElement>(null);
   // Handed to the balloon layer once per scroll frame. A ref rather than state
@@ -345,10 +352,49 @@ export default function AboutSection() {
       `translate(-50%, -50%) translate(${lerp(bigX, pLand.x, portraitDown)}px, ${lerp(0, pLand.y, portraitDown)}px) scale(${lerp(bigScale, 1, portraitDown).toFixed(4)})`;
 
     fade(claim, "claim", BEATS.claim);
-    BEATS.facts.forEach((range, index) => {
-      const item = factsRef.current[index];
-      if (item) fade(item, `fact${index}`, range);
-    });
+
+    // THE THREE CLAIMS. The strip arrives as one thing, then each in turn takes
+    // a line of its own.
+    //
+    // The first grows in place. The other two are hidden while whatever is
+    // above them opens — their width is switched to full on a frame where their
+    // opacity is zero, so the reflow that would otherwise be a jump is never
+    // seen — and then they come back, already a row, opening right to left.
+    const list = factsListRef.current;
+    if (list) {
+      const strip = arrived("factsIn", BEATS.factsIn);
+      const gap = parseFloat(getComputedStyle(list).columnGap) || 0;
+      const columnWidth = (list.clientWidth - gap * 2) / 3;
+      const opens = BEATS.facts.map((range, index) =>
+        smoothstep(arrived(`fact${index}`, range)),
+      );
+
+      factsRef.current.forEach((item, index) => {
+        if (!item) return;
+        // Index 0 is opened by its own beat; the others are REPLACED by the one
+        // before them, so they fade on that beat and return on their own.
+        const open = opens[index];
+        // Both of the waiting claims clear on the FIRST one opening, not each on
+        // the one directly above it. The moment the first goes full width the
+        // strip is broken anyway — and clearing them one at a time leaves a
+        // window with two full rows and a narrow column still standing, which
+        // is the tallest the block ever gets and the one arrangement that does
+        // not fit the panel.
+        const clearing = index === 0 ? 1 : clamp01(1 - opens[0] * 2.2);
+        const shown = index === 0 ? strip : Math.max(strip * clearing, open);
+        const full = index === 0 ? open > 0 : opens[index - 1] > 0.99;
+
+        // Out of the flow entirely once invisible, so the block is only ever as
+        // tall as what can actually be seen.
+        item.style.display = shown < 0.01 && strip > 0.99 ? "none" : "";
+        item.style.opacity = String(shown);
+        item.style.width = full ? "100%" : `${columnWidth}px`;
+        item.style.clipPath = open > 0 && open < 1 ? `inset(0 0 0 ${(1 - open) * 100}%)` : "";
+
+        const title = factTitlesRef.current[index];
+        if (title) title.style.fontSize = `${lerp(23, 30, open)}px`;
+      });
+    }
 
     dropStateRef.current.armed = progress >= DROP_AT;
     // The hold is over and the assembled section is on its way off the top.
@@ -524,7 +570,13 @@ export default function AboutSection() {
               in-flow text is painted below every positioned element and the
               balloons would all be in front. */}
           <div ref={contentRef} className="relative z-10 h-full will-change-transform">
-            <div className="mx-auto flex h-full max-w-[1240px] flex-col justify-center px-6 pt-24 pb-14 md:px-10">
+            {/* pt-14, not pt-24. The top padding is only there to clear the
+                header row — the label sits at y=22 and is 24px tall, so it ends
+                at 46 — and 96px was twice what that needs. The 72px given back
+                here and at the foot is what the claims expand into: the panel
+                is exactly one screen and cannot be made taller, so the only
+                room available inside it is room that was not being used. */}
+            <div className="mx-auto flex h-full max-w-[1240px] flex-col justify-center px-6 pt-14 pb-10 md:px-10">
               <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_30vw] lg:gap-14">
                 <div className="text-right">
                   {/* The slot. It holds the greeting's place in the column so
@@ -594,25 +646,49 @@ export default function AboutSection() {
                 </div>
               </div>
 
-              {/* The three join along the bottom, one at a time, and stay. By
-                  the last one the whole argument is standing on one screen. */}
-              <ol className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3 lg:mt-14 lg:gap-10">
+              {/* The three arrive as a strip of narrow columns — the shape the
+                  section has always had — and are then taken apart one at a
+                  time, each becoming a full-width line of its own.
+
+                  ONE set of markup for both states. The row is a flex line that
+                  WRAPS: at a third of the width the number, the claim and the
+                  gloss stack, which is the strip as it looks today; at full
+                  width they fall onto a single baseline. So the only thing
+                  animated is the width, and the browser does the rest — no
+                  second copy of the content, and no layout to keep in step.
+
+                  The two still waiting are hidden while the one above them
+                  grows, and come back already full-width. That is not a
+                  shortcut around the reflow, it is the sequence: the first
+                  opens, and the other two arrive after it. It also means the
+                  block is never taller than what is actually on screen, which
+                  is what keeps everything above it still. */}
+              <ol
+                ref={factsListRef}
+                className="mt-8 flex flex-wrap items-start gap-x-6 gap-y-2 lg:mt-10 lg:gap-x-10"
+              >
                 {aboutFacts.map((fact, index) => (
                   <li
                     key={fact.title}
                     ref={(el) => {
                       factsRef.current[index] = el;
                     }}
+                    className="will-change-[width,opacity]"
                     style={{ opacity: 0 }}
                   >
-                    <div className="border-t border-white/20 pt-4 text-right">
+                    <div className="flex flex-wrap items-baseline gap-x-6 border-t border-white/20 pt-3 text-right md:gap-x-10">
                       <span className="font-display text-[12px] leading-none font-bold tracking-[0.18em] text-white/35">
                         {String(index + 1).padStart(2, "0")}
                       </span>
-                      <h3 className="mt-3 font-display text-[19px] leading-[1.15] font-bold text-balance text-white md:text-[23px]">
+                      <h3
+                        ref={(el) => {
+                          factTitlesRef.current[index] = el;
+                        }}
+                        className="mt-3 font-display leading-[1.15] font-bold text-balance text-white"
+                      >
                         {fact.title}
                       </h3>
-                      <p className="mt-2 font-body text-[14px] leading-[1.65] text-balance text-white/45 md:text-[15px]">
+                      <p className="mt-2 font-body text-[14px] leading-[1.65] text-white/45 md:text-[15px] md:ms-auto md:mt-3 md:max-w-[46ch]">
                         {fact.description}
                       </p>
                     </div>
