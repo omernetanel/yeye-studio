@@ -35,7 +35,14 @@ const BEATS = {
   // landed meant the header row sat empty through the whole opening.
   label: [0.015, 0.0902],
   content: [0.4812, 0.5714],
-  portrait: [0.5564, 0.6391],
+  // The portrait arrives on the SAME beat the greeting starts settling, not
+  // after the column has landed. That is the whole point of it: "אני עומר."
+  // stops being a line of type at the moment there is a face beside it, and it
+  // has to happen while the name is still the thing being read.
+  portrait: [0.3308, 0.4],
+  // And travels to its slot across the end of the settle and the rise of the
+  // copy, so it is one movement with them rather than a fourth arrival.
+  portraitLand: [0.44, 0.5714],
   claim: [0.5865, 0.6617],
   facts: [
     [0.6466, 0.6917],
@@ -60,9 +67,11 @@ const BEATS = {
 // assembling instead of after a beat of nothing.
 const DROP_AT = 0.7218;
 
-// How far the portrait lifts as it arrives. It is the only picture in the
-// section, so it gets an entrance of its own rather than only an opacity ramp.
-const PORTRAIT_LIFT_PX = 56;
+// The portrait's opening state: tall, and out on the left, clear of the
+// shrinking name. Height as a fraction of the screen and centre as a fraction
+// of the panel's width, so it holds its framing at any size.
+const PORTRAIT_BIG_H = 0.78;
+const PORTRAIT_BIG_X = 0.27;
 
 // The beats above are fractions of this, so the two numbers together decide how
 // fast anything moves. Six screens rather than four: at four the greeting's two
@@ -162,6 +171,7 @@ export default function AboutSection() {
   const labelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
+  const portraitSlotRef = useRef<HTMLDivElement>(null);
   const claimRef = useRef<HTMLDivElement>(null);
   const factsRef = useRef<(HTMLLIElement | null)[]>([]);
 
@@ -178,6 +188,9 @@ export default function AboutSection() {
   // Where the greeting has to land, how big it is when it gets there, and how
   // far each line has to travel sideways to go from centred to right-aligned.
   const landingRef = useRef({ x: 0, y: 0, size: 30, alignShift: [0, 0] });
+  // The same three numbers for the portrait: where its slot sits relative to
+  // the panel's centre, and how tall it is once it gets there.
+  const portraitLandingRef = useRef({ x: 0, y: 0, height: 1 });
   // The high-water mark of every fade. Arrival is one-way.
   const reachedRef = useRef<Record<string, number>>({});
 
@@ -208,9 +221,14 @@ export default function AboutSection() {
     greet.style.transform = "";
     if (content) content.style.transform = "";
 
+    const portraitSlot = portraitSlotRef.current;
+    const previousPortrait = portraitRef.current?.style.transform ?? "";
+    if (portraitRef.current) portraitRef.current.style.transform = "";
+
     const greetBox = greet.getBoundingClientRect();
     const slotBox = slot.getBoundingClientRect();
     const panelBox = panel.getBoundingClientRect();
+    const portraitBox = portraitSlot?.getBoundingClientRect();
 
     // How far right each line sits when right-aligned rather than centred: half
     // the slack between it and the widest line. Kept as a RATIO of the size it
@@ -223,13 +241,25 @@ export default function AboutSection() {
     greet.style.fontSize = previousSize;
     greet.style.transform = previousTransform;
     if (content) content.style.transform = previousContent;
+    if (portraitRef.current) portraitRef.current.style.transform = previousPortrait;
+
+    const centreX = panelBox.left + panel.clientWidth / 2;
+    const centreY = panelBox.top + panel.clientHeight / 2;
 
     landingRef.current = {
-      x: slotBox.left + slotBox.width / 2 - (panelBox.left + panel.clientWidth / 2),
-      y: slotBox.top + slotBox.height / 2 - (panelBox.top + panel.clientHeight / 2),
+      x: slotBox.left + slotBox.width / 2 - centreX,
+      y: slotBox.top + slotBox.height / 2 - centreY,
       size,
       alignShift: [alignShift[0] ?? 0, alignShift[1] ?? 0],
     };
+
+    if (portraitBox && portraitBox.height > 0) {
+      portraitLandingRef.current = {
+        x: portraitBox.left + portraitBox.width / 2 - centreX,
+        y: portraitBox.top + portraitBox.height / 2 - centreY,
+        height: portraitBox.height,
+      };
+    }
   };
 
   const update = () => {
@@ -239,7 +269,8 @@ export default function AboutSection() {
     const content = contentRef.current;
     const portrait = portraitRef.current;
     const claim = claimRef.current;
-    if (!stage || !greet || !label || !content || !portrait || !claim) return;
+    const panel = greet?.offsetParent as HTMLElement | null;
+    if (!stage || !greet || !label || !content || !portrait || !claim || !panel) return;
 
     const screen = window.innerHeight;
     const travel = stage.getBoundingClientRect().height - screen;
@@ -287,6 +318,10 @@ export default function AboutSection() {
 
     const labelIn = arrived("label", BEATS.label);
     label.style.transform = `translateY(${lerp(-14, 0, span(progress, BEATS.label))}px)`;
+    // THE PORTRAIT — floating, like the greeting, and for the same reason: it
+    // has to be on screen before the column it belongs to has arrived, and
+    // inside that column it is a screen and a half below the fold at this point.
+    //
     // Live, not latched. Latched it stayed lit on the way back up, sitting on
     // the black while the greeting was still coming apart above it — the one
     // element big enough to spoil the reverse on its own.
@@ -294,8 +329,13 @@ export default function AboutSection() {
     // Eased, not linear: a linear ramp on a photograph spends its first third
     // as a grey shape sitting there before it is properly on screen.
     const portraitIn = smoothstep(span(progress, BEATS.portrait));
+    const portraitDown = smoothstep(span(progress, BEATS.portraitLand));
+    const pLand = portraitLandingRef.current;
+    const bigScale = (screen * PORTRAIT_BIG_H) / pLand.height;
+    const bigX = (PORTRAIT_BIG_X - 0.5) * panel.clientWidth;
     portrait.style.opacity = String(portraitIn);
-    portrait.style.transform = `translateY(${lerp(PORTRAIT_LIFT_PX, 0, portraitIn)}px)`;
+    portrait.style.transform =
+      `translate(-50%, -50%) translate(${lerp(bigX, pLand.x, portraitDown)}px, ${lerp(0, pLand.y, portraitDown)}px) scale(${lerp(bigScale, 1, portraitDown).toFixed(4)})`;
 
     fade(claim, "claim", BEATS.claim);
     BEATS.facts.forEach((range, index) => {
@@ -406,6 +446,31 @@ export default function AboutSection() {
             would paint over the whole panel. The level has to be declared on
             the panel itself, between the two layers: 5 < 10 < 25. */}
         <div className="sticky top-0 z-10 h-[100svh] overflow-clip">
+          {/* THE PORTRAIT, floating. Enters tall and out on the left while the
+              name is still shrinking towards the right, then travels down onto
+              the slot the column reserves for it.
+
+              The photograph is shown whole — its own aspect ratio, no crop, no
+              rounding. Bounded by height only, so the width follows from the
+              file rather than the file being cut to fit a width. */}
+          <div
+            ref={portraitRef}
+            className="pointer-events-none absolute top-1/2 left-1/2 z-20 will-change-transform"
+            style={{ opacity: 0 }}
+          >
+            <figure className="m-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/portrait.webp"
+                alt="עומר, מייסד YEYE Digital"
+                width={430}
+                height={560}
+                className="block h-auto max-h-[42svh] w-auto"
+                draggable={false}
+              />
+            </figure>
+          </div>
+
           {/* THE GREETING, floating. It lands exactly on the slot the column
               reserves below, so the layout still decides where it ends up. */}
           <div
@@ -494,26 +559,31 @@ export default function AboutSection() {
                   </div>
                 </div>
 
-                {/* The photograph is shown whole — its own aspect ratio, no
-                    crop, no rounding. Bounded by height only, so the width
-                    follows from the file rather than the file being cut to fit
-                    a width. */}
+                {/* THE PORTRAIT'S SLOT. Holds its place in the column and is
+                    what the floating copy is aimed at — the same device the
+                    greeting uses, and for the same reason: the grid still
+                    decides where the picture ends up, so the assembled section
+                    is laid out exactly as it was before any of this moved.
+
+                    An invisible copy of the real thing rather than a hand-built
+                    box of the same size. The height comes out of the file's
+                    aspect ratio against a 42svh cap, and reproducing that by
+                    hand would be a second source of truth that drifts the first
+                    time either changes. Same src, so the browser decodes once. */}
                 <div
-                  ref={portraitRef}
-                  className="order-first will-change-transform lg:order-none"
-                  style={{ opacity: 0 }}
+                  ref={portraitSlotRef}
+                  aria-hidden="true"
+                  className="invisible order-first lg:order-none"
                 >
-                  <figure className="m-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/images/portrait.webp"
-                      alt="עומר, מייסד YEYE Digital"
-                      width={430}
-                      height={560}
-                      className="mx-auto block h-auto max-h-[42svh] w-auto max-w-full"
-                      draggable={false}
-                    />
-                  </figure>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/images/portrait.webp"
+                    alt=""
+                    width={430}
+                    height={560}
+                    className="mx-auto block h-auto max-h-[42svh] w-auto max-w-full"
+                    draggable={false}
+                  />
                 </div>
               </div>
 
