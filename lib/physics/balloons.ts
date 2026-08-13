@@ -77,11 +77,12 @@ export type World = {
 // drag below this puts terminal velocity around 210px/s, so a balloon takes
 // something over three seconds to cross a laptop screen. At twice that they
 // read as painted rocks: the slowness IS the lightness, there is no other cue.
-const GRAVITY = 480;
-// High, and the whole reason these read as light: terminal velocity is
-// GRAVITY / DRAG, so they stop accelerating about a third of a second in.
-const DRAG = 2.25;
-const RESTITUTION = 0.62;
+const GRAVITY = 640;
+// Terminal velocity is GRAVITY / DRAG. Pulled back from the very light setting
+// it started at: these want to read as balls that happen to be balloon-shaped,
+// with real weight behind a bounce, not as something drifting down on the air.
+const DRAG = 1.9;
+const RESTITUTION = 0.72;
 const FLOOR_FRICTION = 2;
 // Below this, a bounce is not worth having — it becomes a rest instead, which
 // is what stops a balloon buzzing against the floor forever. Deliberately low:
@@ -119,8 +120,10 @@ const CONTACT_SLOP = 2;
 // Sideways acceleration applied to anything sitting on the impact line, aimed
 // at whichever end is nearer. The line is a shelf a balloon can land flat on,
 // and the closing panel holds it still for over a screen of scroll, so without
-// this they park on it.
-const WALL_SHED = 220;
+// this they park on it. Deliberately weak: it should walk a balloon off the end
+// over several bounces, not sweep it off on the first contact. The bouncing is
+// the point of the line — the shed is only there so the bouncing ends.
+const WALL_SHED = 85;
 
 /**
  * Sideways drag for the ones that leave. A tenth of the normal figure, which is
