@@ -570,13 +570,7 @@ export default function AboutSection() {
               in-flow text is painted below every positioned element and the
               balloons would all be in front. */}
           <div ref={contentRef} className="relative z-10 h-full will-change-transform">
-            {/* pt-14, not pt-24. The top padding is only there to clear the
-                header row — the label sits at y=22 and is 24px tall, so it ends
-                at 46 — and 96px was twice what that needs. The 72px given back
-                here and at the foot is what the claims expand into: the panel
-                is exactly one screen and cannot be made taller, so the only
-                room available inside it is room that was not being used. */}
-            <div className="mx-auto flex h-full max-w-[1240px] flex-col justify-center px-6 pt-14 pb-10 md:px-10">
+            <div className="mx-auto flex h-full max-w-[1240px] flex-col justify-center px-6 pt-24 pb-14 md:px-10">
               <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_30vw] lg:gap-14">
                 <div className="text-right">
                   {/* The slot. It holds the greeting's place in the column so
