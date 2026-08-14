@@ -441,7 +441,7 @@ export default function HeroSection() {
                 <Link
                   ref={ctaPrimaryRef}
                   href="/#projects"
-                  className="inline-flex items-center gap-2 rounded-lg px-10 py-4 font-display text-lg font-medium text-transparent"
+                  className="inline-flex items-center gap-2 rounded-full px-10 py-4 font-display text-lg font-medium text-transparent"
                 >
                   <span ref={ctaPrimaryLabelRef}>העבודות שלי</span>
                   <span ref={ctaPrimaryArrowRef} aria-hidden className="block h-[14px] w-[14px]" />
@@ -449,7 +449,7 @@ export default function HeroSection() {
                 <Link
                   ref={ctaSecondaryRef}
                   href="/#contact"
-                  className="inline-flex items-center gap-2 rounded-lg border border-transparent px-10 py-4 font-display text-lg font-medium text-transparent"
+                  className="inline-flex items-center gap-2 rounded-full border border-transparent px-10 py-4 font-display text-lg font-medium text-transparent"
                 >
                   <span ref={ctaSecondaryLabelRef}>קבעו פגישה</span>
                   <span ref={ctaSecondaryArrowRef} aria-hidden className="block h-[14px] w-[14px]" />

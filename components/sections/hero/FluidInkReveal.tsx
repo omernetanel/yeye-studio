@@ -812,7 +812,13 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
           const by = (bRect.top - rect.top) * dpr;
           const bw = bRect.width * dpr;
           const bh = bRect.height * dpr;
-          const radius = 8 * dpr; // matches rounded-lg
+          // The Hero's buttons are painted here rather than laid out in HTML,
+          // so they do not inherit anything from components/ui/Button and the
+          // shape has to be kept in step by hand. Half the height is a pill,
+          // which is what that component now draws — a fixed corner radius here
+          // is how these were left as rectangles when the rest of the site
+          // changed shape.
+          const radius = bh / 2;
 
           paperCtx.beginPath();
           if (typeof paperCtx.roundRect === "function") {
