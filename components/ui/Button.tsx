@@ -27,7 +27,11 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const baseClasses =
-  "btn-shimmer inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-6 py-[11px] font-display text-sm font-medium transition-transform duration-200 ease-out hover:scale-[1.04] active:scale-100 disabled:cursor-wait disabled:opacity-70 disabled:hover:scale-100";
+  // Pill, not a rounded rectangle, and the padding goes with it: a fully round
+  // end needs more room beside the words than a 8px corner does, or the label
+  // sits in the curve. One line here is the whole site's buttons — every one of
+  // them comes through this component.
+  "btn-shimmer inline-flex items-center gap-2 whitespace-nowrap rounded-full px-8 py-[13px] font-display text-sm font-medium transition-transform duration-200 ease-out hover:scale-[1.04] active:scale-100 disabled:cursor-wait disabled:opacity-70 disabled:hover:scale-100";
 
 export default function Button({
   children,
