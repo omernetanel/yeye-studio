@@ -20,10 +20,14 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
  * These three land and stay. They are the last thing on the page and they are
  * meant to still be sitting there when the reader stops.
  */
+// All three come down over the left of the screen, close enough together that
+// they end up leaning on each other rather than spaced along the foot of the
+// section. Spread across the width they read as decoration on a border; in one
+// corner they read as the last thing that happened.
 const CAST = [
-  { at: 0, x: 0.22, type: 0, size: 0.15 },
-  { at: 900, x: 0.72, type: 1, size: 0.115 },
-  { at: 1750, x: 0.45, type: 0, size: 0.135 },
+  { at: 0, x: 0.09, type: 0, size: 0.15 },
+  { at: 850, x: 0.19, type: 1, size: 0.115 },
+  { at: 1650, x: 0.14, type: 0, size: 0.135 },
 ] as const;
 
 const SOURCES = ["/images/ball1.webp", "/images/ball2.webp"];
