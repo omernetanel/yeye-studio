@@ -1,10 +1,8 @@
 "use client";
 
-import { useRef } from "react";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import InkWash from "@/components/sections/cta/InkWash";
-import CtaBalloons from "@/components/sections/cta/CtaBalloons";
 
 const particles = [...Array(16)].map((_, i) => ({
   size: i % 3 === 0 ? 3 : 2,
@@ -16,18 +14,12 @@ const particles = [...Array(16)].map((_, i) => ({
 }));
 
 export default function CTASection() {
-  const sectionRef = useRef<HTMLElement>(null);
-
   return (
-    <section ref={sectionRef} id="cta" className="relative overflow-hidden bg-white px-6 py-24 text-center md:py-32">
+    <section id="cta" className="relative overflow-hidden bg-white px-6 py-24 text-center md:py-32">
       {/* The ink from the opening screen, returning at the close with nothing
-          behind it. z-0 and under everything: the heading blends against it. */}
+          behind it. Under everything: the heading blends against it. */}
       <InkWash className="pointer-events-none absolute inset-0 h-full w-full" />
 
-      {/* And the balloons, one last time. Mounted here rather than inside the
-          section's own box because the layer is fixed; it clips itself to the
-          section, so nothing reaches the footer. */}
-      <CtaBalloons sectionRef={sectionRef} />
       {particles.map((p, i) => (
         <motion.div
           key={i}
