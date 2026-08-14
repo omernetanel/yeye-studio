@@ -68,21 +68,20 @@ export default function CTASection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-          // WHITE type, on a white page, in difference blend. That renders it
-          // black here and white wherever the ink beneath has darkened the
-          // page, so the words inverting under the ink is the compositor's
-          // doing rather than a shader's — the same effect the Hero gets, by
-          // the other route.
-          //
-          // The whole heading inverts together. The second line used to be a
-          // gradient fill; difference blending only holds its meaning in black
-          // and white, and a coloured source inverts to its complement rather
-          // than to anything intended.
-          className="mb-6 font-display text-[clamp(40px,5vw,72px)] leading-[1.1] font-extrabold tracking-tight text-white mix-blend-difference"
+          className="mb-6 font-display text-[clamp(40px,5vw,72px)] leading-[1.1] font-extrabold tracking-tight"
         >
-          בוא נבנה משהו
+          {/* Only this line takes the blend. WHITE type, on a white page, in
+              difference: it renders black here and white wherever the ink
+              beneath has darkened the page, so the words inverting under the
+              ink is the compositor's doing rather than a shader's.
+
+              The gradient line below stays out of it. Difference blending only
+              holds its meaning in black and white — a coloured source inverts
+              to its complement, so run through the same treatment the grey
+              would come back as something else entirely. */}
+          <span className="text-white mix-blend-difference">בוא נבנה משהו</span>
           <br />
-          שבאמת עובד.
+          <span className="bg-[image:var(--gradient-accent)] bg-clip-text text-transparent">שבאמת עובד.</span>
         </motion.h2>
 
         <motion.p

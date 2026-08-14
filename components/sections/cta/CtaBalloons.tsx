@@ -20,15 +20,19 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
  * These three land and stay. They are the last thing on the page and they are
  * meant to still be sitting there when the reader stops.
  */
-// All three come down over the left of the screen, close enough together that
-// they end up leaning on each other rather than spaced along the foot of the
-// section. Spread across the width they read as decoration on a border; in one
-// corner they read as the last thing that happened.
+// Two, over the left of the screen and close enough together to end up leaning
+// on each other. Spread along the foot of the section they read as decoration
+// on a border; in one corner they read as the last thing that happened.
 const CAST = [
-  { at: 0, x: 0.09, type: 0, size: 0.15 },
-  { at: 850, x: 0.19, type: 1, size: 0.115 },
-  { at: 1650, x: 0.14, type: 0, size: 0.135 },
+  { at: 0, x: 0.1, type: 0, size: 0.15 },
+  { at: 850, x: 0.19, type: 1, size: 0.12 },
 ] as const;
+
+// They wait for the actual END of the document, not for the section to come
+// into view. The section is on screen for a good while before the reader is
+// finished with it, and something falling then is an interruption; falling once
+// there is nothing left below is a full stop.
+const PAGE_END_SLACK_PX = 8;
 
 const SOURCES = ["/images/ball1.webp", "/images/ball2.webp"];
 
@@ -58,6 +62,8 @@ export default function CtaBalloons({
     let lastFloor = 0;
     let lastScroll = window.scrollY;
     let visible = false;
+
+    const floorYOf = (box: DOMRect) => box.bottom;
 
     const build = () => {
       const short = Math.min(window.innerWidth, window.innerHeight);
@@ -136,7 +142,19 @@ export default function CtaBalloons({
 
       const elapsed = previous === 0 ? 0 : Math.min((now - previous) / 1000, 0.25);
       previous = now;
-      if (started === 0) started = now;
+
+      // Nothing is released until the document has actually run out underneath.
+      const atEnd =
+        scroll + window.innerHeight >=
+        document.documentElement.scrollHeight - PAGE_END_SLACK_PX;
+      if (started === 0) {
+        if (!atEnd) {
+          lastFloor = floorYOf(box);
+          lastScroll = scroll;
+          return;
+        }
+        started = now;
+      }
 
       const floorY = box.bottom;
       const floorVelocity = elapsed > 0 ? (floorY - lastFloor) / elapsed : 0;
