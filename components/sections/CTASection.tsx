@@ -38,12 +38,12 @@ export default function CTASection() {
         />
       ))}
 
-      <motion.div
-        animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.45, 0.25] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        className="pointer-events-none absolute top-1/2 left-1/2 h-[350px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[40px]"
-        style={{ background: "radial-gradient(ellipse, rgba(74,74,74,0.3) 0%, transparent 70%)" }}
-      />
+      {/* The soft grey ellipse that used to breathe behind the heading is gone.
+          Under difference blending the heading's colour is not its own any
+          more, it is whatever sits behind it subtracted from white — and that
+          ellipse sat exactly behind it, at 25-45% of a mid grey. Black type on
+          white came back as dark grey, pulsing. The page under the heading has
+          to be white for the words to read black. */}
 
       {/* relative, and deliberately NOT z-10. A z-index on a positioned element
           opens a stacking context, and mix-blend-mode only ever blends within
