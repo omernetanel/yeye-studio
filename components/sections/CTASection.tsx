@@ -128,9 +128,15 @@ export default function CTASection() {
             before they can say anything is a step that buys nothing: the fields
             are three, they fit here, and the page they would have gone to has
             the same three. */}
+        {/* Opacity only — no y. The submit button below blends against the page
+            and the ink, and mix-blend-mode resolves inside the nearest stacking
+            context: a transform on this wrapper opens one and traps the blend
+            here, where the backdrop is transparent. A transform of none does
+            not, and neither does an opacity of 1, so once this has faded in the
+            button can see the section again. */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mx-auto max-w-[620px]"
@@ -162,11 +168,21 @@ export default function CTASection() {
                 onChange={(e) => setForm({ ...form, reply_to: e.target.value })}
                 required
               />
+              {/* Painted WHITE and blended, not black. Difference against the
+                  white page turns a white fill black and a black label white,
+                  which is the button as it looks at rest; where the ink has
+                  darkened the page underneath, both flip — a white button with
+                  black lettering. The same inversion the Hero's CTAs get.
+
+                  The border is white rather than black for the same reason: at
+                  rest it renders black and disappears into the fill, and over
+                  the ink it renders white and disappears into it again. A black
+                  border would invert to a white ring around the button. */}
               <Button
                 type="submit"
                 disabled={status === "sending"}
                 showArrow={false}
-                className="!border-black !bg-none !bg-black !shadow-none justify-center"
+                className="!border-white !bg-none !bg-white !text-black !shadow-none justify-center mix-blend-difference"
               >
                 {status === "sending" ? "שולח..." : "בוא נתחיל ביחד"}
               </Button>
