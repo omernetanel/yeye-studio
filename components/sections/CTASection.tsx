@@ -15,6 +15,13 @@ const particles = [...Array(16)].map((_, i) => ({
   delay: i * 0.4,
 }));
 
+// The shared Input is nearly transparent (bg-black/[0.02]), which is right
+// everywhere else on the site and wrong here: the ink washes behind this
+// section, and a see-through field lets it straight through the words being
+// typed into it. Opaque white only here, rather than changing the component for
+// every form on the site to suit one of them.
+const FIELD = "!bg-white";
+
 export default function CTASection() {
   const [form, setForm] = useState({ from_name: "", phone: "", reply_to: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
@@ -134,6 +141,7 @@ export default function CTASection() {
             <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 text-right sm:grid-cols-2">
               <Input
                 type="text"
+                className={FIELD}
                 placeholder="שם מלא"
                 value={form.from_name}
                 onChange={(e) => setForm({ ...form, from_name: e.target.value })}
@@ -141,12 +149,14 @@ export default function CTASection() {
               />
               <Input
                 type="tel"
+                className={FIELD}
                 placeholder="טלפון"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
               />
               <Input
                 type="email"
+                className={FIELD}
                 placeholder="דוא״ל"
                 value={form.reply_to}
                 onChange={(e) => setForm({ ...form, reply_to: e.target.value })}
