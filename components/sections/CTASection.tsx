@@ -1,7 +1,9 @@
 "use client";
 
+import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 import InkWash from "@/components/sections/cta/InkWash";
 
 const particles = [...Array(16)].map((_, i) => ({
@@ -14,6 +16,34 @@ const particles = [...Array(16)].map((_, i) => ({
 }));
 
 export default function CTASection() {
+  const [form, setForm] = useState({ from_name: "", phone: "", reply_to: "" });
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!form.from_name || !form.reply_to) return;
+
+    setStatus("sending");
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from_name: form.from_name,
+          reply_to: form.reply_to,
+          project_type: "לא צוין",
+          business_description: form.phone
+            ? `פנייה מסוף העמוד הראשי. טלפון ליצירת קשר: ${form.phone}`
+            : "פנייה מסוף העמוד הראשי",
+        }),
+      });
+      if (!response.ok) throw new Error("contact request failed");
+      setStatus("success");
+    } catch {
+      setStatus("error");
+    }
+  };
+
   return (
     <section id="cta" className="relative overflow-hidden bg-white px-6 py-24 text-center md:py-32">
       {/* The ink from the opening screen, returning at the close with nothing
@@ -86,15 +116,57 @@ export default function CTASection() {
           ייעוץ ראשוני ללא עלות. אשמח לשמוע על הפרויקט שלך.
         </motion.p>
 
+        {/* The form itself, rather than a button through to /contact. Asking
+            someone who has just read to the end of the page to load another one
+            before they can say anything is a step that buys nothing: the fields
+            are three, they fit here, and the page they would have gone to has
+            the same three. */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6, delay: 0.3 }}
+          className="mx-auto max-w-[620px]"
         >
-          <Button href="/contact" variant="primary" className="!border-black !bg-none !bg-black !shadow-none">
-            בוא נתחיל ביחד
-          </Button>
+          {status === "success" ? (
+            <p className="font-body text-[15px] text-black/60">קיבלתי, תודה! אחזור אליך בהקדם.</p>
+          ) : (
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 text-right sm:grid-cols-2">
+              <Input
+                type="text"
+                placeholder="שם מלא"
+                value={form.from_name}
+                onChange={(e) => setForm({ ...form, from_name: e.target.value })}
+                required
+              />
+              <Input
+                type="tel"
+                placeholder="טלפון"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+              <Input
+                type="email"
+                placeholder="דוא״ל"
+                value={form.reply_to}
+                onChange={(e) => setForm({ ...form, reply_to: e.target.value })}
+                required
+              />
+              <Button
+                type="submit"
+                disabled={status === "sending"}
+                showArrow={false}
+                className="!border-black !bg-none !bg-black !shadow-none justify-center"
+              >
+                {status === "sending" ? "שולח..." : "בוא נתחיל ביחד"}
+              </Button>
+              {status === "error" && (
+                <p className="font-body text-[14px] text-black/50 sm:col-span-2">
+                  משהו השתבש בשליחה. אפשר גם ישירות למייל.
+                </p>
+              )}
+            </form>
+          )}
         </motion.div>
       </div>
     </section>
