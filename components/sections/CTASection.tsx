@@ -22,7 +22,7 @@ export default function CTASection() {
     <section ref={sectionRef} id="cta" className="relative overflow-hidden bg-white px-6 py-24 text-center md:py-32">
       {/* The ink from the opening screen, returning at the close with nothing
           behind it. z-0 and under everything: the heading blends against it. */}
-      <InkWash className="pointer-events-none absolute inset-0 z-0 h-full w-full" />
+      <InkWash className="pointer-events-none absolute inset-0 h-full w-full" />
 
       {/* And the balloons, one last time. Mounted here rather than inside the
           section's own box because the layer is fixed; it clips itself to the
@@ -45,7 +45,14 @@ export default function CTASection() {
         style={{ background: "radial-gradient(ellipse, rgba(74,74,74,0.3) 0%, transparent 70%)" }}
       />
 
-      <div className="relative z-10">
+      {/* relative, and deliberately NOT z-10. A z-index on a positioned element
+          opens a stacking context, and mix-blend-mode only ever blends within
+          its own — so the heading inside here could see neither the ink nor the
+          white page, blended against transparency instead, and stayed white on
+          white. Ordering is by DOM position instead: the canvas is declared
+          first, so everything here paints over it without either side needing a
+          layer of its own. */}
+      <div className="relative">
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
