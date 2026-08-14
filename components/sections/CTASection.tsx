@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
+import InkWash from "@/components/sections/cta/InkWash";
 
 const particles = [...Array(16)].map((_, i) => ({
   size: i % 3 === 0 ? 3 : 2,
@@ -14,7 +15,10 @@ const particles = [...Array(16)].map((_, i) => ({
 
 export default function CTASection() {
   return (
-    <section id="cta" className="relative overflow-hidden px-6 py-24 text-center md:py-32">
+    <section id="cta" className="relative overflow-hidden bg-white px-6 py-24 text-center md:py-32">
+      {/* The ink from the opening screen, returning at the close with nothing
+          behind it. z-0 and under everything: the heading blends against it. */}
+      <InkWash className="pointer-events-none absolute inset-0 z-0 h-full w-full" />
       {particles.map((p, i) => (
         <motion.div
           key={i}
@@ -48,11 +52,21 @@ export default function CTASection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="mb-6 font-display text-[clamp(40px,5vw,72px)] leading-[1.1] font-extrabold tracking-tight text-black"
+          // WHITE type, on a white page, in difference blend. That renders it
+          // black here and white wherever the ink beneath has darkened the
+          // page, so the words inverting under the ink is the compositor's
+          // doing rather than a shader's — the same effect the Hero gets, by
+          // the other route.
+          //
+          // The whole heading inverts together. The second line used to be a
+          // gradient fill; difference blending only holds its meaning in black
+          // and white, and a coloured source inverts to its complement rather
+          // than to anything intended.
+          className="mb-6 font-display text-[clamp(40px,5vw,72px)] leading-[1.1] font-extrabold tracking-tight text-white mix-blend-difference"
         >
           בוא נבנה משהו
           <br />
-          <span className="bg-[image:var(--gradient-accent)] bg-clip-text text-transparent">שבאמת עובד.</span>
+          שבאמת עובד.
         </motion.h2>
 
         <motion.p
