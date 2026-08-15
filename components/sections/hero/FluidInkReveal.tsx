@@ -45,6 +45,19 @@ const CROP_TOP_SHIFT = 0.230074;
 // out and evaporating. DENSITY_DISSIPATION itself is slightly lower than
 // the previous pass — that one faded a little too readily; this fades
 // over roughly a second, still well short of lingering.
+//
+// Three of these were moved again for a bigger, tidier stroke:
+//
+//   SPLAT_RADIUS   0.00075 -> 0.0012   a wider mark under the cursor.
+//   VELOCITY_DISSIPATION  10 -> 16     and SPLAT_FORCE 120 -> 88. Together
+//     these are what make the tail EVEN. The ragged, wispy fade was never
+//     the fade itself, it was the velocity field still stretching dye along
+//     its flow lines while the density dropped; kill the motion sooner and
+//     the shape fades as the shape it already is.
+//   MASK_LO/MASK_HI  0.09-0.31 -> 0.145-0.235. This band is the smoothstep
+//     the dye is thresholded through, so its WIDTH is the softness of the
+//     edge. Halving it is what takes the blur off — a narrow band reads as
+//     ink on paper, a wide one as an airbrush.
 const CFG = {
   SIM_RES: 128,
   DYE_RES: 1024,
@@ -52,12 +65,12 @@ const CFG = {
   PRESSURE: 0.8,
   CURL: 0,
   DENSITY_DISSIPATION: 2.1,
-  VELOCITY_DISSIPATION: 10,
-  SPLAT_RADIUS: 0.00075,
-  SPLAT_FORCE: 120,
+  VELOCITY_DISSIPATION: 16,
+  SPLAT_RADIUS: 0.0012,
+  SPLAT_FORCE: 88,
   SPLAT_SPACING: 0.006,
-  MASK_LO: 0.09,
-  MASK_HI: 0.31,
+  MASK_LO: 0.145,
+  MASK_HI: 0.235,
 };
 
 // The bottom-most INTERACTIVE_BOTTOM_MARGIN_PX of the wrapper stops
