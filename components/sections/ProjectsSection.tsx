@@ -32,30 +32,48 @@ export default function ProjectsSection() {
 
   return (
     <section id="projects" className="relative px-6 py-20 md:py-24">
-      <div className="relative z-10 mx-auto max-w-[1000px]">
-        {/* The heading unfolds rather than fades, because the section before it
-            is a sheet of paper opening — same gesture, at the top of the work.
+      {/* The heading unfolds rather than fades, because the section before it
+          is a sheet of paper opening — same gesture, at the top of the work.
 
-            trigger="scroll" and not "mount": mounted, it plays while the
-            section is still far below the fold and is over before anyone has
-            reached it. */}
-        <h2 className="mb-12 text-right md:mb-16">
-          <FoldText
-            text="פרויקטים נבחרים"
-            splitBy="char"
-            hinge="top"
-            trigger="scroll"
-            duration={0.65}
-            stagger={0.045}
-            ease="power3.out"
-            perspective={700}
-            creaseShading={0.55}
-            fontSize="clamp(3rem, 10vw, 7rem)"
-            fontWeight={800}
-            color="#000000"
-            className="font-display"
-          />
-        </h2>
+          trigger="scroll" and not "mount": mounted, it plays while the section
+          is still far below the fold and is over before anyone has reached it.
+
+          OUTSIDE the measure the cards sit in, and sized to fill the page's
+          full width instead. 12.9vw is not a taste: the string is fixed, and at
+          this weight and tracking it renders 7.267px of ink per pixel of font
+          size, so that figure is what puts its two ends near the gutters — one
+          line at any width, from 51px on a phone to 195px on a laptop. A clamp
+          cannot do that; it caps, and a capped heading stops filling the page
+          the moment the page gets wider than the cap.
+
+          The exact fit, 13.24vw, wrapped: it came to 1231.6px of ink in 1232px
+          of room and the space between the words took the second line. The gap
+          here is that margin, and nowrap makes the intent explicit — the size
+          is derived from the viewport, so there is no width at which one line
+          cannot hold it.
+
+          It is the heading that sets this edge, not the grid. The work below is
+          being rebuilt next and should come to meet it. */}
+      <h2 className="relative z-10 mb-12 text-right md:mb-16">
+        <FoldText
+          text="פרויקטים נבחרים"
+          splitBy="char"
+          hinge="top"
+          trigger="scroll"
+          duration={0.65}
+          stagger={0.045}
+          ease="power3.out"
+          perspective={700}
+          creaseShading={0.55}
+          fontSize="12.9vw"
+          fontWeight={800}
+          color="#000000"
+          className="font-display"
+          style={{ whiteSpace: "nowrap" }}
+        />
+      </h2>
+
+      <div className="relative z-10 mx-auto max-w-[1000px]">
 
         {/* Mobile: one swipe carousel — real projects, then "coming soon" slots */}
         <SwipeCarousel className="mb-10 sm:hidden" slideWidth="82%">
