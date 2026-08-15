@@ -38,29 +38,24 @@ export default function ProjectsSection() {
           trigger="scroll" and not "mount": mounted, it plays while the section
           is still far below the fold and is over before anyone has reached it.
 
-          OUTSIDE the measure the cards sit in, and sized to fill the page's
-          full width instead.
-
           BROKEN BY HAND, not by wrapping. The line feed in the text is what
           puts "נבחרים" on its own line; letting it wrap would put the break
           wherever the width happened to fall, and at one width rather than all
-          of them. Both lines are right aligned, so the break reads as a
-          decision.
+          of them. Both lines sit on the same right edge, so the break reads as
+          a decision.
 
-          The size is a calculation, not a taste. "פרויקטים" is the longer of
-          the two lines and at this weight and tracking it renders 3.935px of
-          ink per pixel of font size, so dividing the page's own width by that
-          figure is what lands it exactly on the gutters at EVERY viewport —
-          88px on a phone, 313px here. A clamp cannot do that; it caps, and a
-          capped heading stops filling the page the moment the page is wider
-          than the cap, which is what had it stuck at 112px.
+          The size is a calculation rather than a taste, which is why it is a
+          division and not a clamp. "פרויקטים" is the longer of the two lines
+          and at this weight and tracking it renders 3.935px of ink per pixel of
+          font size, so the page's own width over a divisor holds the same
+          proportion at EVERY viewport. A clamp caps instead, and a capped
+          heading stops growing the moment the page is wider than the cap —
+          which is what had this stuck at 112px.
 
-          It costs about 83% of a laptop screen, so the work below opens under
-          the fold. That is the trade being made deliberately: this is the last
-          section, and the heading is the thing that announces it.
-
-          It is the heading that sets this edge, not the grid. The work below is
-          being rebuilt next and should come to meet it. */}
+          4.6 rather than the 3.98 that put its ends exactly on the gutters: a
+          shade smaller, and the left-hand end now stops short of the edge
+          rather than running into it. The right edge is untouched, which is the
+          one the eye reads from. */}
       <h2 className="relative z-10 mb-12 text-right md:mb-16">
         <FoldText
           text={"פרויקטים\nנבחרים"}
@@ -72,7 +67,7 @@ export default function ProjectsSection() {
           ease="power3.out"
           perspective={700}
           creaseShading={0.55}
-          fontSize="calc((100vw - 3rem) / 3.98)"
+          fontSize="calc((100vw - 3rem) / 4.6)"
           fontWeight={800}
           color="#000000"
           className="font-display"
