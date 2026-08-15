@@ -108,7 +108,7 @@ export default function HeroSection() {
     // factor keeps the aspect ratio and the centring intact.
     // On mobile the mark and the button beneath it share one column and have to
     // line up on the same two edges, so it fills its box exactly.
-    const LOGO_FIT_SCALE = isMobile ? 1 : 0.93;
+    const LOGO_FIT_SCALE = isMobile ? 1 : 0.89;
     // A flat trim off the fitted width, not another ratio: a ratio would
     // take a different number of pixels off at every viewport, and this is
     // meant to be exactly 10px wherever it renders.
