@@ -5,6 +5,7 @@ import Button from "@/components/ui/Button";
 import FoldText from "@/components/ui/FoldText";
 import CylinderGallery, { type GalleryItem } from "@/components/ui/CylinderGallery";
 import { projects } from "@/lib/projects";
+import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
 // FoldText runs its own timeline and does not report back, so the moment it
 // finishes is worked out from its own numbers: the last glyph starts after
@@ -28,13 +29,17 @@ export default function ProjectsSection() {
   // centred line. The second move is what makes the first one a moment rather
   // than a layout: it is large only for as long as it takes to arrive.
   const headingRef = useRef<HTMLHeadingElement>(null);
-  // Collapsed from the start when motion is reduced: there is no fold to wait
-  // for, so the settled state is the only state.
-  const [collapsed, setCollapsed] = useState(() =>
-    typeof window === "undefined"
-      ? false
-      : (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false),
-  );
+  // Through the shared hook rather than reading matchMedia in a lazy state
+  // initialiser. That initialiser ran on the server too, where the answer is
+  // always false, so a reader who has reduced motion on got one tree from the
+  // server and a different one on the client — a hydration mismatch of exactly
+  // the kind the error names first.
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [folded, setFolded] = useState(false);
+  // With motion reduced there is no fold to wait for, so the settled state is
+  // the only state — derived during render rather than set from the effect,
+  // which would be a second render for something already known.
+  const collapsed = folded || prefersReducedMotion;
 
   useEffect(() => {
     const heading = headingRef.current;
@@ -47,7 +52,7 @@ export default function ProjectsSection() {
       ([entry]) => {
         if (!entry.isIntersecting) return;
         watcher.disconnect();
-        timer = window.setTimeout(() => setCollapsed(true), FOLD_SETTLED_MS);
+        timer = window.setTimeout(() => setFolded(true), FOLD_SETTLED_MS);
       },
       { rootMargin: "0px 0px -18% 0px" },
     );
