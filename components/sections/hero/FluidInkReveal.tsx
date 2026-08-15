@@ -48,10 +48,7 @@ const CROP_TOP_SHIFT = 0.230074;
 //
 // Three of these were moved again for a bigger, tidier stroke:
 //
-//   SPLAT_RADIUS   0.00075 -> 0.0017   a wider mark under the cursor. Note
-//     this is a squared falloff term (exp(-dot(p,p) / radius)), so the
-//     stroke's width goes as its square root — the jump from 0.00075 to
-//     0.0017 is a shade over 50% wider on screen, not twice.
+//   SPLAT_RADIUS   0.00075 -> 0.0012   a wider mark under the cursor.
 //   VELOCITY_DISSIPATION  10 -> 16     and SPLAT_FORCE 120 -> 88. Together
 //     these are what make the tail EVEN. The ragged, wispy fade was never
 //     the fade itself, it was the velocity field still stretching dye along
@@ -69,7 +66,7 @@ const CFG = {
   CURL: 0,
   DENSITY_DISSIPATION: 2.1,
   VELOCITY_DISSIPATION: 16,
-  SPLAT_RADIUS: 0.0017,
+  SPLAT_RADIUS: 0.0012,
   SPLAT_FORCE: 88,
   SPLAT_SPACING: 0.006,
   MASK_LO: 0.145,
