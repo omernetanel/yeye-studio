@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { motion, type Variants } from "framer-motion";
 import ProjectCard from "@/components/ui/ProjectCard";
 import Button from "@/components/ui/Button";
@@ -8,6 +9,12 @@ import SwipeCarousel from "@/components/ui/SwipeCarousel";
 import { projects } from "@/lib/projects";
 
 const TOTAL_SLOTS = 4;
+
+// FoldText runs its own timeline and does not report back, so the moment it
+// finishes is worked out from its own numbers: the last glyph starts after
+// stagger x (count - 1) and then takes duration to land. 0.045 x 14 + 0.65,
+// plus a beat to read it standing before it collapses.
+const FOLD_SETTLED_MS = 0.045 * 14 * 1000 + 650 + 420;
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24, scale: 0.96 },
@@ -29,6 +36,40 @@ function ComingSoonTile() {
 
 export default function ProjectsSection() {
   const comingSoonSlots = Array.from({ length: Math.max(0, TOTAL_SLOTS - projects.length) }, (_, i) => i);
+
+  // The heading unfolds big and stacked, then draws itself in to a single
+  // centred line. The second move is what makes the first one a moment rather
+  // than a layout: it is large only for as long as it takes to arrive.
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  // Collapsed from the start when motion is reduced: there is no fold to wait
+  // for, so the settled state is the only state.
+  const [collapsed, setCollapsed] = useState(() =>
+    typeof window === "undefined"
+      ? false
+      : (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false),
+  );
+
+  useEffect(() => {
+    const heading = headingRef.current;
+    if (!heading || collapsed) return;
+
+    let timer = 0;
+    // The same threshold FoldText's own trigger uses, so the clock starts when
+    // the fold does rather than when the section's top edge appears.
+    const watcher = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        watcher.disconnect();
+        timer = window.setTimeout(() => setCollapsed(true), FOLD_SETTLED_MS);
+      },
+      { rootMargin: "0px 0px -18% 0px" },
+    );
+    watcher.observe(heading);
+    return () => {
+      watcher.disconnect();
+      window.clearTimeout(timer);
+    };
+  }, [collapsed]);
 
   return (
     <section id="projects" className="relative px-6 py-20 md:py-24">
@@ -54,9 +95,23 @@ export default function ProjectsSection() {
 
           4.6 rather than the 3.98 that put its ends exactly on the gutters: a
           shade smaller, and the left-hand end now stops short of the edge
-          rather than running into it. The right edge is untouched, which is the
-          one the eye reads from. */}
-      <h2 className="relative z-10 mb-12 text-right md:mb-16">
+          rather than running into it.
+
+          AND THEN IT DRAWS ITSELF IN. Once the fold has landed the whole thing
+          shrinks to a single centred line. font-size is the only property
+          animated — it is what carries the size AND, since the break is a <br>
+          that is switched off at the same moment, the two lines closing into
+          one. The alignment changes on that frame too, under cover of the
+          movement.
+
+          The space between the words has to be put back by hand when the break
+          goes: the text is broken on a bare line feed, so merged, the two words
+          would meet. */}
+      <h2
+        ref={headingRef}
+        data-collapsed={collapsed || undefined}
+        className="fold-heading relative z-10 mb-12 text-right md:mb-16 data-collapsed:text-center"
+      >
         <FoldText
           text={"פרויקטים\nנבחרים"}
           splitBy="char"
@@ -67,7 +122,7 @@ export default function ProjectsSection() {
           ease="power3.out"
           perspective={700}
           creaseShading={0.55}
-          fontSize="calc((100vw - 3rem) / 4.6)"
+          fontSize={collapsed ? "clamp(2rem, 5.2vw, 4.25rem)" : "calc((100vw - 3rem) / 4.6)"}
           fontWeight={800}
           color="#000000"
           className="font-display"
