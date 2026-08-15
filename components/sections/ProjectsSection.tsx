@@ -1,14 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, type Variants } from "framer-motion";
-import ProjectCard from "@/components/ui/ProjectCard";
 import Button from "@/components/ui/Button";
 import FoldText from "@/components/ui/FoldText";
-import SwipeCarousel from "@/components/ui/SwipeCarousel";
+import CylinderGallery, { type GalleryItem } from "@/components/ui/CylinderGallery";
 import { projects } from "@/lib/projects";
-
-const TOTAL_SLOTS = 4;
 
 // FoldText runs its own timeline and does not report back, so the moment it
 // finishes is worked out from its own numbers: the last glyph starts after
@@ -16,27 +12,18 @@ const TOTAL_SLOTS = 4;
 // plus a beat to read it standing before it collapses.
 const FOLD_SETTLED_MS = 0.045 * 14 * 1000 + 650 + 420;
 
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24, scale: 0.96 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.6, ease: [0.34, 1.1, 0.64, 1] as const, delay: i * 0.08 },
-  }),
-};
-
-function ComingSoonTile() {
-  return (
-    <div className="flex aspect-[1672/941] items-center justify-center rounded-xl border border-black/8 bg-black/[0.03]">
-      <span className="font-display text-xs text-black/25">בקרוב</span>
-    </div>
-  );
-}
+// Four real projects, so the arc turns through four and never shows a gap. The
+// grid this replaced padded itself out to four slots with "coming soon" tiles;
+// there is nothing left to pad.
+const galleryItems: GalleryItem[] = projects.map((project) => ({
+  image: project.image,
+  title: project.cardTitle ?? project.title,
+  category: project.cardCategory ?? project.category,
+  href: project.external ? project.url : `/projects/${project.slug}`,
+  external: project.external,
+}));
 
 export default function ProjectsSection() {
-  const comingSoonSlots = Array.from({ length: Math.max(0, TOTAL_SLOTS - projects.length) }, (_, i) => i);
-
   // The heading unfolds big and stacked, then draws itself in to a single
   // centred line. The second move is what makes the first one a moment rather
   // than a layout: it is large only for as long as it takes to arrive.
@@ -110,7 +97,7 @@ export default function ProjectsSection() {
       <h2
         ref={headingRef}
         data-collapsed={collapsed || undefined}
-        className="fold-heading relative z-10 mb-12 text-right md:mb-16 data-collapsed:text-center"
+        className="fold-heading relative z-10 mb-10 text-right transition-[margin] duration-700 data-collapsed:mb-2 data-collapsed:text-center md:mb-14 md:data-collapsed:mb-4"
       >
         <FoldText
           text={"פרויקטים\nנבחרים"}
@@ -122,7 +109,7 @@ export default function ProjectsSection() {
           ease="power3.out"
           perspective={700}
           creaseShading={0.55}
-          fontSize={collapsed ? "clamp(2rem, 5.2vw, 4.25rem)" : "calc((100vw - 3rem) / 4.6)"}
+          fontSize={collapsed ? "calc((100vw - 3rem) / 9.6)" : "calc((100vw - 3rem) / 4.6)"}
           fontWeight={800}
           color="#000000"
           className="font-display"
@@ -135,55 +122,14 @@ export default function ProjectsSection() {
         />
       </h2>
 
-      <div className="relative z-10 mx-auto max-w-[1000px]">
+      {/* The work itself, on the arc. Full width rather than inside the old
+          1000px measure: the centre panel is meant to read as a screen. */}
+      <CylinderGallery items={galleryItems} />
 
-        {/* Mobile: one swipe carousel — real projects, then "coming soon" slots */}
-        <SwipeCarousel className="mb-10 sm:hidden" slideWidth="82%">
-          {[
-            ...projects.map((project) => (
-              <ProjectCard
-                key={project.slug}
-                title={project.cardTitle ?? project.title}
-                category={project.cardCategory ?? project.category}
-                imageSrc={project.image}
-                href={project.external ? project.url : `/projects/${project.slug}`}
-                external={project.external}
-              />
-            )),
-            ...comingSoonSlots.map((slot) => <ComingSoonTile key={slot} />),
-          ]}
-        </SwipeCarousel>
-
-        {/* Tablet/desktop: 2x2 grid — real projects, then coming-soon slots */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
-          className="mb-12 hidden gap-6 sm:grid sm:grid-cols-2"
-        >
-          {projects.map((project, i) => (
-            <motion.div key={project.slug} custom={i} variants={fadeUp}>
-              <ProjectCard
-                title={project.cardTitle ?? project.title}
-                category={project.cardCategory ?? project.category}
-                imageSrc={project.image}
-                href={project.external ? project.url : `/projects/${project.slug}`}
-                external={project.external}
-              />
-            </motion.div>
-          ))}
-          {comingSoonSlots.map((slot, i) => (
-            <motion.div key={slot} custom={i + projects.length} variants={fadeUp}>
-              <ComingSoonTile />
-            </motion.div>
-          ))}
-        </motion.div>
-
-        <div className="flex justify-center">
-          <Button href="/projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none">
-            צפה בכל העבודות
-          </Button>
-        </div>
+      <div className="relative z-10 mt-16 flex justify-center md:mt-20">
+        <Button href="/projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none">
+          צפה בכל העבודות
+        </Button>
       </div>
     </section>
   );
