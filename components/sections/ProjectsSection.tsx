@@ -3,7 +3,7 @@
 import { motion, type Variants } from "framer-motion";
 import ProjectCard from "@/components/ui/ProjectCard";
 import Button from "@/components/ui/Button";
-import SectionHeading from "@/components/ui/SectionHeading";
+import FoldText from "@/components/ui/FoldText";
 import SwipeCarousel from "@/components/ui/SwipeCarousel";
 import { projects } from "@/lib/projects";
 
@@ -33,7 +33,29 @@ export default function ProjectsSection() {
   return (
     <section id="projects" className="relative px-6 py-20 md:py-24">
       <div className="relative z-10 mx-auto max-w-[1000px]">
-        <SectionHeading title="פרויקטים נבחרים" className="mb-12 md:mb-16" light />
+        {/* The heading unfolds rather than fades, because the section before it
+            is a sheet of paper opening — same gesture, at the top of the work.
+
+            trigger="scroll" and not "mount": mounted, it plays while the
+            section is still far below the fold and is over before anyone has
+            reached it. */}
+        <h2 className="mb-12 text-right md:mb-16">
+          <FoldText
+            text="פרויקטים נבחרים"
+            splitBy="char"
+            hinge="top"
+            trigger="scroll"
+            duration={0.65}
+            stagger={0.045}
+            ease="power3.out"
+            perspective={700}
+            creaseShading={0.55}
+            fontSize="clamp(3rem, 10vw, 7rem)"
+            fontWeight={800}
+            color="#000000"
+            className="font-display"
+          />
+        </h2>
 
         {/* Mobile: one swipe carousel — real projects, then "coming soon" slots */}
         <SwipeCarousel className="mb-10 sm:hidden" slideWidth="82%">
