@@ -90,3 +90,38 @@
     opacity: 0 !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   The projects heading, which unfolds stacked and then draws itself in.
+
+   font-size is the only thing transitioned. It carries the size change, and
+   because it is inherited by every piece it carries the whole block at once
+   rather than fifteen glyphs animating separately.
+
+   The break is a <br> from the line feed in the text. Switching it off is what
+   closes the two lines into one, and since the source is broken on a bare line
+   feed with no space in it, the gap between the words has to be put back — the
+   first piece after the break gets it on its inline start, which under RTL is
+   its right-hand side.
+--------------------------------------------------------------------------- */
+.fold-heading .fold-text {
+  transition: font-size 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fold-heading .fold-text-visual br {
+  display: block;
+}
+
+.fold-heading[data-collapsed] .fold-text-visual br {
+  display: none;
+}
+
+.fold-heading[data-collapsed] .fold-text-visual br + .fold-text-segment {
+  margin-inline-start: 0.3em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fold-heading .fold-text {
+    transition: none;
+  }
+}
