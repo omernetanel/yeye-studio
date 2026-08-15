@@ -40,9 +40,8 @@ const VISIBLE_SPAN = 2.6;
 // Degrees a second, unattended. Slow enough to read as drift rather than as a
 // carousel advancing.
 const IDLE_SPEED = 0.055;
-// What a pixel of drag and a notch of wheel are each worth, in steps.
+// What a pixel of drag is worth, in steps.
 const DRAG_PER_PX = 0.0022;
-const WHEEL_PER_PX = 0.0016;
 // How quickly a throw runs out.
 const FRICTION = 2.6;
 // Movement past this counts as a drag rather than a click, and is what decides
@@ -125,16 +124,10 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
       draw();
     };
 
-    // The wheel turns the arc, and ONLY over the arc: the page's own scroll
-    // does not move it at all. That means preventing the default here, so
-    // while the cursor is over the gallery the wheel belongs to the gallery
-    // and the page underneath stays put.
-    const onWheel = (event: WheelEvent) => {
-      event.preventDefault();
-      velocity = 0;
-      position += event.deltaY * WHEEL_PER_PX;
-      draw();
-    };
+    // NOTHING HERE TOUCHES THE WHEEL. It drove the arc for a while, over the
+    // gallery only, which meant the page would not move while the cursor was on
+    // it — you had to steer around the gallery to carry on reading. The arc
+    // turns on its own and answers to a drag; the wheel belongs to the page.
 
     // The panels are links, so the pointer has to serve two purposes without
     // spoiling either. Capture is NOT taken on pointerdown — taking it there
@@ -218,7 +211,6 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
     };
 
     if (!prefersReducedMotion) {
-      stage.addEventListener("wheel", onWheel, { passive: false });
       stage.addEventListener("click", onClickCapture, true);
       stage.addEventListener("pointerdown", onPointerDown);
       stage.addEventListener("pointermove", onPointerMove);
@@ -247,7 +239,6 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
       watcher.disconnect();
       enterHandlers.forEach((off) => off());
       window.removeEventListener("resize", onResize);
-      stage.removeEventListener("wheel", onWheel);
       stage.removeEventListener("click", onClickCapture, true);
       stage.removeEventListener("pointerdown", onPointerDown);
       stage.removeEventListener("pointermove", onPointerMove);
