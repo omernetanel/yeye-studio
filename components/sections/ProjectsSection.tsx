@@ -108,7 +108,7 @@ export default function ProjectsSection() {
       <h2
         ref={headingRef}
         data-collapsed={collapsed || undefined}
-        className="fold-heading relative z-10 mb-10 text-right transition-[margin] duration-700 data-collapsed:mb-2 data-collapsed:text-center md:mb-14 md:data-collapsed:mb-4"
+        className="fold-heading relative z-10 mb-10 text-right transition-[margin] duration-700 data-collapsed:mb-16 data-collapsed:text-center md:mb-14 md:data-collapsed:mb-24"
       >
         <FoldText
           text={"פרויקטים\nנבחרים"}

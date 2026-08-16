@@ -40,6 +40,12 @@ const STEP_Z_PX = 260;
 // Panels further round than this are behind the shoulder and not drawn.
 const VISIBLE_SPAN = 2.6;
 
+// What a pixel of drag is worth, in steps, and how quickly a throw runs out.
+const DRAG_PER_PX = 0.0022;
+const FRICTION = 2.6;
+// Past this the pointer was dragging, not clicking.
+const DRAG_THRESHOLD_PX = 6;
+
 // Degrees a second, unattended. Slow enough to read as drift rather than as a
 // carousel advancing.
 const IDLE_SPEED = 0.055;
@@ -59,6 +65,11 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
     // Position is in STEPS, not degrees or pixels, and it is a float: the arc
     // is never on a detent, it is wherever it has drifted to.
     let position = 0;
+    let velocity = 0;
+    let down = false;
+    let moved = 0;
+    let didDrag = false;
+    let lastX = 0;
     let hovered = -1;
     let previous = 0;
     let frame = 0;
@@ -143,26 +154,85 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
       previous = now;
       if (!visible) return;
 
-      position += IDLE_SPEED * dt;
+      if (!down) {
+        position += IDLE_SPEED * dt + velocity * dt;
+        velocity -= velocity * FRICTION * dt;
+        if (Math.abs(velocity) < 0.0005) velocity = 0;
+      }
       draw();
     };
 
-    // NOTHING HERE LISTENS TO THE POINTER, AND THAT IS THE POINT.
-    //
-    // This carried a drag: pointer capture, a travel threshold to tell a drag
-    // from a click, and a guard that suppressed the click afterwards. All three
-    // compete with the links for the same events, and between them they are why
-    // a panel would not open — sometimes the outer ones, sometimes the middle
-    // one, depending on where the arc had drifted to. The panels are the proof
-    // this section exists to show; nothing gets to stand between them and a
-    // click. The arc turns on its own, every panel is a plain link, and the
-    // browser decides what was clicked exactly as it does anywhere else.
-    //
-    // Hover is the one exception, and it is not an exception really: enter and
-    // leave are notifications. Nothing is captured, nothing is prevented, and
-    // no click passes through them.
+    // DRAGGING, and the one rule that keeps it from eating the links again:
+    // THE POINTER IS NEVER CAPTURED. Capture on the stage is what swallowed the
+    // click before it could reach an anchor. Tracking the move on the window
+    // instead gives the same reach without taking anything from anyone, and the
+    // only thing suppressed is a click that followed a real drag.
+    const onDown = (event: PointerEvent) => {
+      down = true;
+      didDrag = false;
+      moved = 0;
+      velocity = 0;
+      lastX = event.clientX;
+    };
+    const onMove = (event: PointerEvent) => {
+      if (!down) return;
+      const dx = event.clientX - lastX;
+      lastX = event.clientX;
+      moved += Math.abs(dx);
+      if (moved > DRAG_THRESHOLD_PX) didDrag = true;
+      if (!didDrag) return;
+      position -= dx * DRAG_PER_PX;
+      velocity = -dx * DRAG_PER_PX * 12;
+      draw();
+    };
+    const onUp = () => {
+      down = false;
+      // Held one frame past the release: the click arrives after pointerup and
+      // the guard below still has to know what just happened.
+      requestAnimationFrame(() => {
+        didDrag = false;
+      });
+    };
+    const onClick = (event: MouseEvent) => {
+      if (!didDrag) return;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    // Touch is handled separately because the browser cancels the pointer
+    // stream the moment it decides a drag is a scroll. touch-pan-y on the stage
+    // leaves the page's vertical scroll alone and gives us the horizontal.
+    let lastTouchX: number | null = null;
+    const onTouchStart = (event: TouchEvent) => {
+      lastTouchX = event.touches[0]?.clientX ?? null;
+      velocity = 0;
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      const x = event.touches[0]?.clientX;
+      if (x == null || lastTouchX == null) return;
+      const dx = x - lastTouchX;
+      lastTouchX = x;
+      position -= dx * DRAG_PER_PX;
+      velocity = -dx * DRAG_PER_PX * 12;
+      draw();
+    };
+    const onTouchEnd = () => {
+      lastTouchX = null;
+    };
+
+    stage.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    stage.addEventListener("click", onClick, true);
+    stage.addEventListener("touchstart", onTouchStart, { passive: true });
+    stage.addEventListener("touchmove", onTouchMove, { passive: true });
+    stage.addEventListener("touchend", onTouchEnd, { passive: true });
+
+    // Hover is bound to the LINK layer, since that is the layer the pointer
+    // actually meets — the tilted panels above are pointer-deaf scenery.
     const unbind: (() => void)[] = [];
-    panelsRef.current.forEach((panel, index) => {
+    hitsRef.current.forEach((panel, index) => {
       if (!panel) return;
       const enter = () => {
         hovered = index;
@@ -198,6 +268,14 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
       watcher.disconnect();
       unbind.forEach((off) => off());
       window.removeEventListener("resize", onResize);
+      stage.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      stage.removeEventListener("click", onClick, true);
+      stage.removeEventListener("touchstart", onTouchStart);
+      stage.removeEventListener("touchmove", onTouchMove);
+      stage.removeEventListener("touchend", onTouchEnd);
     };
   }, [items, prefersReducedMotion]);
 
