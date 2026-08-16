@@ -134,13 +134,8 @@ export default function ProjectsSection() {
       </h2>
 
       {/* The work itself, on the arc. Full width rather than inside the old
-          1000px measure: the centre panel is meant to read as a screen.
-
-          It waits for the heading. Coming up while the two lines are still
-          folding, it competed with them for the same moment and the reader had
-          two things arriving at once; held back until the heading has drawn
-          itself in, the section reads as one thing then the next. */}
-      <CylinderGallery items={galleryItems} ready={collapsed} />
+          1000px measure: the centre panel is meant to read as a screen. */}
+      <CylinderGallery items={galleryItems} />
 
       <div className="relative z-10 mt-16 flex justify-center md:mt-20">
         <Button href="/projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none">

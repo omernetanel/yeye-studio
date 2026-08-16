@@ -43,17 +43,10 @@ const VISIBLE_SPAN = 2.6;
 // Degrees a second, unattended. Slow enough to read as drift rather than as a
 // carousel advancing.
 const IDLE_SPEED = 0.055;
-// What a pixel of drag is worth, in steps.
-const DRAG_PER_PX = 0.0022;
-// How quickly a throw runs out.
-const FRICTION = 2.6;
-// Movement past this counts as a drag rather than a click, and is what decides
-// whether the link underneath is allowed to fire.
-const DRAG_THRESHOLD_PX = 5;
 // What the panels that are not under the cursor fall back to.
 const DIMMED = 0.42;
 
-export default function CylinderGallery({ items, ready = true }: { items: GalleryItem[]; ready?: boolean }) {
+export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const panelsRef = useRef<(HTMLElement | null)[]>([]);
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -65,11 +58,6 @@ export default function CylinderGallery({ items, ready = true }: { items: Galler
     // Position is in STEPS, not degrees or pixels, and it is a float: the arc
     // is never on a detent, it is wherever it has drifted to.
     let position = 0;
-    let velocity = 0;
-    let pointerDown = false;
-    let dragging = false;
-    let travelled = 0;
-    let lastPointerX = 0;
     let hovered = -1;
     let previous = 0;
     let frame = 0;
@@ -98,15 +86,6 @@ export default function CylinderGallery({ items, ready = true }: { items: Galler
         // Nearest panel on top, so the centre is never overlapped by its
         // neighbours as they pass behind it.
         panel.style.zIndex = String(Math.round(100 - away * 10));
-        // ONLY THE PANEL AT THE FRONT TAKES THE POINTER. The neighbours are
-        // wide enough to overlap it by a couple of hundred pixels, and inside a
-        // preserve-3d context which of the overlapping boxes wins a hit test is
-        // decided by 3D geometry rather than by z-index — so the answer changed
-        // with the arc's position and the middle panel, the one being looked
-        // at, was sometimes the one that could not be clicked. Taking the
-        // others out of the hit test entirely settles it: whatever is at the
-        // front is what answers.
-        panel.style.pointerEvents = away < 0.5 ? "auto" : "none";
         // Distance along the arc dims a panel, and so does the cursor being on
         // a different one. With nothing hovered the second term is 1 and this
         // is exactly the resting state.
@@ -127,71 +106,25 @@ export default function CylinderGallery({ items, ready = true }: { items: Galler
       previous = now;
       if (!visible) return;
 
-      if (!dragging) {
-        position += IDLE_SPEED * dt;
-        position += velocity * dt;
-        velocity -= velocity * FRICTION * dt;
-        if (Math.abs(velocity) < 0.0005) velocity = 0;
-      }
+      position += IDLE_SPEED * dt;
       draw();
     };
 
-    // NOTHING HERE TOUCHES THE WHEEL. It drove the arc for a while, over the
-    // gallery only, which meant the page would not move while the cursor was on
-    // it — you had to steer around the gallery to carry on reading. The arc
-    // turns on its own and answers to a drag; the wheel belongs to the page.
-
-    // The panels are links, so the pointer has to serve two purposes without
-    // spoiling either. Capture is NOT taken on pointerdown — taking it there
-    // swallows the click before it ever reaches the anchor. It is taken only
-    // once the pointer has travelled past the threshold, at which point this
-    // has become a drag and the click that follows is suppressed.
-    const onPointerDown = (event: PointerEvent) => {
-      pointerDown = true;
-      dragging = false;
-      travelled = 0;
-      velocity = 0;
-      lastPointerX = event.clientX;
-    };
-    const onPointerMove = (event: PointerEvent) => {
-      if (!pointerDown) return;
-      const dx = event.clientX - lastPointerX;
-      lastPointerX = event.clientX;
-      travelled += Math.abs(dx);
-      if (!dragging && travelled > DRAG_THRESHOLD_PX) {
-        dragging = true;
-        stage.setPointerCapture(event.pointerId);
-      }
-      if (!dragging) return;
-      // RTL or not, dragging left should bring the next panel from the right.
-      position -= dx * DRAG_PER_PX;
-      velocity = -dx * DRAG_PER_PX * 12;
-      draw();
-    };
-    const endDrag = (event: PointerEvent) => {
-      pointerDown = false;
-      if (stage.hasPointerCapture(event.pointerId)) stage.releasePointerCapture(event.pointerId);
-      // Cleared on the NEXT frame, not here: the click lands after pointerup,
-      // and the guard below has to still know whether this was a drag when it
-      // does.
-      requestAnimationFrame(() => {
-        dragging = false;
-      });
-    };
-    // Keyed off whether a drag actually happened, not off a distance that can
-    // go stale. A distance left over from an earlier throw silently ate the
-    // next click, and a click arriving without any pointer history at all — the
-    // keyboard's — was judged by it too.
-    const onClickCapture = (event: MouseEvent) => {
-      if (!dragging) return;
-      event.preventDefault();
-      event.stopPropagation();
-    };
-
-    // Hover lights one panel and drops the rest back. Bound per panel rather
-    // than hit-testing the stage, because the panels overlap on the arc and the
-    // one under the cursor is whichever the browser says it is.
-    const enterHandlers: (() => void)[] = [];
+    // NOTHING HERE LISTENS TO THE POINTER, AND THAT IS THE POINT.
+    //
+    // This carried a drag: pointer capture, a travel threshold to tell a drag
+    // from a click, and a guard that suppressed the click afterwards. All three
+    // compete with the links for the same events, and between them they are why
+    // a panel would not open — sometimes the outer ones, sometimes the middle
+    // one, depending on where the arc had drifted to. The panels are the proof
+    // this section exists to show; nothing gets to stand between them and a
+    // click. The arc turns on its own, every panel is a plain link, and the
+    // browser decides what was clicked exactly as it does anywhere else.
+    //
+    // Hover is the one exception, and it is not an exception really: enter and
+    // leave are notifications. Nothing is captured, nothing is prevented, and
+    // no click passes through them.
+    const unbind: (() => void)[] = [];
     panelsRef.current.forEach((panel, index) => {
       if (!panel) return;
       const enter = () => {
@@ -204,42 +137,11 @@ export default function CylinderGallery({ items, ready = true }: { items: Galler
       };
       panel.addEventListener("pointerenter", enter);
       panel.addEventListener("pointerleave", leave);
-      enterHandlers.push(() => {
+      unbind.push(() => {
         panel.removeEventListener("pointerenter", enter);
         panel.removeEventListener("pointerleave", leave);
       });
     });
-
-    // Touch goes through touchmove: the browser cancels the pointer stream the
-    // moment it decides a drag is a scroll, which is what made the Hero's ink
-    // appear and die on phones.
-    let lastTouchX: number | null = null;
-    const onTouchStart = (event: TouchEvent) => {
-      lastTouchX = event.touches[0]?.clientX ?? null;
-      velocity = 0;
-    };
-    const onTouchMove = (event: TouchEvent) => {
-      const x = event.touches[0]?.clientX;
-      if (x == null || lastTouchX == null) return;
-      const dx = x - lastTouchX;
-      lastTouchX = x;
-      position -= dx * DRAG_PER_PX;
-      draw();
-    };
-    const onTouchEnd = () => {
-      lastTouchX = null;
-    };
-
-    if (!prefersReducedMotion) {
-      stage.addEventListener("click", onClickCapture, true);
-      stage.addEventListener("pointerdown", onPointerDown);
-      stage.addEventListener("pointermove", onPointerMove);
-      stage.addEventListener("pointerup", endDrag);
-      stage.addEventListener("pointercancel", endDrag);
-      stage.addEventListener("touchstart", onTouchStart, { passive: true });
-      stage.addEventListener("touchmove", onTouchMove, { passive: true });
-      stage.addEventListener("touchend", onTouchEnd, { passive: true });
-    }
 
     const watcher = new IntersectionObserver(
       ([entry]) => {
@@ -257,16 +159,8 @@ export default function CylinderGallery({ items, ready = true }: { items: Galler
     return () => {
       cancelAnimationFrame(frame);
       watcher.disconnect();
-      enterHandlers.forEach((off) => off());
+      unbind.forEach((off) => off());
       window.removeEventListener("resize", onResize);
-      stage.removeEventListener("click", onClickCapture, true);
-      stage.removeEventListener("pointerdown", onPointerDown);
-      stage.removeEventListener("pointermove", onPointerMove);
-      stage.removeEventListener("pointerup", endDrag);
-      stage.removeEventListener("pointercancel", endDrag);
-      stage.removeEventListener("touchstart", onTouchStart);
-      stage.removeEventListener("touchmove", onTouchMove);
-      stage.removeEventListener("touchend", onTouchEnd);
     };
   }, [items, prefersReducedMotion]);
 
@@ -276,9 +170,12 @@ export default function CylinderGallery({ items, ready = true }: { items: Galler
       // z-20 rather than nothing: the heading above carries z-10, and a
       // positioned element with a z-index paints over a positioned one without,
       // so its box could reach down over the top of the arc.
-      className={`relative z-20 h-[54svh] min-h-[320px] touch-pan-y select-none transition-opacity duration-700 [perspective:1600px] md:h-[64svh] ${
-        ready ? "opacity-100" : "pointer-events-none opacity-0"
-      }`}
+      //
+      // NOTHING GATES THIS. It used to wait on the heading finishing, expressed
+      // as pointer-events-none and opacity-0 on the whole stage — so a cue that
+      // did not arrive left every panel invisible AND unclickable. Reveals are
+      // worth having; not in front of the one thing this section exists to do.
+      className="relative z-20 h-[54svh] min-h-[320px] touch-pan-y select-none [perspective:1600px] md:h-[64svh]"
     >
       <div className="absolute inset-0 [transform-style:preserve-3d]">
         {items.map((item, index) => {
