@@ -131,9 +131,9 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
 
     // The panels are links, so the pointer has to serve two purposes without
     // spoiling either. Capture is NOT taken on pointerdown — taking it there
-    // swallows the click before it ever reaches the anchor, which is what made
-    // the cards unclickable. It is taken only once the pointer has actually
-    // travelled, and a click that follows real travel is suppressed.
+    // swallows the click before it ever reaches the anchor. It is taken only
+    // once the pointer has travelled past the threshold, at which point this
+    // has become a drag and the click that follows is suppressed.
     const onPointerDown = (event: PointerEvent) => {
       pointerDown = true;
       dragging = false;
@@ -159,13 +159,21 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
     const endDrag = (event: PointerEvent) => {
       pointerDown = false;
       if (stage.hasPointerCapture(event.pointerId)) stage.releasePointerCapture(event.pointerId);
+      // Cleared on the NEXT frame, not here: the click lands after pointerup,
+      // and the guard below has to still know whether this was a drag when it
+      // does.
+      requestAnimationFrame(() => {
+        dragging = false;
+      });
     };
+    // Keyed off whether a drag actually happened, not off a distance that can
+    // go stale. A distance left over from an earlier throw silently ate the
+    // next click, and a click arriving without any pointer history at all — the
+    // keyboard's — was judged by it too.
     const onClickCapture = (event: MouseEvent) => {
-      if (travelled > DRAG_THRESHOLD_PX) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-      travelled = 0;
+      if (!dragging) return;
+      event.preventDefault();
+      event.stopPropagation();
     };
 
     // Hover lights one panel and drops the rest back. Bound per panel rather
@@ -283,6 +291,10 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
               ref={(el) => {
                 panelsRef.current[index] = el;
               }}
+              // The browser starts its own link-drag on mousedown over an
+              // anchor wrapping an image, and that native drag swallows the
+              // click that should have followed.
+              draggable={false}
               // Sized as a share of the page rather than the stage: the centre
               // panel is meant to read as a screen, not as a card in a row.
               className="absolute top-1/2 left-1/2 block w-[52vw] max-w-[900px] will-change-transform md:w-[46vw]"
