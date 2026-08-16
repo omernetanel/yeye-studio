@@ -49,6 +49,7 @@ const DIMMED = 0.42;
 export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const panelsRef = useRef<(HTMLElement | null)[]>([]);
+  const hitsRef = useRef<(HTMLAnchorElement | null)[]>([]);
   const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
@@ -95,6 +96,42 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
         panel.style.transform =
           `translate(-50%, -50%) translateX(${(offset * STEP_X_VW * window.innerWidth) / 100}px)` +
           ` translateZ(${-away * STEP_Z_PX}px) rotateY(${-offset * STEP_DEGREES}deg)`;
+      });
+
+      // THE HIT TARGETS, laid flat over wherever the 3D put each panel.
+      //
+      // This is the whole answer to why the work could not be clicked. Inside a
+      // preserve-3d context the browser decides between two overlapping boxes
+      // by their computed depth rather than by z-index, and these panels
+      // overlap heavily — so which one answered a click moved with the arc, and
+      // for most of the turn the ones filling the middle of the screen were not
+      // it. No amount of z-index fixes that while the boxes are in 3D.
+      //
+      // So the tilted panels are pictures now and take no pointer at all. The
+      // links are plain rectangles in ordinary 2D, placed each frame over the
+      // box each panel actually projects to. In two dimensions z-index means
+      // what it says, the nearest is on top, and every panel is clickable
+      // wherever it has got to on the arc.
+      //
+      // Every read below happens after every write above, in one pass, so this
+      // costs one forced layout a frame rather than one per panel.
+      const stageBox = stage.getBoundingClientRect();
+      const boxes = panelsRef.current.map((panel) =>
+        panel && panel.style.visibility !== "hidden" ? panel.getBoundingClientRect() : null,
+      );
+      boxes.forEach((box, index) => {
+        const hit = hitsRef.current[index];
+        if (!hit) return;
+        if (!box) {
+          hit.style.display = "none";
+          return;
+        }
+        hit.style.display = "";
+        hit.style.zIndex = String(Math.round(100 - Math.abs(offsetOf(index)) * 10));
+        hit.style.left = `${box.left - stageBox.left}px`;
+        hit.style.top = `${box.top - stageBox.top}px`;
+        hit.style.width = `${box.width}px`;
+        hit.style.height = `${box.height}px`;
       });
     };
 
@@ -177,49 +214,56 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
       // worth having; not in front of the one thing this section exists to do.
       className="relative z-20 h-[54svh] min-h-[320px] touch-pan-y select-none [perspective:1600px] md:h-[64svh]"
     >
-      <div className="absolute inset-0 [transform-style:preserve-3d]">
-        {items.map((item, index) => {
-          const panel = (
-            <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={item.image}
-                alt={item.title}
-                loading="lazy"
-                draggable={false}
-                className="block h-full w-full rounded-xl object-cover shadow-[0_30px_80px_-30px_rgba(0,0,0,0.45)]"
-              />
-              <span className="mt-4 block text-right font-display text-[15px] font-bold text-black md:text-[17px]">
-                {item.title}
-                <span className="ms-2 font-medium text-black/40">{item.category}</span>
-              </span>
-            </>
-          );
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              target={item.external ? "_blank" : undefined}
-              rel={item.external ? "noopener noreferrer" : undefined}
-              ref={(el) => {
-                panelsRef.current[index] = el;
-              }}
-              // The browser starts its own link-drag on mousedown over an
-              // anchor wrapping an image, and that native drag swallows the
-              // click that should have followed.
+      {/* THE PICTURE. Tilted, overlapping, and deliberately deaf to the
+          pointer — everything in here is scenery. */}
+      <div className="pointer-events-none absolute inset-0 [transform-style:preserve-3d]">
+        {items.map((item, index) => (
+          <div
+            key={item.href}
+            ref={(el) => {
+              panelsRef.current[index] = el;
+            }}
+            // Sized as a share of the page rather than the stage: the centre
+            // panel is meant to read as a screen, not as a card in a row.
+            className="absolute top-1/2 left-1/2 block w-[44vw] max-w-[760px] will-change-transform md:w-[38vw]"
+            style={{ aspectRatio: "1672 / 941" }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={item.image}
+              alt=""
+              loading="lazy"
               draggable={false}
-              // Sized as a share of the page rather than the stage: the centre
-              // panel is meant to read as a screen, not as a card in a row.
-              className="absolute top-1/2 left-1/2 block w-[44vw] max-w-[760px] will-change-transform md:w-[38vw]"
-              style={{ aspectRatio: "1672 / 941" }}
-              aria-label={`${item.title} — ${item.category}`}
-            >
-              {panel}
-            </Link>
-          );
-        })}
+              className="block h-full w-full rounded-xl object-cover shadow-[0_30px_80px_-30px_rgba(0,0,0,0.45)]"
+            />
+            <span className="mt-4 block text-right font-display text-[15px] font-bold text-black md:text-[17px]">
+              {item.title}
+              <span className="ms-2 font-medium text-black/40">{item.category}</span>
+            </span>
+          </div>
+        ))}
       </div>
+
+      {/* THE LINKS. Flat rectangles, no transform of any kind, laid over
+          wherever the picture above put each panel. This is the layer the
+          pointer and the keyboard actually meet, and being ordinary 2D boxes
+          they stack by z-index and the nearest one takes the click. */}
+      {items.map((item, index) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          target={item.external ? "_blank" : undefined}
+          rel={item.external ? "noopener noreferrer" : undefined}
+          ref={(el) => {
+            hitsRef.current[index] = el;
+          }}
+          // The browser starts its own link-drag on mousedown over an anchor,
+          // and that native drag swallows the click that should have followed.
+          draggable={false}
+          className="absolute block rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
+          aria-label={`${item.title} — ${item.category}`}
+        />
+      ))}
     </div>
   );
 }
