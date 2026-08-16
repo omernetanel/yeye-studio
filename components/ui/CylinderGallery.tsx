@@ -31,8 +31,11 @@ export type GalleryItem = {
 };
 
 // How far round the arc one step is, and how the panels fall away along it.
+// STEP_X_VW moves with the panel width below: the gap between neighbours is
+// what it leaves over, so shrinking one without the other closes or opens the
+// arc rather than resizing it.
 const STEP_DEGREES = 42;
-const STEP_X_VW = 46;
+const STEP_X_VW = 40;
 const STEP_Z_PX = 260;
 // Panels further round than this are behind the shoulder and not drawn.
 const VISIBLE_SPAN = 2.6;
@@ -50,7 +53,7 @@ const DRAG_THRESHOLD_PX = 5;
 // What the panels that are not under the cursor fall back to.
 const DIMMED = 0.42;
 
-export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
+export default function CylinderGallery({ items, ready = true }: { items: GalleryItem[]; ready?: boolean }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const panelsRef = useRef<(HTMLElement | null)[]>([]);
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -95,6 +98,15 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
         // Nearest panel on top, so the centre is never overlapped by its
         // neighbours as they pass behind it.
         panel.style.zIndex = String(Math.round(100 - away * 10));
+        // ONLY THE PANEL AT THE FRONT TAKES THE POINTER. The neighbours are
+        // wide enough to overlap it by a couple of hundred pixels, and inside a
+        // preserve-3d context which of the overlapping boxes wins a hit test is
+        // decided by 3D geometry rather than by z-index — so the answer changed
+        // with the arc's position and the middle panel, the one being looked
+        // at, was sometimes the one that could not be clicked. Taking the
+        // others out of the hit test entirely settles it: whatever is at the
+        // front is what answers.
+        panel.style.pointerEvents = away < 0.5 ? "auto" : "none";
         // Distance along the arc dims a panel, and so does the cursor being on
         // a different one. With nothing hovered the second term is 1 and this
         // is exactly the resting state.
@@ -261,7 +273,12 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
   return (
     <div
       ref={stageRef}
-      className="relative h-[62svh] min-h-[360px] touch-pan-y select-none [perspective:1600px] md:h-[74svh]"
+      // z-20 rather than nothing: the heading above carries z-10, and a
+      // positioned element with a z-index paints over a positioned one without,
+      // so its box could reach down over the top of the arc.
+      className={`relative z-20 h-[54svh] min-h-[320px] touch-pan-y select-none transition-opacity duration-700 [perspective:1600px] md:h-[64svh] ${
+        ready ? "opacity-100" : "pointer-events-none opacity-0"
+      }`}
     >
       <div className="absolute inset-0 [transform-style:preserve-3d]">
         {items.map((item, index) => {
@@ -297,7 +314,7 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
               draggable={false}
               // Sized as a share of the page rather than the stage: the centre
               // panel is meant to read as a screen, not as a card in a row.
-              className="absolute top-1/2 left-1/2 block w-[52vw] max-w-[900px] will-change-transform md:w-[46vw]"
+              className="absolute top-1/2 left-1/2 block w-[44vw] max-w-[760px] will-change-transform md:w-[38vw]"
               style={{ aspectRatio: "1672 / 941" }}
               aria-label={`${item.title} — ${item.category}`}
             >
