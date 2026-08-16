@@ -28,6 +28,7 @@ export default function ProjectsSection() {
   // The heading unfolds big and stacked, then draws itself in to a single
   // centred line. The second move is what makes the first one a moment rather
   // than a layout: it is large only for as long as it takes to arrive.
+  const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   // Through the shared hook rather than reading matchMedia in a lazy state
   // initialiser. That initialiser ran on the server too, where the answer is
@@ -42,8 +43,13 @@ export default function ProjectsSection() {
   const collapsed = folded || prefersReducedMotion;
 
   useEffect(() => {
-    const heading = headingRef.current;
-    if (!heading || collapsed) return;
+    // Watched on the SECTION, not on the heading. The heading is one line of
+    // type and a quick scroll can pass it without it ever intersecting, and
+    // since the work below waits on this, a missed cue meant the projects were
+    // never shown at all. The section is a thousand pixels tall and cannot be
+    // stepped over.
+    const section = sectionRef.current;
+    if (!section || collapsed) return;
 
     let timer = 0;
     // The same threshold FoldText's own trigger uses, so the clock starts when
@@ -56,7 +62,7 @@ export default function ProjectsSection() {
       },
       { rootMargin: "0px 0px -18% 0px" },
     );
-    watcher.observe(heading);
+    watcher.observe(section);
     return () => {
       watcher.disconnect();
       window.clearTimeout(timer);
@@ -64,7 +70,7 @@ export default function ProjectsSection() {
   }, [collapsed]);
 
   return (
-    <section id="projects" className="relative px-6 py-20 md:py-24">
+    <section ref={sectionRef} id="projects" className="relative px-6 py-20 md:py-24">
       {/* The heading unfolds rather than fades, because the section before it
           is a sheet of paper opening — same gesture, at the top of the work.
 
@@ -128,8 +134,13 @@ export default function ProjectsSection() {
       </h2>
 
       {/* The work itself, on the arc. Full width rather than inside the old
-          1000px measure: the centre panel is meant to read as a screen. */}
-      <CylinderGallery items={galleryItems} />
+          1000px measure: the centre panel is meant to read as a screen.
+
+          It waits for the heading. Coming up while the two lines are still
+          folding, it competed with them for the same moment and the reader had
+          two things arriving at once; held back until the heading has drawn
+          itself in, the section reads as one thing then the next. */}
+      <CylinderGallery items={galleryItems} ready={collapsed} />
 
       <div className="relative z-10 mt-16 flex justify-center md:mt-20">
         <Button href="/projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none">
