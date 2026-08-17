@@ -21,7 +21,10 @@ const galleryItems: GalleryItem[] = projects.map((project) => ({
 // How far the section has to rise through the screen for the heading to be
 // fully in. A fraction of the viewport rather than a duration: this is driven
 // by the reader, not by a clock.
-const RUN_VH = 1.15;
+// 310vh, which is what the same arrival spans in AboutSection: its rise runs
+// 0-85vh of that stage's travel and its settle 220-310vh. Mine ran over 115vh,
+// roughly a quarter of it, which is the whole of "it comes in too fast".
+const RUN_VH = 3.1;
 
 // The same shape as "אני עומר." in the section above, and the same numbers
 // where they mean the same thing.
@@ -30,20 +33,20 @@ const RUN_VH = 1.15;
 // first thing on screen is the top of it, cut and unreadable.
 // SETTLE: only once it is standing does it shrink into the size it keeps. The
 // two do not overlap — it arrives, and then it settles.
-const RISE = [0, 0.46] as const;
-const SETTLE = [0.54, 1] as const;
+const RISE = [0, 0.2743] as const;
+const SETTLE = [0.7097, 1] as const;
 // The work comes up under it during the settle, so the two read as one
 // movement in two parts rather than as two events.
-const GALLERY_FROM = 0.6;
+const GALLERY_FROM = 0.78;
 
 const HEADING_FROM_VH = 0.5;
 const HEADING_BLUR_PX = 52;
 // Alone on the screen, and the size it keeps. Nearly two to one, which is what
 // makes the shrink a movement rather than a nudge.
-const HEADING_ALONE_VW = 13;
-const HEADING_SETTLED_VW = 6.6;
-const HEADING_SETTLED_MIN = 40;
-const HEADING_SETTLED_MAX = 92;
+const HEADING_ALONE_VW = 8.6;
+const HEADING_SETTLED_VW = 4.2;
+const HEADING_SETTLED_MIN = 34;
+const HEADING_SETTLED_MAX = 58;
 const GALLERY_RISE_PX = 90;
 
 function clamp01(value: number) {
