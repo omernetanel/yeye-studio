@@ -21,13 +21,29 @@ const galleryItems: GalleryItem[] = projects.map((project) => ({
 // How far the section has to rise through the screen for the heading to be
 // fully in. A fraction of the viewport rather than a duration: this is driven
 // by the reader, not by a clock.
-const RUN_VH = 0.62;
-// The heading arrives first and the work comes up under it, overlapping — one
-// movement in two parts rather than two events.
-const GALLERY_FROM = 0.42;
+const RUN_VH = 1.15;
 
-const HEADING_RISE_PX = 64;
-const HEADING_BLUR_PX = 22;
+// The same shape as "אני עומר." in the section above, and the same numbers
+// where they mean the same thing.
+//
+// RISE: it comes up from half a screen below, heavily out of focus, so the
+// first thing on screen is the top of it, cut and unreadable.
+// SETTLE: only once it is standing does it shrink into the size it keeps. The
+// two do not overlap — it arrives, and then it settles.
+const RISE = [0, 0.46] as const;
+const SETTLE = [0.54, 1] as const;
+// The work comes up under it during the settle, so the two read as one
+// movement in two parts rather than as two events.
+const GALLERY_FROM = 0.6;
+
+const HEADING_FROM_VH = 0.5;
+const HEADING_BLUR_PX = 52;
+// Alone on the screen, and the size it keeps. Nearly two to one, which is what
+// makes the shrink a movement rather than a nudge.
+const HEADING_ALONE_VW = 13;
+const HEADING_SETTLED_VW = 6.6;
+const HEADING_SETTLED_MIN = 40;
+const HEADING_SETTLED_MAX = 92;
 const GALLERY_RISE_PX = 90;
 
 function clamp01(value: number) {
@@ -66,22 +82,37 @@ export default function ProjectsSection() {
   const { scrollY } = useScroll();
 
   const update = () => {
+    // sectionRef stays for the ref on the element itself; the arrival is
+    // measured off the heading.
     const section = sectionRef.current;
     const heading = headingRef.current;
     const gallery = galleryRef.current;
     if (!section || !heading || !gallery) return;
 
     const screen = window.innerHeight;
-    const top = section.getBoundingClientRect().top;
-    // 0 with the section's top edge at the bottom of the screen, 1 once it has
-    // risen RUN_VH of a screen past that.
+    // Measured off the HEADING, not off the section. The section's top edge is
+    // a screenful above its own heading once the padding is counted, so driving
+    // from it meant the whole arrival ran while the heading was still below the
+    // fold — by the time it came into view it had already finished, which is
+    // exactly the "it just sits there" it was accused of.
+    const top = heading.getBoundingClientRect().top;
+    // 0 with the heading's own top edge at the bottom of the screen, 1 once it
+    // has risen RUN_VH of a screen past that.
     const progress = clamp01((screen - top) / (screen * RUN_VH));
 
-    const headingIn = smoothstep(progress);
-    heading.style.opacity = String(headingIn);
-    heading.style.transform = `translateY(${lerp(HEADING_RISE_PX, 0, headingIn).toFixed(1)}px)`;
-    const blur = lerp(HEADING_BLUR_PX, 0, clamp01(headingIn * 1.35));
-    heading.style.filter = blur > 0.2 ? `blur(${blur.toFixed(2)}px)` : "";
+    const rise = smoothstep((progress - RISE[0]) / (RISE[1] - RISE[0]));
+    const settle = smoothstep((progress - SETTLE[0]) / (SETTLE[1] - SETTLE[0]));
+
+    const alone = (HEADING_ALONE_VW * window.innerWidth) / 100;
+    const settled = Math.max(
+      HEADING_SETTLED_MIN,
+      Math.min(HEADING_SETTLED_MAX, (HEADING_SETTLED_VW * window.innerWidth) / 100),
+    );
+    heading.style.fontSize = `${lerp(alone, settled, settle).toFixed(1)}px`;
+    heading.style.opacity = String(rise);
+    heading.style.transform = `translateY(${lerp(screen * HEADING_FROM_VH, 0, rise).toFixed(1)}px)`;
+    const blur = lerp(HEADING_BLUR_PX, 0, clamp01(rise * 1.4));
+    heading.style.filter = blur > 0.15 ? `blur(${blur.toFixed(2)}px)` : "";
 
     const galleryIn = smoothstep(clamp01((progress - GALLERY_FROM) / (1 - GALLERY_FROM)));
     gallery.style.opacity = String(galleryIn);
@@ -111,7 +142,7 @@ export default function ProjectsSection() {
     <section ref={sectionRef} id="projects" className="relative px-6 py-20 md:py-24">
       <h2
         ref={headingRef}
-        className="relative z-10 mb-16 text-center font-display text-[clamp(2.5rem,7vw,5.5rem)] leading-[1.05] font-extrabold tracking-tight text-black will-change-transform md:mb-24"
+        className="relative z-10 mb-16 text-center font-display leading-[1.05] font-extrabold tracking-tight whitespace-nowrap text-black will-change-transform md:mb-24"
         style={{ opacity: 0 }}
       >
         פרויקטים נבחרים
