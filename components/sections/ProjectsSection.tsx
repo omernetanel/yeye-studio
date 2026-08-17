@@ -1,21 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef } from "react";
+import { useMotionValueEvent, useScroll } from "framer-motion";
 import Button from "@/components/ui/Button";
-import FoldText from "@/components/ui/FoldText";
 import CylinderGallery, { type GalleryItem } from "@/components/ui/CylinderGallery";
 import { projects } from "@/lib/projects";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
-// FoldText runs its own timeline and does not report back, so the moment it
-// finishes is worked out from its own numbers: the last glyph starts after
-// stagger x (count - 1) and then takes duration to land. 0.045 x 14 + 0.65,
-// plus a beat to read it standing before it collapses.
-const FOLD_SETTLED_MS = 0.045 * 14 * 1000 + 650 + 420;
-
-// Four real projects, so the arc turns through four and never shows a gap. The
-// grid this replaced padded itself out to four slots with "coming soon" tiles;
-// there is nothing left to pad.
+// Four real projects today, and nothing here is written for four: the arc takes
+// its count from this array and wraps by it, and the project pages are built
+// from the same file. Adding work is adding an entry to lib/projects.
 const galleryItems: GalleryItem[] = projects.map((project) => ({
   image: project.image,
   title: project.cardTitle ?? project.title,
@@ -24,118 +18,111 @@ const galleryItems: GalleryItem[] = projects.map((project) => ({
   external: project.external,
 }));
 
+// How far the section has to rise through the screen for the heading to be
+// fully in. A fraction of the viewport rather than a duration: this is driven
+// by the reader, not by a clock.
+const RUN_VH = 0.62;
+// The heading arrives first and the work comes up under it, overlapping — one
+// movement in two parts rather than two events.
+const GALLERY_FROM = 0.42;
+
+const HEADING_RISE_PX = 64;
+const HEADING_BLUR_PX = 22;
+const GALLERY_RISE_PX = 90;
+
+function clamp01(value: number) {
+  return Math.min(1, Math.max(0, value));
+}
+
+function smoothstep(t: number) {
+  const c = clamp01(t);
+  return c * c * (3 - 2 * c);
+}
+
+function lerp(from: number, to: number, t: number) {
+  return from + (to - from) * t;
+}
+
+/**
+ * The heading here gets the same treatment as "אני עומר." in the section
+ * above: it rises out of focus and sharpens as it settles, driven straight off
+ * the scroll position rather than off a timeline.
+ *
+ * That is the whole reason it changed. It ran on GSAP before — a fold that
+ * fired once when the section came into view and then played for 1.3 seconds
+ * on its own clock, which made it the only thing on this page that did not
+ * answer the reader's hand. Everything else here is a function of scrollY, and
+ * a heading that is not reads as detached however good the effect is.
+ *
+ * Live in both directions, like the rest: scrolling back up takes it apart
+ * again. Nothing latches, because there is nothing here that only makes sense
+ * once.
+ */
 export default function ProjectsSection() {
-  // The heading unfolds big and stacked, then draws itself in to a single
-  // centred line. The second move is what makes the first one a moment rather
-  // than a layout: it is large only for as long as it takes to arrive.
   const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  // Through the shared hook rather than reading matchMedia in a lazy state
-  // initialiser. That initialiser ran on the server too, where the answer is
-  // always false, so a reader who has reduced motion on got one tree from the
-  // server and a different one on the client — a hydration mismatch of exactly
-  // the kind the error names first.
+  const galleryRef = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [folded, setFolded] = useState(false);
-  // With motion reduced there is no fold to wait for, so the settled state is
-  // the only state — derived during render rather than set from the effect,
-  // which would be a second render for something already known.
-  const collapsed = folded || prefersReducedMotion;
+  const { scrollY } = useScroll();
 
-  useEffect(() => {
-    // Watched on the SECTION, not on the heading. The heading is one line of
-    // type and a quick scroll can pass it without it ever intersecting, and
-    // since the work below waits on this, a missed cue meant the projects were
-    // never shown at all. The section is a thousand pixels tall and cannot be
-    // stepped over.
+  const update = () => {
     const section = sectionRef.current;
-    if (!section || collapsed) return;
+    const heading = headingRef.current;
+    const gallery = galleryRef.current;
+    if (!section || !heading || !gallery) return;
 
-    let timer = 0;
-    // The same threshold FoldText's own trigger uses, so the clock starts when
-    // the fold does rather than when the section's top edge appears.
-    const watcher = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        watcher.disconnect();
-        timer = window.setTimeout(() => setFolded(true), FOLD_SETTLED_MS);
-      },
-      { rootMargin: "0px 0px -18% 0px" },
-    );
-    watcher.observe(section);
-    return () => {
-      watcher.disconnect();
-      window.clearTimeout(timer);
-    };
-  }, [collapsed]);
+    const screen = window.innerHeight;
+    const top = section.getBoundingClientRect().top;
+    // 0 with the section's top edge at the bottom of the screen, 1 once it has
+    // risen RUN_VH of a screen past that.
+    const progress = clamp01((screen - top) / (screen * RUN_VH));
+
+    const headingIn = smoothstep(progress);
+    heading.style.opacity = String(headingIn);
+    heading.style.transform = `translateY(${lerp(HEADING_RISE_PX, 0, headingIn).toFixed(1)}px)`;
+    const blur = lerp(HEADING_BLUR_PX, 0, clamp01(headingIn * 1.35));
+    heading.style.filter = blur > 0.2 ? `blur(${blur.toFixed(2)}px)` : "";
+
+    const galleryIn = smoothstep(clamp01((progress - GALLERY_FROM) / (1 - GALLERY_FROM)));
+    gallery.style.opacity = String(galleryIn);
+    gallery.style.transform = `translateY(${lerp(GALLERY_RISE_PX, 0, galleryIn).toFixed(1)}px)`;
+  };
+
+  useLayoutEffect(() => {
+    const heading = headingRef.current;
+    const gallery = galleryRef.current;
+    if (prefersReducedMotion) {
+      // Nothing to arrive from: everything is simply here.
+      if (heading) heading.style.opacity = "1";
+      if (gallery) gallery.style.opacity = "1";
+      return;
+    }
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [prefersReducedMotion]);
+
+  useMotionValueEvent(scrollY, "change", () => {
+    if (prefersReducedMotion) return;
+    update();
+  });
 
   return (
     <section ref={sectionRef} id="projects" className="relative px-6 py-20 md:py-24">
-      {/* The heading unfolds rather than fades, because the section before it
-          is a sheet of paper opening — same gesture, at the top of the work.
-
-          trigger="scroll" and not "mount": mounted, it plays while the section
-          is still far below the fold and is over before anyone has reached it.
-
-          BROKEN BY HAND, not by wrapping. The line feed in the text is what
-          puts "נבחרים" on its own line; letting it wrap would put the break
-          wherever the width happened to fall, and at one width rather than all
-          of them. Both lines sit on the same right edge, so the break reads as
-          a decision.
-
-          The size is a calculation rather than a taste, which is why it is a
-          division and not a clamp. "פרויקטים" is the longer of the two lines
-          and at this weight and tracking it renders 3.935px of ink per pixel of
-          font size, so the page's own width over a divisor holds the same
-          proportion at EVERY viewport. A clamp caps instead, and a capped
-          heading stops growing the moment the page is wider than the cap —
-          which is what had this stuck at 112px.
-
-          4.6 rather than the 3.98 that put its ends exactly on the gutters: a
-          shade smaller, and the left-hand end now stops short of the edge
-          rather than running into it.
-
-          AND THEN IT DRAWS ITSELF IN. Once the fold has landed the whole thing
-          shrinks to a single centred line. font-size is the only property
-          animated — it is what carries the size AND, since the break is a <br>
-          that is switched off at the same moment, the two lines closing into
-          one. The alignment changes on that frame too, under cover of the
-          movement.
-
-          The space between the words has to be put back by hand when the break
-          goes: the text is broken on a bare line feed, so merged, the two words
-          would meet. */}
       <h2
         ref={headingRef}
-        data-collapsed={collapsed || undefined}
-        className="fold-heading relative z-10 mb-10 text-right transition-[margin] duration-700 data-collapsed:mb-24 data-collapsed:text-center md:mb-14 md:data-collapsed:mb-36"
+        className="relative z-10 mb-16 text-center font-display text-[clamp(2.5rem,7vw,5.5rem)] leading-[1.05] font-extrabold tracking-tight text-black will-change-transform md:mb-24"
+        style={{ opacity: 0 }}
       >
-        <FoldText
-          text={"פרויקטים\nנבחרים"}
-          splitBy="char"
-          hinge="top"
-          trigger="scroll"
-          duration={0.65}
-          stagger={0.045}
-          ease="power3.out"
-          perspective={700}
-          creaseShading={0.55}
-          fontSize={collapsed ? "calc((100vw - 3rem) / 7.6)" : "calc((100vw - 3rem) / 4.6)"}
-          fontWeight={800}
-          color="#000000"
-          className="font-display"
-          // nowrap is not belt and braces here, it is required. Splitting by
-          // character puts every glyph in its own inline-block, which gives the
-          // line a break opportunity between EVERY PAIR OF LETTERS — the last
-          // letter of the first word came off and took a line of its own. The
-          // hand-placed line feed still renders as a <br> and is still honoured.
-          style={{ whiteSpace: "nowrap" }}
-        />
+        פרויקטים נבחרים
       </h2>
 
-      {/* The work itself, on the arc. Full width rather than inside the old
-          1000px measure: the centre panel is meant to read as a screen. */}
-      <CylinderGallery items={galleryItems} />
+      {/* The work comes up under the heading while it is still settling, so the
+          two read as one movement. Full width rather than inside the old 1000px
+          measure: the centre panel is meant to read as a screen. */}
+      <div ref={galleryRef} className="will-change-transform" style={{ opacity: 0 }}>
+        <CylinderGallery items={galleryItems} />
+      </div>
 
       <div className="relative z-10 mt-16 flex justify-center md:mt-20">
         <Button href="/projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none">
