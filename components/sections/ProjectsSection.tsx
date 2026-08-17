@@ -108,7 +108,7 @@ export default function ProjectsSection() {
       <h2
         ref={headingRef}
         data-collapsed={collapsed || undefined}
-        className="fold-heading relative z-10 mb-10 text-right transition-[margin] duration-700 data-collapsed:mb-16 data-collapsed:text-center md:mb-14 md:data-collapsed:mb-24"
+        className="fold-heading relative z-10 mb-10 text-right transition-[margin] duration-700 data-collapsed:mb-24 data-collapsed:text-center md:mb-14 md:data-collapsed:mb-36"
       >
         <FoldText
           text={"פרויקטים\nנבחרים"}
@@ -120,7 +120,7 @@ export default function ProjectsSection() {
           ease="power3.out"
           perspective={700}
           creaseShading={0.55}
-          fontSize={collapsed ? "calc((100vw - 3rem) / 9.6)" : "calc((100vw - 3rem) / 4.6)"}
+          fontSize={collapsed ? "calc((100vw - 3rem) / 7.6)" : "calc((100vw - 3rem) / 4.6)"}
           fontWeight={800}
           color="#000000"
           className="font-display"
