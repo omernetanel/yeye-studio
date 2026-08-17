@@ -3,6 +3,7 @@ import HomeSwitch from "@/components/home/HomeSwitch";
 import MobileHome from "@/components/home/MobileHome";
 import { isMobileUserAgent } from "@/lib/device";
 import Navbar from "@/components/layout/Navbar";
+import NavMenu from "@/components/layout/NavMenu";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
 import StatementSection from "@/components/sections/StatementSection";
@@ -39,6 +40,7 @@ export default async function Home() {
       <div className="relative z-10">
         <HomeSwitch serverIsMobile={serverIsMobile} mobile={<MobileHome />}>
           <Navbar />
+          <NavMenu />
           <HeroSection />
           <ServicesSection />
           {/* Sits between the paper sequence and the contact stage rather than
