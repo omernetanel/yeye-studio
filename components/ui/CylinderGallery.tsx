@@ -35,8 +35,8 @@ export type GalleryItem = {
 // what it leaves over, so shrinking one without the other closes or opens the
 // arc rather than resizing it.
 const STEP_DEGREES = 42;
-const STEP_X_VW = 40;
-const STEP_Z_PX = 260;
+const STEP_X_VW = 46;
+const STEP_Z_PX = 300;
 // Panels further round than this are behind the shoulder and not drawn.
 const VISIBLE_SPAN = 2.6;
 
@@ -290,7 +290,7 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
       // as pointer-events-none and opacity-0 on the whole stage — so a cue that
       // did not arrive left every panel invisible AND unclickable. Reveals are
       // worth having; not in front of the one thing this section exists to do.
-      className="relative z-20 h-[54svh] min-h-[320px] touch-pan-y select-none [perspective:1600px] md:h-[64svh]"
+      className="relative z-20 h-[60svh] min-h-[340px] touch-pan-y select-none [perspective:1600px] md:h-[72svh]"
     >
       {/* THE PICTURE. Tilted, overlapping, and deliberately deaf to the
           pointer — everything in here is scenery. */}
@@ -303,7 +303,7 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
             }}
             // Sized as a share of the page rather than the stage: the centre
             // panel is meant to read as a screen, not as a card in a row.
-            className="absolute top-1/2 left-1/2 block w-[44vw] max-w-[760px] will-change-transform md:w-[38vw]"
+            className="absolute top-1/2 left-1/2 block w-[50vw] max-w-[880px] will-change-transform md:w-[44vw]"
             style={{ aspectRatio: "1672 / 941" }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}

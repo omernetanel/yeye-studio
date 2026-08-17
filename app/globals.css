@@ -53,6 +53,20 @@ html {
      biggest reason the page felt like it moved under the finger. Nothing else
      on the site depends on either behaviour. */
   overscroll-behavior-y: contain;
+
+  /* No scrollbar. The page is a sequence of full-bleed panels and a strip of
+     browser chrome down the edge of every one of them is the one thing on
+     screen that is not part of the work.
+     Both spellings: `scrollbar-width` is the standard property, the
+     `::-webkit-scrollbar` rule below covers Safari and older Chrome.
+     Nothing about scrolling itself changes — wheel, keys, touch and Lenis are
+     untouched. What goes is dragging the bar by hand, which fights smooth
+     scroll anyway. */
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
 }
 
 body {

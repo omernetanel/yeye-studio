@@ -28,6 +28,23 @@ const VIDEO_PRELOAD_MARGIN = "200% 0px";
 // separately, so scrolling only ever changes one scale and one offset.
 const ROOM_W = 6688;
 const ROOM_H = 3764;
+
+/**
+ * Where the plate lands once the zoom is done: covering the viewport, centred
+ * on it. Max rather than min, so it bleeds off whichever axis it has to rather
+ * than ever showing a white margin — which means on any screen wider than the
+ * plate's own 16:9 it ends up taller than the viewport, cropped equally above
+ * and below.
+ *
+ * Both the pinned panel and the tail below the section read the resting
+ * geometry from here. That is the whole reason it is a function: the tail is
+ * the same picture continuing, and a seam between two boxes that computed their
+ * own scale would drift the moment either side was touched.
+ */
+function roomAtRest(vw: number, vh: number) {
+  const scale = Math.max(vw / ROOM_W, vh / ROOM_H);
+  return { scale, left: (vw - ROOM_W * scale) / 2, top: (vh - ROOM_H * scale) / 2 };
+}
 const SCREEN_X = 2235;
 const SCREEN_Y = 1248;
 const SCREEN_W = 2237;
@@ -247,6 +264,7 @@ export default function ContactStage() {
   // which one rendered.
   const gateRef = useRef<HTMLDivElement>(null);
   const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
+  const [tail, setTail] = useState<{ height: number; width: number; left: number; top: number } | null>(null);
 
   useEffect(() => {
     const gate = gateRef.current;
@@ -282,10 +300,10 @@ export default function ContactStage() {
     form.style.pointerEvents = fadeT > 0.5 ? "none" : "auto";
 
     // Start: the screen cut-out spans the full viewport width.
-    // End: the plate covers the viewport — max, not min, so it bleeds off
-    // whichever axis it has to rather than ever showing a white margin.
+    // End: the plate at rest, from the one place that decides that.
     const scaleStart = vw / VIDEO_W;
-    const scaleEnd = Math.max(vw / ROOM_W, vh / ROOM_H);
+    const rest = roomAtRest(vw, vh);
+    const scaleEnd = rest.scale;
     const zoomT = smoothstep(mapRange(progress, ZOOM_START, ZOOM_END, 0, 1));
     const scale = lerp(scaleStart, scaleEnd, zoomT);
 
@@ -294,8 +312,8 @@ export default function ContactStage() {
     // the footage instead of letting the scene slide while it shrinks.
     const focalStartX = vw / 2;
     const focalStartY = (VIDEO_H * scaleStart) / 2;
-    const focalEndX = (vw - ROOM_W * scaleEnd) / 2 + SCREEN_CX * scaleEnd;
-    const focalEndY = (vh - ROOM_H * scaleEnd) / 2 + SCREEN_CY * scaleEnd;
+    const focalEndX = rest.left + SCREEN_CX * scaleEnd;
+    const focalEndY = rest.top + SCREEN_CY * scaleEnd;
 
     const focalX = lerp(focalStartX, focalEndX, zoomT);
     const focalY = lerp(focalStartY, focalEndY, zoomT);
@@ -303,9 +321,14 @@ export default function ContactStage() {
     stage.style.transform = `translate(${focalX - SCREEN_CX * scale}px, ${focalY - SCREEN_CY * scale}px) scale(${scale})`;
 
     // The clip is centred on the focal point, so its on-screen box falls out
-    // of the same two numbers. Report dark only while it actually sits under
-    // the logo — the room behind it is white, so once the clip has pulled away
-    // from the corner the logo has to go back to its dark-on-light form.
+    // of the same two numbers.
+    //
+    // INVERTED AGAINST WHAT THIS ONCE DID, because the plate was replaced. The
+    // old room was a white showroom, so the clip was the dark thing and the
+    // logo went white only while it sat over it. bghearmeout.png is a dark
+    // studio and the footage inside the screen is a bright office — so the
+    // reverse is now true, and reporting the old way left the logo black on
+    // black for the whole of the zoom-out.
     const halfW = (VIDEO_W * scale) / 2;
     const halfH = (VIDEO_H * scale) / 2;
     const overClip =
@@ -313,7 +336,21 @@ export default function ContactStage() {
       LOGO_X_PX <= focalX + halfW &&
       LOGO_Y_PX >= focalY - halfH &&
       LOGO_Y_PX <= focalY + halfH;
-    wrapperRef.current?.setAttribute("data-nav-dark", overClip ? "true" : "false");
+    wrapperRef.current?.setAttribute("data-nav-dark", overClip ? "false" : "true");
+  };
+
+  // What is left of the plate below the bottom edge once the zoom has come to
+  // rest — nothing but the rest of the picture. It lives outside the section
+  // and outside the pin, so it costs the zoom nothing and is simply scrolled
+  // into afterwards.
+  const measureTail = () => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const { scale, left, top } = roomAtRest(vw, vh);
+    const height = top + ROOM_H * scale - vh;
+    // Zero on a screen narrower than 16:9, where the plate is scaled by height
+    // and there is nothing hanging below.
+    setTail(height > 1 ? { height, width: ROOM_W * scale, left, top: top - vh } : null);
   };
 
   const measurePinRange = () => {
@@ -331,10 +368,12 @@ export default function ContactStage() {
     if (!wrapper) return;
 
     measurePinRange();
+    measureTail();
     update();
 
     const handleResize = () => {
       measurePinRange();
+      measureTail();
       update();
     };
     window.addEventListener("resize", handleResize);
@@ -368,6 +407,7 @@ export default function ContactStage() {
   }
 
   return (
+    <>
     <section
       ref={wrapperRef}
       id="contact"
@@ -452,5 +492,31 @@ export default function ContactStage() {
         </div>
       </div>
     </section>
+
+    {/* The rest of the picture. Outside the section on purpose: it takes no
+        part in the zoom, adds nothing to the pin's travel, and exists only so
+        the plate does not end on a cut edge. Same image, same resting scale,
+        pushed up by a viewport so it is the continuation of what the panel
+        above is already showing rather than a second copy placed near it. */}
+    {tail && (
+      <div
+        aria-hidden="true"
+        data-nav-dark="true"
+        className="relative overflow-clip bg-white"
+        style={{ height: tail.height }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={ROOM_SRC}
+          alt=""
+          width={ROOM_W}
+          height={ROOM_H}
+          className="absolute max-w-none"
+          style={{ width: tail.width, height: "auto", left: tail.left, top: tail.top }}
+          draggable={false}
+        />
+      </div>
+    )}
+    </>
   );
 }

@@ -29,10 +29,6 @@ const BEATS = {
   greetLine1: [0.0, 0.1063],
   greetLine2: [0.1313, 0.2375],
   greetSettle: [0.2750, 0.3875],
-  // With the section, not with the copy. It names where you are, so it belongs
-  // on screen from the moment the black arrives — waiting until the column
-  // landed meant the header row sat empty through the whole opening.
-  label: [0.0125, 0.0750],
   content: [0.4000, 0.4750],
   // The portrait arrives on the SAME beat the greeting starts settling, not
   // after the column has landed. That is the whole point of it: "אני עומר."
@@ -156,9 +152,8 @@ function span(progress: number, range: readonly [number, number]) {
  * only place on the page with a face on it and the only one that speaks in the
  * first person, so it is staged rather than laid out.
  *
- * The screen assembles: the greeting arrives alone on the black, then the
- * section's label takes the navbar's line, then the face, then the copy, then
- * the three reasons one at a time. By the last of them the whole argument is
+ * The screen assembles: the greeting arrives alone on the black, then the face,
+ * then the copy, then the three reasons one at a time. By the last of them the whole argument is
  * standing there at once, which is what removes the dead black — a screen that
  * only ever fills has none.
  *
@@ -192,7 +187,6 @@ export default function AboutSection() {
   const greetRef = useRef<HTMLDivElement>(null);
   const greetLinesRef = useRef<(HTMLSpanElement | null)[]>([]);
   const slotRef = useRef<HTMLDivElement>(null);
-  const labelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
   const portraitSlotRef = useRef<HTMLDivElement>(null);
@@ -289,12 +283,11 @@ export default function AboutSection() {
   const update = () => {
     const stage = stageRef.current;
     const greet = greetRef.current;
-    const label = labelRef.current;
     const content = contentRef.current;
     const portrait = portraitRef.current;
     const claim = claimRef.current;
     const panel = greet?.offsetParent as HTMLElement | null;
-    if (!stage || !greet || !label || !content || !portrait || !claim || !panel) return;
+    if (!stage || !greet || !content || !portrait || !claim || !panel) return;
 
     const screen = window.innerHeight;
     const travel = stage.getBoundingClientRect().height - screen;
@@ -340,8 +333,6 @@ export default function AboutSection() {
       el.style.opacity = String(arrived(key, range));
     };
 
-    const labelIn = arrived("label", BEATS.label);
-    label.style.transform = `translateY(${lerp(-14, 0, span(progress, BEATS.label))}px)`;
     // THE PORTRAIT — floating, like the greeting, and for the same reason: it
     // has to be on screen before the column it belongs to has arrived, and
     // inside that column it is a screen and a half below the fold at this point.
@@ -420,14 +411,6 @@ export default function AboutSection() {
 
       closerSwash.style.clipPath = `inset(0 ${(1 - draw) * 100}% 0 0)`;
 
-      // The label leaves with the section rather than being carried out of it.
-      // It holds all the way through the close and only lets go over the last
-      // settle, so the header row stays whole until there is no section left to
-      // name.
-      const exit = clamp01((held - drawEnd) / (screen * CLOSER_SETTLE_VH));
-      label.style.opacity = String(labelIn * (1 - smoothstep(exit)));
-    } else {
-      label.style.opacity = String(labelIn);
     }
   };
 
@@ -463,28 +446,6 @@ export default function AboutSection() {
 
   return (
     <section id="about" ref={sectionRef} data-nav-dark="true" className="relative bg-black">
-      {/* The section's label, mirrored on the logo: the logo is fixed at
-          left-6 / top-[22px], so this is the same inset from the other edge and
-          the same line. The two read as one header row — the mark on one side,
-          where you are on the other.
-
-          Pinned to the SECTION, in a sticky box of its own, not to the first
-          stage's panel. Inside that panel it was released the moment the stage
-          ended and scrolled away up the page while the fixed logo stayed put —
-          the header row losing one half of itself with the close still to come.
-          Zero height so it costs the layout nothing. */}
-      <div className="pointer-events-none sticky top-0 z-30 h-0">
-        <div
-          ref={labelRef}
-          className="absolute top-[22px] right-6 will-change-transform"
-          style={{ opacity: 0 }}
-        >
-          <span className="font-display text-[20px] leading-none font-bold text-white md:text-[24px]">
-            מי אני
-          </span>
-        </div>
-      </div>
-
       <div ref={stageRef} style={{ height: `${STAGE_VH * 100}svh` }}>
         {/* z-10 is load-bearing. `position: sticky` creates a stacking context
             of its own, so the copy's z-10 INSIDE this panel is sealed in here
