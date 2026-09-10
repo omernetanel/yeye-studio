@@ -4,7 +4,6 @@ import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import InkWash from "@/components/sections/cta/InkWash";
 
 const particles = [...Array(16)].map((_, i) => ({
   size: i % 3 === 0 ? 3 : 2,
@@ -14,13 +13,6 @@ const particles = [...Array(16)].map((_, i) => ({
   duration: 3 + (i % 4),
   delay: i * 0.4,
 }));
-
-// The shared Input is nearly transparent (bg-black/[0.02]), which is right
-// everywhere else on the site and wrong here: the ink washes behind this
-// section, and a see-through field lets it straight through the words being
-// typed into it. Opaque white only here, rather than changing the component for
-// every form on the site to suit one of them.
-const FIELD = "!bg-white";
 
 export default function CTASection() {
   const [form, setForm] = useState({ from_name: "", phone: "", reply_to: "" });
@@ -52,11 +44,10 @@ export default function CTASection() {
   };
 
   return (
-    <section id="cta" className="relative overflow-hidden bg-white px-6 py-24 text-center md:py-32">
-      {/* The ink from the opening screen, returning at the close with nothing
-          behind it. Under everything: the heading blends against it. */}
-      <InkWash className="pointer-events-none absolute inset-0 h-full w-full" />
-
+    <section
+      id="cta"
+      className="relative overflow-hidden bg-white px-6 pt-40 pb-24 text-right md:ps-24 md:pe-10 md:pt-56 md:pb-32"
+    >
       {particles.map((p, i) => (
         <motion.div
           key={i}
@@ -67,133 +58,103 @@ export default function CTASection() {
         />
       ))}
 
-      {/* The soft grey ellipse that used to breathe behind the heading is gone.
-          Under difference blending the heading's colour is not its own any
-          more, it is whatever sits behind it subtracted from white — and that
-          ellipse sat exactly behind it, at 25-45% of a mid grey. Black type on
-          white came back as dark grey, pulsing. The page under the heading has
-          to be white for the words to read black. */}
+      {/* Two columns, and in RTL the first of them is the right one — so the
+          copy is declared first and the balloons take the left half without
+          either needing to be placed. On a phone the grid collapses and they
+          stack in the same order. */}
+      <div className="relative mx-auto grid w-full max-w-[1400px] items-center gap-14 md:grid-cols-2">
+        <div>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5 }}
+            className="mb-6 font-display text-sm font-medium tracking-[0.08em] text-accent uppercase"
+          >
+            מוכנים להתחיל?
+          </motion.p>
 
-      {/* relative, and deliberately NOT z-10. A z-index on a positioned element
-          opens a stacking context, and mix-blend-mode only ever blends within
-          its own — so the heading inside here could see neither the ink nor the
-          white page, blended against transparency instead, and stayed white on
-          white. Ordering is by DOM position instead: the canvas is declared
-          first, so everything here paints over it without either side needing a
-          layer of its own. */}
-      <div className="relative">
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.5 }}
-          className="mb-6 font-display text-sm font-medium tracking-[0.08em] text-accent uppercase"
-        >
-          מוכנים להתחיל?
-        </motion.p>
+          <motion.h2
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="mb-6 font-display text-[clamp(40px,5vw,72px)] leading-[1.1] font-extrabold tracking-tight"
+          >
+            <span className="text-black">בוא נבנה משהו</span>
+            <br />
+            <span className="bg-[image:var(--gradient-accent)] bg-clip-text text-transparent">שבאמת עובד.</span>
+          </motion.h2>
 
-        <motion.h2
-          initial={{ opacity: 0, y: 32 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="mb-6 font-display text-[clamp(40px,5vw,72px)] leading-[1.1] font-extrabold tracking-tight"
-        >
-          {/* Only this line takes the blend. WHITE type, on a white page, in
-              difference: it renders black here and white wherever the ink
-              beneath has darkened the page, so the words inverting under the
-              ink is the compositor's doing rather than a shader's.
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-10 font-body text-lg text-black/45"
+          >
+            ייעוץ ראשוני ללא עלות. אשמח לשמוע על הפרויקט שלך.
+          </motion.p>
 
-              The gradient line below stays out of it. Difference blending only
-              holds its meaning in black and white — a coloured source inverts
-              to its complement, so run through the same treatment the grey
-              would come back as something else entirely. */}
-          <span className="text-white mix-blend-difference">בוא נבנה משהו</span>
-          <br />
-          <span className="bg-[image:var(--gradient-accent)] bg-clip-text text-transparent">שבאמת עובד.</span>
-        </motion.h2>
+          {/* The form itself, rather than a button through to /contact. Asking
+              someone who has just read to the end of the page to load another
+              one before they can say anything is a step that buys nothing: the
+              fields are three, they fit here, and the page they would have gone
+              to has the same three. */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="max-w-[620px]"
+          >
+            {status === "success" ? (
+              <p className="font-body text-[15px] text-black/60">קיבלתי, תודה! אחזור אליך בהקדם.</p>
+            ) : (
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 text-right sm:grid-cols-2">
+                <Input
+                  type="text"
+                  placeholder="שם מלא"
+                  value={form.from_name}
+                  onChange={(e) => setForm({ ...form, from_name: e.target.value })}
+                  required
+                />
+                <Input
+                  type="tel"
+                  placeholder="טלפון"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                />
+                <Input
+                  type="email"
+                  placeholder="דוא״ל"
+                  value={form.reply_to}
+                  onChange={(e) => setForm({ ...form, reply_to: e.target.value })}
+                  required
+                />
+                <Button
+                  type="submit"
+                  disabled={status === "sending"}
+                  showArrow={false}
+                  className="!border-black !bg-none !bg-black !text-white !shadow-none justify-center"
+                >
+                  {status === "sending" ? "שולח..." : "בוא נתחיל ביחד"}
+                </Button>
+                {status === "error" && (
+                  <p className="font-body text-[14px] text-black/50 sm:col-span-2">
+                    משהו השתבש בשליחה. אפשר גם ישירות למייל.
+                  </p>
+                )}
+              </form>
+            )}
+          </motion.div>
+        </div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-10 font-body text-lg text-black/45"
-        >
-          ייעוץ ראשוני ללא עלות. אשמח לשמוע על הפרויקט שלך.
-        </motion.p>
-
-        {/* The form itself, rather than a button through to /contact. Asking
-            someone who has just read to the end of the page to load another one
-            before they can say anything is a step that buys nothing: the fields
-            are three, they fit here, and the page they would have gone to has
-            the same three. */}
-        {/* Opacity only — no y. The submit button below blends against the page
-            and the ink, and mix-blend-mode resolves inside the nearest stacking
-            context: a transform on this wrapper opens one and traps the blend
-            here, where the backdrop is transparent. A transform of none does
-            not, and neither does an opacity of 1, so once this has faded in the
-            button can see the section again. */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mx-auto max-w-[620px]"
-        >
-          {status === "success" ? (
-            <p className="font-body text-[15px] text-black/60">קיבלתי, תודה! אחזור אליך בהקדם.</p>
-          ) : (
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 text-right sm:grid-cols-2">
-              <Input
-                type="text"
-                className={FIELD}
-                placeholder="שם מלא"
-                value={form.from_name}
-                onChange={(e) => setForm({ ...form, from_name: e.target.value })}
-                required
-              />
-              <Input
-                type="tel"
-                className={FIELD}
-                placeholder="טלפון"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              />
-              <Input
-                type="email"
-                className={FIELD}
-                placeholder="דוא״ל"
-                value={form.reply_to}
-                onChange={(e) => setForm({ ...form, reply_to: e.target.value })}
-                required
-              />
-              {/* Painted WHITE and blended, not black. Difference against the
-                  white page turns a white fill black and a black label white,
-                  which is the button as it looks at rest; where the ink has
-                  darkened the page underneath, both flip — a white button with
-                  black lettering. The same inversion the Hero's CTAs get.
-
-                  The border is white rather than black for the same reason: at
-                  rest it renders black and disappears into the fill, and over
-                  the ink it renders white and disappears into it again. A black
-                  border would invert to a white ring around the button. */}
-              <Button
-                type="submit"
-                disabled={status === "sending"}
-                showArrow={false}
-                className="!border-white !bg-none !bg-white !text-black !shadow-none justify-center mix-blend-difference"
-              >
-                {status === "sending" ? "שולח..." : "בוא נתחיל ביחד"}
-              </Button>
-              {status === "error" && (
-                <p className="font-body text-[14px] text-black/50 sm:col-span-2">
-                  משהו השתבש בשליחה. אפשר גם ישירות למייל.
-                </p>
-              )}
-            </form>
-          )}
-        </motion.div>
+        {/* The left half, waiting on the balloons. Empty rather than filled
+            with a stand-in: a placeholder image is a thing to forget to
+            replace, and the column already earns its place by existing — it is
+            what holds the copy to the right half of the page. */}
+        <div className="hidden md:block" />
       </div>
     </section>
   );

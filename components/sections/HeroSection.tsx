@@ -15,6 +15,25 @@ const CONTACT_EMAIL = "hello@yeyelabs.com";
 
 const TAGLINE_TEXT = "בואו נבנה לכם אתר שעובד ומוכר באמת.";
 
+/**
+ * TEMPORARY, and here to be flipped rather than read.
+ *
+ * Set this to false and the line is gone from all four places it lives —
+ * painted on the canvas on desktop, real type on mobile, and the two
+ * measuring/reduced-motion copies behind them. Set it back to true and it
+ * returns. Nothing else has to be edited either way.
+ *
+ * It exists because the question is one for the eye and not for argument, and
+ * the two states are not the same layout: the logo is sized from whatever is
+ * left after the line and the buttons have taken theirs, so WITHOUT THE LINE
+ * THE WORDMARK GROWS. Comparing them from memory would be comparing the wrong
+ * thing.
+ *
+ * DELETE THIS once the call is made — either the line stays as it is now, or it
+ * comes out for good. A switch nobody flips is dead code with a comment on it.
+ */
+const SHOW_TAGLINE = true;
+
 export default function HeroSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
@@ -189,12 +208,14 @@ export default function HeroSection() {
 
               18px, not 19: at 19 the line measured 343px against 342 available
               and wrapped by a single pixel. */}
-          <p
-            className="text-right font-display text-[18px] leading-[1.4] font-semibold whitespace-nowrap"
-            style={{ color: "#fff", mixBlendMode: "difference" }}
-          >
-            {TAGLINE_TEXT}
-          </p>
+          {SHOW_TAGLINE && (
+            <p
+              className="text-right font-display text-[18px] leading-[1.4] font-semibold whitespace-nowrap"
+              style={{ color: "#fff", mixBlendMode: "difference" }}
+            >
+              {TAGLINE_TEXT}
+            </p>
+          )}
 
           <div ref={logoAreaRef} className="relative flex min-h-0 w-full flex-1 select-none items-center justify-center">
             {prefersReducedMotion ? (
@@ -280,12 +301,24 @@ export default function HeroSection() {
         // still reaches this element and splats, with pointer-events-auto
         // opted back in specifically on the CTA button and the two
         // contact icons so they stay genuinely, unaffectedly clickable.
-        <div className="absolute inset-x-0 bottom-0 -top-[48px] overflow-hidden">
+        <div
+          className="absolute inset-x-0 bottom-0 -top-[48px] overflow-hidden"
+          // And the ink dissolves into the run-off rather than reaching its
+          // end. Masked on the wrapper, not in the shader: the fade is a
+          // property of where the canvas stops, not of how the fluid behaves,
+          // and the simulation stays untouched.
+          // The paper fades with it, which costs nothing — what is behind is
+          // the section's own white.
+          style={{
+            maskImage: "linear-gradient(to bottom, #000 calc(100% - 170px), transparent 100%)",
+            WebkitMaskImage: "linear-gradient(to bottom, #000 calc(100% - 170px), transparent 100%)",
+          }}
+        >
           <FluidInkReveal
             logoSrc="/images/logo.png"
             videoSrc="/videos/herobg.mp4"
-            taglineText={TAGLINE_TEXT}
-            taglineElRef={taglineRef}
+            taglineText={SHOW_TAGLINE ? TAGLINE_TEXT : ""}
+            taglineElRef={SHOW_TAGLINE ? taglineRef : undefined}
             logoSlotRef={logoSlotRef}
             ctas={ctas}
             className="relative h-full w-full select-none"
@@ -305,7 +338,7 @@ export default function HeroSection() {
             screen readers and search engines. */}
         <h1 className="sr-only">YEYE</h1>
 
-        {prefersReducedMotion ? (
+        {!SHOW_TAGLINE ? null : prefersReducedMotion ? (
           <div className="mx-auto mt-4 w-full max-w-[1400px] px-6">
             <div className="flex flex-col items-start text-right">
               <p className="font-display text-2xl leading-snug font-semibold text-black md:text-4xl">{TAGLINE_TEXT}</p>
@@ -481,8 +514,13 @@ export default function HeroSection() {
           resized to make space for it, so the logo, tagline and CTAs sit
           exactly where they did. The ink canvas spans the whole section, so
           this simply hands the ink somewhere to drift and settle instead of
-          being driven straight into the section's hard bottom edge. */}
-      <div aria-hidden="true" className="h-[15px] w-full shrink-0" />
+          being driven straight into the section's hard bottom edge.
+          170, not the 15 it was: fifteen pixels is a gap, not a run-off. Ink
+          that drifted down still met the edge and was cut across, which is the
+          one thing on this screen that looks like a mistake rather than an
+          effect. This is white space on a white page — the only thing it
+          changes is how much room the ink has to end in. */}
+      <div aria-hidden="true" className="h-[170px] w-full shrink-0" />
     </section>
   );
 }

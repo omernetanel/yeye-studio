@@ -347,10 +347,24 @@ function ServicesListBlock() {
  * open page than a column of prose was, since it is a thing to look at rather
  * than to read around.
  *
- * The drawing itself is a file rather than markup — it is line work, not a
- * layout — but the heading over it is type, so it stays type: it scales with
- * the sheet, stays sharp at any size, and changing the wording costs an edit
- * rather than a re-export.
+ * SPLIT DOWN THE MIDDLE, on purpose. The pencil is a file: hatching, texture,
+ * the little construction sketches of the letters — none of that can be faked
+ * in markup and there is no reason to try. Everything with structure to it —
+ * the four stations, their numbers, their copy and the arrows between them —
+ * is type and SVG, in the drawing's own 1920x1080 space.
+ *
+ * The reason is not sharpness, though it is sharper. It is that this is the
+ * one section on the page where nothing happens: the hero is a fluid
+ * simulation, the room is a real zoom, the work is an arc you can turn, and
+ * this was a picture that changed size. Four stages around a circle are the
+ * content that gains most from being revealed over time, and a flat plate
+ * cannot take part in the scrub it is printed on. As SVG the arrows can draw
+ * themselves between the stations.
+ *
+ * The overlay is laid over the existing plate rather than replacing it, and
+ * that doubling is the alignment test: type that lands exactly on what is
+ * printed underneath reads as one drawing. Anything out of place shows up as a
+ * ghost. When the background-only plate arrives, only the src changes.
  */
 function ProcessDiagram({ headingRef }: { headingRef: RefObject<HTMLHeadingElement | null> }) {
   return (
@@ -375,14 +389,185 @@ function ProcessDiagram({ headingRef }: { headingRef: RefObject<HTMLHeadingEleme
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/whatidopng.png"
-          alt="מכירים את העסק, מעצבים את החוויה, בונים את זה נכון, עולים לאוויר"
+          alt=""
           width={1920}
           height={1080}
           className="block h-auto w-full"
           draggable={false}
         />
+
+        <ProcessStations />
       </div>
     </div>
+  );
+}
+
+// The four stations, in the plate's own pixel space, each a self-contained
+// block centred on its point: the numeral, the heading under it, the copy under
+// that. The plate carries no icons any more, so a station is type and nothing
+// else — and type stacked on its own centre is the one arrangement that does
+// not look like it is missing the picture that used to sit beside it.
+//
+// `titleY` is the baseline of the heading; everything else is measured off it.
+// Lines are split by hand because SVG text does not wrap. That is the price of
+// placing every glyph exactly where it belongs on the page.
+const STATIONS = [
+  {
+    number: "01",
+    cx: 960,
+    titleY: 250,
+    title: "מבינים את העסק",
+    lines: ["לפני הכול יושבים ומדברים: מה המטרה, מי הקהל,", "ומה כבר לא עובד. אתר טוב מתחיל בהבנה."],
+  },
+  {
+    number: "02",
+    cx: 1560,
+    titleY: 500,
+    title: "מעצבים את החוויה",
+    lines: ["כל מסך, כל מרווח וכל צבע נבחרים בכוונה —", "שהגולש ידע לאן ללכת, לא רק שיהיה לו יפה."],
+  },
+  {
+    number: "03",
+    cx: 960,
+    titleY: 800,
+    title: "בונים את זה נכון",
+    lines: ["קוד נקי ומהיר שבנוי להחזיק שנים, בלי הפתעות", "כשתרצו לשנות או להוסיף משהו."],
+  },
+  {
+    number: "04",
+    cx: 380,
+    titleY: 500,
+    title: "עולים לאוויר",
+    lines: ["ביום ההשקה אני שם, וגם הרבה אחריו —", "ממשיכים לתקן, לשפר ולגדול יחד."],
+  },
+] as const;
+
+// The arrows, as arcs of ONE ellipse — the one that passes through all four
+// station centres, centred between them at (960, 525) with radii 580 and 275.
+// Each runs from 32 degrees past one station to 32 short of the next, so they
+// read as a single circle broken four times rather than four curves that happen
+// to line up. Clockwise throughout, which is why every sweep flag is 1.
+const ARROWS = [
+  "M 1267.3 291.8 A 580 275 0 0 1 1451.8 379.3",
+  "M 1451.8 670.7 A 580 275 0 0 1 1267.3 758.2",
+  "M 652.7 758.2 A 580 275 0 0 1 468.2 670.7",
+  "M 468.2 379.3 A 580 275 0 0 1 652.7 291.8",
+];
+
+// One icon per station, drawn around its own origin so a station only has to
+// say where its centre is. Stroked, not filled, at the same weight as the
+// arrows — the plate under them is pencil, and a solid shape would read as
+// pasted onto the page rather than drawn on it.
+const ICONS: Record<string, string[]> = {
+  // Two speech bubbles: a conversation, which is what the first stage is.
+  "01": [
+    "M -42 -30 h 54 a 10 10 0 0 1 10 10 v 26 a 10 10 0 0 1 -10 10 h -32 l -16 14 v -14 h -6 a 10 10 0 0 1 -10 -10 v -26 a 10 10 0 0 1 10 -10 z",
+    "M 4 6 h 32 a 9 9 0 0 1 9 9 v 15 a 9 9 0 0 1 -9 9 h -5 v 12 l -13 -12 h -14 a 9 9 0 0 1 -9 -9 v -15 a 9 9 0 0 1 9 -9 z",
+  ],
+  // A browser window with a wireframe in it.
+  "02": [
+    "M -46 -34 h 92 a 6 6 0 0 1 6 6 v 56 a 6 6 0 0 1 -6 6 h -92 a 6 6 0 0 1 -6 -6 v -56 a 6 6 0 0 1 6 -6 z",
+    "M -52 -16 h 104",
+    "M -36 -4 h 30 v 28 h -30 z",
+    "M 6 -2 h 38",
+    "M 6 10 h 38",
+    "M 6 22 h 24",
+  ],
+  // Angle brackets and a slash.
+  "03": ["M -18 -26 L -46 0 L -18 26", "M 18 -26 L 46 0 L 18 26", "M 8 -32 L -8 32"],
+  // A rocket, mid-launch.
+  "04": [
+    "M 0 -46 C 16 -28 22 -6 22 12 L 22 26 L -22 26 L -22 12 C -22 -6 -16 -28 0 -46 Z",
+    "M -22 6 L -38 30 L -22 26",
+    "M 22 6 L 38 30 L 22 26",
+    "M -10 32 L -6 44",
+    "M 0 32 L 0 48",
+    "M 10 32 L 6 44",
+  ],
+};
+
+function ProcessStations() {
+  return (
+    <svg
+      viewBox="0 0 1920 1080"
+      className="absolute inset-0 h-full w-full"
+      role="img"
+      aria-label="ארבעת שלבי העבודה: מבינים את העסק, מעצבים את החוויה, בונים את זה נכון, עולים לאוויר"
+    >
+      <defs>
+        {/* orient="auto" turns the head to follow the path, so one marker
+            serves all four arrows whichever way they curve. */}
+        <marker
+          id="process-arrowhead"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="6"
+          markerHeight="6"
+          orient="auto"
+        >
+          <path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        </marker>
+      </defs>
+
+      <g className="text-black/45" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+        {ARROWS.map((d) => (
+          <path key={d} d={d} markerEnd="url(#process-arrowhead)" />
+        ))}
+      </g>
+
+      {/* Each station stacks on its own centre: icon, numeral, heading, copy.
+          direction rtl and a middle anchor because the copy is Hebrew and every
+          station is centred on itself, not set in a column. */}
+      <g direction="rtl" textAnchor="middle">
+        {STATIONS.map((station) => (
+          <g key={station.number}>
+            <g
+              transform={`translate(${station.cx} ${station.titleY - 168})`}
+              className="text-black/45"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {ICONS[station.number].map((d) => (
+                <path key={d} d={d} />
+              ))}
+              {station.number === "04" && <circle cx="0" cy="-8" r="9" />}
+              {station.number === "02" && (
+                <g strokeWidth="0" fill="currentColor">
+                  <circle cx="-40" cy="-25" r="2.6" />
+                  <circle cx="-30" cy="-25" r="2.6" />
+                  <circle cx="-20" cy="-25" r="2.6" />
+                </g>
+              )}
+            </g>
+
+            <text
+              x={station.cx}
+              y={station.titleY - 62}
+              className="fill-black/25 font-display text-[76px] font-bold"
+            >
+              {station.number}
+            </text>
+            <text x={station.cx} y={station.titleY} className="fill-black font-display text-[44px] font-bold">
+              {station.title}
+            </text>
+            {station.lines.map((line, index) => (
+              <text
+                key={line}
+                x={station.cx}
+                y={station.titleY + 52 + index * 34}
+                className="fill-black/55 font-body text-[24px]"
+              >
+                {line}
+              </text>
+            ))}
+          </g>
+        ))}
+      </g>
+    </svg>
   );
 }
 
