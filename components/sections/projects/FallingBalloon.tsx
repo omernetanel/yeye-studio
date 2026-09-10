@@ -28,9 +28,9 @@ const ROCK_DEGREES = 30;
 const ROCK_SPEED = 1.05;
 const ROCK_DRIFT = 30;
 
-const SIZE_VW = 12;
-const SIZE_MIN = 120;
-const SIZE_MAX = 200;
+const SIZE_VW = 8;
+const SIZE_MIN = 90;
+const SIZE_MAX = 140;
 // Where it crosses, as a fraction of the width. Left of centre in RTL terms is
 // the empty side here: the heading is centred and the arc has not arrived yet.
 const LANE = 0.24;
@@ -99,9 +99,11 @@ export default function FallingBalloon() {
       frame = requestAnimationFrame(step);
     };
 
-    // Fires when the top of the section reaches the screen, and re-arms only
-    // once it has left again — so it drops on arrival, not on every wobble of
-    // the scroll around the boundary.
+    // Not when the section arrives — a third of a screen after it, so the
+    // heading has begun coming up out of its blur before anything falls past
+    // it. The negative bottom margin pulls the root's lower edge up by that
+    // much, so this only counts the section as present once it has actually
+    // taken the screen. Re-arms when it leaves.
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -109,7 +111,7 @@ export default function FallingBalloon() {
           else stop();
         }
       },
-      { threshold: 0 },
+      { threshold: 0, rootMargin: "0px 0px -34% 0px" },
     );
     observer.observe(marker);
 

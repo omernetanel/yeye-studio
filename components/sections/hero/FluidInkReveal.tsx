@@ -66,8 +66,12 @@ const CFG = {
   CURL: 0,
   DENSITY_DISSIPATION: 2.1,
   VELOCITY_DISSIPATION: 16,
-  SPLAT_RADIUS: 0.0012,
-  SPLAT_FORCE: 88,
+  SPLAT_RADIUS: 0.0018,
+  // How hard each splat is thrown, and the one number that decides whether the
+  // ink reads as quick or as sluggish. The dissipations are left alone: they
+  // are what keeps the tail even as it goes, and buying speed from them would
+  // buy back the messy fade with it.
+  SPLAT_FORCE: 155,
   SPLAT_SPACING: 0.006,
   MASK_LO: 0.145,
   MASK_HI: 0.235,
