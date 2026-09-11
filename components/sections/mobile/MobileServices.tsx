@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { services } from "@/lib/content";
+import { ICONS, ICON_MOTION, IconExtras } from "../process/icons";
 
 const CLIP_SRC = "/mobile/videos/servicesbg-mobile.mp4";
 const CLIP_POSTER = "/mobile/images/servicesbg-mobile-poster.jpg";
@@ -27,38 +28,42 @@ const CUE_STATEMENT_IN = 10 + 23 / 30; // the closing line rises behind the plan
 const FADE_SECONDS = 0.35;
 
 /**
- * How much scrolling each stretch of the clip is worth, as a run of
- * (progress, clip time) points that the scrub interpolates between.
+ * How much scrolling each stretch of the clip is worth, written as the number
+ * of screen-heights it takes to REACH each cue from the one before it.
  *
- * Two points sharing a time is a hold: the clip stands still while scrolling
- * keeps accumulating, which is what buys reading time without freezing the
- * page under the finger. Because it is arithmetic in both directions rather
- * than a played timeline, scrolling back up runs the paper backwards through
- * exactly the same frames.
+ * NOTHING HERE EVER HOLDS. There used to be two stops — a fifth of the run on
+ * frame zero, and another fifth frozen on the flat sheet — which together left
+ * four and a half screens of scrolling where the picture did not move at all.
+ * On a desk that reads as a beat. In a hand it reads as a page that has caught
+ * on something, because the finger is still travelling and nothing is coming
+ * back. The rule the desktop already follows applies here too: slow down over
+ * what matters, never stop.
  *
- * The reading holds sit where the picture is still. The one for "who I am"
- * deliberately starts at CUE_PAPER_FLAT rather than at the cue that brings the
- * text in, so the sheet finishes opening behind it instead of standing
- * half-unfurled for the whole time it is being read.
+ * So the reading beats are paid for with a slower rate instead of a stop. The
+ * open-sheet stretch runs at about a third of the speed of the crumple — and
+ * the clip is nearly still through it anyway, so a slow rate there looks calm
+ * rather than sluggish, while the long empty stretch after it is over quickly.
+ *
+ * Because it is arithmetic in both directions rather than a played timeline,
+ * scrolling back up runs the paper backwards through exactly the same frames.
  */
-const SCROLL_SCREENS = 11;
-const TIMELINE: readonly { progress: number; time: number }[] = [
-  { progress: 0.0, time: 0 },
-  { progress: 0.2, time: 0 }, // hold: read the four services
-  { progress: 0.27, time: CUE_SERVICES_OUT },
-  { progress: 0.31, time: CUE_ABOUT_IN },
-  { progress: 0.37, time: CUE_PAPER_FLAT },
-  { progress: 0.59, time: CUE_PAPER_FLAT }, // hold: read "who I am"
-  { progress: 0.66, time: CUE_ABOUT_OUT },
-  { progress: 0.76, time: CUE_STATEMENT_IN }, // the empty stretch runs fast
-  // Straight to the last frame, with no hold on it. There was one — six percent
-  // of the run, about two thirds of a screen, with the clip frozen on white
-  // while the closing line travelled out over it. It was the only moment in the
-  // section where the scroll moved and the picture did not, and on a page whose
-  // whole argument is that the hand drives the image, that reads as a stall.
-  // Now the sheet is still finishing as the line leaves.
-  { progress: 1.0, time: CLIP_SECONDS },
+const BEATS: readonly { screens: number; time: number }[] = [
+  { screens: 0, time: 0 },
+  { screens: 1.5, time: CUE_SERVICES_OUT }, // the ball sits still; read the four services
+  { screens: 1.3, time: CUE_PAPER_FLAT }, // it opens
+  { screens: 1.9, time: CUE_ABOUT_OUT }, // flat and legible: the process is on it
+  { screens: 2.2, time: CUE_STATEMENT_IN }, // crumple and flight, at speed
+  { screens: 1.8, time: CLIP_SECONDS }, // the closing line rises as the sheet lands
 ];
+
+const SCROLL_SCREENS = BEATS.reduce((total, beat) => total + beat.screens, 0);
+
+/** The same beats as (progress, time) points, which is what the scrub reads. */
+const TIMELINE = BEATS.reduce<{ progress: number; time: number }[]>((points, beat, index) => {
+  const previous = index === 0 ? 0 : points[index - 1].progress;
+  points.push({ progress: previous + beat.screens / SCROLL_SCREENS, time: beat.time });
+  return points;
+}, []);
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -291,14 +296,11 @@ function ServiceGrid({ className }: { className?: string }) {
 }
 
 /**
- * The process, drawn on the open sheet — the same four steps the desktop draws,
- * at phone sizes.
- *
- * It sits in the slot the "who I am" block used to occupy, on the same cues:
- * that slot is "whatever is printed on the paper while it is open", and a
- * diagram uses an open page better than a column of prose did. "Who I am" is a
- * section of its own now, so leaving it here as well showed it twice on the
- * phone — and it is the wrong thing to print on a sheet of paper anyway.
+ * The four stages, in the slot the "who I am" block used to occupy and on the
+ * same cues: that slot is "whatever is printed on the paper while it is open",
+ * and a diagram uses an open page better than a column of prose did. "Who I am"
+ * is a section of its own now, so leaving it here as well showed it twice on
+ * the phone — and it is the wrong thing to print on a sheet of paper anyway.
  */
 const PROCESS_STEPS = [
   "מכירים את העסק",
@@ -307,25 +309,175 @@ const PROCESS_STEPS = [
   "עולים לאוויר",
 ];
 
+// The drawing's own coordinate space. Everything below is in these units, and
+// the viewBox is what turns them into whatever width the phone gives us — so
+// the whole diagram scales as one piece and nothing has to be measured.
+const ART_W = 600;
+const ART_H = 1000;
+// The column the icons stand in, and the four heights they stand at. The right
+// side, because this is RTL and that is where a line starts.
+const ICON_X = 498;
+const ROW_Y = [140, 380, 620, 860];
+// Where the connector leaves one icon and where it arrives at the next: the
+// icons are about 110 units tall, so this clears the tallest of them.
+const CONNECTOR_CLEARANCE = 66;
+// How far each connector bows sideways. Alternating, so the four stations read
+// as one line winding down the page rather than a stack joined by dashes —
+// the same idea as the desktop's single broken ellipse, stood on end.
+const CONNECTOR_BOW = 52;
+
+/**
+ * The process, drawn on the open sheet.
+ *
+ * This is the desktop's diagram rearranged, not a different idea: same four
+ * stations, same artwork, same numerals, connected by one line that turns four
+ * separate items into a route. What changes is the shape it is laid out on. The
+ * desktop has a landscape sheet and puts the stations on an ellipse; a phone
+ * sheet is a tall column, and a ring in a column is a ring with nothing in it.
+ *
+ * Titles only, no copy under them. This is printed on a sheet that is open for
+ * about two screens of scrolling — long enough to take in four steps, nowhere
+ * near long enough to read eight lines of explanation. The service pages carry
+ * the words.
+ *
+ * Drawn as one SVG rather than laid out in HTML for the same reason the desktop
+ * is: the sheet it sits on is a video frame that shrinks, and a drawing that
+ * scales as a unit stays in proportion with it. An HTML stack would reflow.
+ */
 function ProcessDiagram() {
   return (
-    <div className="text-center text-black">
-      <span className="font-display text-m-small leading-none font-bold tracking-[0.28em] text-black/40 uppercase">
-        process
-      </span>
-      <ol className="mt-6 space-y-5">
-        {PROCESS_STEPS.map((step, index) => (
-          <li key={step} className="flex items-baseline justify-center gap-3">
-            <span className="font-display text-m-small leading-none font-bold text-black/30">
-              {String(index + 1).padStart(2, "0")}
-            </span>
-            <span className="font-display text-m-sub font-bold text-black">
-              {step}
-            </span>
-          </li>
-        ))}
-      </ol>
-    </div>
+    <svg
+      viewBox={`0 0 ${ART_W} ${ART_H}`}
+      className="mx-auto max-h-[76svh] w-full"
+      role="img"
+      aria-label={`ארבעת שלבי העבודה: ${PROCESS_STEPS.join(", ")}`}
+    >
+      <defs>
+        <marker
+          id="mobile-process-arrowhead"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="6"
+          markerHeight="6"
+          orient="auto"
+        >
+          <path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="currentColor" strokeWidth="1.8" />
+        </marker>
+
+        {/* The same halo the desktop uses, and gentler than it on purpose: the
+            sheet under the desktop diagram is covered in pencil work, and this
+            one is bare white with nothing but the crumple's own shadows on it.
+            Set as strong as the desktop's, it would read as a white cloud on
+            white paper. Enough to keep the type off the creases, no more. */}
+        <filter id="mobile-process-halo" x="-25%" y="-25%" width="150%" height="150%">
+          <feMorphology in="SourceAlpha" operator="dilate" radius="2" result="spread" />
+          <feGaussianBlur in="spread" stdDeviation="5" result="soft" />
+          <feComponentTransfer in="soft" result="halo">
+            <feFuncR type="linear" slope="0" intercept="1" />
+            <feFuncG type="linear" slope="0" intercept="1" />
+            <feFuncB type="linear" slope="0" intercept="1" />
+            <feFuncA type="linear" slope="1.4" intercept="0" />
+          </feComponentTransfer>
+          <feMerge>
+            <feMergeNode in="halo" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <g
+        className="text-black/40"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      >
+        {ROW_Y.slice(0, -1).map((y, index) => {
+          const from = y + CONNECTOR_CLEARANCE;
+          const to = ROW_Y[index + 1] - CONNECTOR_CLEARANCE;
+          const bow = index % 2 === 0 ? -CONNECTOR_BOW : CONNECTOR_BOW;
+          const lean = (to - from) * 0.34;
+          return (
+            <path
+              key={y}
+              d={`M ${ICON_X} ${from} C ${ICON_X + bow} ${from + lean} ${ICON_X + bow} ${to - lean} ${ICON_X} ${to}`}
+              markerEnd="url(#mobile-process-arrowhead)"
+            />
+          );
+        })}
+      </g>
+
+      {/* One filter over the whole block, not one per element: applied per
+          piece, every glyph would glow onto its neighbour and the words would
+          end up sitting in a bank of white. */}
+      <g direction="rtl" filter="url(#mobile-process-halo)">
+        {/* Heading the column rather than centred over the page: the drawing
+            hangs off the icon column on the right, and a label floating in the
+            middle of the sheet reads as belonging to nothing.
+            direction ltr on the word itself because it is Latin — inside the
+            rtl group, `end` would anchor the wrong edge of it. */}
+        <text
+          x={ICON_X + 52}
+          y={44}
+          direction="ltr"
+          textAnchor="end"
+          className="fill-black/40 font-display text-[26px] font-bold tracking-[0.28em] uppercase"
+        >
+          process
+        </text>
+
+        {PROCESS_STEPS.map((step, index) => {
+          const number = String(index + 1).padStart(2, "0");
+          const y = ROW_Y[index];
+          return (
+            <g key={step}>
+              {/* TWO GROUPS, AND THAT IS THE POINT OF THEM. The outer one
+                  carries the position as an SVG `transform` attribute; the
+                  inner one carries the animation, which is a CSS `transform`
+                  property. On one element they do not combine — the CSS
+                  property wins outright and the attribute is thrown away, so
+                  every animated icon loses its placement and stacks up at 0,0. */}
+              <g transform={`translate(${ICON_X} ${y})`}>
+                <g
+                  className={`text-black/45 ${ICON_MOTION[number]}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {ICONS[number].map((part) => (
+                    <path key={part.d} d={part.d} className={part.cls} />
+                  ))}
+                  <IconExtras number={number} />
+                </g>
+              </g>
+
+              {/* textAnchor start under direction rtl is the RIGHT edge, so
+                  both of these hang off the same line beside the icon column
+                  and run leftward into the page. */}
+              <text
+                x={ICON_X - 92}
+                y={y - 24}
+                textAnchor="start"
+                className="fill-black/30 font-display text-[34px] font-bold"
+              >
+                {number}
+              </text>
+              <text
+                x={ICON_X - 92}
+                y={y + 32}
+                textAnchor="start"
+                className="fill-black font-display text-[42px] font-bold"
+              >
+                {step}
+              </text>
+            </g>
+          );
+        })}
+      </g>
+    </svg>
   );
 }
 
