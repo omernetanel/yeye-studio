@@ -53,6 +53,23 @@ const SCREEN_H = 1152;
 const SCREEN_CX = SCREEN_X + SCREEN_W / 2;
 const SCREEN_CY = SCREEN_Y + SCREEN_H / 2;
 
+// The phone's framing of the plate: a SQUARE window holding the plate's full
+// height, cropped at the sides and centred on the cut-out. The whole room is
+// there top to bottom — the ceiling lights, the monitor, the rocks on the floor
+// — and what goes is the empty wall at either end, which is the only part of a
+// 16:9 room shot that a phone has no width for.
+//
+// The plate is scaled by height, so its width comes out at the room's own
+// aspect ratio against the square: 177.7% of the frame.
+const MOBILE_PLATE_WIDTH_PCT = (ROOM_W / ROOM_H) * 100;
+
+// The clip is held a little inside the plate's cut-out rather than filling it,
+// and the gap is drawn as a bezel. Filling the cut-out edge to edge, the
+// footage reads as a rectangle floating on a wall — the thing that makes it a
+// television is the dark border around the picture, and the plate's own screen
+// edge is too thin to be that at this size.
+const MOBILE_SCREEN_SCALE = 0.9;
+
 // The clip fills the cut-out edge to edge. The plate is a placeholder whose
 // cut-out is 1.94:1 against the clip's 16:9, so filling it costs ~4% off the
 // top and bottom of the frame — the alternative was fitting the clip by height
@@ -159,15 +176,15 @@ function ContactForm() {
   // on it and leans on light type for contrast.
   return (
     <div className="mx-auto w-full max-w-[720px] px-6 text-center">
-      <h3 className="font-display text-3xl leading-snug font-bold text-white md:text-[38px]">
+      <h3 className="font-display text-m-title font-bold text-white md:text-[38px] md:leading-snug">
         לא חייבים לדעת בדיוק מה רוצים כדי להתחיל.
       </h3>
-      <p className="mt-4 font-body text-[16px] leading-[1.7] text-white/70">
+      <p className="mt-4 font-body text-m-body text-white/70">
         תשאירו כמה פרטים ואחזור אליכם תוך יום עסקים אחד. בלי מכירות, בלי התחייבות.
       </p>
 
       {status === "success" ? (
-        <p className="mt-8 font-body text-[16px] text-white/70">קיבלתי, תודה! אחזור אליך בהקדם.</p>
+        <p className="mt-8 font-body text-m-body text-white/70">קיבלתי, תודה! אחזור אליך בהקדם.</p>
       ) : (
         <form onSubmit={handleSubmit} className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Input
@@ -191,7 +208,11 @@ function ContactForm() {
             type="submit"
             disabled={status === "sending"}
             showArrow={false}
-            className="!border-white !bg-none !bg-white !text-black !shadow-none justify-center !py-3"
+            // justify-self-center: this is a grid item, so left alone it
+            // stretches to the full width of its column and comes out as wide
+            // as the three fields above it. It is one button, not a fourth
+            // field.
+            className="!border-white !bg-none !bg-white !text-black !shadow-none w-auto justify-center justify-self-center !px-12 !py-3"
           >
             {status === "sending" ? "שולח..." : "בואו נדבר"}
           </Button>
@@ -393,13 +414,87 @@ export default function ContactStage() {
 
   // Mobile and reduced motion: no pin and no zoom — the clip is just a
   // backdrop with the contact block on it.
+  //
+  // THE FORM SETS THE HEIGHT, and it did not before. The section used to be as
+  // tall as the footage's own 2237:1152 box — 193px on a phone — with the
+  // contact block laid over it absolutely, taking part in no layout at all. The
+  // block is 240px. It overflowed by 46 and the section clips, so the form that
+  // this whole section exists to ask for was cut off at both ends on every
+  // phone. The clip is the backdrop now and the content decides the height.
   if (skipPin) {
     return (
-      <section id="contact" className="relative overflow-hidden bg-black">
-        <div ref={gateRef} className="relative w-full" style={{ aspectRatio: `${SCREEN_W} / ${SCREEN_H}` }}>
-          <StageVideo src={videoSrc} />
+      // PULLED UP INTO THE SECTION ABOVE, and z-20 so it travels over it.
+      //
+      // The closing line of "who I am" is pinned to the middle of the screen at
+      // the end of that section, and while a panel is pinned nothing below it
+      // can be seen — so the line always held on a screen of black and then the
+      // room appeared afterwards, as a separate arrival. Starting this section
+      // 42svh early means the room climbs into view WHILE the line is still
+      // standing, and when the pin lets go the two travel on together.
+      //
+      // It also closes the hairline the sections used to show at their seam:
+      // both are black, but their heights are computed from svh and land on
+      // fractional pixels, and the white page showed through the gap.
+      // data-nav-dark: this is the one black section on the phone's page, and
+      // the floating chrome — the logo, the menu, the WhatsApp mark — all read
+      // this attribute to know to invert. The desktop branch sets it from its
+      // own scroll handler because the zoom changes what is under the corner;
+      // here nothing moves, so it is simply true.
+      <section
+        id="contact"
+        data-nav-dark="true"
+        className="relative z-20 -mt-[42svh] overflow-hidden bg-black py-24"
+      >
+        {/* The plate, framed rather than filled. The zoom does not run on a
+            phone, so what is left of this section is the composition it ends on
+            — and a composition wants black around it, not a screen it bleeds
+            off. The clip sits in the room's own cut-out, positioned by the same
+            four numbers the desktop zoom uses, expressed as fractions of the
+            plate: nothing here is measured by eye, and moving the cut-out moves
+            both. */}
+        {/* CROPPED AT THE SIDES, not zoomed. At full width the plate is a wide
+            shot and its cut-out comes out 125px across on a phone — the thing
+            this section is about, rendered smaller than a thumbnail. A square
+            window holding the plate's full height keeps the whole room and
+            loses only the wall at the ends. The left offset puts the cut-out's
+            own centre on the frame's centre; every number is derived from the
+            same four the desktop zoom uses, so nothing here is nudged by eye. */}
+        <div ref={gateRef} className="relative aspect-square w-full overflow-hidden">
+          <div
+            className="absolute top-0"
+            style={{
+              width: `${MOBILE_PLATE_WIDTH_PCT}%`,
+              left: `${50 - MOBILE_PLATE_WIDTH_PCT * (SCREEN_CX / ROOM_W)}%`,
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={ROOM_SRC}
+              alt=""
+              aria-hidden="true"
+              width={ROOM_W}
+              height={ROOM_H}
+              className="block h-auto w-full"
+              draggable={false}
+            />
+            <div
+              className="absolute overflow-hidden rounded-[3px] border-[5px] border-[#0d0d0d] bg-[#0d0d0d]"
+              style={{
+                left: `${((SCREEN_X + (SCREEN_W * (1 - MOBILE_SCREEN_SCALE)) / 2) / ROOM_W) * 100}%`,
+                top: `${((SCREEN_Y + (SCREEN_H * (1 - MOBILE_SCREEN_SCALE)) / 2) / ROOM_H) * 100}%`,
+                width: `${((SCREEN_W * MOBILE_SCREEN_SCALE) / ROOM_W) * 100}%`,
+                height: `${((SCREEN_H * MOBILE_SCREEN_SCALE) / ROOM_H) * 100}%`,
+              }}
+            >
+              <StageVideo src={videoSrc} />
+            </div>
+          </div>
         </div>
-        <div className="absolute inset-0 flex items-center justify-center">
+
+        {/* And the ask underneath it. No heading over the picture: the block
+            below already opens with one, so putting a second line above the
+            plate would explain the shot before it had been looked at. */}
+        <div className="mt-[9svh]">
           <ContactForm />
         </div>
       </section>

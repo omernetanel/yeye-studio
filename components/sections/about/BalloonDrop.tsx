@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { stepBalloons, type Balloon, type World } from "@/lib/physics/balloons";
 
 /**
@@ -33,9 +33,28 @@ type Props = {
   sectionRef: RefObject<HTMLElement | null>;
   lineRef: RefObject<HTMLElement | null>;
   stateRef: RefObject<DropState>;
+  /**
+   * Nine balloons instead of seventeen. Not a screen-size tweak — a phone has
+   * to solve the same collisions in three passes on a tenth of the silicon, and
+   * this is the one thing in the section with a per-frame cost that grows with
+   * the count. The choreography is the same shape either way: a couple over the
+   * copy, a handful at the close.
+   */
+  variant?: "desktop" | "mobile";
 };
 
 const SOURCES = ["/images/ball1.webp", "/images/ball2.webp"];
+
+/** One balloon's brief: when it is released, where from, and how far back. */
+type CastEntry = {
+  cue: "drop" | "leaving" | "wall";
+  at: number;
+  x: number;
+  depth: number;
+  type: number;
+  settles: boolean;
+  front: boolean;
+};
 
 /**
  * The cast, authored rather than generated. With a fixed timestep and fixed
@@ -53,7 +72,7 @@ const SOURCES = ["/images/ball1.webp", "/images/ball2.webp"];
  * out in order they read as a wipe across the screen; clustered, they land in a
  * heap in the middle. Neither looks like weather.
  */
-const CAST = [
+const CAST: readonly CastEntry[] = [
   // OVER THE COPY, while the section is still standing. Spaced wide: with
   // nothing else moving, one balloon a second is an event and three a second is
   // a shower. Five is all this stretch can hold at that spacing.
@@ -92,6 +111,44 @@ const CAST = [
   { cue: "wall", at: 900, x: 0.66, depth: 0, type: 1, settles: true, front: true },
 ] as const;
 
+/**
+ * The phone's cast. Two over the copy where the desktop has five, and seven at
+ * the close where it has twelve — the same three cues and the same reading of
+ * them, thinned.
+ *
+ * Spread wider across the width than the desktop set, because a narrow screen
+ * turns a spacing that reads as scattered on a laptop into a single column
+ * falling down the middle.
+ */
+const MOBILE_CAST: readonly CastEntry[] = [
+  // Two over the cards, and neither on the cue's own instant. The first used to
+  // go at zero, which meant it was already falling before the card that armed
+  // it had finished arriving — the balloon beat the thing it was reacting to.
+  { cue: "drop", at: 700, x: 0.71, depth: 1, type: 0, settles: false, front: true },
+  { cue: "drop", at: 3000, x: 0.21, depth: 0, type: 1, settles: false, front: false },
+
+  // Falling past on the way to the close. Spread wide and unevenly: at a second
+  // apart, balloons on a 375px column are never fewer than three on screen at
+  // once and read as one falling mass, and even gaps read as a machine feeding
+  // them in.
+  { cue: "leaving", at: 0, x: 0.86, depth: 0, type: 1, settles: false, front: false },
+  { cue: "leaving", at: 2400, x: 0.33, depth: 0.5, type: 1, settles: false, front: false },
+
+  // AND THREE THAT STAY. Everything above falls straight through the bottom of
+  // the black; these come to rest on the floor of the section and are still
+  // there when the reader leaves it. Without them the close is one balloon on a
+  // line and a great deal of empty black under it — the pile is what gives the
+  // end of the section any weight at all.
+  { cue: "leaving", at: 4800, x: 0.16, depth: 0.5, type: 1, settles: true, front: false },
+  { cue: "leaving", at: 6600, x: 0.62, depth: 0, type: 1, settles: true, front: false },
+  { cue: "leaving", at: 8900, x: 0.4, depth: 1, type: 0, settles: true, front: true },
+
+  // ONE on the line, and the biggest of them: depth 1 puts it in the near band
+  // and type 0 is the silver. A single balloon knocked by the impact line reads
+  // as the line having done it; three read as weather.
+  { cue: "wall", at: 500, x: 0.44, depth: 1, type: 0, settles: true, front: true },
+] as const;
+
 // Rendered width, as a fraction of the screen's short side. Sized off the short
 // side so a balloon is the same share of the picture on a phone as on a laptop.
 //
@@ -120,7 +177,11 @@ function sizeFor(depth: number, short: number) {
   return Math.round(short * fraction);
 }
 
-export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
+export default function BalloonDrop({ sectionRef, lineRef, stateRef, variant = "desktop" }: Props) {
+  const cast = useMemo<readonly CastEntry[]>(
+    () => (variant === "mobile" ? MOBILE_CAST : CAST),
+    [variant],
+  );
   const nodesRef = useRef<(HTMLImageElement | null)[]>([]);
   const layersRef = useRef<(HTMLDivElement | null)[]>([]);
   const balloonsRef = useRef<Balloon[]>([]);
@@ -147,7 +208,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
 
     const build = () => {
       const short = Math.min(window.innerWidth, window.innerHeight);
-      balloonsRef.current = CAST.map((entry, index) => {
+      balloonsRef.current = cast.map((entry, index) => {
         const size = sizeFor(entry.depth, short);
         return {
           x: entry.x * window.innerWidth,
@@ -303,7 +364,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
         wall: wallSince === 0 ? -1 : now - wallSince,
       };
       balloonsRef.current.forEach((balloon, index) => {
-        const entry = CAST[index];
+        const entry = cast[index];
         const clock = clocks[entry.cue];
         if (clock >= 0 && clock >= entry.at) balloon.released = true;
       });
@@ -343,7 +404,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
       watcher.disconnect();
       window.removeEventListener("resize", onResize);
     };
-  }, [sectionRef, lineRef, stateRef]);
+  }, [sectionRef, lineRef, stateRef, cast]);
 
   const layer = (front: boolean, z: string) => (
     <div
@@ -353,7 +414,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef }: Props) {
       className={`pointer-events-none fixed inset-0 ${z}`}
       aria-hidden="true"
     >
-      {CAST.map((entry, index) =>
+      {cast.map((entry, index) =>
         entry.front === front ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

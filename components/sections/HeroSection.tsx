@@ -50,6 +50,11 @@ export default function HeroSection() {
   // clipped invisibly by the section's overflow-hidden.
   const logoAreaRef = useRef<HTMLDivElement>(null);
   const logoSlotRef = useRef<HTMLDivElement>(null);
+  // Mobile only: the CTA hanging under the mark, and the line at the foot of
+  // the screen. The button is placed halfway between them — see the sizing
+  // effect below.
+  const ctaSlotRef = useRef<HTMLDivElement>(null);
+  const footRowRef = useRef<HTMLDivElement>(null);
   // The two Hero CTAs are painted onto the ink's paper layer rather than
   // rendered as ordinary DOM, so the ink can wash over them the same way it
   // does the wordmark and the tagline. The DOM elements stay in place —
@@ -147,6 +152,30 @@ export default function HeroSection() {
       const finalWidth = Math.max(0, width * LOGO_FIT_SCALE - LOGO_TRIM_PX);
       slot.style.width = `${finalWidth}px`;
       slot.style.height = `${finalWidth * CROPPED_ASPECT}px`;
+
+      // THE BUTTON, PUT HALFWAY BETWEEN THE MARK AND THE LINE AT THE FOOT.
+      //
+      // It used to hang off the wordmark at a fixed distance, which meant the
+      // air was all in one place: a measured gap above it and whatever was left
+      // over below. Centring it in the space between the two things it sits
+      // between splits that evenly, and it stays even at any screen height —
+      // which a fixed offset cannot, because the leftover shrinks as the phone
+      // does while the offset does not.
+      //
+      // Measured rather than expressed in CSS because one of the two edges is
+      // the bottom of a mark whose height is computed right here.
+      const cta = ctaSlotRef.current;
+      const foot = footRowRef.current;
+      if (cta && foot) {
+        const slotBox = slot.getBoundingClientRect();
+        const footBox = foot.getBoundingClientRect();
+        const ctaBox = cta.getBoundingClientRect();
+        const middle = (slotBox.bottom + footBox.top) / 2;
+        // `top` is measured from the slot's TOP edge, not its bottom — the
+        // button is positioned inside the mark's own box. Subtracting the wrong
+        // edge put it a mark's height too high.
+        cta.style.top = `${middle - ctaBox.height / 2 - slotBox.top}px`;
+      }
     };
     resize();
 
@@ -187,89 +216,112 @@ export default function HeroSection() {
         )}
 
         {/* pointer-events-none so a touch anywhere in the empty space still
-            reaches the ink canvas underneath; the controls opt back in. */}
-        {/* No z-index here on purpose. `relative` plus a z-index would open a
-            stacking context, and a blend only ever mixes with the backdrop
-            INSIDE its own context — so the inverted text and button below had
-            nothing but transparency to blend against and vanished. Left at
-            z-auto they share the section's context with the ink canvas, which
-            is what they need to invert against; DOM order still puts them on
-            top of it. */}
-        <div className="pointer-events-none relative flex h-full flex-col px-6 pt-[72px] pb-8">
+            reaches the ink canvas underneath; the controls opt back in.
+            NOTHING HERE BLENDS ANY MORE. Every element in this block used to be
+            written in inverted colours — a white fill with black text — and
+            turned right way round by mix-blend-mode: difference against the ink
+            canvas, so it would flip again wherever ink ran under it. Mobile
+            Safari does not apply that blend over a WebGL canvas, and the result
+            on a real phone was not "fails to invert" but "is not there": the
+            white fills vanished into the white page and left the tagline, the
+            button's body, the second link and the studio line all missing.
+            They are plain black now. The cost is that dark ink dragged directly
+            over them swallows them for the moment it is there, which is a fair
+            price for existing. The wordmark is untouched — it comes off the
+            canvas, not out of a blend, and the ink revealing it is the whole
+            screen. */}
+        <div className="pointer-events-none relative flex h-full flex-col px-6 pt-[20px] pb-8">
           <h1 className="sr-only">YEYE</h1>
 
-          {/* Inverted by BLENDING rather than by being painted into the canvas.
-              mix-blend-mode: difference against whatever is underneath means
-              white source over the white page renders black, and the same white
-              source over dark ink renders white — the exact inversion the
-              desktop gets from the shader, except the glyphs stay real text at
-              the device's own pixel density instead of being drawn into a
-              canvas capped at 2x and stretched to 3x.
-
-              18px, not 19: at 19 the line measured 343px against 342 available
-              and wrapped by a single pixel. */}
           {SHOW_TAGLINE && (
+            // Two lines now, not one, and no longer nowrap: at 18px on a single
+            // line it was a caption. Broken and set larger it carries the
+            // weight of being the only sentence on the screen. Balanced rather
+            // than hand-broken — a manual break is only ever right at one width.
+            //
+            // WHITE, and inverted by the blend — see the block comment above.
             <p
-              className="text-right font-display text-[18px] leading-[1.4] font-semibold whitespace-nowrap"
+              className="text-right font-display text-[21px] leading-[1.3] font-bold text-balance"
               style={{ color: "#fff", mixBlendMode: "difference" }}
             >
               {TAGLINE_TEXT}
             </p>
           )}
 
-          <div ref={logoAreaRef} className="relative flex min-h-0 w-full flex-1 select-none items-center justify-center">
-            {prefersReducedMotion ? (
-              <div ref={logoSlotRef} className="relative mx-auto overflow-hidden">
-                <div className="absolute inset-x-0" style={{ top: "-23.0074%", height: "143.7962%" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/images/logo.png"
-                    alt="YEYE"
-                    className="h-full w-full object-contain"
-                    style={{ filter: "brightness(0)" }}
-                    draggable={false}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div ref={logoSlotRef} className="relative mx-auto" />
-            )}
-          </div>
+          {/* The space the wordmark is SIZED from — it is still the leftover
+              between the line above and the row below, which is what keeps the
+              mark from ever colliding with either. It holds nothing: the mark
+              itself is drawn in the centred layer further down, because being
+              sized by this column and being centred in it are two different
+              things, and only the first is wanted. */}
+          <div ref={logoAreaRef} className="min-h-0 w-full flex-1" />
 
-          {/* One real button, with the second route as a text link under it.
-              Two buttons of equal weight split the attention and read as
-              indecision; the studios this is modelled on all commit to one. */}
-          {/* Same difference blend as the line above, which is why the colours
-              here look inverted in the source: a WHITE fill with BLACK text
-              renders as a black button with white text against the white page,
-              and flips to a white button with black text wherever ink runs
-              under it. */}
+          {/* ONE LINE at the foot of the screen, where three stacked blocks
+              used to be. Those three came to a hundred pixels of content and
+              took the bottom third of the hero with them; this is twenty, and
+              the difference goes to the wordmark, which is sized from whatever
+              is left over. The empty middle is the point — it is what the
+              screens this is modelled on all have and this did not. */}
           <div
-            className="pointer-events-auto flex w-full flex-col items-center"
+            ref={footRowRef}
+            className="pointer-events-auto flex w-full items-baseline justify-between font-display text-m-small"
             style={{ mixBlendMode: "difference" }}
           >
-            <Button
-              href="/#contact"
-              variant="primary"
-              className="!border-white !bg-none !bg-white !text-black !shadow-none w-full justify-center py-4 text-[17px]"
-            >
-              קבעו פגישה
-            </Button>
-            <Link
-              href="/#projects"
-              className="mt-4 inline-flex items-center gap-2 font-display text-[15px] font-medium text-white/70"
-            >
+            <Link href="/#projects" className="inline-flex items-center gap-1.5 font-medium text-white">
               העבודות שלי
               <ArrowIcon />
             </Link>
+            <span className="text-white/45">סטודיו דיגיטלי עצמאי</span>
           </div>
+        </div>
 
-          <span
-            className="mt-7 text-center font-display text-[12px]"
-            style={{ color: "rgba(255,255,255,0.45)", mixBlendMode: "difference" }}
-          >
-            סטודיו דיגיטלי עצמאי
-          </span>
+        {/* THE WORDMARK, ON THE SCREEN'S OWN CENTRE — not on the centre of the
+            column above it. Those two are not the same point: the line at the
+            top is taller than the row at the bottom, so a mark centred in what
+            is left over sits some forty pixels low. This layer spans the whole
+            section, so its middle is the middle.
+            The button hangs off the mark rather than off the screen, so it
+            keeps its distance from the letters at any size — `top-full` is the
+            wordmark's own bottom edge. */}
+        {/* pb-[20svh] lifts the pair by half of it — ten percent of the screen.
+            Not centred any more, and that is the point: the button hangs under
+            the wordmark here rather than sitting under the line at the top the
+            way the screens this is modelled on do, so a centred mark pushed the
+            lowest thing on the page down to 72% and split the empty half of the
+            screen in two. Theirs ends at 57% and leaves one unbroken void below
+            it, which is what reads as calm. Raising the pair buys that void
+            back without moving the button off the mark. */}
+        <div className="pointer-events-none absolute inset-0 flex select-none items-center justify-center px-6 pb-[20svh]">
+          {prefersReducedMotion ? (
+            <div ref={logoSlotRef} className="relative overflow-hidden">
+              <div className="absolute inset-x-0" style={{ top: "-23.0074%", height: "143.7962%" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/logo.png"
+                  alt="YEYE"
+                  className="h-full w-full object-contain"
+                  style={{ filter: "brightness(0)" }}
+                  draggable={false}
+                />
+              </div>
+            </div>
+          ) : (
+            <div ref={logoSlotRef} className="relative">
+              <div
+                ref={ctaSlotRef}
+                className="pointer-events-auto absolute inset-x-0 top-full flex justify-center"
+                style={{ mixBlendMode: "difference" }}
+              >
+                <Button
+                  href="/#contact"
+                  variant="primary"
+                  className="!border-white !bg-none !bg-white !text-black !shadow-none py-3.5 text-[16px]"
+                >
+                  קבעו פגישה
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     );
@@ -301,19 +353,13 @@ export default function HeroSection() {
         // still reaches this element and splats, with pointer-events-auto
         // opted back in specifically on the CTA button and the two
         // contact icons so they stay genuinely, unaffectedly clickable.
-        <div
-          className="absolute inset-x-0 bottom-0 -top-[48px] overflow-hidden"
-          // And the ink dissolves into the run-off rather than reaching its
-          // end. Masked on the wrapper, not in the shader: the fade is a
-          // property of where the canvas stops, not of how the fluid behaves,
-          // and the simulation stays untouched.
-          // The paper fades with it, which costs nothing — what is behind is
-          // the section's own white.
-          style={{
-            maskImage: "linear-gradient(to bottom, #000 calc(100% - 170px), transparent 100%)",
-            WebkitMaskImage: "linear-gradient(to bottom, #000 calc(100% - 170px), transparent 100%)",
-          }}
-        >
+        //
+        // No mask on the bottom. There was one for a round — a gradient over
+        // the last 170px so drifting ink dissolved instead of meeting the edge
+        // — but it faded the paper along with the ink, and what it actually
+        // read as was a grey wash across the foot of the screen. The run-off
+        // strip below stays; the room is what the ink needed, not the fade.
+        <div className="absolute inset-x-0 bottom-0 -top-[48px] overflow-hidden">
           <FluidInkReveal
             logoSrc="/images/logo.png"
             videoSrc="/videos/herobg.mp4"

@@ -51,8 +51,13 @@ const TIMELINE: readonly { progress: number; time: number }[] = [
   { progress: 0.59, time: CUE_PAPER_FLAT }, // hold: read "who I am"
   { progress: 0.66, time: CUE_ABOUT_OUT },
   { progress: 0.76, time: CUE_STATEMENT_IN }, // the empty stretch runs fast
-  { progress: 0.94, time: CLIP_SECONDS },
-  { progress: 1.0, time: CLIP_SECONDS }, // tail: frozen white, the line travels out
+  // Straight to the last frame, with no hold on it. There was one — six percent
+  // of the run, about two thirds of a screen, with the clip frozen on white
+  // while the closing line travelled out over it. It was the only moment in the
+  // section where the scroll moved and the picture did not, and on a page whose
+  // whole argument is that the hand drives the image, that reads as a stall.
+  // Now the sheet is still finishing as the line leaves.
+  { progress: 1.0, time: CLIP_SECONDS },
 ];
 
 function clamp01(value: number) {
@@ -238,7 +243,10 @@ export default function MobileServices() {
           <ProcessDiagram />
         </div>
 
-        <div ref={statementLayerRef} className="absolute inset-x-0 bottom-[11%] px-6 opacity-0">
+        {/* 22%, not 11%. The clip is 9:16 inside a screen that is taller than
+            that, so the bottom eighth of this panel is the letterbox — the line
+            was sitting half on the footage and half on white. */}
+        <div ref={statementLayerRef} className="absolute inset-x-0 bottom-[22%] px-6 opacity-0">
           <Statement />
         </div>
       </div>
@@ -249,7 +257,7 @@ export default function MobileServices() {
 function ServicesHeading({ className }: { className?: string }) {
   return (
     <h2
-      className={`font-display text-[30px] leading-[1.05] font-bold text-balance text-black ${className ?? ""}`}
+      className={`font-display text-m-title font-bold text-balance text-black ${className ?? ""}`}
     >
       מה אני עושה
     </h2>
@@ -269,10 +277,10 @@ function ServiceGrid({ className }: { className?: string }) {
             href={service.href}
             className="flex aspect-[4/3] flex-col justify-between rounded-lg border border-black/12 bg-white/70 p-3 text-right backdrop-blur-[2px]"
           >
-            <span className="font-display text-[13px] leading-none font-bold text-black/35">
+            <span className="font-display text-m-small leading-none font-bold text-black/35">
               {String(index + 1).padStart(2, "0")}
             </span>
-            <span className="font-display text-[15px] leading-[1.15] font-bold text-balance text-black">
+            <span className="font-display text-m-sub font-bold text-balance text-black">
               {service.title}
             </span>
           </Link>
@@ -302,16 +310,16 @@ const PROCESS_STEPS = [
 function ProcessDiagram() {
   return (
     <div className="text-center text-black">
-      <span className="font-display text-[11px] leading-none font-bold tracking-[0.28em] text-black/40 uppercase">
+      <span className="font-display text-m-small leading-none font-bold tracking-[0.28em] text-black/40 uppercase">
         process
       </span>
       <ol className="mt-6 space-y-5">
         {PROCESS_STEPS.map((step, index) => (
           <li key={step} className="flex items-baseline justify-center gap-3">
-            <span className="font-display text-[12px] leading-none font-bold text-black/30">
+            <span className="font-display text-m-small leading-none font-bold text-black/30">
               {String(index + 1).padStart(2, "0")}
             </span>
-            <span className="font-display text-[19px] leading-[1.15] font-bold text-black">
+            <span className="font-display text-m-sub font-bold text-black">
               {step}
             </span>
           </li>
@@ -324,7 +332,7 @@ function ProcessDiagram() {
 function Statement({ className }: { className?: string }) {
   return (
     <p
-      className={`text-right font-display text-[38px] leading-[1.12] font-normal text-black ${className ?? ""}`}
+      className={`text-right font-display text-m-statement font-normal text-black ${className ?? ""}`}
     >
       עיצוב מושך תשומת לב.
       <br />

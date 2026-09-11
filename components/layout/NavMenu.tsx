@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { useLenis } from "@/lib/motion/lenis";
+import { useDocked } from "@/lib/motion/heroDock";
+import { useIsMobile } from "@/lib/use-mobile";
 
 /**
  * THE HARD PART OF THIS MENU IS NOT THE MENU — it is where each link lands.
@@ -39,10 +42,35 @@ export default function NavMenu() {
   const rootRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const lenis = useLenis();
+  const isMobile = useIsMobile();
+  const docked = useDocked();
+
+  // WHICH CORNER THE MENU SITS IN, and it is not a preference — it is whether
+  // the wordmark is currently occupying the other one.
+  //
+  // At the top of the page on a phone the fixed logo is faded out, so the left
+  // corner is empty and the menu takes it: menu on the left, the hero's line on
+  // the right, one header row. The moment the logo docks in, the two would be
+  // on top of each other — so the menu crosses to the right as the logo arrives
+  // and they trade places instead of colliding.
+  //
+  // Desktop never moves. There the logo's corner is claimed the whole way down
+  // and the right side carries the section labels, so a menu that wandered
+  // would only ever be in the way.
+  const atRight = !isMobile || docked;
 
   // Same contract the logo across the page uses: a section declares itself dark
   // behind the chrome with data-nav-dark, and anything floating over it asks
   // whether one of those is under its own corner.
+  //
+  // NOT a blend, which is what this was for one round. Difference against the
+  // page would have let the ink wash over the menu the way it washes over the
+  // wordmark — but this element is `fixed` with a z-index, which puts it in a
+  // compositing layer of its own, and a blend cannot mix with a WebGL canvas
+  // sitting in a different layer. It silently does nothing and the white button
+  // stays white on a white page. The hero's own tagline and CTA blend correctly
+  // because they are INSIDE the hero, next to the canvas. Position is what
+  // decides this, not the blend mode.
   useEffect(() => {
     if (pathname !== "/") return;
     let frame: number | null = null;
@@ -110,7 +138,23 @@ export default function NavMenu() {
   if (pathname !== "/") return null;
 
   return (
-    <div ref={rootRef} className="fixed top-[22px] right-6 z-50">
+    // The rail spans both margins; the menu is placed inside it and crosses
+    // from one end to the other. `justify-end` is the LEFT under RTL — that
+    // reversal has caused three separate bugs on this site, so it is worth
+    // saying out loud rather than reading it as English.
+    // A layout animation rather than an animated `left`: framer measures where
+    // the block ended up and tweens it there, so the same code works whatever
+    // the button's width or the viewport's, and nothing has to be computed.
+    <div
+      className="pointer-events-none fixed inset-x-6 top-[22px] z-50 flex"
+      style={{ justifyContent: atRight ? "flex-start" : "flex-end" }}
+    >
+      <motion.div
+        ref={rootRef}
+        layout
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        className="pointer-events-auto relative"
+      >
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -132,7 +176,11 @@ export default function NavMenu() {
         // Always white on black text, on every section. The chrome inverts
         // because it sits directly on the page; a panel is its own surface and
         // inverting it too would make it flicker section to section.
-        <div className="absolute top-[calc(100%+12px)] right-0 min-w-[176px] rounded-2xl bg-white py-2 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.45)]">
+        // Hangs off whichever edge the menu is currently standing on, so it
+        // never opens off the side of the screen.
+        <div
+          className={`absolute top-[calc(100%+12px)] min-w-[176px] rounded-2xl bg-white py-2 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.45)] ${atRight ? "right-0" : "left-0"}`}
+        >
           {TARGETS.map((target) => (
             <button
               key={target.id}
@@ -155,6 +203,7 @@ export default function NavMenu() {
           </div>
         </div>
       )}
+      </motion.div>
     </div>
   );
 }

@@ -1,10 +1,12 @@
 import Navbar from "@/components/layout/Navbar";
+import NavMenu from "@/components/layout/NavMenu";
+import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
 import MobileServices from "@/components/sections/mobile/MobileServices";
 import ContactStage from "@/components/sections/ContactStage";
-import AboutSection from "@/components/sections/AboutSection";
-import ProjectsSection from "@/components/sections/ProjectsSection";
+import MobileAbout from "@/components/sections/mobile/MobileAbout";
+import MobileProjects from "@/components/sections/mobile/MobileProjects";
 import CTASection from "@/components/sections/CTASection";
 
 /**
@@ -19,16 +21,18 @@ export default function MobileHome() {
   return (
     <>
       <Navbar />
+      <NavMenu />
+      <WhatsAppButton />
       <HeroSection />
       {/* No StatementSection here. It exists to carry the closing line on the
           versions whose paper sequence cannot, and this one ends on that line
           itself — rendering both would show the sentence twice. */}
       <MobileServices />
-      <AboutSection />
+      <MobileAbout />
       {/* Contact stage after "who I am" and before the work — see the note in
           app/page.tsx. */}
       <ContactStage />
-      <ProjectsSection />
+      <MobileProjects />
       <CTASection />
       <Footer light />
     </>

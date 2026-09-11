@@ -14,7 +14,13 @@ interface FooterProps {
 export default function Footer({ light = false }: FooterProps) {
   return (
     <footer className={cn("border-t", light ? "border-black/8" : "border-white/6")}>
-      <div className="mx-auto flex max-w-[1200px] flex-col items-center gap-6 px-6 py-8 text-center md:grid md:h-20 md:grid-cols-3 md:items-center md:py-0 md:text-inherit">
+      {/* On a phone this is a stack, and the order it stacks in is not the
+          order it is written in. The DOM has the social links first because
+          under RTL that puts them in the rightmost column of the desktop grid —
+          but stacked, that opens the footer with two icons and buries the mark
+          underneath them. `order-first` on the logo fixes the stack without
+          touching the row. */}
+      <div className="mx-auto flex max-w-[1200px] flex-col items-center gap-5 px-6 py-10 text-center md:grid md:h-20 md:grid-cols-3 md:items-center md:gap-6 md:py-0 md:text-inherit">
         {/* Social — first in DOM sits rightmost under dir="rtl" */}
         <div className="flex items-center gap-5">
           <Link
@@ -44,7 +50,7 @@ export default function Footer({ light = false }: FooterProps) {
         </div>
 
         {/* Logo — center */}
-        <div className="flex flex-col items-center gap-1">
+        <div className="order-first flex flex-col items-center gap-1 md:order-none">
           <Image
             src="/images/logo.png"
             alt="YEYE"
@@ -65,7 +71,7 @@ export default function Footer({ light = false }: FooterProps) {
         </div>
 
         {/* Copyright */}
-        <div className={cn("font-display text-[13px]", light ? "text-black/35" : "text-white/35")}>
+        <div className={cn("font-display text-m-small", light ? "text-black/35" : "text-white/35")}>
           © 2026 YEYE Digital. כל הזכויות שמורות.
         </div>
       </div>
