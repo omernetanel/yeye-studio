@@ -85,13 +85,28 @@ const CFG = {
 // the canvas still renders the whole area, and ink that drifts down keeps
 // settling and smearing on its own all the way to the bottom.
 //
-// Kept deliberately narrow — just a hair below the CTA row's own bottom
-// edge — so the ink stays live across the entire composition, the buttons
-// included, and only the last few pixels before the hard edge are held
-// back. It was 190px when the Hero ran a full viewport taller; at the
-// current one-screen height that reached up into the wordmark itself and
-// killed the interaction over the bottom of the logo.
-const INTERACTIVE_BOTTOM_MARGIN_PX = 24;
+// 150, and it is not arbitrary: the Hero now carries a 170px run-off strip
+// below its bottom row, so this band sits ENTIRELY INSIDE that strip. Live
+// interaction still reaches every pixel of the composition — the line, the
+// wordmark, the buttons, the row at the foot — and stops only over ground
+// that holds nothing.
+//
+// It was 24, then 20. Both were too narrow to do the job they were asked for:
+// the ink that gets cut at the bottom edge is not ink that was made there, it
+// is ink that DRIFTED there, and a margin of twenty pixels means a finger
+// twenty-one pixels above the edge still puts a fresh splat close enough to be
+// clipped a moment later. A band this wide means anything reaching the edge has
+// travelled 150px to get there and has thinned out on the way.
+//
+// This reduces the hard cut rather than removing it. A hard drag straight down
+// can still carry ink into the band faster than it dissipates. Removing it
+// outright needs either a fade at the edge — tried, and it read as a grey wash
+// across the foot of the screen — or the simulation itself dissipating faster
+// near the bottom, which is a change to the shader.
+//
+// It was 190px when the Hero ran a full viewport taller; at that height it
+// reached up into the wordmark and killed the interaction over the logo.
+const INTERACTIVE_BOTTOM_MARGIN_PX = 150;
 
 const BASE_VERTEX_SHADER = `#version 300 es
 precision highp float;

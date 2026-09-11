@@ -126,7 +126,10 @@ export default function Navbar() {
     <motion.div
       initial={false}
       animate={{ opacity: docked ? 1 : 0 }}
-      transition={{ duration: 0.2 }}
+      // Long enough to read as arriving rather than switching on, and on the
+      // same curve and duration as the menu crossing the header to make room
+      // for it — the two are one movement, so they have to be one easing.
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       className="fixed left-6 top-[22px] z-50"
     >
       <Link href="/" tabIndex={docked ? 0 : -1} aria-label="YEYE">
@@ -136,7 +139,11 @@ export default function Navbar() {
           alt="YEYE"
           width={8200}
           height={3500}
-          className="h-9 w-auto object-contain transition-[filter] duration-200"
+          // 22px, matched to the menu's own height on the other side of the
+          // row. At 36 the mark was half again as tall as the word opposite it
+          // and the two read as two different pieces of furniture rather than
+          // as one header.
+          className="h-[22px] w-auto object-contain transition-[filter] duration-200"
           style={{ filter: LIGHT_FILTER }}
           priority
         />

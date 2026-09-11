@@ -4,6 +4,7 @@ import MobileHome from "@/components/home/MobileHome";
 import { isMobileUserAgent } from "@/lib/device";
 import Navbar from "@/components/layout/Navbar";
 import NavMenu from "@/components/layout/NavMenu";
+import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
 import StatementSection from "@/components/sections/StatementSection";
@@ -41,6 +42,7 @@ export default async function Home() {
         <HomeSwitch serverIsMobile={serverIsMobile} mobile={<MobileHome />}>
           <Navbar />
           <NavMenu />
+          <WhatsAppButton />
           <HeroSection />
           <ServicesSection />
           {/* Sits between the paper sequence and the contact stage rather than

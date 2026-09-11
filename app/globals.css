@@ -22,6 +22,51 @@
   --text-hero--line-height: 1.1;
   --text-section-title: clamp(2.25rem, 4.5vw, 3.5rem);
   --text-section-title--line-height: 1.2;
+
+  /*
+   * THE PHONE'S TYPE SCALE — five sizes, and every piece of text on a phone
+   * has to be one of them.
+   *
+   * It exists because the page had eight body sizes across six sections:
+   * 17px in "who I am", 16 in the contact block, 18 in the closing CTA — three
+   * different sizes doing the identical job. A difference that small is not
+   * read as variety, it is read as noise: too small to be a decision, too large
+   * to be the same. Sections were each built on their own and each picked their
+   * own numbers, and the result feels unresolved without anyone being able to
+   * point at what is wrong.
+   *
+   * `m-` for mobile: these are the base sizes, and the desktop keeps its own
+   * fluid clamps above the breakpoint.
+   */
+  --text-m-display: 56px;
+  --text-m-display--line-height: 1.02;
+  --text-m-title: 40px;
+  --text-m-title--line-height: 1.12;
+  /*
+   * A step between the two, and it has a job rather than being a convenience:
+   * a long Hebrew sentence that has to hold two lines on a 327px column. At
+   * the title size it breaks to four, and a closing statement in four lines
+   * stops being a statement.
+   */
+  --text-m-lead: 25px;
+  --text-m-lead--line-height: 1.2;
+
+  /*
+   * And one above it, for a statement whose lines are short enough to take the
+   * extra size. "עיצוב מושך תשומת לב." is twenty characters and holds one line
+   * at 31; the closing line in "who I am" is forty-eight and breaks to three.
+   * Same job, different lengths — which is the one honest reason for two steps
+   * this close together.
+   */
+  --text-m-statement: 31px;
+  --text-m-statement--line-height: 1.5;
+
+  --text-m-sub: 21px;
+  --text-m-sub--line-height: 1.25;
+  --text-m-body: 16px;
+  --text-m-body--line-height: 1.65;
+  --text-m-small: 13px;
+  --text-m-small--line-height: 1.5;
 }
 
 :root {
@@ -51,8 +96,13 @@ html {
      the page. Dragging on the ink at the top of the hero was reaching the
      scroller before the canvas did and arming a page refresh — the single
      biggest reason the page felt like it moved under the finger. Nothing else
-     on the site depends on either behaviour. */
-  overscroll-behavior-y: contain;
+     on the site depends on either behaviour.
+     `none` and not `contain`: contain only stops the scroll CHAINING to a
+     parent, and left the pull itself alive — on Android the hero could still be
+     dragged down far enough to expose the black behind the canvas with the
+     browser's refresh spinner over it. none is the value that also kills the
+     overscroll effect on the element itself. */
+  overscroll-behavior-y: none;
 
   /* No scrollbar. The page is a sequence of full-bleed panels and a strip of
      browser chrome down the edge of every one of them is the one thing on
@@ -74,7 +124,7 @@ body {
   /* Also on body, not just html: on iOS the pull-to-refresh gesture is armed
      from whichever of the two is actually the scrolling element, and which one
      that is depends on the smooth-scroll layer. Setting both covers it. */
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: none;
 }
 
 ::selection {
@@ -204,6 +254,216 @@ body {
      heading is plain black while it waits rather than flashing the gradient's
      resting position first. */
   animation: heading-shine 2.7s linear 0.5s 1 both;
+}
+
+/* The same sweep as .heading-shine, on the grey half of the closing line
+   rather than on black type.
+   The band is lighter than the letters and darker than the page: on grey a
+   white band would read as a hole punched through the words, and anything
+   darker than the base is a shadow, not a gloss. Both ends of the gradient are
+   the base grey because the background tiles — a band that reached the edge
+   would reappear at the seam and put a second glint on the text.
+   The animation is held off until the line is actually on screen: this is the
+   last section on the page, and on its own clock the glint would have come and
+   gone before anyone got there. */
+.heading-shine-accent {
+  background-image: linear-gradient(105deg, #4a4a4a 40%, #c9c9c9 50%, #4a4a4a 60%);
+  background-size: 300% 100%;
+  background-position: 92% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ONE pass, where .heading-shine does two. The services heading gets a double
+   glint because it is the opening of a long pinned run and has the room for it;
+   this is the last line on the page, and a second sweep over a sentence the
+   reader has already finished reads as a loop rather than as a highlight. */
+@keyframes heading-shine-once {
+  from {
+    background-position: 92% 0;
+  }
+  to {
+    background-position: 8% 0;
+  }
+}
+
+.heading-shine-accent.is-shining {
+  /* Linear on purpose: the band only crosses the words in the middle of its
+     travel, so an ease would spend its slow ends off the text and rip the
+     glint through the letters in a fraction of the runtime. */
+  animation: heading-shine-once 1.5s linear 0.35s 1 both;
+}
+
+/* THE FOUR PROCESS ICONS, each moving the way the thing it draws would.
+   A single shared bob on all of them would read as a page that wobbles; what
+   makes this land is that the rocket flies, the brackets breathe, and the
+   speech bubbles answer each other.
+   Translate-only wherever possible: a CSS transform on an SVG child is resolved
+   against the user-space origin, not the element, so anything with a scale or a
+   rotate needs transform-box: fill-box or it pivots off the top-left of the
+   whole drawing. */
+@keyframes icon-rocket {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-9px);
+  }
+}
+
+@keyframes icon-flame {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scaleY(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1.35);
+  }
+}
+
+@keyframes icon-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* The three marks on the sheet draw themselves, one after another, and then
+   clear — a brush working, rather than a picture of one. The dash is longer
+   than any of the strokes, so an offset of that length hides it completely. */
+@keyframes icon-paint {
+  0% {
+    stroke-dashoffset: 64;
+  }
+  35%,
+  72% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 64;
+  }
+}
+
+/* The brush works DOWN the sheet and back, which is the motion of painting —
+   the earlier version nudged diagonally on the spot and read as a brush lying
+   on a page rather than one being used. Slower than the strokes it is drawing,
+   so the two do not lock into a visible rhythm. */
+@keyframes icon-brush {
+  0%,
+  100% {
+    transform: translateY(-17px);
+  }
+  50% {
+    transform: translateY(17px);
+  }
+}
+
+.icon-paint-1,
+.icon-paint-2,
+.icon-paint-3 {
+  stroke-dasharray: 64;
+  animation: icon-paint 3.6s ease-in-out infinite;
+}
+
+.icon-paint-2 {
+  animation-delay: 0.4s;
+}
+
+.icon-paint-3 {
+  animation-delay: 0.8s;
+}
+
+.icon-brush {
+  animation: icon-brush 4.4s ease-in-out infinite;
+}
+
+@keyframes icon-bracket-out {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes icon-bracket-in {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-5px);
+  }
+}
+
+@keyframes icon-reply {
+  0%,
+  55% {
+    opacity: 0.25;
+    transform: translateY(3px);
+  }
+  70%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.icon-rocket {
+  animation: icon-rocket 3.2s ease-in-out infinite;
+}
+
+.icon-flame {
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: icon-flame 0.45s ease-in-out infinite;
+}
+
+.icon-drift {
+  animation: icon-drift 4.5s ease-in-out infinite;
+}
+
+.icon-bracket-out {
+  animation: icon-bracket-out 2.6s ease-in-out infinite;
+}
+
+.icon-bracket-in {
+  animation: icon-bracket-in 2.6s ease-in-out infinite;
+}
+
+.icon-reply {
+  animation: icon-reply 2.8s ease-in-out infinite;
+}
+
+/* The global reduce rule further down already clamps every animation to a
+   hundredth of a millisecond, which would leave the painted strokes frozen
+   mid-draw at whatever offset the first frame lands on. These have to be turned
+   off outright so they render complete. */
+@media (prefers-reduced-motion: reduce) {
+  .icon-rocket,
+  .icon-flame,
+  .icon-drift,
+  .icon-bracket-out,
+  .icon-bracket-in,
+  .icon-reply,
+  .icon-brush {
+    animation: none;
+  }
+
+  .icon-paint-1,
+  .icon-paint-2,
+  .icon-paint-3 {
+    animation: none;
+    stroke-dasharray: none;
+  }
 }
 
 .no-scrollbar {

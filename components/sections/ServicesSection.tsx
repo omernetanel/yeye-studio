@@ -388,7 +388,24 @@ function ProcessDiagram({ headingRef }: { headingRef: RefObject<HTMLHeadingEleme
 
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/whatidopng.png"
+          // whatido-alpha.png, keyed from whatidopng.png — which ships as rgb24,
+          // a solid white background with the pencil work on top of it, and so
+          // covered the paper instead of being drawn on it.
+          //
+          // A BLEND CANNOT FIX THAT HERE, which is why this is a second file
+          // rather than a class. darken and multiply both need to see the video
+          // behind them, and this image sits inside a layer whose opacity is
+          // animated — any opacity below 1 opens a stacking context, and a blend
+          // only ever mixes within its own. It was blending against the layer's
+          // transparent backdrop and doing nothing at all.
+          //
+          // The key is by luminance at a tight threshold (0.97, tolerance 0.03),
+          // so only near-white goes: the corner hatching, the construction
+          // sketches and every grey in the drawing survive untouched.
+          // ffmpeg -i whatidopng.png -vf
+          //   "format=rgba,lumakey=threshold=0.97:tolerance=0.03:softness=0.12"
+          //   whatido-alpha.png
+          src="/images/whatido-alpha.png"
           alt=""
           width={1920}
           height={1080}
@@ -415,75 +432,120 @@ const STATIONS = [
   {
     number: "01",
     cx: 960,
-    titleY: 250,
+    titleY: 305,
+    iconDy: -20,
     title: "מבינים את העסק",
     lines: ["לפני הכול יושבים ומדברים: מה המטרה, מי הקהל,", "ומה כבר לא עובד. אתר טוב מתחיל בהבנה."],
   },
   {
     number: "02",
-    cx: 1560,
-    titleY: 500,
+    cx: 1625,
+    titleY: 616,
+    iconDy: -10,
     title: "מעצבים את החוויה",
     lines: ["כל מסך, כל מרווח וכל צבע נבחרים בכוונה —", "שהגולש ידע לאן ללכת, לא רק שיהיה לו יפה."],
   },
   {
     number: "03",
     cx: 960,
-    titleY: 800,
+    titleY: 928,
+    iconDy: 0,
     title: "בונים את זה נכון",
     lines: ["קוד נקי ומהיר שבנוי להחזיק שנים, בלי הפתעות", "כשתרצו לשנות או להוסיף משהו."],
   },
   {
     number: "04",
-    cx: 380,
-    titleY: 500,
+    cx: 295,
+    titleY: 616,
+    iconDy: -9,
     title: "עולים לאוויר",
     lines: ["ביום ההשקה אני שם, וגם הרבה אחריו —", "ממשיכים לתקן, לשפר ולגדול יחד."],
   },
 ] as const;
 
 // The arrows, as arcs of ONE ellipse — the one that passes through all four
-// station centres, centred between them at (960, 525) with radii 580 and 275.
+// station centres, centred between them at (960, 616) with radii 665 and 311.
 // Each runs from 32 degrees past one station to 32 short of the next, so they
 // read as a single circle broken four times rather than four curves that happen
 // to line up. Clockwise throughout, which is why every sweep flag is 1.
 const ARROWS = [
-  "M 1267.3 291.8 A 580 275 0 0 1 1451.8 379.3",
-  "M 1451.8 670.7 A 580 275 0 0 1 1267.3 758.2",
-  "M 652.7 758.2 A 580 275 0 0 1 468.2 670.7",
-  "M 468.2 379.3 A 580 275 0 0 1 652.7 291.8",
+  "M 1312.4 352.4 A 665 311 0 0 1 1523.9 451.4",
+  "M 1523.9 781.6 A 665 311 0 0 1 1312.4 880.6",
+  "M 607.6 880.6 A 665 311 0 0 1 396.1 781.6",
+  "M 396.1 451.4 A 665 311 0 0 1 607.6 352.4",
 ];
 
 // One icon per station, drawn around its own origin so a station only has to
 // say where its centre is. Stroked, not filled, at the same weight as the
 // arrows — the plate under them is pencil, and a solid shape would read as
 // pasted onto the page rather than drawn on it.
-const ICONS: Record<string, string[]> = {
-  // Two speech bubbles: a conversation, which is what the first stage is.
+//
+// EACH ONE MOVES THE WAY THE THING IT DRAWS WOULD, which is the difference
+// between four icons and four animations: the rocket flies and its flame
+// flickers, the reply bubble answers the first one, the brackets breathe apart,
+// the browser drifts. One shared bob across all four would read as a page that
+// wobbles. The classes are defined in globals.css, where the reduced-motion
+// switch turns every one of them off in a single rule.
+type IconPart = { d: string; cls?: string };
+
+const ICONS: Record<string, IconPart[]> = {
+  // Two speech bubbles: a conversation, which is what the first stage is. The
+  // second one arrives late and holds, the way a reply does.
   "01": [
-    "M -42 -30 h 54 a 10 10 0 0 1 10 10 v 26 a 10 10 0 0 1 -10 10 h -32 l -16 14 v -14 h -6 a 10 10 0 0 1 -10 -10 v -26 a 10 10 0 0 1 10 -10 z",
-    "M 4 6 h 32 a 9 9 0 0 1 9 9 v 15 a 9 9 0 0 1 -9 9 h -5 v 12 l -13 -12 h -14 a 9 9 0 0 1 -9 -9 v -15 a 9 9 0 0 1 9 -9 z",
+    {
+      d: "M -42 -30 h 54 a 10 10 0 0 1 10 10 v 26 a 10 10 0 0 1 -10 10 h -32 l -16 14 v -14 h -6 a 10 10 0 0 1 -10 -10 v -26 a 10 10 0 0 1 10 -10 z",
+    },
+    {
+      d: "M 4 6 h 32 a 9 9 0 0 1 9 9 v 15 a 9 9 0 0 1 -9 9 h -5 v 12 l -13 -12 h -14 a 9 9 0 0 1 -9 -9 v -15 a 9 9 0 0 1 9 -9 z",
+      cls: "icon-reply",
+    },
   ],
-  // A browser window with a wireframe in it.
+  // A sheet being painted on. The three marks draw themselves in turn and then
+  // clear, and the brush works along with them — design as something happening,
+  // not a finished page.
   "02": [
-    "M -46 -34 h 92 a 6 6 0 0 1 6 6 v 56 a 6 6 0 0 1 -6 6 h -92 a 6 6 0 0 1 -6 -6 v -56 a 6 6 0 0 1 6 -6 z",
-    "M -52 -16 h 104",
-    "M -36 -4 h 30 v 28 h -30 z",
-    "M 6 -2 h 38",
-    "M 6 10 h 38",
-    "M 6 22 h 24",
+    { d: "M -34 -44 h 58 a 7 7 0 0 1 7 7 v 74 a 7 7 0 0 1 -7 7 h -58 a 7 7 0 0 1 -7 -7 v -74 a 7 7 0 0 1 7 -7 z" },
+    { d: "M -22 -22 q 22 -11 44 0", cls: "icon-paint-1" },
+    { d: "M -22 0 q 22 -11 44 0", cls: "icon-paint-2" },
+    { d: "M -22 22 q 14 -9 28 -3", cls: "icon-paint-3" },
+    // A real brush rather than a line with a blob on it: a long handle that
+    // tapers, the metal ferrule, and bristles that come to a point. Three
+    // shapes is the fewest that reads as a brush at this size — two reads as a
+    // pencil.
+    { d: "M 32 -54 L 40 -52 L 28 -4 L 20 -6 Z", cls: "icon-brush" },
+    { d: "M 20 -6 L 28 -4 L 26 8 L 18 6 Z", cls: "icon-brush" },
+    { d: "M 18 6 L 26 8 L 20 30 Z", cls: "icon-brush" },
   ],
-  // Angle brackets and a slash.
-  "03": ["M -18 -26 L -46 0 L -18 26", "M 18 -26 L 46 0 L 18 26", "M 8 -32 L -8 32"],
-  // A rocket, mid-launch.
+  // A browser window with a wireframe in it — the thing that actually gets
+  // built. It carried stage two until the sheet took that over.
+  "03": [
+    {
+      d: "M -46 -34 h 92 a 6 6 0 0 1 6 6 v 56 a 6 6 0 0 1 -6 6 h -92 a 6 6 0 0 1 -6 -6 v -56 a 6 6 0 0 1 6 -6 z",
+    },
+    { d: "M -52 -16 h 104" },
+    { d: "M -36 -4 h 30 v 28 h -30 z" },
+    { d: "M 6 -2 h 38" },
+    { d: "M 6 10 h 38" },
+    { d: "M 6 22 h 24" },
+  ],
+  // A rocket, mid-launch: the body rides up and down and the three exhaust
+  // ticks flicker on their own, much faster clock.
   "04": [
-    "M 0 -46 C 16 -28 22 -6 22 12 L 22 26 L -22 26 L -22 12 C -22 -6 -16 -28 0 -46 Z",
-    "M -22 6 L -38 30 L -22 26",
-    "M 22 6 L 38 30 L 22 26",
-    "M -10 32 L -6 44",
-    "M 0 32 L 0 48",
-    "M 10 32 L 6 44",
+    { d: "M 0 -46 C 16 -28 22 -6 22 12 L 22 26 L -22 26 L -22 12 C -22 -6 -16 -28 0 -46 Z" },
+    { d: "M -22 6 L -38 30 L -22 26" },
+    { d: "M 22 6 L 38 30 L 22 26" },
+    { d: "M -10 32 L -6 44", cls: "icon-flame" },
+    { d: "M 0 32 L 0 48", cls: "icon-flame" },
+    { d: "M 10 32 L 6 44", cls: "icon-flame" },
   ],
+};
+
+/** The motion carried by the icon as a whole, rather than by one of its parts. */
+const ICON_MOTION: Record<string, string> = {
+  "01": "icon-drift",
+  "02": "",
+  "03": "icon-drift",
+  "04": "icon-rocket",
 };
 
 function ProcessStations() {
@@ -508,6 +570,44 @@ function ProcessStations() {
         >
           <path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="currentColor" strokeWidth="1.6" />
         </marker>
+
+        {/* THE HALO, as a filter rather than a stroke.
+            A thick white stroke under the fill reads as exactly that — a hard
+            outline traced around every letter, with its own edge. This takes
+            the type's alpha, spreads it a little, blurs it, and floods the
+            result white: a soft field that fades out with no edge of its own,
+            which is what lifts the words off a pencil drawing without
+            announcing itself.
+            dilate before blur is what gives it body. Blur alone puts the glow's
+            half-strength right at the glyph's own edge, so the letters end up
+            sitting in a grey fringe instead of a clean white one. */}
+        <filter id="process-halo" x="-25%" y="-25%" width="150%" height="150%">
+          <feMorphology in="SourceAlpha" operator="dilate" radius="3.5" result="spread" />
+          <feGaussianBlur in="spread" stdDeviation="7" result="soft" />
+          {/* NO feFlood. A flood fills the filter's whole region and then
+              relies on a composite to cut it back to the blur — and when that
+              clip does not take, what is left is a pale rectangle across the
+              entire drawing, which is exactly what happened. This recolours the
+              blurred alpha in place instead: the channel transfer forces RGB to
+              white while leaving alpha alone, so the halo can only ever exist
+              where the type does. The A ramp is what makes it translucent. */}
+          <feComponentTransfer in="soft" result="halo">
+            <feFuncR type="linear" slope="0" intercept="1" />
+            <feFuncG type="linear" slope="0" intercept="1" />
+            <feFuncB type="linear" slope="0" intercept="1" />
+            {/* slope above 1 on purpose: alpha clamps at 1, so the inner part
+                of the blur saturates to solid white and only the outer edge
+                keeps its falloff. That is what a halo needs against a drawing —
+                opaque where it is clearing the line work, soft where it meets
+                the paper. At 0.9 the whole thing was translucent and the pencil
+                read straight through the type. */}
+            <feFuncA type="linear" slope="2.1" intercept="0" />
+          </feComponentTransfer>
+          <feMerge>
+            <feMergeNode in="halo" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
 
       <g className="text-black/45" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
@@ -519,34 +619,50 @@ function ProcessStations() {
       {/* Each station stacks on its own centre: icon, numeral, heading, copy.
           direction rtl and a middle anchor because the copy is Hebrew and every
           station is centred on itself, not set in a column. */}
-      <g direction="rtl" textAnchor="middle">
+      {/* The halo is on the whole block rather than on each piece: applied per
+          element, every glyph would glow onto its neighbour and the words would
+          sit in a bank of white. One filter over the group means the halo is
+          computed from the block's silhouette. */}
+      <g direction="rtl" textAnchor="middle" filter="url(#process-halo)">
         {STATIONS.map((station) => (
           <g key={station.number}>
-            <g
-              transform={`translate(${station.cx} ${station.titleY - 168})`}
-              className="text-black/45"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              {ICONS[station.number].map((d) => (
-                <path key={d} d={d} />
-              ))}
-              {station.number === "04" && <circle cx="0" cy="-8" r="9" />}
-              {station.number === "02" && (
-                <g strokeWidth="0" fill="currentColor">
-                  <circle cx="-40" cy="-25" r="2.6" />
-                  <circle cx="-30" cy="-25" r="2.6" />
-                  <circle cx="-20" cy="-25" r="2.6" />
-                </g>
-              )}
+            {/* TWO GROUPS, AND THAT IS THE POINT OF THEM.
+                The outer one carries the position as an SVG `transform`
+                attribute; the inner one carries the animation, which is a CSS
+                `transform` property. Put on one element they do not combine —
+                the CSS property wins outright and the attribute is discarded,
+                so every animated icon lost its placement and stacked up in the
+                corner of the drawing at 0,0.
+                iconDy on the outer one corrects for the artwork: the four icons
+                are not the same height, so one shared offset left the rocket
+                sitting closer to its numeral than the browser window was to
+                its. Measured per station, so all four gaps come out the same. */}
+            <g transform={`translate(${station.cx} ${station.titleY - 246 + station.iconDy})`}>
+              <g
+                className={`text-black/45 ${ICON_MOTION[station.number]}`}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                {ICONS[station.number].map((part) => (
+                  <path key={part.d} d={part.d} className={part.cls} />
+                ))}
+                {station.number === "04" && <circle cx="0" cy="-8" r="9" />}
+                {station.number === "03" && (
+                  <g strokeWidth="0" fill="currentColor">
+                    <circle cx="-40" cy="-25" r="2.6" />
+                    <circle cx="-30" cy="-25" r="2.6" />
+                    <circle cx="-20" cy="-25" r="2.6" />
+                  </g>
+                )}
+              </g>
             </g>
 
             <text
               x={station.cx}
-              y={station.titleY - 62}
+              y={station.titleY - 92}
               className="fill-black/25 font-display text-[76px] font-bold"
             >
               {station.number}
@@ -558,7 +674,7 @@ function ProcessStations() {
               <text
                 key={line}
                 x={station.cx}
-                y={station.titleY + 52 + index * 34}
+                y={station.titleY + 61 + index * 34}
                 className="fill-black/55 font-body text-[24px]"
               >
                 {line}
