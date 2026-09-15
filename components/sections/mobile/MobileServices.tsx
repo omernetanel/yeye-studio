@@ -439,21 +439,26 @@ function ProcessStage({
   const number = String(index + 1).padStart(2, "0");
   return (
     <div ref={stageRef} className={`text-center ${className ?? ""}`}>
-      <svg viewBox="-60 -60 120 120" aria-hidden="true" className="h-24 w-24 overflow-visible text-black/55">
-        <g
-          className={ICON_MOTION[number]}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          {ICONS[number].map((part) => (
-            <path key={part.d} d={part.d} className={part.cls} />
-          ))}
-          <IconExtras number={number} />
-        </g>
-      </svg>
+      {/* A solid black disc with the drawing in white, heavy enough to hold its
+          own on the crumpled paper. A thin grey outline straight on the sheet
+          read as clip-art beside the site's heavy black type. */}
+      <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-black text-white">
+        <svg viewBox="-60 -60 120 120" aria-hidden="true" className="h-12 w-12 overflow-visible">
+          <g
+            className={ICON_MOTION[number]}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            {ICONS[number].map((part) => (
+              <path key={part.d} d={part.d} className={part.cls} />
+            ))}
+            <IconExtras number={number} />
+          </g>
+        </svg>
+      </div>
       <span className="mt-7 block font-display text-m-small font-bold tracking-[0.2em] text-black/35">{number}</span>
       <h3 className="paper-halo mt-2 font-display text-m-statement font-bold text-balance text-black">
         {STAGE_TITLES[index]}
