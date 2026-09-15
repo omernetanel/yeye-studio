@@ -554,6 +554,17 @@ body {
   opacity: 0;
 }
 
+/* AND THEY STAND BACK, BY HOW FAR THEY ARE FROM THE MIDDLE. The scale is not a
+   state, it is a function of position: SwipeCarousel writes --card-scale on
+   every slide from its distance to the centre of the track on each scroll
+   frame, so the card being dragged away shrinks as it goes and the one arriving
+   grows into its place, under the finger rather than after it.
+   No transition here on purpose — a transition on a value that is already
+   following the finger is lag. */
+.border-glow {
+  transform: scale(var(--card-scale, 1));
+}
+
 /* EXCEPT FOR A REFLECTION OFF THE ONE IN THE MIDDLE.
  *
  * Every card's disc runs the same twelve-second animation and they all start

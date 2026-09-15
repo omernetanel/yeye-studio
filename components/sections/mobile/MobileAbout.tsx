@@ -438,7 +438,12 @@ export default function MobileAbout() {
               to: "01" on a card that arrives on its own says the reader has
               missed something, where the dots under it say how many there are
               without numbering anything. */}
-          <SwipeCarousel className="mt-6" slideWidth="72vw" tone="dark" centred>
+          {/* THE ROW LOOPS, which is also what puts the first claim in the
+              middle with a card either side of it: in a loop nothing is first,
+              so the one being read always has a neighbour on both sides. The
+              claims stay in their own order and the dots count them straight —
+              the reader opens on the first, and the first dot is lit. */}
+          <SwipeCarousel className="mt-6" slideWidth="72vw" tone="dark" centred loop>
             {aboutFacts.map((fact) => (
               <BorderGlowCard key={fact.title} className="h-full px-5 py-8 text-center">
                 <h4 className="font-display text-m-sub font-bold text-balance text-white">
