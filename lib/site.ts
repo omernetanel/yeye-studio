@@ -22,6 +22,14 @@ export const SITE_DESCRIPTION = "אני בונה אתרים ומערכות שמ�
  */
 export const SITE_BACKGROUND = "#ffffff";
 
+/**
+ * The same surface while a black section fills the top of the screen. The
+ * navbar swaps the browser chrome to this and back as those sections pass, so
+ * the strip behind the clock follows the page instead of staying white over
+ * black. It has to match the sections' own black exactly.
+ */
+export const SITE_BACKGROUND_DARK = "#000000";
+
 /** Title for any page that is not the homepage. */
 export function pageTitle(label: string) {
   return `${label} | ${SITE_NAME}`;
