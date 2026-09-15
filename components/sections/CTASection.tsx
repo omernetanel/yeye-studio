@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import EndBalloons from "@/components/sections/cta/EndBalloons";
 
 const particles = [...Array(16)].map((_, i) => ({
   size: i % 3 === 0 ? 3 : 2,
@@ -88,6 +89,8 @@ export default function CTASection() {
         aria-hidden="true"
         className="relative z-0 mb-24 block h-[250px] w-full rounded-2xl object-cover object-left-bottom md:absolute md:inset-0 md:mb-0 md:h-full md:w-full md:origin-bottom-left md:translate-x-[3%] md:scale-[0.82] md:object-cover md:object-left-bottom md:rounded-none"
       />
+
+      <EndBalloons />
 
       {/* The copy, held to a 620px column on the right — the clip runs behind
           the whole section, and this is what keeps the type off the balloons,

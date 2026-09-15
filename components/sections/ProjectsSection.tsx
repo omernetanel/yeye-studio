@@ -3,7 +3,6 @@
 import { useLayoutEffect, useRef } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import Button from "@/components/ui/Button";
-import FallingBalloon from "@/components/sections/projects/FallingBalloon";
 import CylinderGallery, { type GalleryItem } from "@/components/ui/CylinderGallery";
 import { projects } from "@/lib/projects";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
@@ -191,7 +190,6 @@ export default function ProjectsSection() {
 
   return (
     <section id="projects" className="relative pb-20 md:pb-24">
-      <FallingBalloon />
       <div
         ref={stageRef}
         style={prefersReducedMotion ? undefined : { height: `${(1 + PIN_VH) * 100}svh` }}

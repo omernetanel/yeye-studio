@@ -42,7 +42,13 @@ const VIDEO_FPS = 30;
 // position first (confirmed: a too-small value here reads as the images
 // getting clipped at the top the moment it locks). Not part of the
 // pinned range itself — purely a scroll distance to cover first.
-const SPACER_PX = 35;
+// 8 rather than 35: with the heading zone's own top padding now gone, this is
+// the entire distance between the end of the hero's ink run-off and the top of
+// this section's heading, and a hair of it is all that gap wants. It still has
+// its original job — the panel is not sticky for these first pixels, so it
+// arrives rather than locking the instant the section appears — it just does it
+// over a gap you can no longer see.
+const SPACER_PX = 8;
 
 
 // This single clip now carries TWO overlaid content phases across its
@@ -161,7 +167,13 @@ const ABOUT_SHIFT_Y_PX = -PANEL_STICKY_TOP_PX;
 // can never be set below its own padding sum, so a fixed pt/pb class
 // would silently floor the "collapse to 0" animation at that sum instead
 // of actually reaching 0.
-const HEADING_ZONE_PADDING_TOP_PX = 54;
+// 0, and it used to be 54. The hero above this ends with a 170px strip of blank
+// page that exists only so the ink has somewhere to dissolve instead of meeting
+// a hard edge — that strip is untouchable. Everything after it was another 89
+// pixels of white on top of it, and the two together read as a hole between the
+// opening screen and this one. The heading now starts as soon as the ink's own
+// run-off is over, with SPACER_PX the only thing between them.
+const HEADING_ZONE_PADDING_TOP_PX = 0;
 const HEADING_ZONE_PADDING_BOTTOM_PX = 8;
 
 // Scroll no longer maps straight onto the clip's timeline. At each of these
