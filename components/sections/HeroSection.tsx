@@ -2,9 +2,13 @@
 
 import { Mail } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import Button from "@/components/ui/Button";
-import FluidInkReveal from "@/components/sections/hero/FluidInkReveal";
+import FluidInkReveal, {
+  type CtaTarget,
+  type FluidInkRevealHandle,
+  type TextTarget,
+} from "@/components/sections/hero/FluidInkReveal";
 import ArrowIcon from "@/components/ui/ArrowIcon";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
@@ -62,37 +66,46 @@ export default function HeroSection() {
   // effect below.
   const ctaSlotRef = useRef<HTMLDivElement>(null);
   const footRowRef = useRef<HTMLDivElement>(null);
-  // The two Hero CTAs are painted onto the ink's paper layer rather than
-  // rendered as ordinary DOM, so the ink can wash over them the same way it
-  // does the wordmark and the tagline. The DOM elements stay in place —
-  // real links, real hit areas, keyboard focusable — but are visually
-  // transparent; these refs are what the canvas measures to know where to
-  // paint each box, its label, and its arrow.
-  const ctaPrimaryRef = useRef<HTMLAnchorElement>(null);
-  const ctaPrimaryLabelRef = useRef<HTMLSpanElement>(null);
-  const ctaPrimaryArrowRef = useRef<HTMLSpanElement>(null);
-  const ctaSecondaryRef = useRef<HTMLAnchorElement>(null);
-  const ctaSecondaryLabelRef = useRef<HTMLSpanElement>(null);
-  const ctaSecondaryArrowRef = useRef<HTMLSpanElement>(null);
+  // The ink, for one thing only: telling it to repaint once this component has
+  // finished placing what it paints. See the end of the sizing effect.
+  const inkRef = useRef<FluidInkRevealHandle>(null);
+  // Everything the ink passes over is painted onto its paper layer rather than
+  // rendered as ordinary DOM, so it can wash over them the same way it does the
+  // wordmark — the line, the buttons, and on a phone the row at the foot. The
+  // DOM elements stay in place — real text, real links, real hit areas,
+  // keyboard focusable — but are visually transparent; these refs are what the
+  // canvas measures to know where to paint each box, each line, each arrow.
+  // Both layouts share the button refs: only one of the two renders at a time.
+  const ctaWorksRef = useRef<HTMLAnchorElement>(null);
+  const ctaWorksLabelRef = useRef<HTMLSpanElement>(null);
+  const ctaWorksArrowRef = useRef<HTMLSpanElement>(null);
+  const ctaContactRef = useRef<HTMLAnchorElement>(null);
+  const ctaContactLabelRef = useRef<HTMLSpanElement>(null);
+  const ctaContactArrowRef = useRef<HTMLSpanElement>(null);
+  const footWorksRef = useRef<HTMLAnchorElement>(null);
+  const footWorksArrowRef = useRef<HTMLSpanElement>(null);
+  const footStudioRef = useRef<HTMLSpanElement>(null);
 
-  const ctas = [
-    {
-      ref: ctaPrimaryRef,
-      labelRef: ctaPrimaryLabelRef,
-      arrowRef: ctaPrimaryArrowRef,
-      fill: "#ffffff",
-      textColor: "#000000",
-      borderColor: "#000000",
-    },
-    {
-      ref: ctaSecondaryRef,
-      labelRef: ctaSecondaryLabelRef,
-      arrowRef: ctaSecondaryArrowRef,
-      fill: "#000000",
-      textColor: "#ffffff",
-      borderColor: "#000000",
-    },
-  ];
+  const worksCta: CtaTarget = {
+    ref: ctaWorksRef,
+    labelRef: ctaWorksLabelRef,
+    arrowRef: ctaWorksArrowRef,
+    fill: "#ffffff",
+    textColor: "#000000",
+    borderColor: "#000000",
+  };
+  const contactCta: CtaTarget = {
+    ref: ctaContactRef,
+    labelRef: ctaContactLabelRef,
+    arrowRef: ctaContactArrowRef,
+    fill: "#000000",
+    textColor: "#ffffff",
+    borderColor: "#000000",
+  };
+  const taglineTarget: TextTarget = { ref: taglineRef, color: "#000000" };
+  // Whether the ink is running and therefore painting the type. Without it
+  // (reduced motion) there is no canvas, and the DOM shows everything itself.
+  const painted = !prefersReducedMotion;
 
   // The Navbar's own mark stays hidden while the Hero itself is on screen
   // (nothing to dock against yet), and crossfades in once the Hero has
@@ -128,7 +141,12 @@ export default function HeroSection() {
   // object-fit: contain gives an <img> for free — but logoAreaRef isn't a
   // replaced element, so it's done by hand: prefer full width, and only
   // fall back to fitting by height when that would overflow.
-  useEffect(() => {
+  // A LAYOUT effect, so every box it sizes and places is in position before the
+  // browser paints — and before the ink's own (ordinary) effect runs and takes
+  // its first paint from those boxes. As a plain effect it ran after both: for
+  // one frame the phone's button sat at `top-full` under the wordmark, in the
+  // DOM and on the paper alike, before jumping to where it belongs.
+  useLayoutEffect(() => {
     const area = logoAreaRef.current;
     const slot = logoSlotRef.current;
     if (!area || !slot) return;
@@ -183,6 +201,14 @@ export default function HeroSection() {
         // edge put it a mark's height too high.
         cta.style.top = `${middle - ctaBox.height / 2 - slotBox.top + CTA_DROP_PX}px`;
       }
+
+      // Last, and not optional. The ink paints the wordmark, the type and the
+      // button from where these boxes are, but it only watches its OWN size —
+      // and when the space around the mark changes without the hero changing
+      // (the webfont arriving and rewrapping the line is the usual one), these
+      // boxes move and the ink's does not. On the first run this is a no-op:
+      // the ink has not mounted yet, and takes its first paint after this.
+      inkRef.current?.redraw();
     };
     resize();
 
@@ -204,45 +230,38 @@ export default function HeroSection() {
   if (isMobile) {
     return (
       <section ref={sectionRef} id="hero" className="relative flex h-[100svh] min-h-[560px] flex-col overflow-hidden bg-white">
-        {!prefersReducedMotion && (
+        {painted && (
           <div className="absolute inset-0 overflow-hidden">
-            {/* No taglineElRef on mobile: the canvas is capped at 2x device
-                pixels, and a phone runs at 3x — so canvas-painted text is drawn
-                at 2x and stretched to 3x, which is the soft, doubled-looking
-                edge. The line is rendered as ordinary black text instead, which
-                the device draws at its own density. Only the wordmark still
-                comes from the canvas, because the ink has to reveal it. */}
             <FluidInkReveal
+              ref={inkRef}
               logoSrc="/images/logo.png"
               videoSrc="/videos/herobg.mp4"
-              taglineText=""
+              textTargets={[
+                ...(SHOW_TAGLINE ? [taglineTarget] : []),
+                { ref: footWorksRef, arrowRef: footWorksArrowRef, color: "#000000" },
+                { ref: footStudioRef, color: "rgba(0, 0, 0, 0.45)" },
+              ]}
               logoSlotRef={logoSlotRef}
+              ctas={[contactCta]}
               className="relative h-full w-full select-none"
             />
           </div>
         )}
 
-        {/* pointer-events-none so a touch anywhere in the empty space still
-            reaches the ink canvas underneath; the controls opt back in.
-            NOTHING HERE BLENDS ANY MORE. Every element in this block used to be
-            written in inverted colours — a white fill with black text — and
-            turned right way round by mix-blend-mode: difference against the ink
-            canvas, so it would flip again wherever ink ran under it. Mobile
-            Safari does not apply that blend over a WebGL canvas, and the result
-            on a real phone was not "fails to invert" but "is not there": the
-            white fills vanished into the white page and left the tagline, the
-            button's body, the second link and the studio line all missing.
-            They are plain black now. The cost is that dark ink dragged directly
-            over them swallows them for the moment it is there, which is a fair
-            price for existing. The wordmark is untouched — it comes off the
-            canvas, not out of a blend, and the ink revealing it is the whole
-            screen.
-            THIS SAID EXACTLY THIS AND WAS NOT TRUE. Three of them — the line
-            above, the button under the mark, and the row at the foot — kept
-            their white fills and their difference blend through the rewrite, so
-            on a real phone the hero was a wordmark alone on an empty page: no
-            sentence, no button body, no row. If a rule like this is worth
-            writing down, every element it covers has to actually follow it. */}
+        {/* THE SAME MECHANISM AS THE DESKTOP, and it took three rounds to get
+            here. Every piece of type and the button are painted onto the ink's
+            paper and inverted in its shader, so under the ink they turn white
+            on black instead of disappearing into it. What stays in the DOM is
+            the real thing — text for screen readers and search, links you can
+            tap and tab to — laid out exactly as before and made transparent.
+            The two rounds before this are why it has to be the canvas:
+            mix-blend-mode, which phones do not apply over a WebGL canvas, left
+            white type on a white page; plain black type then drowned wherever
+            the ink crossed it.
+            With reduced motion there is no ink and no canvas, so the same
+            elements simply show in their own colours.
+            pointer-events-none so a touch anywhere in the empty space still
+            reaches the ink canvas underneath; the controls opt back in. */}
         <div className="pointer-events-none relative flex h-full flex-col px-6 pt-[20px] pb-8">
           <h1 className="sr-only">YEYE</h1>
 
@@ -250,10 +269,14 @@ export default function HeroSection() {
             // Two lines now, not one, and no longer nowrap: at 18px on a single
             // line it was a caption. Broken and set larger it carries the
             // weight of being the only sentence on the screen. Balanced rather
-            // than hand-broken — a manual break is only ever right at one width.
-            //
-            // WHITE, and inverted by the blend — see the block comment above.
-            <p className="text-right font-display text-[21px] leading-[1.3] font-bold text-balance text-black">
+            // than hand-broken — a manual break is only ever right at one width;
+            // the paper copies whatever break the browser chose.
+            <p
+              ref={taglineRef}
+              className={`text-right font-display text-[21px] leading-[1.3] font-bold text-balance ${
+                painted ? "text-transparent" : "text-black"
+              }`}
+            >
               {TAGLINE_TEXT}
             </p>
           )}
@@ -276,11 +299,23 @@ export default function HeroSection() {
             ref={footRowRef}
             className="pointer-events-auto flex w-full items-baseline justify-between font-display text-m-small"
           >
-            <Link href="/#projects" className="inline-flex items-center gap-1.5 font-medium text-black">
+            <Link
+              ref={footWorksRef}
+              href="/#projects"
+              className={`inline-flex items-center gap-1.5 font-medium ${painted ? "text-transparent" : "text-black"}`}
+            >
               העבודות שלי
-              <ArrowIcon />
+              {/* The icon's exact box and nothing in it — the paper draws the
+                  arrow. An SVG left here would still paint in currentColor. */}
+              {painted ? (
+                <span ref={footWorksArrowRef} aria-hidden="true" className="block h-[14px] w-[14px] shrink-0" />
+              ) : (
+                <ArrowIcon />
+              )}
             </Link>
-            <span className="text-black/45">סטודיו דיגיטלי עצמאי</span>
+            <span ref={footStudioRef} className={painted ? "text-transparent" : "text-black/45"}>
+              סטודיו דיגיטלי עצמאי
+            </span>
           </div>
         </div>
 
@@ -301,31 +336,43 @@ export default function HeroSection() {
             it, which is what reads as calm. Raising the pair buys that void
             back without moving the button off the mark. */}
         <div className="pointer-events-none absolute inset-0 flex select-none items-center justify-center px-6 pb-[20svh]">
-          {prefersReducedMotion ? (
-            <div ref={logoSlotRef} className="relative overflow-hidden">
-              <div className="absolute inset-x-0" style={{ top: "-23.0074%", height: "143.7962%" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/logo.png"
-                  alt="YEYE"
-                  className="h-full w-full object-contain"
-                  style={{ filter: "brightness(0)" }}
-                  draggable={false}
-                />
+          {/* One slot for both modes now. With reduced motion it used to be an
+              overflow-hidden box holding only the image, which clipped anything
+              hung below it — so that mode had no button at all. The crop lives
+              on an inner box instead, and the button hangs off the slot in
+              either case. */}
+          <div ref={logoSlotRef} className="relative">
+            {!painted && (
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute inset-x-0" style={{ top: "-23.0074%", height: "143.7962%" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/images/logo.png"
+                    alt="YEYE"
+                    className="h-full w-full object-contain"
+                    style={{ filter: "brightness(0)" }}
+                    draggable={false}
+                  />
+                </div>
               </div>
-            </div>
-          ) : (
-            <div ref={logoSlotRef} className="relative">
-              <div
-                ref={ctaSlotRef}
-                className="pointer-events-auto absolute inset-x-0 top-full flex justify-center"
-              >
-                {/* A black pill with white type, written as what it is. It used
-                    to be the inverse of that — white on white — because the
-                    blend on the wrapper was going to turn it round, and on a
-                    real phone it simply stayed white on white: the button's
-                    body disappeared into the page and only the label was left
-                    floating there. */}
+            )}
+            <div ref={ctaSlotRef} className="pointer-events-auto absolute inset-x-0 top-full flex justify-center">
+              {painted ? (
+                /* The box of the site's Button to the pixel — the same padding,
+                   line height, 1px border and gap to its arrow, measured against
+                   the Button that stood here — so the paper paints a pill the
+                   exact size of the one it replaces. Transparent, like the
+                   desktop's: no shimmer and no hover scale, because the paper
+                   only repaints on layout changes. */
+                <Link
+                  ref={ctaContactRef}
+                  href="/#contact"
+                  className="inline-flex items-center gap-2 rounded-full border border-transparent px-8 py-3.5 font-display text-[16px] leading-6 font-medium whitespace-nowrap text-transparent"
+                >
+                  <span ref={ctaContactLabelRef}>קבעו פגישה</span>
+                  <span ref={ctaContactArrowRef} aria-hidden="true" className="block h-[14px] w-[14px] shrink-0" />
+                </Link>
+              ) : (
                 <Button
                   href="/#contact"
                   variant="primary"
@@ -333,9 +380,9 @@ export default function HeroSection() {
                 >
                   קבעו פגישה
                 </Button>
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </section>
     );
@@ -375,12 +422,12 @@ export default function HeroSection() {
         // strip below stays; the room is what the ink needed, not the fade.
         <div className="absolute inset-x-0 bottom-0 -top-[48px] overflow-hidden">
           <FluidInkReveal
+            ref={inkRef}
             logoSrc="/images/logo.png"
             videoSrc="/videos/herobg.mp4"
-            taglineText={SHOW_TAGLINE ? TAGLINE_TEXT : ""}
-            taglineElRef={SHOW_TAGLINE ? taglineRef : undefined}
+            textTargets={SHOW_TAGLINE ? [taglineTarget] : []}
             logoSlotRef={logoSlotRef}
-            ctas={ctas}
+            ctas={[worksCta, contactCta]}
             className="relative h-full w-full select-none"
           />
         </div>
@@ -532,20 +579,20 @@ export default function HeroSection() {
                  repaint on enter and leave. */
               <div className="flex items-center gap-3">
                 <Link
-                  ref={ctaPrimaryRef}
+                  ref={ctaWorksRef}
                   href="/#projects"
                   className="inline-flex items-center gap-2 rounded-full px-10 py-4 font-display text-lg font-medium text-transparent"
                 >
-                  <span ref={ctaPrimaryLabelRef}>העבודות שלי</span>
-                  <span ref={ctaPrimaryArrowRef} aria-hidden className="block h-[14px] w-[14px]" />
+                  <span ref={ctaWorksLabelRef}>העבודות שלי</span>
+                  <span ref={ctaWorksArrowRef} aria-hidden className="block h-[14px] w-[14px]" />
                 </Link>
                 <Link
-                  ref={ctaSecondaryRef}
+                  ref={ctaContactRef}
                   href="/#contact"
                   className="inline-flex items-center gap-2 rounded-full border border-transparent px-10 py-4 font-display text-lg font-medium text-transparent"
                 >
-                  <span ref={ctaSecondaryLabelRef}>קבעו פגישה</span>
-                  <span ref={ctaSecondaryArrowRef} aria-hidden className="block h-[14px] w-[14px]" />
+                  <span ref={ctaContactLabelRef}>קבעו פגישה</span>
+                  <span ref={ctaContactArrowRef} aria-hidden className="block h-[14px] w-[14px]" />
                 </Link>
               </div>
             )}
