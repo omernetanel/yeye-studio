@@ -477,8 +477,16 @@ export default function ContactStage() {
             own centre on the frame's centre; every number is derived from the
             same four the desktop zoom uses, so nothing here is nudged by eye. */}
         {/* data-balloon-floor: where the balloons falling out of "who I am"
-            stop being visible — see BalloonDrop. */}
-        <div ref={gateRef} data-balloon-floor className="relative aspect-square w-full overflow-hidden">
+            stop being visible — see BalloonDrop.
+
+            z-10 puts the picture ABOVE this stage's own balloon layer, which
+            sits at z-[5]: they pass behind the room and the footage and are
+            only seen once they are below it, against the black of the form. */}
+        <div
+          ref={gateRef}
+          data-balloon-floor
+          className="relative z-10 aspect-square w-full overflow-hidden"
+        >
           <div
             className="absolute top-0"
             style={{

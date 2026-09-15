@@ -163,9 +163,13 @@ const MOBILE_CAST: readonly CastEntry[] = [
  * top of the section as its picture starts to leave the screen, and gone at the
  * section's bottom edge — the clip there is what keeps them off the projects.
  * Neither settles; there is no heap to leave at the foot of a form.
+ *
+ * BOTH IN THE BACK LAYER, and nothing here is ever in front. They fall BEHIND
+ * the room and the footage — which is the depth: they come out from under a
+ * picture that is leaving the screen, rather than passing over it.
  */
 const CONTACT_CAST: readonly CastEntry[] = [
-  { cue: "drop", at: 0, x: 0.3, depth: 1, type: 0, settles: false, front: true },
+  { cue: "drop", at: 0, x: 0.3, depth: 1, type: 0, settles: false, front: false },
   { cue: "drop", at: 900, x: 0.72, depth: 0.5, type: 1, settles: false, front: false },
 ] as const;
 
