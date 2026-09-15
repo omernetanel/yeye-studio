@@ -191,6 +191,18 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef, variant = "
     const section = sectionRef.current;
     if (!section) return;
 
+    // ON A PHONE THE BLACK ENDS AT A PICTURE, not at this section's edge. The
+    // contact stage that follows is pulled up over the last of it, so this
+    // section's bottom sits partway down that stage's photograph: clipped there,
+    // balloons vanished over a band of open black above the picture and cut
+    // across the picture itself. The stage's first image is where the black
+    // really stops, so that is the floor and the clip. Found once — the order of
+    // the page does not change under it.
+    const edge =
+      variant === "mobile"
+        ? (section.nextElementSibling?.querySelector<HTMLElement>("img, video") ?? null)
+        : null;
+
     let frame = 0;
     let started = 0;
     // The two clocks that are not the drop's: when the section began leaving,
@@ -290,6 +302,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef, variant = "
       // synchronous layout, and inside a per-frame loop that is the difference
       // between this being free and this being the reason the page stutters.
       const sectionBox = section.getBoundingClientRect();
+      const blackBottom = edge ? Math.min(sectionBox.bottom, edge.getBoundingClientRect().top) : sectionBox.bottom;
       const line = lineRef.current;
       // The GLYPHS, not the paragraph. A Range over the element's contents
       // yields one rect per line box, each only as wide as the words actually
@@ -337,7 +350,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef, variant = "
       // So they keep falling the whole way down and the heap gathers at the end
       // of the section, which is also the only place it can gather without ever
       // crossing into the next one.
-      const floorY = sectionBox.bottom;
+      const floorY = blackBottom;
       const wallTop = wallBox ? wallBox[0].top : 0;
       const floorVelocity = elapsed > 0 ? (floorY - lastFloor) / elapsed : 0;
       const wallVelocity = wallBox && lastWallTop !== 0 && elapsed > 0 ? (wallTop - lastWallTop) / elapsed : 0;
@@ -379,7 +392,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef, variant = "
       lastFloor = floorY;
       lastWallTop = wallTop;
       lastScroll = scroll;
-      draw(sectionBox.bottom);
+      draw(blackBottom);
     };
 
     // Nothing simulates while the section is off screen. It is six screens tall
@@ -405,7 +418,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef, variant = "
       watcher.disconnect();
       window.removeEventListener("resize", onResize);
     };
-  }, [sectionRef, lineRef, stateRef, cast]);
+  }, [sectionRef, lineRef, stateRef, cast, variant]);
 
   const layer = (front: boolean, z: string) => (
     <div

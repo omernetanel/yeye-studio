@@ -440,10 +440,17 @@ export default function ContactStage() {
       // this attribute to know to invert. The desktop branch sets it from its
       // own scroll handler because the zoom changes what is under the corner;
       // here nothing moves, so it is simply true.
+      //
+      // TRANSPARENT FOR THE PART PULLED UP, black from there down. The overlap
+      // lies over the black of "who I am" anyway, and painted black it hid that
+      // section's falling balloons at this section's top edge — a band of open
+      // black above the picture where they simply vanished. Clear, they fall on
+      // until the picture itself covers them. The switch is 2px inside the
+      // overlap so the fractional-pixel seam above still has black on both sides.
       <section
         id="contact"
         data-nav-dark="true"
-        className="relative z-20 -mt-[42svh] overflow-hidden bg-black py-24"
+        className="relative z-20 -mt-[42svh] overflow-hidden bg-[linear-gradient(to_bottom,transparent_calc(42svh_-_2px),black_calc(42svh_-_2px))] py-24"
       >
         {/* The plate, framed rather than filled. The zoom does not run on a
             phone, so what is left of this section is the composition it ends on

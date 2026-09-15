@@ -114,13 +114,15 @@ const CLOSER_PULL_VH = 25;
 // arrived on an empty screen and read as a section of its own rather than as
 // the end of this one.
 const CLOSER_LEAD_VH = 0.7;
-// How far ahead of the close's own lead-in the first two balloons are released:
-// enough that they are already falling when the rest begin, not so much that
-// they fall alone. Measured at 375×812 this is about 120px of scroll before the
-// rest; 0.35 released them earlier than the first card had.
-const DROP_AHEAD_VH = 0.1;
+// THE BALLOONS WAIT FOR THE LINE. The first two — one blue, one silver — go
+// when the top of the impact line has come up to 30% of the screen from the
+// bottom, and the rest a little after it. Cued off the stage instead, they
+// started while the cards were still being read: the stage is pulled up into
+// the cards' space, so its own lead-in begins long before the line is on
+// screen. Fractions of the screen from the top.
+const DROP_LINE_AT = 0.7;
+const LEAVING_LINE_AT = 0.6;
 const CLOSER_ARRIVE = [0, 0.16] as const;
-const CLOSER_BALLOONS_AT = 0.04;
 const CLOSER_DRAW = [0.42, 0.82] as const;
 
 function clamp01(value: number) {
@@ -259,13 +261,16 @@ export default function MobileAbout() {
     if (travel <= 0) return;
     const closerLead = screen * CLOSER_LEAD_VH;
 
-    // THE FIRST TWO BALLOONS are armed a little ahead of the close, so they
-    // fall just before the rest rather than on their own, early in the section.
-    // Armed off the first card, they came down while the reader was still in
-    // the copy, and read as a stray event rather than the start of the fall.
-    if (!dropStateRef.current.armed) {
-      dropStateRef.current.armed = box.top < closerLead + screen * DROP_AHEAD_VH;
-    }
+    // Where the line's top sits on screen, from layout rather than its rect,
+    // which would include the rise written below. The line is laid out in the
+    // pinned panel, and the panel is at the stage's top until it pins, at the
+    // top of the screen while pinned, and rides up with the stage's end after.
+    const panelTop = Math.max(box.top, Math.min(0, box.bottom - screen));
+    const lineTop = panelTop + line.offsetTop;
+    // Both latch inside BalloonDrop, so reading them false again on the way back
+    // up does not take a balloon back out of the air.
+    if (!dropStateRef.current.armed) dropStateRef.current.armed = lineTop < screen * DROP_LINE_AT;
+    dropStateRef.current.leaving = lineTop < screen * LEAVING_LINE_AT;
     const progress = clamp01((closerLead - box.top) / (travel + closerLead));
 
     const arrive = span(progress, CLOSER_ARRIVE);
@@ -276,11 +281,11 @@ export default function MobileAbout() {
     // its own accord. A collider read off a box that is mid-entrance shifts
     // every frame, and they would judder against a wall that is not where it
     // appears to be.
-    dropStateRef.current.wallLive = arrive >= 1;
-    // The second group goes as the close comes INTO view rather than a third of
-    // the way through it, so they are falling while the line is still arriving
-    // instead of raining down onto a picture that has already settled.
-    dropStateRef.current.leaving = progress > CLOSER_BALLOONS_AT;
+    //
+    // And not before the rest have started. The line finishes its fade while it
+    // is still at the bottom edge of the screen, so on arrival alone the balloon
+    // it knocks went ahead of the two that are meant to fall first.
+    dropStateRef.current.wallLive = arrive >= 1 && lineTop < screen * LEAVING_LINE_AT;
 
     const draw = span(progress, CLOSER_DRAW);
     swash.style.clipPath = `inset(0 ${((1 - draw) * 100).toFixed(1)}% 0 0)`;
