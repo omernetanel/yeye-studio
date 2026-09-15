@@ -7,9 +7,10 @@ import { usePathname } from "next/navigation";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { useDocked } from "@/lib/motion/heroDock";
 
-// The logo's own fixed vertical center — used to sample which section is
-// currently behind it.
-const LOGO_CENTER_Y_PX = 40;
+// The row the header samples to decide which section is behind it. 43, not the
+// mark's centre on either layout: the mark spans 22–44 on a desktop and 42–64 on
+// a phone, and 43 is the one row inside it on both.
+const LOGO_CENTER_Y_PX = 43;
 const DARK_FILTER = "brightness(0) invert(1)";
 const LIGHT_FILTER = "brightness(0)";
 
@@ -131,9 +132,7 @@ export default function Navbar() {
       // for it — the two are one movement, so they have to be one easing.
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       // Same offset as NavMenu's row, phone and desktop both — see there.
-      // LOGO_CENTER_Y_PX still lands inside the mark at either (22–44 on the
-      // desktop, 32–54 on a phone).
-      className="fixed left-6 top-[32px] z-50 md:top-[22px]"
+      className="fixed left-6 top-[42px] z-50 md:top-[22px]"
     >
       <Link href="/" tabIndex={docked ? 0 : -1} aria-label="YEYE">
         <Image

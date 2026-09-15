@@ -146,11 +146,11 @@ export default function NavMenu() {
     // the block ended up and tweens it there, so the same code works whatever
     // the button's width or the viewport's, and nothing has to be computed.
     <div
-      // 32px on a phone, 22 above it. The phone's opening screen puts its line
-      // right beside this row, and at 22 the pair sat pressed against the top
-      // of the glass. Must match the logo's own offset in Navbar — they are one
-      // row.
-      className="pointer-events-none fixed inset-x-6 top-[32px] z-50 flex md:top-[22px]"
+      // 42px on a phone, 22 above it. The phone's opening screen puts its line
+      // right beside this row, and nearer the top the pair sat pressed against
+      // the edge of the glass. Must match the logo's own offset in Navbar — they
+      // are one row.
+      className="pointer-events-none fixed inset-x-6 top-[42px] z-50 flex md:top-[22px]"
       style={{ justifyContent: atRight ? "flex-start" : "flex-end" }}
     >
       <motion.div
