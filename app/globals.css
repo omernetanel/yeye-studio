@@ -329,6 +329,17 @@ body {
    against the user-space origin, not the element, so anything with a scale or a
    rotate needs transform-box: fill-box or it pivots off the top-left of the
    whole drawing. */
+/* Type set straight onto the paper clip, whose creases run behind every letter.
+   A soft white field that fades out with no edge of its own, so the words lift
+   off the crumple's shadows without reading as a sticker on it — the desktop
+   diagram's SVG halo, for ordinary HTML text. */
+.paper-halo {
+  text-shadow:
+    0 0 4px #fff,
+    0 0 12px #fff,
+    0 0 28px rgb(255 255 255 / 0.85);
+}
+
 @keyframes icon-rocket {
   0%,
   100% {
