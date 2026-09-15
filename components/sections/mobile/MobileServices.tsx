@@ -53,33 +53,32 @@ const FADE_SECONDS = 0.35;
  * How much scrolling each stretch of the clip is worth, written as the number
  * of screen-heights it takes to REACH each cue from the one before it.
  *
- * NOTHING HERE EVER HOLDS. There used to be two stops — a fifth of the run on
- * frame zero, and another fifth frozen on the flat sheet — which together left
- * four and a half screens of scrolling where the picture did not move at all.
- * On a desk that reads as a beat. In a hand it reads as a page that has caught
- * on something, because the finger is still travelling and nothing is coming
- * back. The rule the desktop already follows applies here too: slow down over
- * what matters, never stop.
+ * THERE IS ONE HOLD, AND IT IS NOT A PAUSE. There used to be two stops — a fifth
+ * of the run frozen on frame zero and another fifth on the flat sheet, with
+ * nothing on screen moving at all — and in a hand that reads as a page that has
+ * caught on something. Everywhere else the rule the desktop follows still holds:
+ * slow down over what matters, never stop.
  *
- * So the reading beats are paid for with a slower rate instead of a stop. The
- * open-sheet stretch runs at about a third of the speed of the crumple — and
- * the clip is nearly still through it anyway, so a slow rate there looks calm
- * rather than sluggish, while the long empty stretch after it is over quickly.
+ * The flat sheet is the exception, and deliberately. The clip holds still while
+ * the four stages of the work travel up across it, so the scroll never stops
+ * producing movement — it moves the column instead of the paper. With both
+ * moving at once, the sheet settling and the column climbing, neither could be
+ * followed. Only once the last stage has been read do the words shrink back into
+ * the page, and only then does the paper crumple.
  *
  * Because it is arithmetic in both directions rather than a played timeline,
  * scrolling back up runs the paper backwards through exactly the same frames.
  */
-//
-// The two reading stretches are long because each is now a sequence, not a
-// single card: on the ball, the sentence rises and the four services arrive one
-// by one; on the open sheet, the four stages of the work follow each other, one
-// at a time. Something changes on every screen of both, so length here is
-// reading time, never a hold.
+
+/** The hold: the clip stays on the flat sheet while the four stages go by. */
+const STAGES_BEAT = { screens: 3.2, time: CUE_PAPER_FLAT };
+
 const BEATS: readonly { screens: number; time: number }[] = [
   { screens: 0, time: 0 },
-  { screens: 2.8, time: CUE_SERVICES_OUT }, // on the ball: the sentence, then the services
+  { screens: 2.8, time: CUE_SERVICES_OUT }, // on the ball: the whole services block, read in full
   { screens: 1.3, time: CUE_PAPER_FLAT }, // it opens
-  { screens: 3.2, time: CUE_ABOUT_OUT }, // on the sheet: the four stages, 0.8 screens each
+  STAGES_BEAT, // the clip holds; the stages travel up the sheet
+  { screens: 0.9, time: CUE_ABOUT_OUT }, // the stages shrink back into the page
   { screens: 2.2, time: CUE_STATEMENT_IN }, // crumple and flight, at speed
   { screens: 1.8, time: CLIP_SECONDS }, // the closing line rises as the sheet lands
 ];
@@ -92,6 +91,11 @@ const TIMELINE = BEATS.reduce<{ progress: number; time: number }[]>((points, bea
   points.push({ progress: previous + beat.screens / SCROLL_SCREENS, time: beat.time });
   return points;
 }, []);
+
+// Where the hold starts and ends, as scroll progress. The stages are driven off
+// these rather than off clip time, because clip time stands still in between.
+const STAGES_FROM = TIMELINE[BEATS.indexOf(STAGES_BEAT) - 1].progress;
+const STAGES_TO = TIMELINE[BEATS.indexOf(STAGES_BEAT)].progress;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -123,9 +127,9 @@ function fadeOut(time: number, until: number) {
 
 // ON THE SHEET — the four stages as one column that travels up with the scroll,
 // the stage passing through the middle of the window at full strength and its
-// neighbours faded back. It reaches the last stage at STAGES_END of the flat
-// stretch rather than at its end, so that stage sits still in the middle for the
-// last part instead of still moving while the sheet crumples and the layer fades.
+// neighbours faded back. It reaches the last stage at STAGES_END of the hold
+// rather than at its end, so that stage sits still in the middle for a moment
+// before the words shrink back into the page.
 //
 // A column and not a sequence. The version before this faded one stage out and
 // the next one in, and between them the sheet was blank for a moment on every
@@ -137,6 +141,8 @@ const STAGES_END = 0.76;
 const STAGE_DIM_OPACITY = 0.22;
 const DOT_PX = 6;
 const DOT_ACTIVE_PX = 20;
+/** How small the stages get as they go back into the folding paper. */
+const COLLAPSED_SCALE = 0.55;
 
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
@@ -216,13 +222,17 @@ export default function MobileServices() {
     servicesLayer.style.opacity = String(servicesOpacity);
     servicesLayer.style.pointerEvents = servicesOpacity > 0.5 ? "auto" : "none";
 
-    // ON THE SHEET.
-    const aboutOpacity = Math.min(fadeIn(time, CUE_ABOUT_IN), fadeOut(time, CUE_ABOUT_OUT));
-    aboutLayer.style.opacity = String(aboutOpacity);
+    // ON THE SHEET. The layer stays whole for as long as the clip holds, and only
+    // once the paper starts folding back in does it shrink into the page with it
+    // and go — the clip is past CUE_PAPER_FLAT exactly then, and not before.
+    const collapse = clamp01((time - CUE_PAPER_FLAT) / (CUE_ABOUT_OUT - CUE_PAPER_FLAT));
+    aboutLayer.style.opacity = String(Math.min(fadeIn(time, CUE_ABOUT_IN), 1 - collapse));
+    aboutLayer.style.transform = `scale(${lerp(1, COLLAPSED_SCALE, collapse)})`;
 
     // Which stage is in the middle of the window, as a continuous position —
-    // 1.5 is halfway between the second and the third.
-    const onSheet = clamp01((time - CUE_PAPER_FLAT) / (CUE_ABOUT_OUT - CUE_PAPER_FLAT));
+    // 1.5 is halfway between the second and the third. Read off the scroll inside
+    // the hold, not off clip time, which is standing still there.
+    const onSheet = clamp01((progress - STAGES_FROM) / (STAGES_TO - STAGES_FROM));
     const position = clamp01(onSheet / STAGES_END) * (STAGE_COUNT - 1);
     const from = Math.floor(position);
     const to = Math.min(STAGE_COUNT - 1, from + 1);
