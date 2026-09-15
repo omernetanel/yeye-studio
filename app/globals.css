@@ -564,26 +564,29 @@ body {
   animation: border-glow-turn 12s linear infinite;
 }
 
-/* The card's own face, over the disc: what is left showing of it is the 1px
-   ring between this and the card's edge, which is the lit border. */
-.border-glow-face {
-  position: absolute;
-  inset: 1px;
-  border-radius: inherit;
-  background: #0b0b0b;
-  pointer-events: none;
-}
-
-/* And the bloom outside the card. Not masked by a cone of its own — it is the
-   same disc, blurred, so the two are one light. */
+/* The same disc again, blurred, so the lit edge has a soft side rather than a
+   drawn one. It sits UNDER the face, with the sharp disc: painted over it, a
+   blurred disc this size washes across half the card, which is what the first
+   version did — a glow in the corner rather than a light on the border. */
 .border-glow-edge {
   position: absolute;
-  inset: -1px;
+  inset: 0;
   border-radius: inherit;
   pointer-events: none;
   overflow: hidden;
-  opacity: 0.55;
-  filter: blur(6px);
+  opacity: 0.6;
+  filter: blur(4px);
+}
+
+/* THE FACE IS THE LAST LAYER BEFORE THE CONTENT, and it is what makes this a
+   border and not a wash: it covers both discs except for the pixel and a half
+   at the very edge. That ring is the whole effect. */
+.border-glow-face {
+  position: absolute;
+  inset: 1.5px;
+  border-radius: inherit;
+  background: #0b0b0b;
+  pointer-events: none;
 }
 
 @keyframes border-glow-turn {

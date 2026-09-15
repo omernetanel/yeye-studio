@@ -13,10 +13,9 @@ import { cn } from "@/lib/utils";
  * Four layers, in paint order, and the order is the whole trick:
  *
  *   sweep  — an oversized disc carrying one bright arc, turning.
- *   face   — the card's black face, inset by a pixel, over the disc. What is
- *            left of the disc showing is that one-pixel ring: the lit border.
- *   edge   — the same disc again, blurred, for the bloom along the inside of
- *            the border.
+ *   edge   — the same disc, blurred, so the light has a soft side.
+ *   face   — the card's black face, inset a pixel and a half, over BOTH discs.
+ *            What is left showing of them is that ring: the lit border.
  *   content— the card's own children, above all of it.
  */
 export default function BorderGlowCard({
@@ -29,10 +28,10 @@ export default function BorderGlowCard({
   return (
     <div className={cn("border-glow", className)}>
       <span aria-hidden="true" className="border-glow-sweep" />
-      <span aria-hidden="true" className="border-glow-face" />
       <span aria-hidden="true" className="border-glow-edge">
         <span className="border-glow-sweep" />
       </span>
+      <span aria-hidden="true" className="border-glow-face" />
       <div className="relative z-[1]">{children}</div>
     </div>
   );
