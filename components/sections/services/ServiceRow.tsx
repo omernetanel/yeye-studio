@@ -41,7 +41,7 @@ export default function ServiceRow({ service, index, compact = false, className 
       href={service.href}
       className={cn(
         "group flex items-center justify-between border-b border-black/8 last:border-b-0",
-        compact ? "gap-3 py-3" : "gap-6 py-5 pe-10 first:pt-0",
+        compact ? "gap-3 py-4" : "gap-6 py-5 pe-10 first:pt-0",
         className
       )}
     >
