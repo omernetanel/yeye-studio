@@ -70,7 +70,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="he" dir="rtl" className={`${googleSans.variable} ${assistant.variable}`}>
-      <body className="bg-background font-body text-white">
+      {/* No bg/text utilities here on purpose: they would win over the html,body
+          rule in globals.css, which is the one place the document's own surface
+          is decided — and that surface is what a phone reads when it picks a
+          colour for its bars. See the comment on that rule. */}
+      <body className="font-body">
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
       </body>
     </html>

@@ -71,40 +71,63 @@ export default function WhatsAppButton() {
   }, []);
 
   return (
-    <Link
-      ref={rootRef}
-      href={`https://wa.me/${WHATSAPP_NUMBER}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="WhatsApp"
-      aria-hidden={!past}
-      tabIndex={past ? undefined : -1}
-      // No clip and no crop. The file carries a real alpha channel now, so the
-      // mark cuts its own shape — an earlier version was yuv420p with the
-      // transparency checkerboard exported into the pixels, and this had to be
-      // a circular mask with the artwork scaled up inside it to hide the
-      // corners. None of that is needed against a file that is actually
-      // transparent.
-      className={`fixed bottom-5 left-5 z-40 block h-[64px] w-[64px] transition-[opacity,transform] duration-300 ease-out md:bottom-7 md:left-7 md:h-[72px] md:w-[72px] ${
-        past
-          ? "pointer-events-auto translate-y-0 opacity-100 hover:scale-[1.06] active:scale-100"
-          : "pointer-events-none translate-y-3 opacity-0"
+    // The wrapper carries the corner and the arrival; the link inside carries
+    // only its own size. Keeping them apart is what lets the label sit beside
+    // the mark without being scaled by the mark's own hover.
+    <div
+      className={`group fixed bottom-5 left-5 z-40 transition-[opacity,transform] duration-300 ease-out md:bottom-7 md:left-7 ${
+        past ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"
       }`}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/images/whatsapplogo.webp"
-        alt=""
+      <Link
+        ref={rootRef}
+        href={`https://wa.me/${WHATSAPP_NUMBER}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="WhatsApp"
+        aria-hidden={!past}
+        tabIndex={past ? undefined : -1}
+        // No clip and no crop. The file carries a real alpha channel now, so the
+        // mark cuts its own shape — an earlier version was yuv420p with the
+        // transparency checkerboard exported into the pixels, and this had to be
+        // a circular mask with the artwork scaled up inside it to hide the
+        // corners. None of that is needed against a file that is actually
+        // transparent.
+        className="block h-[64px] w-[64px] transition-transform duration-200 ease-out group-hover:scale-[1.06] active:scale-100 md:h-[72px] md:w-[72px]"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/whatsapplogo.webp"
+          alt=""
+          aria-hidden="true"
+          // Inverted over anything dark: the mark is a black disc, which on black
+          // is nothing at all. Inverting turns the disc white and the glyph dark
+          // — the same mark reading the other way round, rather than a second
+          // asset to keep in step with the first.
+          className={`h-full w-full object-contain transition-[filter] duration-200 ${
+            dark ? "invert" : ""
+          }`}
+          draggable={false}
+        />
+      </Link>
+
+      {/* To the RIGHT of the mark, because the mark is in the left corner and
+          there is nowhere else for it to go. Absolute rather than a flex
+          sibling: in flow it would widen the wrapper, and the wrapper is what
+          `group-hover` is measured against — the label would then arm itself
+          from empty air beside the button.
+          It follows the same inversion as the mark. A black pill is the right
+          note against a white page and invisible against a dark section, so
+          over one it turns white with dark type, which is the same object seen
+          the other way round. */}
+      <span
         aria-hidden="true"
-        // Inverted over anything dark: the mark is a black disc, which on black
-        // is nothing at all. Inverting turns the disc white and the glyph dark
-        // — the same mark reading the other way round, rather than a second
-        // asset to keep in step with the first.
-        className={`h-full w-full object-contain transition-[filter] duration-200 ${
-          dark ? "invert" : ""
-        }`}
-        draggable={false}
-      />
-    </Link>
+        className={`pointer-events-none absolute top-1/2 left-full ml-3 -translate-y-1/2 rounded-full px-4 py-2 font-display text-[13px] leading-none font-medium whitespace-nowrap opacity-0 shadow-[0_6px_20px_rgba(0,0,0,0.16)] transition-[opacity,transform] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100 ${
+          dark ? "bg-white text-black" : "bg-black text-white"
+        } -translate-x-1`}
+      >
+        לחצו לדבר איתי בוואטסאפ
+      </span>
+    </div>
   );
 }
