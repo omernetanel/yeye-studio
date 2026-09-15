@@ -108,6 +108,28 @@ const CFG = {
 // reached up into the wordmark and killed the interaction over the logo.
 const INTERACTIVE_BOTTOM_MARGIN_PX = 150;
 
+// The paper's resolution ceiling, and it is separate from the WebGL canvas's on
+// purpose. The paper is a 2D canvas uploaded once per redraw as a texture, so a
+// finer one costs memory and an upload — never a frame. The WebGL canvas is
+// what the display shader fills sixty times a second, and that stays at 2x.
+//
+// 3, where it was 2: every type on the paper is drawn here rather than by the
+// browser, and a phone runs at 3x. At 2 the letters were rendered at two thirds
+// of the screen's density and stretched to fit, which is the soft, doubled edge
+// that kept the phone's line and buttons out of the canvas altogether.
+const PAPER_MAX_DPR = 3;
+
+// How many separate regions the ink may invert instead of erase. The most any
+// layout draws is the phone's: up to three lines of the sentence, the button,
+// and two items in the row at the foot plus its arrow — seven. The headroom is
+// deliberate; the shader's loop stops at the real count, so the ceiling costs
+// nothing it does not use.
+const MAX_INVERT_RECTS = 16;
+
+// Each region reaches this far past the glyphs or the button it covers, so the
+// inversion takes in their anti-aliased edge instead of cutting across it.
+const INVERT_PAD_PX = 3;
+
 const BASE_VERTEX_SHADER = `#version 300 es
 precision highp float;
 in vec2 aPosition;
@@ -300,27 +322,31 @@ void main () {
 
 // The reveal itself: wherever dye density crosses the threshold band, alpha
 // goes to 0 (transparent). Below the threshold, alpha stays 1 and the color
-// is the paper texture (white page + the flat black wordmark + the tagline,
-// drawn from logo.png and the DOM tagline's own metrics — not left as HTML;
-// see the note on why that drawing has to happen on this canvas in
-// FluidInkReveal below).
+// is the paper texture — the white page with everything painted on it: the
+// wordmark, the type, the buttons. None of it is left as HTML; see the note
+// on why that drawing has to happen on this canvas in FluidInkReveal below.
 //
-// Outside the tagline, a transparent pixel just lets whatever sits behind
-// the canvas show through — the video within its own tight box, or the
+// Outside the invert regions, a transparent pixel just lets whatever sits
+// behind the canvas show through — the video within its own tight box, or the
 // wrapper's own solid black background everywhere else (see the className
 // below) — both black, so there's no seam where one ends and the other
 // begins.
 //
-// Inside the tagline's own rect specifically, revealing doesn't show
-// anything behind at all: erasing the SAME alpha there as everywhere else
-// would erase the text and its background at the same rate, and since both
-// reveal the identical black behind them, the letters would blend into the
-// background exactly where the ink touches them — the opposite of
-// legible. Instead the tagline always stays fully opaque, and reveals by
-// inverting its own paper colors — paper*aOutside for the white background
-// becomes black, and 1-paper for the black text becomes white, together,
-// from the same source pixels, so contrast is guaranteed rather than
-// incidental.
+// Inside an invert region, revealing doesn't show anything behind at all:
+// erasing the SAME alpha there as everywhere else would erase the type and its
+// background at the same rate, and since both reveal the identical black
+// behind them, the letters would blend into the background exactly where the
+// ink touches them — the opposite of legible. Instead those regions stay fully
+// opaque and reveal by inverting their own paper colors — the white page
+// becomes black and the black type becomes white, together, from the same
+// source pixels, so contrast is guaranteed rather than incidental. A painted
+// button without a region of its own is simply wiped out, which is what the
+// first attempt at painting them hit.
+//
+// One region per line of type and one per button, not one box around a group.
+// A union of two buttons also covers the gap between them, and a union of two
+// lines covers the ragged space beside the shorter one — both empty paper that
+// would turn solid black under the ink instead of letting it through.
 const DISPLAY_SHADER = `#version 300 es
 precision highp float;
 precision highp sampler2D;
@@ -329,25 +355,20 @@ uniform sampler2D uDye;
 uniform sampler2D uPaper;
 uniform float maskLo;
 uniform float maskHi;
-uniform vec4 taglineRect;
-uniform vec4 ctaRect;
+uniform vec4 invertRects[${MAX_INVERT_RECTS}];
+uniform int invertCount;
 out vec4 fragColor;
 void main () {
   float d = texture(uDye, vUv).r;
   float mask = smoothstep(maskLo, maskHi, d);
   vec3 paper = texture(uPaper, vUv).rgb;
 
-  float inTagline = step(taglineRect.x, vUv.x) * step(vUv.x, taglineRect.z)
-    * step(taglineRect.y, vUv.y) * step(vUv.y, taglineRect.w);
-
-  // The CTAs invert exactly like the tagline does: inside this rect the ink
-  // flips the paper instead of erasing it, so the black button reads white
-  // under ink and the white one reads black. Without a region of its own a
-  // painted button is simply wiped out, which is what the first attempt hit.
-  float inCta = step(ctaRect.x, vUv.x) * step(vUv.x, ctaRect.z)
-    * step(ctaRect.y, vUv.y) * step(vUv.y, ctaRect.w);
-
-  float inInvert = max(inTagline, inCta);
+  float inInvert = 0.0;
+  for (int i = 0; i < ${MAX_INVERT_RECTS}; i++) {
+    if (i >= invertCount) break;
+    vec4 r = invertRects[i];
+    inInvert = max(inInvert, step(r.x, vUv.x) * step(vUv.x, r.z) * step(r.y, vUv.y) * step(vUv.y, r.w));
+  }
 
   float aOutside = 1.0 - mask;
   vec3 colorOutside = paper * aOutside;
@@ -411,18 +432,68 @@ interface DoubleFBO {
 export interface FluidInkRevealHandle {
   /** Whether the fluid sim actually mounted (false = fallback rendered instead). */
   isActive: () => boolean;
+  /** Repaint the paper from the DOM as it stands now. The ink watches its own
+   * size, but not where its parent moves the things it paints — the space
+   * around the wordmark can change (a webfont rewrapping the line) while the
+   * ink's own box stays the same. The parent says when it has moved them. */
+  redraw: () => void;
+}
+
+/** One laid-out line of an element's text, in viewport CSS pixels. */
+interface TextLine {
+  text: string;
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+/**
+ * The lines an element's text actually broke into, exactly as the browser laid
+ * them out, read one word at a time.
+ *
+ * Word by word because nothing else says which words ended up on which line: a
+ * range over the whole text returns one rectangle per line, but not what is in
+ * it, and canvas text does not wrap at all. So the browser does the breaking —
+ * balance, width, font and all — and the paper copies the result.
+ *
+ * Words join a line by vertical overlap, not by an equal `top`: a glyph run in
+ * another script or weight can sit a fraction of a pixel off its neighbours,
+ * and exact equality would split one line in two.
+ */
+function measureTextLines(el: HTMLElement): TextLine[] {
+  const lines: (TextLine & { words: string[] })[] = [];
+  const range = document.createRange();
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    for (const match of (node.nodeValue ?? "").matchAll(/\S+/g)) {
+      const start = match.index ?? 0;
+      range.setStart(node, start);
+      range.setEnd(node, start + match[0].length);
+      const r = range.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue;
+      const middle = (r.top + r.bottom) / 2;
+      const line = lines.find((l) => middle > l.top && middle < l.bottom);
+      if (line) {
+        line.words.push(match[0]);
+        line.left = Math.min(line.left, r.left);
+        line.right = Math.max(line.right, r.right);
+        line.top = Math.min(line.top, r.top);
+        line.bottom = Math.max(line.bottom, r.bottom);
+      } else {
+        lines.push({ text: "", words: [match[0]], left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+      }
+    }
+  }
+  return lines.map(({ words, ...line }) => ({ ...line, text: words.join(" ") }));
 }
 
 interface FluidInkRevealProps {
   logoSrc: string;
   videoSrc: string;
-  /** Current (possibly mid-typewriter) tagline substring, drawn into the
-   * same canvas as the wordmark so it can invert under the ink too. */
-  taglineText: string;
-  /** The (visually transparent, layout-only) DOM element the tagline's
-   * real position/font/size is measured from — see HeroSection. */
-  /** Omit to leave the line to ordinary DOM text — see the mobile hero. */
-  taglineElRef?: React.RefObject<HTMLElement | null>;
+  /** Type painted onto the paper so it inverts under the ink rather than being
+   * wiped by it — the hero's line, and on a phone the row at its foot. */
+  textTargets?: TextTarget[];
   /** An invisible DOM spacer marking exactly where the (cropped) logo
    * should sit — see HeroSection. Measuring this instead of computing a
    * "how big should the logo be" formula is deliberate: a formula is
@@ -444,8 +515,19 @@ export interface CtaTarget {
   borderColor?: string;
 }
 
+export interface TextTarget {
+  /** A visually transparent element whose text is painted line for line, in
+   * its own computed font, exactly where the browser laid it out. */
+  ref: React.RefObject<HTMLElement | null>;
+  /** The colour it is painted in. Passed rather than read off the element,
+   * whose own colour is transparent by design. */
+  color: string;
+  /** A 14px spacer inside it standing in for ArrowIcon, painted as that icon. */
+  arrowRef?: React.RefObject<HTMLElement | null>;
+}
+
 const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(function FluidInkReveal(
-  { logoSrc, videoSrc, taglineText, taglineElRef, logoSlotRef, ctas, className },
+  { logoSrc, videoSrc, textTargets, logoSlotRef, ctas, className },
   ref
 ) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -453,30 +535,19 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
   const videoRef = useRef<HTMLVideoElement>(null);
   const activeRef = useRef(false);
   const redrawRef = useRef<(() => void) | null>(null);
-  // Same escape hatch the tagline text uses: read through a ref so the
-  // single long-lived effect below never needs these in its dep array.
+  // Read through refs so the single long-lived effect below never needs these
+  // in its dep array: re-running it would tear down and rebuild the whole WebGL
+  // context, and every parent render hands over fresh arrays.
   const ctasRef = useRef<CtaTarget[] | undefined>(ctas);
   ctasRef.current = ctas;
-  // redrawPaper() is created once, inside the main effect below, which
-  // deliberately does NOT re-run on every taglineText change (that would
-  // mean tearing down and rebuilding the whole WebGL context per
-  // keystroke). Reading the `taglineText` prop directly from there would
-  // therefore always see the string from whenever that effect last ran —
-  // stale on every subsequent keystroke. Keeping the latest value in a ref
-  // that redrawPaper reads from each call sidesteps the closure entirely.
-  const taglineTextRef = useRef(taglineText);
-  taglineTextRef.current = taglineText;
+  const textTargetsRef = useRef<TextTarget[] | undefined>(textTargets);
+  textTargetsRef.current = textTargets;
   const prefersReducedMotion = usePrefersReducedMotion();
 
   useImperativeHandle(ref, () => ({
     isActive: () => activeRef.current,
+    redraw: () => redrawRef.current?.(),
   }));
-
-  // Re-paints the paper texture whenever the typewriter advances — the
-  // WebGL setup itself doesn't need to re-run for that, just a redraw.
-  useEffect(() => {
-    redrawRef.current?.();
-  }, [taglineText]);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -663,9 +734,9 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
 
     buildSimTargets();
 
-    // ---- paper texture (the white page + flat black wordmark + tagline,
-    // drawn from logo.png and the DOM tagline's own metrics — not left as
-    // HTML, so both can be erased/inverted by the sim's own alpha output;
+    // ---- paper texture (the white page + flat black wordmark + the type and
+    // buttons, drawn from logo.png and the DOM's own metrics — not left as
+    // HTML, so all of it can be erased/inverted by the sim's own alpha output;
     // see DISPLAY_SHADER). A live 2D canvas is used purely as a pixel
     // source to upload from, never itself displayed. ----
     const paperCanvas = document.createElement("canvas");
@@ -677,12 +748,19 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-    // The current text bounding box in wrapper-local CSS pixels — recomputed
-    // whenever the paper texture is redrawn, and what both the video's CSS
-    // placement and the tagline-invert shader uniform key off.
+    // The GPU's texture ceiling, read once — see where the paper is sized.
+    const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number;
+
+    // The wordmark's bounding box in wrapper-local CSS pixels — recomputed
+    // whenever the paper texture is redrawn, and what the video's CSS
+    // placement keys off.
     let textRect = { left: 0, top: 0, width: 0, height: 0 };
-    let taglineRectUv = [0, 0, 0, 0];
-    let ctaRectUv = [0, 0, 0, 0];
+    // The regions the ink inverts rather than erases, as UV rects packed four
+    // floats apiece for the display shader. Refilled from zero on every redraw,
+    // so a target that has moved or gone can never leave a stale region
+    // inverting empty page.
+    const invertRects = new Float32Array(MAX_INVERT_RECTS * 4);
+    let invertCount = 0;
     let logoImage: HTMLImageElement | null = null;
     // Reused across frames; recreating it every paint would thrash allocation.
     let logoTintCanvas: HTMLCanvasElement | null = null;
@@ -698,7 +776,15 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     const redrawPaper = () => {
       const rect = wrapper.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // See PAPER_MAX_DPR. Also held inside the GPU's texture limit: a paper
+      // larger than the driver will accept does not upload at all, and that is
+      // a blank hero rather than a sharp one.
+      const dpr = Math.min(
+        window.devicePixelRatio || 1,
+        PAPER_MAX_DPR,
+        maxTextureSize / rect.width,
+        maxTextureSize / rect.height
+      );
       const w = Math.max(1, Math.round(rect.width * dpr));
       const h = Math.max(1, Math.round(rect.height * dpr));
       paperCanvas.width = w;
@@ -707,31 +793,86 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       paperCtx.fillStyle = "#ffffff";
       paperCtx.fillRect(0, 0, w, h);
 
-      // Tagline — drawn from the live DOM element's own measured position
-      // and computed font, matching what would have rendered there as
-      // ordinary text (which is now visually transparent — see
-      // HeroSection).
-      const taglineEl = taglineElRef?.current ?? null;
-      const currentTaglineText = taglineTextRef.current;
-      if (taglineEl) {
-        const tRect = taglineEl.getBoundingClientRect();
-        const relLeft = (tRect.left - rect.left) * dpr;
-        const relTop = (tRect.top - rect.top) * dpr;
-        const relWidth = tRect.width * dpr;
-        const relHeight = tRect.height * dpr;
+      invertCount = 0;
+      // Takes a viewport box, stores it as UV — y flipped, because the paper is
+      // uploaded with UNPACK_FLIP_Y. Works in CSS pixels against the wrapper
+      // rather than in paper pixels, so it is the same at any density.
+      const addInvertRect = (box: { left: number; top: number; right: number; bottom: number }) => {
+        if (invertCount === MAX_INVERT_RECTS) return;
+        const o = invertCount * 4;
+        invertRects[o] = (box.left - rect.left - INVERT_PAD_PX) / rect.width;
+        invertRects[o + 1] = 1 - (box.bottom - rect.top + INVERT_PAD_PX) / rect.height;
+        invertRects[o + 2] = (box.right - rect.left + INVERT_PAD_PX) / rect.width;
+        invertRects[o + 3] = 1 - (box.top - rect.top - INVERT_PAD_PX) / rect.height;
+        invertCount += 1;
+      };
 
-        if (currentTaglineText && relWidth > 0 && relHeight > 0) {
-          const style = getComputedStyle(taglineEl);
-          const fontSize = parseFloat(style.fontSize) * dpr;
-          paperCtx.font = `${style.fontWeight} ${fontSize}px ${style.fontFamily}`;
-          paperCtx.fillStyle = "#000000";
-          paperCtx.direction = "rtl";
-          paperCtx.textAlign = "right";
-          paperCtx.textBaseline = "middle";
-          paperCtx.fillText(currentTaglineText, relLeft + relWidth, relTop + relHeight / 2);
+      // ArrowIcon, drawn stroke for stroke into the box its spacer holds.
+      const paintArrow = (arrowEl: HTMLElement | null, color: string) => {
+        if (!arrowEl) return;
+        const aRect = arrowEl.getBoundingClientRect();
+        if (aRect.width <= 0 || aRect.height <= 0) return;
+        const ax = (aRect.left - rect.left) * dpr;
+        const ay = (aRect.top - rect.top) * dpr;
+        const u = (aRect.width * dpr) / 14; // the icon's own 14x14 viewBox
+        paperCtx.beginPath();
+        paperCtx.moveTo(ax + 11.5 * u, ay + 7 * u);
+        paperCtx.lineTo(ax + 2.5 * u, ay + 7 * u);
+        paperCtx.moveTo(ax + 6.5 * u, ay + 3 * u);
+        paperCtx.lineTo(ax + 2.5 * u, ay + 7 * u);
+        paperCtx.lineTo(ax + 6.5 * u, ay + 11 * u);
+        paperCtx.strokeStyle = color;
+        paperCtx.lineWidth = 1.5 * u;
+        paperCtx.lineCap = "round";
+        paperCtx.lineJoin = "round";
+        paperCtx.stroke();
+      };
+
+      // Type, painted line for line in the element's own computed font at the
+      // exact place the browser set it (see measureTextLines). The lines are
+      // handed back so the caller decides what, if anything, they invert.
+      const paintTextLines = (el: HTMLElement, color: string) => {
+        const style = getComputedStyle(el);
+        paperCtx.font = `${style.fontStyle} ${style.fontWeight} ${parseFloat(style.fontSize) * dpr}px ${style.fontFamily}`;
+        paperCtx.fillStyle = color;
+        paperCtx.direction = "rtl";
+        paperCtx.textAlign = "right";
+        // ON THE BASELINE, not on the middle of the line box. A word's range
+        // box is its font's content area, whose top sits exactly the font's
+        // ascent above the baseline — the same ascent the canvas reports for
+        // the same font. That places every glyph on the pixel row the browser
+        // would have used. "middle" is the middle of the em square, which only
+        // coincides with the content area when ascent and descent happen to be
+        // equal; for most fonts they are not, and the type sits a pixel or two
+        // off the real text it replaces.
+        paperCtx.textBaseline = "alphabetic";
+        const lines = measureTextLines(el);
+        for (const line of lines) {
+          const ascent = paperCtx.measureText(line.text).fontBoundingBoxAscent;
+          const x = (line.right - rect.left) * dpr;
+          if (ascent) {
+            paperCtx.fillText(line.text, x, (line.top - rect.top) * dpr + ascent);
+          } else {
+            // Engines that do not report font metrics yet.
+            paperCtx.textBaseline = "middle";
+            paperCtx.fillText(line.text, x, ((line.top + line.bottom) / 2 - rect.top) * dpr);
+            paperCtx.textBaseline = "alphabetic";
+          }
         }
+        return lines;
+      };
 
-        taglineRectUv = [relLeft / w, 1 - (relTop + relHeight) / h, (relLeft + relWidth) / w, 1 - relTop / h];
+      // Every text target. The element itself is transparent, so this copy is
+      // the one that is seen — and each of its lines inverts on its own.
+      for (const target of textTargetsRef.current ?? []) {
+        const el = target.ref.current;
+        if (!el) continue;
+        for (const line of paintTextLines(el, target.color)) addInvertRect(line);
+        const arrowEl = target.arrowRef?.current;
+        if (arrowEl) {
+          paintArrow(arrowEl, target.color);
+          addInvertRect(arrowEl.getBoundingClientRect());
+        }
       }
 
       // Logo — measured from the invisible logoSlot spacer (its exact
@@ -805,103 +946,45 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
 
       // CTAs — painted straight onto the paper layer, measured from their
       // own (transparent) DOM boxes so the canvas copy lands exactly where
-      // the real, clickable link already is.
-      const currentCtas = ctasRef.current;
-      // Union of both buttons, in the same UV space the tagline rect uses,
-      // padded slightly so the inversion covers their outer edge rather than
-      // cutting exactly at it. Reset first so a hidden/absent row can never
-      // leave a stale region inverting empty page.
-      ctaRectUv = [0, 0, 0, 0];
-      if (currentCtas && currentCtas.length) {
-        let minL = Infinity, minT = Infinity, maxR = -Infinity, maxB = -Infinity;
-        currentCtas.forEach((cta) => {
-          const el = cta.ref.current;
-          if (!el) return;
-          const r = el.getBoundingClientRect();
-          if (r.width <= 0 || r.height <= 0) return;
-          minL = Math.min(minL, r.left - rect.left);
-          minT = Math.min(minT, r.top - rect.top);
-          maxR = Math.max(maxR, r.right - rect.left);
-          maxB = Math.max(maxB, r.bottom - rect.top);
-        });
-        if (minL < Infinity) {
-          const pad = 3;
-          const l = (minL - pad) * dpr;
-          const t = (minT - pad) * dpr;
-          const r2 = (maxR + pad) * dpr;
-          const b2 = (maxB + pad) * dpr;
-          // y is flipped: the paper texture is uploaded with UNPACK_FLIP_Y.
-          ctaRectUv = [l / w, 1 - b2 / h, r2 / w, 1 - t / h];
+      // the real, clickable link already is. Each gets its own invert region;
+      // see the note on DISPLAY_SHADER for why not one around both.
+      for (const cta of ctasRef.current ?? []) {
+        const el = cta.ref.current;
+        if (!el) continue;
+        const bRect = el.getBoundingClientRect();
+        if (bRect.width <= 0 || bRect.height <= 0) continue;
+        const bx = (bRect.left - rect.left) * dpr;
+        const by = (bRect.top - rect.top) * dpr;
+        const bw = bRect.width * dpr;
+        const bh = bRect.height * dpr;
+        // The Hero's buttons are painted here rather than laid out in HTML,
+        // so they do not inherit anything from components/ui/Button and the
+        // shape has to be kept in step by hand. Half the height is a pill,
+        // which is what that component now draws — a fixed corner radius here
+        // is how these were left as rectangles when the rest of the site
+        // changed shape.
+        const radius = bh / 2;
+
+        paperCtx.beginPath();
+        if (typeof paperCtx.roundRect === "function") {
+          paperCtx.roundRect(bx, by, bw, bh, radius);
+        } else {
+          paperCtx.rect(bx, by, bw, bh);
         }
-      }
-      if (currentCtas) {
-        currentCtas.forEach((cta) => {
-          const el = cta.ref.current;
-          if (!el) return;
-          const bRect = el.getBoundingClientRect();
-          if (bRect.width <= 0 || bRect.height <= 0) return;
-          const bx = (bRect.left - rect.left) * dpr;
-          const by = (bRect.top - rect.top) * dpr;
-          const bw = bRect.width * dpr;
-          const bh = bRect.height * dpr;
-          // The Hero's buttons are painted here rather than laid out in HTML,
-          // so they do not inherit anything from components/ui/Button and the
-          // shape has to be kept in step by hand. Half the height is a pill,
-          // which is what that component now draws — a fixed corner radius here
-          // is how these were left as rectangles when the rest of the site
-          // changed shape.
-          const radius = bh / 2;
+        paperCtx.fillStyle = cta.fill;
+        paperCtx.fill();
+        if (cta.borderColor) {
+          paperCtx.lineWidth = Math.max(1, dpr);
+          paperCtx.strokeStyle = cta.borderColor;
+          paperCtx.stroke();
+        }
 
-          paperCtx.beginPath();
-          if (typeof paperCtx.roundRect === "function") {
-            paperCtx.roundRect(bx, by, bw, bh, radius);
-          } else {
-            paperCtx.rect(bx, by, bw, bh);
-          }
-          paperCtx.fillStyle = cta.fill;
-          paperCtx.fill();
-          if (cta.borderColor) {
-            paperCtx.lineWidth = Math.max(1, dpr);
-            paperCtx.strokeStyle = cta.borderColor;
-            paperCtx.stroke();
-          }
-
-          const labelEl = cta.labelRef.current;
-          if (labelEl) {
-            const lRect = labelEl.getBoundingClientRect();
-            const lStyle = getComputedStyle(labelEl);
-            paperCtx.font = `${lStyle.fontWeight} ${parseFloat(lStyle.fontSize) * dpr}px ${lStyle.fontFamily}`;
-            paperCtx.fillStyle = cta.textColor;
-            paperCtx.textAlign = "center";
-            paperCtx.textBaseline = "middle";
-            paperCtx.direction = "rtl";
-            paperCtx.fillText(
-              labelEl.textContent ?? "",
-              (lRect.left + lRect.width / 2 - rect.left) * dpr,
-              (lRect.top + lRect.height / 2 - rect.top) * dpr
-            );
-          }
-
-          const arrowEl = cta.arrowRef.current;
-          if (arrowEl) {
-            const aRect = arrowEl.getBoundingClientRect();
-            const ax = (aRect.left - rect.left) * dpr;
-            const ay = (aRect.top - rect.top) * dpr;
-            const size = aRect.width * dpr;
-            const u = size / 14; // the icon's own 14x14 viewBox
-            paperCtx.beginPath();
-            paperCtx.moveTo(ax + 11.5 * u, ay + 7 * u);
-            paperCtx.lineTo(ax + 2.5 * u, ay + 7 * u);
-            paperCtx.moveTo(ax + 6.5 * u, ay + 3 * u);
-            paperCtx.lineTo(ax + 2.5 * u, ay + 7 * u);
-            paperCtx.lineTo(ax + 6.5 * u, ay + 11 * u);
-            paperCtx.strokeStyle = cta.textColor;
-            paperCtx.lineWidth = 1.5 * u;
-            paperCtx.lineCap = "round";
-            paperCtx.lineJoin = "round";
-            paperCtx.stroke();
-          }
-        });
+        // The label goes through the same line painter as every other piece
+        // of type, so it lands on the browser's own baseline rather than on
+        // the middle of its box. Its region is the button's, below.
+        if (cta.labelRef.current) paintTextLines(cta.labelRef.current, cta.textColor);
+        paintArrow(cta.arrowRef.current, cta.textColor);
+        addInvertRect(bRect);
       }
       gl.bindTexture(gl.TEXTURE_2D, paperTexture);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -942,6 +1025,17 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       redrawPaper();
     };
     img.src = logoSrc;
+
+    // Canvas type is drawn in whichever font is loaded AT THE MOMENT of the
+    // call. Before the webfont arrives that is the fallback — and nothing else
+    // would ever paint the paper again, so the hero's type would stay in Arial
+    // on a slow connection for as long as the page was open. `ready` covers
+    // fonts already on their way; `loadingdone` covers any that start later.
+    const handleFontsLoaded = () => {
+      if (!disposed) redrawPaper();
+    };
+    document.fonts.ready.then(handleFontsLoaded);
+    document.fonts.addEventListener("loadingdone", handleFontsLoaded);
 
     const handleVideoMeta = () => positionVideo();
     video.addEventListener("loadedmetadata", handleVideoMeta);
@@ -1247,8 +1341,11 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       gl.uniform1i(displayProgram.uniforms.uPaper, 1);
       gl.uniform1f(displayProgram.uniforms.maskLo, CFG.MASK_LO);
       gl.uniform1f(displayProgram.uniforms.maskHi, CFG.MASK_HI);
-      gl.uniform4f(displayProgram.uniforms.taglineRect, taglineRectUv[0], taglineRectUv[1], taglineRectUv[2], taglineRectUv[3]);
-      gl.uniform4f(displayProgram.uniforms.ctaRect, ctaRectUv[0], ctaRectUv[1], ctaRectUv[2], ctaRectUv[3]);
+      // An array uniform is addressed through its first element's name — that
+      // is the name the program reports for it, and the location it returns
+      // takes the whole array.
+      gl.uniform4fv(displayProgram.uniforms["invertRects[0]"], invertRects);
+      gl.uniform1i(displayProgram.uniforms.invertCount, invertCount);
       drawQuad();
 
       rafId = requestAnimationFrame(step);
@@ -1272,6 +1369,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       video.removeEventListener("loadedmetadata", handleVideoMeta);
       video.removeEventListener("canplay", attemptPlay);
       document.removeEventListener("visibilitychange", handleVisibility);
+      document.fonts.removeEventListener("loadingdone", handleFontsLoaded);
       video.pause();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
