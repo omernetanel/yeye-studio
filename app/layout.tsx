@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { googleSans, assistant } from "@/lib/fonts";
-import { SITE_NAME, SITE_TITLE, SITE_DESCRIPTION } from "@/lib/site";
+import { SITE_NAME, SITE_TITLE, SITE_DESCRIPTION, SITE_BACKGROUND } from "@/lib/site";
 import { SmoothScrollProvider } from "@/lib/motion/lenis";
 
 // TODO: replace with the real production domain before launch (also used in app/sitemap.ts and app/robots.ts).
@@ -38,8 +38,8 @@ const BASE_URL = "https://yeyelabs.com";
  */
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: light)", color: SITE_BACKGROUND },
+    { media: "(prefers-color-scheme: dark)", color: SITE_BACKGROUND },
   ],
   viewportFit: "cover",
 };
@@ -69,7 +69,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="he" dir="rtl" className={`${googleSans.variable} ${assistant.variable}`}>
+    <html
+      lang="he"
+      dir="rtl"
+      className={`${googleSans.variable} ${assistant.variable}`}
+      // The surface, handed to CSS from the same constant the theme-color above
+      // is built from. Inline rather than declared in @theme so there is exactly
+      // one value: see SITE_BACKGROUND.
+      style={{ "--color-background": SITE_BACKGROUND } as React.CSSProperties}
+    >
       {/* No bg/text utilities here on purpose: they would win over the html,body
           rule in globals.css, which is the one place the document's own surface
           is decided — and that surface is what a phone reads when it picks a

@@ -7,7 +7,11 @@
  * brand palette or fonts happens here, once.
  */
 @theme {
-  --color-background: #0a0a0a;
+  /* --color-background is NOT declared here. It is set on <html> from
+     SITE_BACKGROUND in lib/site.ts, because the phone's theme-color has to be
+     the same value and that one can only be written in TypeScript. A default
+     here would be a second answer to the same question, and the wrong one the
+     day the site changes colour. */
   --color-surface: #111111;
   --color-surface-hover: #15151c;
   --color-primary: #4a4a4a;
@@ -81,20 +85,21 @@
 
 html,
 body {
-  /* WHITE, and it was #0a0a0a — which is the last thing on this page that was
-     still dark, and the reason the phone's own bars stayed black however the
-     theme-color below was declared. A browser deciding what to paint its
-     toolbar and status strip does not only read the meta tag: it looks at the
-     document's own surface, and this page was telling it, truthfully, that its
-     surface was almost black.
-     It changes nothing you can see in the page. Every section paints its own
-     background over this, and overscroll cannot expose it either because
-     overscroll-behavior is off below. It was a leftover from when the whole
-     site was dark, and it has been outvoted by every section since. */
-  background-color: #ffffff;
-  /* Black with it, for the same reason the background moved: text that inherits
-     from here rather than from a section would otherwise be white on white. */
-  color: #0a0a0a;
+  /* From SITE_BACKGROUND in lib/site.ts, by way of an inline variable on <html>
+     — see that constant for why it and the theme-color meta tag have to be the
+     same value. It used to be a token declared up in @theme as #0a0a0a, which
+     is the last thing on this page that was still dark and the reason the
+     phone's own bars stayed black however the meta tag was written: a browser
+     looks at the surface the document declares, not only at the tag.
+     It changes nothing you can see. Every section paints its own background
+     over this, and overscroll cannot expose it either because
+     overscroll-behavior is off below. */
+  background-color: var(--color-background);
+
+  /* No `color` here on purpose, where there used to be `white`. Text that gets
+     its colour from the document rather than from a section should take the
+     one that belongs to the declared scheme, which is what leaving it alone
+     does — and that follows a change of surface on its own. */
 
   /* This site has one rendering and it is the one that is authored here. Said
      out loud, it stops two separate things a phone does on its own to a page
