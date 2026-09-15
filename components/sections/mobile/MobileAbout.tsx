@@ -37,21 +37,36 @@ import { aboutFacts } from "@/lib/content";
 // What was wrong with the first pinned version was not the pin, it was how much
 // happened inside it: the greeting shrank AND lifted AND the face rose AND
 // settled, and a frame where the only thing moving is the animation reads as
-// frozen. Here the greeting arrives and then does nothing, and the picture is
-// the one thing travelling.
-const INTRO_VH = 1.9;
+// frozen.
+//
+// THE GREETING IS THE DESKTOP'S, beat for beat and in proportion: each line
+// comes up from half a screen below, heavily out of focus, the salutation first
+// and the name after it; the pair stands large in the middle of the screen; and
+// then it shrinks and lifts into its place at the top as the face climbs in
+// under it. The lines keep the desktop's 0.4em / 1.34em, so the salutation is
+// the same third of the name it is there.
+const INTRO_VH = 3;
 // AND IT OPENS BEFORE THE PIN CATCHES. A sticky panel's progress is zero until
 // its top reaches the top of the screen — which is a whole screen of scrolling
 // during which the black has arrived and is holding nothing. Opening the
-// progress a screen early means the greeting comes up WITH the black instead of
-// after it, and there is no dead ground.
-const INTRO_LEAD_VH = 0.85;
-const GREET_IN = [0, 0.22] as const;
-const GREET_RISE_PX = 44;
-// Up into its slot, on the stage's clock. The rise starts while the greeting is
-// still settling — it used to wait for it, which left the greeting standing
-// alone in a screen of empty black for a quarter of the run.
-const PORTRAIT_RISE = [0.08, 0.6] as const;
+// progress half a screen early means the greeting comes up WITH the black
+// instead of after it, and there is no dead ground.
+const INTRO_LEAD_VH = 0.5;
+const GREET_LINE_1 = [0, 0.22] as const;
+const GREET_LINE_2 = [0.24, 0.46] as const;
+const GREET_SETTLE = [0.52, 0.78] as const;
+const GREET_FROM_VH = 0.5;
+// The desktop's 52px of blur on a 124px line, kept as that ratio.
+const GREET_BLUR_EM = 0.42;
+// Large while it is alone — the name then spans most of a phone's width — and
+// settled so the name is the phone's display size, 56px.
+const GREET_SIZE_ALONE_VW = 13;
+const GREET_SIZE_SETTLED_PX = 42;
+// Where it settles, as a fraction of the panel from the top.
+const GREET_TOP = 0.19;
+// Up into its slot on the same beat the greeting starts to settle, as on the
+// desktop, where the face arrives while the name is still the thing being read.
+const PORTRAIT_RISE = [0.52, 0.95] as const;
 // It enters from just past the bottom edge rather than a screen below it, so
 // the top of it is already showing while it climbs.
 const PORTRAIT_FROM_VH = 0.62;
@@ -128,7 +143,12 @@ function span(progress: number, range: readonly [number, number]) {
 export default function MobileAbout() {
   const sectionRef = useRef<HTMLElement>(null);
   const introStageRef = useRef<HTMLDivElement>(null);
+  const greetRef = useRef<HTMLDivElement>(null);
   const greetLinesRef = useRef<(HTMLSpanElement | null)[]>([]);
+  // The greeting's height at its settled size. Its lines are sized in em and do
+  // not wrap, so at any other size the height is this in proportion — one read
+  // on layout, rather than one on every scroll frame.
+  const greetHeightRef = useRef(0);
   const portraitRef = useRef<HTMLDivElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
   const claimsRef = useRef<(HTMLElement | null)[]>([]);
@@ -155,16 +175,28 @@ export default function MobileAbout() {
         const lead = screen * INTRO_LEAD_VH;
         const progress = clamp01((lead - box.top) / (travel + lead));
 
-        // The greeting: both lines on one beat, each rising a little later than
-        // the last so the pair reads as one arrival rather than two.
-        greetLinesRef.current.forEach((line, index) => {
+        // THE GREETING. It is laid out at its settled place and size; the
+        // transform carries it from the middle of the panel up to there, and
+        // the size runs from large to settled over the same beat.
+        const greet = greetRef.current;
+        const panelHeight = (greet?.offsetParent as HTMLElement | null)?.offsetHeight ?? screen;
+        const settle = span(progress, GREET_SETTLE);
+        const aloneSize = (GREET_SIZE_ALONE_VW * window.innerWidth) / 100;
+        const size = lerp(aloneSize, GREET_SIZE_SETTLED_PX, settle);
+        if (greet) {
+          const height = (greetHeightRef.current * size) / GREET_SIZE_SETTLED_PX;
+          const fromMiddle = panelHeight / 2 - height / 2 - panelHeight * GREET_TOP;
+          greet.style.fontSize = `${size.toFixed(2)}px`;
+          greet.style.transform = `translateY(${lerp(fromMiddle, 0, settle).toFixed(1)}px)`;
+        }
+        [GREET_LINE_1, GREET_LINE_2].forEach((range, index) => {
+          const line = greetLinesRef.current[index];
           if (!line) return;
-          const t = span(progress, [
-            GREET_IN[0] + index * 0.06,
-            GREET_IN[1] + index * 0.06,
-          ] as const);
-          line.style.opacity = String(t);
-          line.style.transform = `translateY(${lerp(GREET_RISE_PX, 0, t).toFixed(1)}px)`;
+          const rise = span(progress, range);
+          line.style.opacity = String(rise);
+          const blur = lerp(aloneSize * GREET_BLUR_EM, 0, clamp01(rise * 1.4));
+          line.style.filter = blur > 0.15 ? `blur(${blur.toFixed(1)}px)` : "";
+          line.style.transform = `translateY(${lerp(screen * GREET_FROM_VH, 0, rise).toFixed(1)}px)`;
         });
 
         const rise = span(progress, PORTRAIT_RISE);
@@ -275,9 +307,31 @@ export default function MobileAbout() {
       if (closerSwashRef.current) closerSwashRef.current.style.clipPath = "none";
       return;
     }
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    // The settled height, read at the settled size with the scroll-driven size
+    // put back afterwards. Again once the display font has loaded, since the
+    // first read runs against the fallback face.
+    const measure = () => {
+      const greet = greetRef.current;
+      if (!greet) return;
+      const current = greet.style.fontSize;
+      greet.style.fontSize = `${GREET_SIZE_SETTLED_PX}px`;
+      greetHeightRef.current = greet.offsetHeight;
+      greet.style.fontSize = current;
+    };
+    const refresh = () => {
+      measure();
+      update();
+    };
+    refresh();
+    let cancelled = false;
+    document.fonts.ready.then(() => {
+      if (!cancelled) refresh();
+    });
+    window.addEventListener("resize", refresh);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("resize", refresh);
+    };
   }, [prefersReducedMotion]);
 
   useMotionValueEvent(scrollY, "change", () => {
@@ -293,8 +347,15 @@ export default function MobileAbout() {
           drawing origin rather than just adding a bar. */}
       <div ref={introStageRef} style={{ height: `${INTRO_VH * 100}svh` }}>
         <div className="sticky top-0 h-[100svh] overflow-clip">
-          <div className="absolute inset-x-0 top-[19%] px-6 text-center">
-            <span className="block font-display text-m-small leading-none font-bold text-white/70">
+          {/* Laid out at its settled place and size, which is also what
+              reduced motion shows. The desktop's markup: em-sized lines, so
+              the pair keeps its proportions at every size on the way up. */}
+          <div
+            ref={greetRef}
+            className="absolute inset-x-0 top-[19%] text-center font-display leading-[1.06] font-bold whitespace-nowrap text-white will-change-transform"
+            style={{ fontSize: `${GREET_SIZE_SETTLED_PX}px` }}
+          >
+            <span className="block text-[0.4em] text-white/70">
               <span
                 ref={(el) => {
                   greetLinesRef.current[0] = el;
@@ -305,7 +366,7 @@ export default function MobileAbout() {
                 נעים מאוד,
               </span>
             </span>
-            <span className="mt-3 block font-display text-m-display font-bold text-white">
+            <span className="block text-[1.34em]">
               <span
                 ref={(el) => {
                   greetLinesRef.current[1] = el;
