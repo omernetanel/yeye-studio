@@ -116,12 +116,13 @@ const CLOSER_PULL_VH = 25;
 const CLOSER_LEAD_VH = 0.7;
 // THE BALLOONS WAIT FOR THE LINE. The first two — one blue, one silver — go
 // when the top of the impact line has come up to 30% of the screen from the
-// bottom, and the rest a little after it. Cued off the stage instead, they
-// started while the cards were still being read: the stage is pulled up into
-// the cards' space, so its own lead-in begins long before the line is on
-// screen. Fractions of the screen from the top.
+// bottom, and the rest on the same cue, a beat behind them by their own clock
+// in BalloonDrop. Cued off the stage instead, they started while the cards were
+// still being read: the stage is pulled up into the cards' space, so its own
+// lead-in begins long before the line is on screen. A second, later line
+// position for the rest made them depend on how fast the reader scrolled, and
+// at a reading pace they came far too late. Fraction of the screen from the top.
 const DROP_LINE_AT = 0.7;
-const LEAVING_LINE_AT = 0.6;
 const CLOSER_ARRIVE = [0, 0.16] as const;
 const CLOSER_DRAW = [0.42, 0.82] as const;
 
@@ -268,9 +269,12 @@ export default function MobileAbout() {
     const panelTop = Math.max(box.top, Math.min(0, box.bottom - screen));
     const lineTop = panelTop + line.offsetTop;
     // Both latch inside BalloonDrop, so reading them false again on the way back
-    // up does not take a balloon back out of the air.
-    if (!dropStateRef.current.armed) dropStateRef.current.armed = lineTop < screen * DROP_LINE_AT;
-    dropStateRef.current.leaving = lineTop < screen * LEAVING_LINE_AT;
+    // up does not take a balloon back out of the air. NOT latched here: BalloonDrop
+    // resets itself once the reader scrolls back above the section, and a flag
+    // still stuck true from the last pass restarted the drop the moment the
+    // section came back into view — two balloons over the greeting.
+    dropStateRef.current.armed = lineTop < screen * DROP_LINE_AT;
+    dropStateRef.current.leaving = lineTop < screen * DROP_LINE_AT;
     const progress = clamp01((closerLead - box.top) / (travel + closerLead));
 
     const arrive = span(progress, CLOSER_ARRIVE);
@@ -285,7 +289,7 @@ export default function MobileAbout() {
     // And not before the rest have started. The line finishes its fade while it
     // is still at the bottom edge of the screen, so on arrival alone the balloon
     // it knocks went ahead of the two that are meant to fall first.
-    dropStateRef.current.wallLive = arrive >= 1 && lineTop < screen * LEAVING_LINE_AT;
+    dropStateRef.current.wallLive = arrive >= 1 && lineTop < screen * DROP_LINE_AT;
 
     const draw = span(progress, CLOSER_DRAW);
     swash.style.clipPath = `inset(0 ${((1 - draw) * 100).toFixed(1)}% 0 0)`;

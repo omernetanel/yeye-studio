@@ -132,17 +132,21 @@ const MOBILE_CAST: readonly CastEntry[] = [
   // apart, balloons on a 375px column are never fewer than three on screen at
   // once and read as one falling mass, and even gaps read as a machine feeding
   // them in.
-  { cue: "leaving", at: 0, x: 0.86, depth: 0, type: 1, settles: false, front: false },
-  { cue: "leaving", at: 2400, x: 0.33, depth: 0.5, type: 1, settles: false, front: false },
+  //
+  // On the same cue as the first two, so each time is measured from the moment
+  // those two went: 800ms leaves them a clear head start without the rest
+  // arriving late.
+  { cue: "leaving", at: 800, x: 0.86, depth: 0, type: 1, settles: false, front: false },
+  { cue: "leaving", at: 2000, x: 0.33, depth: 0.5, type: 1, settles: false, front: false },
 
   // AND THREE THAT STAY. Everything above falls straight through the bottom of
   // the black; these come to rest on the floor of the section and are still
   // there when the reader leaves it. Without them the close is one balloon on a
   // line and a great deal of empty black under it — the pile is what gives the
   // end of the section any weight at all.
-  { cue: "leaving", at: 4800, x: 0.16, depth: 0.5, type: 1, settles: true, front: false },
-  { cue: "leaving", at: 6600, x: 0.62, depth: 0, type: 1, settles: true, front: false },
-  { cue: "leaving", at: 8900, x: 0.4, depth: 1, type: 0, settles: true, front: true },
+  { cue: "leaving", at: 3300, x: 0.16, depth: 0.5, type: 1, settles: true, front: false },
+  { cue: "leaving", at: 4500, x: 0.62, depth: 0, type: 1, settles: true, front: false },
+  { cue: "leaving", at: 5900, x: 0.4, depth: 1, type: 0, settles: true, front: true },
 
   // ONE on the line, and the biggest of them: depth 1 puts it in the near band
   // and type 0 is the silver. A single balloon knocked by the impact line reads
