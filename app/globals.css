@@ -545,7 +545,48 @@ body {
  * square and oversized (150% of the longer side, by way of 200% width on a box
  * that is as wide as it is tall) so the disc covers the corners at every angle
  * rather than sweeping its own edge across the card. */
+/* ONLY THE CARD IN THE MIDDLE IS LIT. The two either side are peeking, not
+   being read, and three lit borders at once turn one moving light into
+   decoration. It fades rather than switches, so the light hands over as the
+   swipe settles — and the card's own hairline border stays, so an unlit card is
+   still a card. The attribute comes from SwipeCarousel. */
+[data-active="false"] .border-glow-sweep {
+  opacity: 0;
+}
+
+/* EXCEPT FOR A REFLECTION OFF THE ONE IN THE MIDDLE.
+ *
+ * Every card's disc runs the same twelve-second animation and they all start
+ * together, so they are always at the same angle — the neighbour does not need
+ * to be told where the light is, it already knows. What is added here is WHERE
+ * it may show: only along the edge that faces the middle card, so the light
+ * appears there exactly as the arc in the middle swings that way, and the rest
+ * of the neighbour's border stays dark.
+ *
+ * Faint, and much fainter than the card being read: this is light falling on
+ * something, not a second lit card.
+ *
+ * In RTL the first slide is the rightmost, so the one BEFORE the active card in
+ * the DOM sits to its right and catches the light on its left edge, and the one
+ * AFTER sits to its left and catches it on its right. */
+[data-active="false"]:has(+ [data-active="true"]) .border-glow-sweep,
+[data-active="true"] + [data-active="false"] .border-glow-sweep {
+  opacity: 0.28;
+}
+
+/* The card to the right of the middle one catches it on its left edge. */
+[data-active="false"]:has(+ [data-active="true"]) .border-glow-sweep {
+  -webkit-mask-image: linear-gradient(to right, black, transparent 42%);
+  mask-image: linear-gradient(to right, black, transparent 42%);
+}
+
+[data-active="true"] + [data-active="false"] .border-glow-sweep {
+  -webkit-mask-image: linear-gradient(to left, black, transparent 42%);
+  mask-image: linear-gradient(to left, black, transparent 42%);
+}
+
 .border-glow-sweep {
+  transition: opacity 450ms ease-out;
   position: absolute;
   top: 50%;
   left: 50%;

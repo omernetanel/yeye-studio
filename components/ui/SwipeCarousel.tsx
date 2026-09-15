@@ -88,6 +88,10 @@ export default function SwipeCarousel({
             ref={(el) => {
               itemRefs.current[i] = el;
             }}
+            // Which slide is the one being read. Published as an attribute
+            // rather than a class so a slide's own design decides what to do
+            // with it — the claim cards light their border only here.
+            data-active={i === active}
             className="shrink-0 snap-center"
             style={{ width: slideWidth }}
           >
