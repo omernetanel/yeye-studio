@@ -18,6 +18,13 @@ const WHATSAPP_NUMBER = "972552434775";
  */
 export default function WhatsAppButton() {
   const [dark, setDark] = useState(false);
+  // Held back until the hero is behind the reader. Two reasons, and the second
+  // is the one that forced it: the opening screen is a wordmark, one sentence
+  // and one button, and a floating circle in the corner of it is a fourth thing
+  // competing with three — and on a phone it landed directly on the studio line
+  // at the foot, which is the one place on the page where the layout has no
+  // room to give. Everything after the hero has margins it can spare.
+  const [past, setPast] = useState(false);
   const rootRef = useRef<HTMLAnchorElement>(null);
 
   // Same contract the logo and the menu use: a section declares itself dark
@@ -32,6 +39,14 @@ export default function WhatsAppButton() {
       const box = root.getBoundingClientRect();
       const x = box.left + box.width / 2;
       const y = box.top + box.height / 2;
+
+      // Its own rect is what the colour check below reads, so it is never taken
+      // out of the layout — only made invisible and untouchable. "Left the
+      // hero" is the hero's last pixel clearing the top of the screen; with no
+      // hero on the page at all (the sub-pages) there is nothing to wait for.
+      const hero = document.getElementById("hero");
+      setPast(!hero || hero.getBoundingClientRect().bottom <= 0);
+
       let over = false;
       for (const el of document.querySelectorAll<HTMLElement>('[data-nav-dark="true"]')) {
         const r = el.getBoundingClientRect();
@@ -62,13 +77,19 @@ export default function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="WhatsApp"
+      aria-hidden={!past}
+      tabIndex={past ? undefined : -1}
       // No clip and no crop. The file carries a real alpha channel now, so the
       // mark cuts its own shape — an earlier version was yuv420p with the
       // transparency checkerboard exported into the pixels, and this had to be
       // a circular mask with the artwork scaled up inside it to hide the
       // corners. None of that is needed against a file that is actually
       // transparent.
-      className="fixed bottom-5 left-5 z-40 block h-[64px] w-[64px] transition-transform duration-200 ease-out hover:scale-[1.06] active:scale-100 md:bottom-7 md:left-7 md:h-[72px] md:w-[72px]"
+      className={`fixed bottom-5 left-5 z-40 block h-[64px] w-[64px] transition-[opacity,transform] duration-300 ease-out md:bottom-7 md:left-7 md:h-[72px] md:w-[72px] ${
+        past
+          ? "pointer-events-auto translate-y-0 opacity-100 hover:scale-[1.06] active:scale-100"
+          : "pointer-events-none translate-y-3 opacity-0"
+      }`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img

@@ -34,6 +34,13 @@ const TAGLINE_TEXT = "בואו נבנה לכם אתר שעובד ומוכר בא
  */
 const SHOW_TAGLINE = true;
 
+// How far the phone's CTA sits BELOW the exact midpoint between the wordmark
+// and the line at the foot (see where it is applied). Dead centre is where the
+// arithmetic lands; a little under it is where the eye wants it, because the
+// mark above is a solid black block and the row below is a thin grey line — the
+// heavier neighbour needs the bigger gap or the button reads as crowding it.
+const CTA_DROP_PX = 24;
+
 export default function HeroSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
@@ -174,7 +181,7 @@ export default function HeroSection() {
         // `top` is measured from the slot's TOP edge, not its bottom — the
         // button is positioned inside the mark's own box. Subtracting the wrong
         // edge put it a mark's height too high.
-        cta.style.top = `${middle - ctaBox.height / 2 - slotBox.top}px`;
+        cta.style.top = `${middle - ctaBox.height / 2 - slotBox.top + CTA_DROP_PX}px`;
       }
     };
     resize();
