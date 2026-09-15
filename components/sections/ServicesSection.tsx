@@ -179,10 +179,10 @@ const ABOUT_SHIFT_Y_PX = -PANEL_STICKY_TOP_PX;
 // edge are simply not on screen. At 0 that was the heading's own cap line.
 //
 // So the gap cannot be tuned smaller than the clearance: they are the same
-// pixels seen in two states. 30 leaves ten clear when locked — about seventeen
-// with the line box's own leading — and reads as a close gap rather than a hole
-// when it is sitting still.
-const HEADING_ZONE_PADDING_TOP_PX = 30;
+// pixels seen in two states. 40 leaves twenty clear when locked — about
+// twenty-seven with the line box's own leading — and reads as a close gap
+// rather than a hole when it is sitting still.
+const HEADING_ZONE_PADDING_TOP_PX = 40;
 const HEADING_ZONE_PADDING_BOTTOM_PX = 8;
 
 // Scroll no longer maps straight onto the clip's timeline. At each of these

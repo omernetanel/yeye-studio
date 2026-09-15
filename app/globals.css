@@ -81,8 +81,20 @@
 
 html,
 body {
-  background-color: var(--color-background);
-  color: white;
+  /* WHITE, and it was #0a0a0a — which is the last thing on this page that was
+     still dark, and the reason the phone's own bars stayed black however the
+     theme-color below was declared. A browser deciding what to paint its
+     toolbar and status strip does not only read the meta tag: it looks at the
+     document's own surface, and this page was telling it, truthfully, that its
+     surface was almost black.
+     It changes nothing you can see in the page. Every section paints its own
+     background over this, and overscroll cannot expose it either because
+     overscroll-behavior is off below. It was a leftover from when the whole
+     site was dark, and it has been outvoted by every section since. */
+  background-color: #ffffff;
+  /* Black with it, for the same reason the background moved: text that inherits
+     from here rather than from a section would otherwise be white on white. */
+  color: #0a0a0a;
 
   /* This site has one rendering and it is the one that is authored here. Said
      out loud, it stops two separate things a phone does on its own to a page
