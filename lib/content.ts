@@ -42,6 +42,15 @@ export const services = [
   },
 ];
 
+/**
+ * The line over the three facts on a phone, where they are a card the reader
+ * swipes rather than a list. The desktop prints them without one: there they
+ * stand in a row at the foot of an assembled screen and read as a summary of
+ * what is above them, while a single card needs to say what it is before anyone
+ * will swipe it.
+ */
+export const ABOUT_FACTS_HEADING = "מה היתרונות בלעבוד איתי?";
+
 // The three things a client needs to believe before hiring one person instead
 // of a studio. Not achievements and not numbers: each one is a plain fact about
 // how the work is arranged, which an agency that subcontracts or assembles

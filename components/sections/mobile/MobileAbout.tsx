@@ -5,7 +5,9 @@ import { useMotionValueEvent, useScroll } from "framer-motion";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import HeadingSwash from "@/components/ui/HeadingSwash";
 import BalloonDrop, { type DropState } from "@/components/sections/about/BalloonDrop";
-import { aboutFacts } from "@/lib/content";
+import BorderGlowCard from "@/components/ui/BorderGlowCard";
+import SwipeCarousel from "@/components/ui/SwipeCarousel";
+import { ABOUT_FACTS_HEADING, aboutFacts } from "@/lib/content";
 
 /**
  * "מי אני" on a phone.
@@ -86,33 +88,31 @@ const PORTRAIT_SHRINK_RUN_VH = 0.55;
 // gap to the copy under it never changes while it settles.
 const PORTRAIT_SETTLED = 0.88;
 
-// How far the cards brighten as they come up: dim when they arrive, full once
-// their middle reaches FACT_READ_AT of the screen. A function of position, so it
-// only ever runs one way per direction of scroll — never dark, bright, dark.
-const FACT_DIM = 0.35;
-const FACT_READ_FROM = 0.78;
-const FACT_READ_AT = 0.5;
+// THE IMPACT LINE IS KEYED TO ITSELF, not to the stage it lives in. It fades up
+// as its own top crosses the bottom of the screen — which, with the gap the
+// cards leave above it, is only once the card has gone past the middle of the
+// page. Keyed to the stage's progress instead, it began arriving while the card
+// was still being read, because a pinned stage opens its clock a screen before
+// anything of it is visible. Fractions of the screen from the top.
+const LINE_IN_FROM = 0.92;
+const LINE_IN_TO = 0.62;
 
 // How far into the screen a scrolling element must come before it is fully in.
 const RISE_VH = 0.42;
 const RISE_PX = 26;
 
-// THE CLOSE. It rides up with the copy, catches at the middle of the screen,
+// THE CLOSE. It rides up behind the card, catches at the middle of the screen,
 // and holds while the balloons fall and the rule draws under it.
-// 1.6, not 2.2. The pin held for 1.2 screens after the line had arrived, which
-// is a long time to look at a finished sentence — and every one of those pixels
-// is also scroll the reader has to spend to get out of the section. Halved: the
-// line stands, the balloons fall, the rule draws, and it lets go.
-const CLOSER_STAGE_VH = 1.6;
-// And it starts inside the cards' own space rather than after it. The distance
-// from the last card to the line was the section's bottom padding plus the top
-// half of a pinned screen; pulling the stage up by a quarter-screen halves it,
-// so the line arrives while the reader is still leaving the cards.
-const CLOSER_PULL_VH = 25;
-// Same lead as the opening, and for the same reason turned around: without it
-// the line does not begin until the cards above have already left, so it always
-// arrived on an empty screen and read as a section of its own rather than as
-// the end of this one.
+//
+// 2.8 screens, where it was 1.6. The three claims used to be three blocks the
+// reader scrolled past, and the line arrived as the last of them left; now they
+// are one card, which the page scrolls off in a fraction of that. The hold has
+// to carry the difference, or the line reaches the middle of the screen and the
+// section ends before the balloons have finished falling through it.
+const CLOSER_STAGE_VH = 2.8;
+// The pull up into the cards' space is gone with them. It existed to close a
+// gap left by three stacked blocks; against a single card it did the opposite,
+// and the brief here is a wider gap, not a tighter one.
 const CLOSER_LEAD_VH = 0.7;
 // THE BALLOONS WAIT FOR THE LINE. The first two — one blue, one silver — go
 // when the top of the impact line has come up to 30% of the screen from the
@@ -123,7 +123,6 @@ const CLOSER_LEAD_VH = 0.7;
 // position for the rest made them depend on how fast the reader scrolled, and
 // at a reading pace they came far too late. Fraction of the screen from the top.
 const DROP_LINE_AT = 0.7;
-const CLOSER_ARRIVE = [0, 0.16] as const;
 const CLOSER_DRAW = [0.42, 0.82] as const;
 
 function clamp01(value: number) {
@@ -154,10 +153,7 @@ export default function MobileAbout() {
   const greetHeightRef = useRef(0);
   const portraitRef = useRef<HTMLDivElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
-  const claimsRef = useRef<(HTMLElement | null)[]>([]);
-  // High-water marks for the cards. Everything else here reverses with the
-  // scroll; these do not — see the comment where they are read.
-  const claimsSeenRef = useRef<boolean[]>([]);
+  const cardsRef = useRef<HTMLDivElement>(null);
   const closerStageRef = useRef<HTMLDivElement>(null);
   const closerLineRef = useRef<HTMLParagraphElement>(null);
   const closerSwashRef = useRef<HTMLDivElement>(null);
@@ -228,29 +224,19 @@ export default function MobileAbout() {
       copy.style.transform = `translateY(${lerp(RISE_PX, 0, t).toFixed(1)}px)`;
     }
 
-    // THE CARDS, and they are the one thing here that does not reverse.
+    // THE CARD, arriving as one block — heading, card and dots together.
     //
-    // Everything else on this page is a function of scroll position, so
-    // scrolling back up takes it apart again — which is right for a thing that
-    // is arriving. A card that has been read is not arriving any more, and
-    // watching all three fold themselves away on the way back up reads as the
-    // page undoing itself. Latched with a high-water mark: once in, in.
-    //
-    // What does follow the scroll is how bright a card is: it arrives dim and
-    // comes up to full as it reaches the middle of the screen, which walks the
-    // eye down the three the way the desktop's sweep does.
-    claimsRef.current.forEach((el, index) => {
-      if (!el) return;
-      const box = el.getBoundingClientRect();
-      if (!claimsSeenRef.current[index] && box.top < screen * 0.82) claimsSeenRef.current[index] = true;
-      const seen = claimsSeenRef.current[index];
-      const middle = box.top + box.height / 2;
-      const read = smoothstep(
-        clamp01((screen * FACT_READ_FROM - middle) / (screen * (FACT_READ_FROM - FACT_READ_AT))),
-      );
-      el.style.opacity = seen ? String(lerp(FACT_DIM, 1, read)) : "0";
-      el.style.transform = seen ? "translateY(0)" : "translateY(30px)";
-    });
+    // It used to be three, each with a high-water mark of its own and a sweep
+    // that brightened them in turn. None of that survives the three becoming one
+    // thing the reader swipes: there is no order to walk the eye down, and a
+    // card that dims because the page moved would fight the swipe for attention.
+    const cards = cardsRef.current;
+    if (cards) {
+      const top = cards.getBoundingClientRect().top;
+      const t = smoothstep(clamp01((screen - top) / (screen * RISE_VH)));
+      cards.style.opacity = String(t);
+      cards.style.transform = `translateY(${lerp(RISE_PX, 0, t).toFixed(1)}px)`;
+    }
 
     const stage = closerStageRef.current;
     const line = closerLineRef.current;
@@ -277,7 +263,11 @@ export default function MobileAbout() {
     dropStateRef.current.leaving = lineTop < screen * DROP_LINE_AT;
     const progress = clamp01((closerLead - box.top) / (travel + closerLead));
 
-    const arrive = span(progress, CLOSER_ARRIVE);
+    // Its own entrance, off its own place on the screen rather than off the
+    // stage's clock — see LINE_IN_FROM.
+    const arrive = smoothstep(
+      clamp01((screen * LINE_IN_FROM - lineTop) / (screen * (LINE_IN_FROM - LINE_IN_TO))),
+    );
     line.style.opacity = String(arrive);
     line.style.transform = `translateY(${lerp(30, 0, arrive).toFixed(1)}px)`;
 
@@ -306,7 +296,7 @@ export default function MobileAbout() {
         copyRef.current,
         closerLineRef.current,
         ...greetLinesRef.current,
-        ...claimsRef.current,
+        cardsRef.current,
       ]) {
         if (el) {
           el.style.opacity = "1";
@@ -426,38 +416,41 @@ export default function MobileAbout() {
           </p>
         </div>
 
-        {/* The three as the desktop sets them: a hairline, the numeral, the
-            claim and its sentence, right-aligned under the copy. They were glass
-            cards, which nothing else on the site looks like.
+        {/* THE THREE AS ONE CARD THE READER SWIPES. Stacked, they were three
+            blocks of type on a screen that already carries a face and two
+            paragraphs, and they are the part a reader is least likely to work
+            through. One at a time is shorter to look at, and the swipe is
+            something to do rather than something to read.
 
             mt-16 is the same 64px the picture stands above the copy — written
             as the same number by hand, because one is a margin and the other is
-            where the picture sits in a pinned panel, and nothing links them.
-
-            Opacity follows the scroll closely and the arrival glides, so the
-            two get different transition lengths. */}
-        <ol className="mx-auto mt-16 max-w-[420px] space-y-9">
-          {aboutFacts.map((fact, index) => (
-            <li
-              key={fact.title}
-              ref={(el) => {
-                claimsRef.current[index] = el;
-              }}
-              className="border-t border-white/20 pt-5 text-right [transition:opacity_200ms_ease-out,transform_700ms_ease-out] will-change-transform"
-              style={{ opacity: 0, transform: "translateY(30px)" }}
-            >
-              <span className="font-display text-m-small leading-none font-bold tracking-[0.18em] text-white/35">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <h3 className="mt-3 font-display text-m-sub font-bold text-balance text-white">
-                {fact.title}
-              </h3>
-              <p className="mt-2 font-body text-m-small text-balance text-white/55">
-                {fact.description}
-              </p>
-            </li>
-          ))}
-        </ol>
+            where the picture sits in a pinned panel, and nothing links them. */}
+        <div
+          ref={cardsRef}
+          className="mt-16 will-change-transform"
+          style={{ opacity: 0, transform: `translateY(${RISE_PX}px)` }}
+        >
+          <h3 className="text-center font-display text-m-sub font-bold text-white">
+            {ABOUT_FACTS_HEADING}
+          </h3>
+          {/* 72%, so a slice of the card on either side shows the middle one is
+              one of several. The numerals are gone with the list they belonged
+              to: "01" on a card that arrives on its own says the reader has
+              missed something, where the dots under it say how many there are
+              without numbering anything. */}
+          <SwipeCarousel className="mt-6" slideWidth="72vw" tone="dark" centred>
+            {aboutFacts.map((fact) => (
+              <BorderGlowCard key={fact.title} className="h-full px-5 py-8 text-center">
+                <h4 className="font-display text-m-sub font-bold text-balance text-white">
+                  {fact.title}
+                </h4>
+                <p className="mt-3 font-body text-m-small text-balance text-white/55">
+                  {fact.description}
+                </p>
+              </BorderGlowCard>
+            ))}
+          </SwipeCarousel>
+        </div>
       </div>
 
       {/* The balloons. A child of the section rather than of a stage, because
@@ -475,10 +468,7 @@ export default function MobileAbout() {
           above finishes leaving, the balloons fall, and the rule draws. */}
       <div
         ref={closerStageRef}
-        style={{
-          height: `${CLOSER_STAGE_VH * 100}svh`,
-          marginTop: `-${CLOSER_PULL_VH}svh`,
-        }}
+        style={{ height: `${CLOSER_STAGE_VH * 100}svh` }}
       >
         {/* Centred in the panel. It was held near the top for one round to
             close the gap from the last card — but that gap is the lead-in's job

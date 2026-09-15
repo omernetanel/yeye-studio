@@ -503,6 +503,107 @@ body {
   }
 }
 
+/* THE GLOW ON THE PHONE'S CLAIM CARDS.
+ *
+ * Taken from React Bits' BorderGlow (MIT) and cut down to the half that draws:
+ * a cone of light masked around the border, plus the same cone as an outer
+ * bloom. What was dropped is everything that aimed it — the original reads a
+ * mouse pointer near the card's edges, and the cards this is for are only ever
+ * on a phone, where there is no pointer to read.
+ *
+ * SO IT IS TURNED BY A CSS ANIMATION, and that is not a shortcut: a CSS
+ * animation keeps running through iOS momentum scrolling, where anything driven
+ * by scroll or pointer events stops dead for the length of the flick. The brief
+ * was a glow that does not stall while the page moves.
+ *
+ * Twelve seconds a turn, and faint. The reference shot is brighter than this on
+ * purpose: there it is the only thing on screen, and here it sits behind three
+ * lines of type that have to stay the thing being read. */
+.border-glow {
+  /* Pearl rather than white: the sweep runs from white through a light grey to
+     silver, so the edge reads as metal catching light rather than as a lamp. */
+  --glow-rgb: 255 255 255;
+  position: relative;
+  isolation: isolate;
+  border-radius: 24px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  background: #0b0b0b;
+  /* Clips the turning disc below to the card's own shape. */
+  overflow: hidden;
+}
+
+/* THE LIGHT IS A TURNING DISC, not a turning gradient.
+ *
+ * The first version put the animated angle inside the conic-gradient that masks
+ * the border — `conic-gradient(from var(--glow-angle) ...)` — and it never moved
+ * a pixel: the property animated (it was read back mid-sweep at 357deg) while
+ * the gradient stayed at the angle it was first evaluated with. Engines resolve
+ * a gradient image once and do not rebuild it when a variable inside it changes.
+ *
+ * So the gradient holds still and the ELEMENT rotates, which is a transform —
+ * cheap, composited, and something a browser has to keep repainting. It is
+ * square and oversized (150% of the longer side, by way of 200% width on a box
+ * that is as wide as it is tall) so the disc covers the corners at every angle
+ * rather than sweeping its own edge across the card. */
+.border-glow-sweep {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  aspect-ratio: 1;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgb(255 255 255 / 85%) 22deg,
+    rgb(216 216 221 / 55%) 40deg,
+    rgb(154 160 166 / 25%) 62deg,
+    transparent 92deg,
+    transparent 360deg
+  );
+  animation: border-glow-turn 12s linear infinite;
+}
+
+/* The card's own face, over the disc: what is left showing of it is the 1px
+   ring between this and the card's edge, which is the lit border. */
+.border-glow-face {
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: #0b0b0b;
+  pointer-events: none;
+}
+
+/* And the bloom outside the card. Not masked by a cone of its own — it is the
+   same disc, blurred, so the two are one light. */
+.border-glow-edge {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.55;
+  filter: blur(6px);
+}
+
+@keyframes border-glow-turn {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Stopped, not slowed. The global reduce rule below clamps every animation to a
+   hundredth of a millisecond, which here would leave the light parked at
+   whatever angle the first frame happened to land on. */
+@media (prefers-reduced-motion: reduce) {
+  .border-glow {
+    animation: none;
+  }
+}
+
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
