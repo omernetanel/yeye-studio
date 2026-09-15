@@ -79,6 +79,14 @@ export default function Navbar() {
         meta.content = colour;
       }
       document.documentElement.style.setProperty("--color-background", colour);
+      // AND THE DECLARED SCHEME WITH IT, which is the half that was missing.
+      // globals.css declares `color-scheme: light` for the whole document, and
+      // that is a promise: newer iOS Safari picks its chrome from the page
+      // rather than from the tag, and a page that says it has only a light
+      // rendering gets light chrome whatever colour is painted underneath — the
+      // clock stayed on white over the black sections. Over one of those, the
+      // document is dark for as long as it is there, and says so.
+      document.documentElement.style.colorScheme = topDark ? "dark" : "light";
     }
   };
 
