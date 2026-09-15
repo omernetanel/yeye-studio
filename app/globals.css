@@ -83,6 +83,15 @@ html,
 body {
   background-color: var(--color-background);
   color: white;
+
+  /* This site has one rendering and it is the one that is authored here. Said
+     out loud, it stops two separate things a phone does on its own to a page
+     that does not declare a scheme: the browser's force-dark pass, which
+     inverts colours it decides are "light" and made a white studio page come
+     out grey; and the toolbar tint, which a dark-mode browser refuses to take
+     from a page it has not been told is light. See app/layout.tsx, where the
+     theme-color that goes with this is declared for both schemes. */
+  color-scheme: light;
 }
 
 /* overflow-x: hidden on BOTH html and body (not just one) makes Chromium

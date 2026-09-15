@@ -229,7 +229,13 @@ export default function HeroSection() {
             over them swallows them for the moment it is there, which is a fair
             price for existing. The wordmark is untouched — it comes off the
             canvas, not out of a blend, and the ink revealing it is the whole
-            screen. */}
+            screen.
+            THIS SAID EXACTLY THIS AND WAS NOT TRUE. Three of them — the line
+            above, the button under the mark, and the row at the foot — kept
+            their white fills and their difference blend through the rewrite, so
+            on a real phone the hero was a wordmark alone on an empty page: no
+            sentence, no button body, no row. If a rule like this is worth
+            writing down, every element it covers has to actually follow it. */}
         <div className="pointer-events-none relative flex h-full flex-col px-6 pt-[20px] pb-8">
           <h1 className="sr-only">YEYE</h1>
 
@@ -240,10 +246,7 @@ export default function HeroSection() {
             // than hand-broken — a manual break is only ever right at one width.
             //
             // WHITE, and inverted by the blend — see the block comment above.
-            <p
-              className="text-right font-display text-[21px] leading-[1.3] font-bold text-balance"
-              style={{ color: "#fff", mixBlendMode: "difference" }}
-            >
+            <p className="text-right font-display text-[21px] leading-[1.3] font-bold text-balance text-black">
               {TAGLINE_TEXT}
             </p>
           )}
@@ -265,13 +268,12 @@ export default function HeroSection() {
           <div
             ref={footRowRef}
             className="pointer-events-auto flex w-full items-baseline justify-between font-display text-m-small"
-            style={{ mixBlendMode: "difference" }}
           >
-            <Link href="/#projects" className="inline-flex items-center gap-1.5 font-medium text-white">
+            <Link href="/#projects" className="inline-flex items-center gap-1.5 font-medium text-black">
               העבודות שלי
               <ArrowIcon />
             </Link>
-            <span className="text-white/45">סטודיו דיגיטלי עצמאי</span>
+            <span className="text-black/45">סטודיו דיגיטלי עצמאי</span>
           </div>
         </div>
 
@@ -310,12 +312,17 @@ export default function HeroSection() {
               <div
                 ref={ctaSlotRef}
                 className="pointer-events-auto absolute inset-x-0 top-full flex justify-center"
-                style={{ mixBlendMode: "difference" }}
               >
+                {/* A black pill with white type, written as what it is. It used
+                    to be the inverse of that — white on white — because the
+                    blend on the wrapper was going to turn it round, and on a
+                    real phone it simply stayed white on white: the button's
+                    body disappeared into the page and only the label was left
+                    floating there. */}
                 <Button
                   href="/#contact"
                   variant="primary"
-                  className="!border-white !bg-none !bg-white !text-black !shadow-none py-3.5 text-[16px]"
+                  className="!border-black !bg-none !bg-black !text-white !shadow-none py-3.5 text-[16px]"
                 >
                   קבעו פגישה
                 </Button>
