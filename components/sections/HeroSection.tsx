@@ -262,7 +262,9 @@ export default function HeroSection() {
             elements simply show in their own colours.
             pointer-events-none so a touch anywhere in the empty space still
             reaches the ink canvas underneath; the controls opt back in. */}
-        <div className="pointer-events-none relative flex h-full flex-col px-6 pt-[20px] pb-8">
+        {/* pt-[30px] follows the menu row down from 22 to 32 — the line sits
+            beside that row, and the two move as one. */}
+        <div className="pointer-events-none relative flex h-full flex-col px-6 pt-[30px] pb-8">
           <h1 className="sr-only">YEYE</h1>
 
           {SHOW_TAGLINE && (
@@ -273,7 +275,7 @@ export default function HeroSection() {
             // the paper copies whatever break the browser chose.
             <p
               ref={taglineRef}
-              className={`text-right font-display text-[21px] leading-[1.3] font-bold text-balance ${
+              className={`text-right font-display text-[21px] leading-[1.3] font-semibold text-balance ${
                 painted ? "text-transparent" : "text-black"
               }`}
             >
