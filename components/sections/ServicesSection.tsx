@@ -42,13 +42,14 @@ const VIDEO_FPS = 30;
 // position first (confirmed: a too-small value here reads as the images
 // getting clipped at the top the moment it locks). Not part of the
 // pinned range itself — purely a scroll distance to cover first.
-// 8 rather than 35: with the heading zone's own top padding now gone, this is
-// the entire distance between the end of the hero's ink run-off and the top of
-// this section's heading, and a hair of it is all that gap wants. It still has
-// its original job — the panel is not sticky for these first pixels, so it
-// arrives rather than locking the instant the section appears — it just does it
-// over a gap you can no longer see.
-const SPACER_PX = 8;
+// 0, down from 35. Its original job was to keep the panel from locking the
+// instant the section appeared, because the content at the panel's top edge was
+// cramped against the sticky offset when it did. That is not what this was ever
+// really fixing: the offset is twenty pixels and the cure for it is twenty
+// pixels of clearance INSIDE the panel, which is what HEADING_ZONE_PADDING_TOP_PX
+// is now carrying. Paying for it out here as well only moved the heading further
+// from the hero, which is the gap that had to go.
+const SPACER_PX = 0;
 
 
 // This single clip now carries TWO overlaid content phases across its
@@ -167,13 +168,21 @@ const ABOUT_SHIFT_Y_PX = -PANEL_STICKY_TOP_PX;
 // can never be set below its own padding sum, so a fixed pt/pb class
 // would silently floor the "collapse to 0" animation at that sum instead
 // of actually reaching 0.
-// 0, and it used to be 54. The hero above this ends with a 170px strip of blank
-// page that exists only so the ink has somewhere to dissolve instead of meeting
-// a hard edge — that strip is untouchable. Everything after it was another 89
-// pixels of white on top of it, and the two together read as a hole between the
-// opening screen and this one. The heading now starts as soon as the ink's own
-// run-off is over, with SPACER_PX the only thing between them.
-const HEADING_ZONE_PADDING_TOP_PX = 0;
+// 30, down from 54 — and it cannot go to 0, which is where it was for one round
+// and where the heading came out cut in half.
+//
+// THIS ONE NUMBER IS TWO THINGS AT ONCE, and that is the whole constraint. Sat
+// still, it is the white between the end of the hero's ink run-off and the top
+// of the heading. Pinned, it is the only thing holding the heading off the top
+// of the SCREEN — the panel locks at PANEL_STICKY_TOP_PX, twenty pixels above
+// the viewport, so the first twenty pixels of whatever is at the panel's top
+// edge are simply not on screen. At 0 that was the heading's own cap line.
+//
+// So the gap cannot be tuned smaller than the clearance: they are the same
+// pixels seen in two states. 30 leaves ten clear when locked — about seventeen
+// with the line box's own leading — and reads as a close gap rather than a hole
+// when it is sitting still.
+const HEADING_ZONE_PADDING_TOP_PX = 30;
 const HEADING_ZONE_PADDING_BOTTOM_PX = 8;
 
 // Scroll no longer maps straight onto the clip's timeline. At each of these
