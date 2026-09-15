@@ -161,6 +161,12 @@ function smoothstep(t: number) {
 }
 /** How small the stages get as they go back into the folding paper. */
 const COLLAPSED_SCALE = 0.55;
+/**
+ * How much of the fold back in the last stage stays whole before it starts to
+ * go. Leaving at the first frame of the fold, it was gone before the paper had
+ * visibly started to crumple.
+ */
+const COLLAPSE_DELAY = 0.5;
 
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
@@ -243,10 +249,11 @@ export default function MobileServices() {
     servicesLayer.style.opacity = String(servicesOpacity);
     servicesLayer.style.pointerEvents = servicesOpacity > 0.5 ? "auto" : "none";
 
-    // ON THE SHEET. The layer stays whole for as long as the clip holds, and only
-    // once the paper starts folding back in does it shrink into the page with it
-    // and go — the clip is past CUE_PAPER_FLAT exactly then, and not before.
-    const collapse = clamp01((time - CUE_PAPER_FLAT) / (CUE_ABOUT_OUT - CUE_PAPER_FLAT));
+    // ON THE SHEET. The layer stays whole for as long as the clip holds and into
+    // the start of the fold, and only once the paper is visibly going back in
+    // does it shrink into the page with it and go.
+    const fold = clamp01((time - CUE_PAPER_FLAT) / (CUE_ABOUT_OUT - CUE_PAPER_FLAT));
+    const collapse = clamp01((fold - COLLAPSE_DELAY) / (1 - COLLAPSE_DELAY));
     aboutLayer.style.opacity = String(Math.min(fadeIn(time, CUE_ABOUT_IN), 1 - collapse));
     aboutLayer.style.transform = `scale(${lerp(1, COLLAPSED_SCALE, collapse)})`;
 
@@ -436,8 +443,8 @@ function ServicesIntro() {
       <h2 className="text-center font-display text-m-statement font-bold text-balance text-black">
         {SERVICES_HEADING.join(" ")}
       </h2>
-      <p className="mt-2 text-center font-body text-m-small text-black/55">{SERVICES_LEAD}</p>
-      <div className="mt-5">
+      <p className="mt-3 text-center font-body text-m-small text-black/55">{SERVICES_LEAD}</p>
+      <div className="mt-7">
         {services.map((service, index) => (
           <ServiceRow key={service.title} service={service} index={index} compact />
         ))}
