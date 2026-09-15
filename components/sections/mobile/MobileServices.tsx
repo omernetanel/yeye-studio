@@ -5,7 +5,13 @@ import Link from "next/link";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { services } from "@/lib/content";
-import { ICONS, ICON_MOTION, IconExtras } from "../process/icons";
+import {
+  ICONS,
+  ICON_MOTION,
+  IconExtras,
+  PROCESS_HEADING,
+  STAGE_TITLES,
+} from "../process/stages";
 
 const CLIP_SRC = "/mobile/videos/servicesbg-mobile.mp4";
 const CLIP_POSTER = "/mobile/images/servicesbg-mobile-poster.jpg";
@@ -295,20 +301,6 @@ function ServiceGrid({ className }: { className?: string }) {
   );
 }
 
-/**
- * The four stages, in the slot the "who I am" block used to occupy and on the
- * same cues: that slot is "whatever is printed on the paper while it is open",
- * and a diagram uses an open page better than a column of prose did. "Who I am"
- * is a section of its own now, so leaving it here as well showed it twice on
- * the phone — and it is the wrong thing to print on a sheet of paper anyway.
- */
-const PROCESS_STEPS = [
-  "מכירים את העסק",
-  "מעצבים את החוויה",
-  "בונים את זה נכון",
-  "עולים לאוויר",
-];
-
 // The drawing's own coordinate space. Everything below is in these units, and
 // the viewBox is what turns them into whatever width the phone gives us — so
 // the whole diagram scales as one piece and nothing has to be measured.
@@ -327,7 +319,11 @@ const CONNECTOR_CLEARANCE = 66;
 const CONNECTOR_BOW = 52;
 
 /**
- * The process, drawn on the open sheet.
+ * The process, drawn on the open sheet — in the slot the "who I am" block used
+ * to occupy and on the same cues: that slot is "whatever is printed on the
+ * paper while it is open", and a diagram uses an open page better than a column
+ * of prose did. "Who I am" is a section of its own now, so leaving it here as
+ * well showed it twice on the phone.
  *
  * This is the desktop's diagram rearranged, not a different idea: same four
  * stations, same artwork, same numerals, connected by one line that turns four
@@ -350,7 +346,7 @@ function ProcessDiagram() {
       viewBox={`0 0 ${ART_W} ${ART_H}`}
       className="mx-auto max-h-[76svh] w-full"
       role="img"
-      aria-label={`ארבעת שלבי העבודה: ${PROCESS_STEPS.join(", ")}`}
+      aria-label={`ארבעת שלבי העבודה: ${STAGE_TITLES.join(", ")}`}
     >
       <defs>
         <marker
@@ -412,22 +408,22 @@ function ProcessDiagram() {
           piece, every glyph would glow onto its neighbour and the words would
           end up sitting in a bank of white. */}
       <g direction="rtl" filter="url(#mobile-process-halo)">
-        {/* Heading the column rather than centred over the page: the drawing
-            hangs off the icon column on the right, and a label floating in the
-            middle of the sheet reads as belonging to nothing.
-            direction ltr on the word itself because it is Latin — inside the
-            rtl group, `end` would anchor the wrong edge of it. */}
+        {/* The desktop's heading, on one line instead of two: it sits in the
+            corner of a landscape sheet there and has to fold, and there is no
+            reason to fold it in a column that is wider than it is.
+            Right-aligned to the icon column rather than centred over the page —
+            the drawing hangs off that column, and a heading floating in the
+            middle of the sheet reads as belonging to nothing. */}
         <text
           x={ICON_X + 52}
-          y={44}
-          direction="ltr"
-          textAnchor="end"
-          className="fill-black/40 font-display text-[26px] font-bold tracking-[0.28em] uppercase"
+          y={40}
+          textAnchor="start"
+          className="fill-black font-display text-[40px] font-bold"
         >
-          process
+          {PROCESS_HEADING.join(" ")}
         </text>
 
-        {PROCESS_STEPS.map((step, index) => {
+        {STAGE_TITLES.map((step, index) => {
           const number = String(index + 1).padStart(2, "0");
           const y = ROW_Y[index];
           return (

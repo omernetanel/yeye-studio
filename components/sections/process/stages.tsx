@@ -1,11 +1,18 @@
 /**
- * The four process icons, as raw path data.
+ * The four stages of the work: what they are called, and what they look like.
  *
  * They live here rather than beside the desktop diagram because the phone draws
  * the same four stages on the same open sheet, in a vertical arrangement that
- * shares nothing else with the desktop's ellipse. The geometry is the one thing
- * both do share, and forty lines of path data copied into a second file is the
- * kind of duplicate that quietly drifts apart.
+ * shares nothing else with the desktop's ellipse. The words and the artwork are
+ * what both do share, and a second copy of either is the kind of duplicate that
+ * quietly drifts apart — which it already had: the phone's first stage read
+ * "מכירים את העסק" against the desktop's "מבינים את העסק", and the heading over
+ * it was the English word "process" against "איך אני עובד?". Two files, two
+ * answers to the same question. Now there is one.
+ *
+ * What is NOT here is anything about arrangement — coordinates, sizes, the
+ * sentence under each title on the desktop. Those belong to whichever layout is
+ * doing the drawing.
  *
  * Every icon is drawn around its OWN origin, so a layout only has to say where
  * the centre of a station is.
@@ -17,6 +24,23 @@
  * wobbles. The classes are defined in globals.css, where the reduced-motion
  * switch turns every one of them off in a single rule.
  */
+/**
+ * The heading over the diagram, as the two lines it breaks into. The break is
+ * deliberate on the desktop, where the heading sits in the corner of the sheet
+ * in a column two words wide; the phone joins them back into one line. Kept as
+ * lines rather than as a string with a `<br/>` in it so neither layout has to
+ * parse the other's markup.
+ */
+export const PROCESS_HEADING = ["איך אני", "עובד?"];
+
+/** In order. The numeral each one carries is its position, not a field. */
+export const STAGE_TITLES = [
+  "מבינים את העסק",
+  "מעצבים את החוויה",
+  "בונים את זה נכון",
+  "עולים לאוויר",
+];
+
 export type IconPart = { d: string; cls?: string };
 
 export const ICONS: Record<string, IconPart[]> = {
