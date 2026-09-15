@@ -65,9 +65,18 @@ const PORTRAIT_FROM_VH = 0.62;
 // and the movement are the same gesture.
 const PORTRAIT_SHRINK_FROM_VH = 0.34;
 const PORTRAIT_SHRINK_RUN_VH = 0.55;
-// SCALED, NOT RESIZED. The box is always its settled size and only the picture
-// inside it runs past the edges, so nothing below is dragged around by it.
-const PORTRAIT_ZOOM = 1.32;
+// The picture comes up at its own size and only settles a little smaller. It
+// used to enter zoomed in by a third and shrink back, which cut the sides off
+// the photograph for most of the way in. Scaled about its bottom edge, so the
+// gap to the copy under it never changes while it settles.
+const PORTRAIT_SETTLED = 0.88;
+
+// How far the cards brighten as they come up: dim when they arrive, full once
+// their middle reaches FACT_READ_AT of the screen. A function of position, so it
+// only ever runs one way per direction of scroll — never dark, bright, dark.
+const FACT_DIM = 0.35;
+const FACT_READ_FROM = 0.78;
+const FACT_READ_AT = 0.5;
 
 // How far into the screen a scrolling element must come before it is fully in.
 const RISE_VH = 0.42;
@@ -154,17 +163,19 @@ export default function MobileAbout() {
         });
 
         const rise = span(progress, PORTRAIT_RISE);
-        // Read after the rise is written, deliberately: the shrink is a
-        // function of where the portrait actually IS, which is the panel's
-        // position once the pin has released and the rise has finished.
-        const held = portrait.getBoundingClientRect().top;
+        const lift = lerp(screen * PORTRAIT_FROM_VH, 0, rise);
+        // The shrink is a function of where the portrait's box IS, which is the
+        // pinned panel's position once it has let go, plus the box's place in it
+        // and the rise. Worked out from layout rather than read off the element,
+        // whose rect would include the very scale this is computing.
+        const panel = portrait.offsetParent as HTMLElement | null;
+        const held = (panel?.getBoundingClientRect().top ?? 0) + portrait.offsetTop + lift;
         const shrink = smoothstep(
           clamp01((screen * PORTRAIT_SHRINK_FROM_VH - held) / (screen * PORTRAIT_SHRINK_RUN_VH)),
         );
         portrait.style.opacity = String(rise);
         portrait.style.transform =
-          `translateY(${lerp(screen * PORTRAIT_FROM_VH, 0, rise).toFixed(1)}px) ` +
-          `scale(${lerp(PORTRAIT_ZOOM, 1, shrink).toFixed(3)})`;
+          `translateY(${lift.toFixed(1)}px) scale(${lerp(1, PORTRAIT_SETTLED, shrink).toFixed(3)})`;
       }
     }
 
@@ -184,15 +195,21 @@ export default function MobileAbout() {
     // is arriving. A card that has been read is not arriving any more, and
     // watching all three fold themselves away on the way back up reads as the
     // page undoing itself. Latched with a high-water mark: once in, in.
+    //
+    // What does follow the scroll is how bright a card is: it arrives dim and
+    // comes up to full as it reaches the middle of the screen, which walks the
+    // eye down the three the way the desktop's sweep does.
     claimsRef.current.forEach((el, index) => {
       if (!el) return;
-      if (!claimsSeenRef.current[index]) {
-        const top = el.getBoundingClientRect().top;
-        if (top < screen * 0.82) claimsSeenRef.current[index] = true;
-      }
+      const box = el.getBoundingClientRect();
+      if (!claimsSeenRef.current[index] && box.top < screen * 0.82) claimsSeenRef.current[index] = true;
       const seen = claimsSeenRef.current[index];
-      el.style.opacity = seen ? "1" : "0";
-      el.style.transform = seen ? "translateY(0) scale(1)" : "translateY(30px) scale(0.96)";
+      const middle = box.top + box.height / 2;
+      const read = smoothstep(
+        clamp01((screen * FACT_READ_FROM - middle) / (screen * (FACT_READ_FROM - FACT_READ_AT))),
+      );
+      el.style.opacity = seen ? String(lerp(FACT_DIM, 1, read)) : "0";
+      el.style.transform = seen ? "translateY(0)" : "translateY(30px)";
     });
 
     // THE FIRST BALLOONS ARE ARMED HERE, on the cards — not on the close.
@@ -307,9 +324,14 @@ export default function MobileAbout() {
             </span>
           </div>
 
+          {/* Anchored to the bottom of the panel, 64px up — the same 64px the
+              copy leaves above the cards, so the three blocks keep one rhythm.
+              Bounded by height as well as width: at 86% of a small phone's
+              width the picture alone was taller than the space under the
+              greeting. */}
           <div
             ref={portraitRef}
-            className="absolute inset-x-0 top-[38%] mx-auto w-[86%] max-w-[420px] origin-top will-change-transform"
+            className="absolute inset-x-0 bottom-16 mx-auto w-[min(86%,420px,calc(50svh*430/560))] origin-bottom will-change-transform"
             style={{ opacity: 0 }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -340,24 +362,25 @@ export default function MobileAbout() {
           </p>
         </div>
 
-        {/* Three cards, centred, arriving one after another. Glass rather than
-            a rule and a gap: stacked on a phone the desktop's hairline-topped
-            columns read as a list of headings, and a card is what makes each
-            one a thing of its own. */}
-        {/* 84px, which is what the panel above leaves between the bottom of the
-            picture and the first line of copy. Matched by hand rather than
-            inherited, because one of the two distances is set by a margin and
-            the other falls out of where a pinned panel ends — nothing links
-            them, so they have to be written down as the same number. */}
-        <ol className="mx-auto mt-[84px] max-w-[420px] space-y-5">
+        {/* The three as the desktop sets them: a hairline, the numeral, the
+            claim and its sentence, right-aligned under the copy. They were glass
+            cards, which nothing else on the site looks like.
+
+            mt-16 is the same 64px the picture stands above the copy — written
+            as the same number by hand, because one is a margin and the other is
+            where the picture sits in a pinned panel, and nothing links them.
+
+            Opacity follows the scroll closely and the arrival glides, so the
+            two get different transition lengths. */}
+        <ol className="mx-auto mt-16 max-w-[420px] space-y-9">
           {aboutFacts.map((fact, index) => (
             <li
               key={fact.title}
               ref={(el) => {
                 claimsRef.current[index] = el;
               }}
-              className="rounded-2xl border border-white/10 bg-white/[0.06] px-6 py-7 text-center backdrop-blur-md transition-[opacity,transform] duration-700 ease-out will-change-transform"
-              style={{ opacity: 0, transform: "translateY(30px) scale(0.96)" }}
+              className="border-t border-white/20 pt-5 text-right [transition:opacity_200ms_ease-out,transform_700ms_ease-out] will-change-transform"
+              style={{ opacity: 0, transform: "translateY(30px)" }}
             >
               <span className="font-display text-m-small leading-none font-bold tracking-[0.18em] text-white/35">
                 {String(index + 1).padStart(2, "0")}
@@ -365,7 +388,7 @@ export default function MobileAbout() {
               <h3 className="mt-3 font-display text-m-sub font-bold text-balance text-white">
                 {fact.title}
               </h3>
-              <p className="mt-2 font-body text-m-small text-balance text-white/45">
+              <p className="mt-2 font-body text-m-small text-balance text-white/55">
                 {fact.description}
               </p>
             </li>

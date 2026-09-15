@@ -359,16 +359,23 @@ export default function MobileServices() {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative aspect-[9/16] w-[min(100%,calc(100svh*9/16))]">
             <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />
-
-            {/* Everything on the ball at once — the desktop's full block, not a
-                shorter one. The reading time is the whole stretch before the
-                paper opens, rather than whatever was left after the words had
-                finished arriving, which in the version before this was not
-                enough. The halo keeps it legible over the crumple. */}
-            <div ref={servicesLayerRef} className="paper-halo absolute inset-0 flex flex-col justify-center px-[5%]">
-              <ServicesIntro />
-            </div>
           </div>
+        </div>
+
+        {/* Everything on the ball at once — the desktop's full block, not a
+            shorter one. The reading time is the whole stretch before the paper
+            opens, rather than whatever was left after the words had finished
+            arriving, which in the version before this was not enough. The halo
+            keeps it legible over the crumple.
+
+            Centred in the panel BELOW the menu row, not in the picture box: on a
+            short phone the box is the whole screen, and centred in it the top
+            of the block sat under the menu. */}
+        <div
+          ref={servicesLayerRef}
+          className="paper-halo absolute inset-x-0 top-16 bottom-3 flex flex-col justify-center px-[5%]"
+        >
+          <ServicesIntro />
         </div>
 
         {/* Anchored to the screen rather than to the picture: by the time this
@@ -444,7 +451,7 @@ function ServicesIntro() {
         {SERVICES_HEADING.join(" ")}
       </h2>
       <p className="mt-3 text-center font-body text-m-small text-black/55">{SERVICES_LEAD}</p>
-      <div className="mt-7">
+      <div className="mt-7 [@media(max-height:700px)]:mt-4">
         {services.map((service, index) => (
           <ServiceRow key={service.title} service={service} index={index} compact />
         ))}

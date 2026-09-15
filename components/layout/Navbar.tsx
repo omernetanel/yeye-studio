@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { useDocked } from "@/lib/motion/heroDock";
+import { SITE_BACKGROUND, SITE_BACKGROUND_DARK } from "@/lib/site";
 
 // The row the header samples to decide which section is behind it. 43, not the
 // mark's centre on either layout: the mark spans 22–44 on a desktop and 42–64 on
@@ -44,6 +45,10 @@ export default function Navbar() {
   const imgRef = useRef<HTMLImageElement>(null);
   const { scrollY } = useScroll();
 
+  // The chrome colour last written, so the meta tags are only touched when the
+  // answer actually changes rather than on every scroll frame.
+  const chromeDarkRef = useRef(false);
+
   const checkTheme = () => {
     const img = imgRef.current;
     if (!img) return;
@@ -53,14 +58,28 @@ export default function Navbar() {
     // themselves, so this stays a simple "is something dark under me" check
     // rather than needing to know how each section works.
     let onDark = false;
+    let topDark = false;
     for (const el of document.querySelectorAll<HTMLElement>('[data-nav-dark="true"]')) {
       const rect = el.getBoundingClientRect();
-      if (rect.top <= LOGO_CENTER_Y_PX && rect.bottom >= LOGO_CENTER_Y_PX) {
-        onDark = true;
-        break;
-      }
+      if (rect.top <= LOGO_CENTER_Y_PX && rect.bottom >= LOGO_CENTER_Y_PX) onDark = true;
+      if (rect.top <= 0 && rect.bottom > 0) topDark = true;
     }
     img.style.filter = onDark ? DARK_FILTER : LIGHT_FILTER;
+
+    // THE BROWSER CHROME follows the same flag, sampled at the very top edge —
+    // the row the strip behind the clock sits on. Both places a phone reads it
+    // from are switched together, for the reason SITE_BACKGROUND gives: the
+    // theme-color tags (every one of them, since there is one per colour
+    // scheme) and the document's own surface, which is what newer Safari
+    // samples instead of the tag.
+    if (topDark !== chromeDarkRef.current) {
+      chromeDarkRef.current = topDark;
+      const colour = topDark ? SITE_BACKGROUND_DARK : SITE_BACKGROUND;
+      for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+        meta.content = colour;
+      }
+      document.documentElement.style.setProperty("--color-background", colour);
+    }
   };
 
   // Arriving from another page on a hash link — /#services from a sub-page's
