@@ -1,9 +1,7 @@
 "use client";
 
 import { forwardRef, useLayoutEffect, useRef, type RefObject } from "react";
-import Link from "next/link";
 import { useMotionValueEvent, useScroll } from "framer-motion";
-import { ArrowLeft, Layers, PenTool, Rocket, ShoppingBag } from "lucide-react";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { SERVICES_HEADING, SERVICES_LEAD, services } from "@/lib/content";
 // The words and the artwork, shared with the phone's own arrangement of the
@@ -16,13 +14,10 @@ import {
   STAGE_LINES,
   STAGE_TITLES,
 } from "./process/stages";
-import { cn } from "@/lib/utils";
+// The row itself is shared with the phone, which prints the same four at a
+// smaller size — see there.
+import ServiceRow from "./services/ServiceRow";
 import { ScrollFrames, type FrameSequence } from "@/lib/scrub/scroll-frames";
-
-// The words live in lib/content because the mobile page renders the same four
-// services in a layout that shares nothing else with this one. The icons stay
-// here: they belong to this row design.
-const SERVICE_ICONS = [ShoppingBag, Rocket, Layers, PenTool];
 
 // The paper, as the clip's own frames — every one of servicesbg.mp4's 554, at its
 // own 1920×1080 and 30fps. lib/scrub/scroll-frames.ts has why this is not a
@@ -260,65 +255,6 @@ function lerp(a: number, b: number, t: number) {
 function smoothstep(t: number) {
   const c = clamp01(t);
   return c * c * (3 - 2 * c);
-}
-
-interface ServiceRowProps {
-  service: (typeof services)[number];
-  index: number;
-}
-
-// Every row hovers to the same grey. It used to be a different accent per row,
-// which fought the black-and-white section around it; a single neutral reads as
-// a hover state rather than as four unrelated brand colours.
-// Literal class strings (not built from interpolation) so Tailwind's JIT
-// scanner — which only ever detects classes it can see verbatim in the
-// source — actually generates these arbitrary-color utilities.
-const ROW_HOVER_TEXT_CLASS = "group-hover:text-[#8A8A8A]";
-const ROW_HOVER_BORDER_CLASS = "group-hover:border-[#8A8A8A]";
-
-function ServiceRow({ service, index }: ServiceRowProps) {
-  const Icon = SERVICE_ICONS[index];
-  const hoverTextClass = ROW_HOVER_TEXT_CLASS;
-  const hoverBorderClass = ROW_HOVER_BORDER_CLASS;
-  return (
-    <Link
-      href={service.href}
-      className="group flex items-center justify-between gap-6 border-b border-black/8 py-5 pe-10 first:pt-0 last:border-b-0"
-    >
-      <div className="flex items-center gap-5">
-        <span className={cn("font-display text-5xl leading-none font-bold text-black transition-colors duration-200", hoverTextClass)}>
-          {String(index + 1).padStart(2, "0")}
-        </span>
-        <span className="w-px self-stretch bg-black/10" />
-        <div
-          className={cn(
-            "flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-black/10 bg-black/[0.02] transition-colors duration-200",
-            hoverBorderClass
-          )}
-        >
-          <Icon size={20} strokeWidth={1.5} className={cn("text-black/70 transition-colors duration-200", hoverTextClass)} />
-        </div>
-        <div className="text-right">
-          <h3 className={cn("font-display text-lg font-bold text-black transition-colors duration-200", hoverTextClass)}>{service.title}</h3>
-          <p
-            className={cn(
-              "mt-1 whitespace-pre-line font-body text-[13px] leading-[1.6] text-black/55 transition-colors duration-200",
-              hoverTextClass
-            )}
-          >
-            {service.description}
-          </p>
-        </div>
-      </div>
-
-      <ArrowLeft
-        aria-hidden
-        size={32}
-        strokeWidth={2.25}
-        className="shrink-0 text-black transition-transform duration-200 group-hover:-translate-x-1"
-      />
-    </Link>
-  );
 }
 
 // Heading zone content — the h2 AND the subtitle/divider beneath it live

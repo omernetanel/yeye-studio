@@ -1,9 +1,8 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
-import Link from "next/link";
 import { useMotionValueEvent, useScroll } from "framer-motion";
-import ArrowIcon from "@/components/ui/ArrowIcon";
+import ServiceRow from "@/components/sections/services/ServiceRow";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { SERVICES_HEADING, SERVICES_LEAD, services } from "@/lib/content";
 import { ScrollFrames, type FrameSequence } from "@/lib/scrub/scroll-frames";
@@ -122,51 +121,22 @@ function fadeOut(time: number, until: number) {
   return clamp01((until - time) / FADE_SECONDS);
 }
 
-// ON THE BALL — the stretch before the paper opens, as fractions of it. Clip time
-// is linear in scroll inside a beat, so these are fractions of scroll too.
+// ON THE SHEET — the four stages as one column that travels up with the scroll,
+// the stage passing through the middle of the window at full strength and its
+// neighbours faded back. It reaches the last stage at STAGES_END of the flat
+// stretch rather than at its end, so that stage sits still in the middle for the
+// last part instead of still moving while the sheet crumples and the layer fades.
 //
-// The sentence starts centred on the ball, rises and settles smaller at the top;
-// the lead follows it; then the four services arrive one after another. The last
-// one is in with a sixth of the stretch to spare — about half a screen to read
-// the list whole before the paper opens and takes it away.
-const HEADING_RISE: [number, number] = [0.12, 0.34];
-const LEAD_IN: [number, number] = [0.28, 0.4];
-const ROWS_START = 0.34;
-const ROW_STAGGER = 0.07;
-const ROW_DURATION = 0.09;
-// Where the sentence sits, as fractions of the picture's height: its centre on
-// the ball at the start, its top once it has settled.
-const HEADING_START_CENTRE = 0.36;
-const HEADING_SETTLED_TOP = 0.07;
-const HEADING_SETTLED_SCALE = 0.72;
-const LEAD_GAP_PX = 10;
-const LIST_GAP_PX = 22;
-
-// ON THE SHEET — the four stages, one at a time. They finish at STAGES_END of the
-// flat stretch rather than at its end, so the last stage is read whole before the
-// sheet starts to crumple and the layer fades, not read while it fades.
+// A column and not a sequence. The version before this faded one stage out and
+// the next one in, and between them the sheet was blank for a moment on every
+// swap — reading as the page losing its content under the finger. A column that
+// moves with the hand always has something on it, and moves the way scrolling
+// moves.
 const STAGE_COUNT = STAGE_TITLES.length;
 const STAGES_END = 0.76;
-// How much of a stage its exit takes, before the boundary, and the next stage's
-// entrance takes, after it — in stages. The two never overlap: the outgoing
-// stage is gone exactly at the boundary and the next only starts there. The
-// first version spread one swap across both sides at once, and mid-swap the two
-// stages sat in the same slot at half strength each — two icons, two titles and
-// two sentences printed over one another.
-const STAGE_SWAP = 0.14;
-const STAGE_TRAVEL_PX = 36;
+const STAGE_DIM_OPACITY = 0.22;
 const DOT_PX = 6;
 const DOT_ACTIVE_PX = 20;
-
-/** 0 before `range[0]`, 1 after `range[1]`, linear between. */
-function ramp(value: number, [from, to]: [number, number]) {
-  return clamp01((value - from) / (to - from));
-}
-
-/** Smoothstep — eases every reveal in and out instead of starting and stopping dead. */
-function ease(t: number) {
-  return t * t * (3 - 2 * t);
-}
 
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
@@ -194,11 +164,9 @@ export default function MobileServices() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const framesRef = useRef<ScrollFrames | null>(null);
   const servicesLayerRef = useRef<HTMLDivElement>(null);
-  const servicesHeadingRef = useRef<HTMLHeadingElement>(null);
-  const servicesLeadRef = useRef<HTMLParagraphElement>(null);
-  const serviceListRef = useRef<HTMLUListElement>(null);
-  const rowRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const aboutLayerRef = useRef<HTMLDivElement>(null);
+  const stageWindowRef = useRef<HTMLDivElement>(null);
+  const stageColumnRef = useRef<HTMLDivElement>(null);
   const stageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dotRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const statementLayerRef = useRef<HTMLDivElement>(null);
@@ -208,12 +176,11 @@ export default function MobileServices() {
     const panel = panelRef.current;
     const frames = framesRef.current;
     const servicesLayer = servicesLayerRef.current;
-    const heading = servicesHeadingRef.current;
-    const lead = servicesLeadRef.current;
-    const list = serviceListRef.current;
     const aboutLayer = aboutLayerRef.current;
+    const stageWindow = stageWindowRef.current;
+    const stageColumn = stageColumnRef.current;
     const statementLayer = statementLayerRef.current;
-    if (!wrapper || !panel || !frames || !servicesLayer || !heading || !lead || !list || !aboutLayer || !statementLayer) {
+    if (!wrapper || !panel || !frames || !servicesLayer || !aboutLayer || !stageWindow || !stageColumn || !statementLayer) {
       return;
     }
 
@@ -229,9 +196,11 @@ export default function MobileServices() {
     const wrapperBox = wrapper.getBoundingClientRect();
     const travel = wrapperBox.height - panel.offsetHeight;
     if (travel <= 0) return;
-    const pictureHeight = servicesLayer.offsetHeight;
-    const headingHeight = heading.offsetHeight;
-    const leadHeight = lead.offsetHeight;
+    const windowHeight = stageWindow.clientHeight;
+    // Where each stage's middle sits inside the column. These are layout offsets,
+    // which the column's own transform never changes, so they hold still while it
+    // moves.
+    const stageMiddles = stageRefs.current.map((stage) => (stage ? stage.offsetTop + stage.offsetHeight / 2 : 0));
 
     const progress = clamp01(-wrapperBox.top / travel);
     const time = progressToTime(progress);
@@ -240,62 +209,36 @@ export default function MobileServices() {
     // that is the frame already showing, so this is free on most scroll events.
     frames.show(time * CLIP_FPS);
 
-    // ON THE BALL.
-    const onBall = clamp01(time / CUE_SERVICES_OUT);
+    // ON THE BALL. Everything is already on the paper; the scroll runs the clip
+    // underneath and takes the words away as the paper opens. Pointer events go
+    // with them, so a list nobody can see cannot swallow a tap.
     const servicesOpacity = fadeOut(time, CUE_SERVICES_OUT);
     servicesLayer.style.opacity = String(servicesOpacity);
-
-    const rise = ease(ramp(onBall, HEADING_RISE));
-    const headingTop = lerp(
-      pictureHeight * HEADING_START_CENTRE - headingHeight / 2,
-      pictureHeight * HEADING_SETTLED_TOP,
-      rise
-    );
-    heading.style.transform = `translateY(${headingTop}px) scale(${lerp(1, HEADING_SETTLED_SCALE, rise)})`;
-
-    // Laid out from where the sentence ENDS UP, not from where it is: the lead
-    // and the list only appear once it has settled, so there is nothing to gain
-    // from chasing it, and a target that moves every frame reads as a jump.
-    const leadTop = pictureHeight * HEADING_SETTLED_TOP + headingHeight * HEADING_SETTLED_SCALE + LEAD_GAP_PX;
-    const leadIn = ease(ramp(onBall, LEAD_IN));
-    lead.style.opacity = String(leadIn);
-    lead.style.transform = `translateY(${leadTop + (1 - leadIn) * 12}px)`;
-    list.style.transform = `translateY(${leadTop + leadHeight + LIST_GAP_PX}px)`;
-
-    rowRefs.current.forEach((row, index) => {
-      if (!row) return;
-      const start = ROWS_START + index * ROW_STAGGER;
-      const shown = ease(ramp(onBall, [start, start + ROW_DURATION]));
-      row.style.opacity = String(shown);
-      row.style.transform = `translateY(${(1 - shown) * 14}px)`;
-      // A link is tappable only while it can actually be seen. Both conditions,
-      // because a child's pointer-events: auto would override a hidden parent's.
-      row.style.pointerEvents = shown > 0.5 && servicesOpacity > 0.5 ? "auto" : "none";
-    });
+    servicesLayer.style.pointerEvents = servicesOpacity > 0.5 ? "auto" : "none";
 
     // ON THE SHEET.
     const aboutOpacity = Math.min(fadeIn(time, CUE_ABOUT_IN), fadeOut(time, CUE_ABOUT_OUT));
     aboutLayer.style.opacity = String(aboutOpacity);
 
+    // Which stage is in the middle of the window, as a continuous position —
+    // 1.5 is halfway between the second and the third.
     const onSheet = clamp01((time - CUE_PAPER_FLAT) / (CUE_ABOUT_OUT - CUE_PAPER_FLAT));
-    const stagePosition = clamp01(onSheet / STAGES_END) * STAGE_COUNT;
+    const position = clamp01(onSheet / STAGES_END) * (STAGE_COUNT - 1);
+    const from = Math.floor(position);
+    const to = Math.min(STAGE_COUNT - 1, from + 1);
+    // Travels between the stages' real middles rather than by a fixed step, so a
+    // stage whose sentence runs a line longer still lands centred.
+    const middle = lerp(stageMiddles[from], stageMiddles[to], position - from);
+    stageColumn.style.transform = `translateY(${windowHeight / 2 - middle}px)`;
+
     for (let index = 0; index < STAGE_COUNT; index++) {
-      // The first stage is already up when the sheet arrives, and the last one
-      // leaves with the sheet — neither has a swap of its own on that side.
-      const enter = index === 0 ? 1 : ease(ramp(stagePosition, [index, index + STAGE_SWAP]));
-      const leave = index === STAGE_COUNT - 1 ? 0 : ease(ramp(stagePosition, [index + 1 - STAGE_SWAP, index + 1]));
-      const shown = enter * (1 - leave);
+      const nearness = 1 - clamp01(Math.abs(index - position));
       const stage = stageRefs.current[index];
-      if (stage) {
-        stage.style.opacity = String(shown);
-        // Rises in from below and leaves upward, so the stages read as one
-        // column moving past rather than as slides swapped in place.
-        stage.style.transform = `translateY(${(1 - enter - leave) * STAGE_TRAVEL_PX}px)`;
-      }
+      if (stage) stage.style.opacity = String(lerp(STAGE_DIM_OPACITY, 1, nearness));
       const dot = dotRefs.current[index];
       if (dot) {
-        dot.style.width = `${lerp(DOT_PX, DOT_ACTIVE_PX, shown)}px`;
-        dot.style.opacity = String(lerp(0.2, 1, shown));
+        dot.style.width = `${lerp(DOT_PX, DOT_ACTIVE_PX, nearness)}px`;
+        dot.style.opacity = String(lerp(0.2, 1, nearness));
       }
     }
 
@@ -336,11 +279,7 @@ export default function MobileServices() {
     // Everything the scroll would have revealed, simply laid out in order.
     return (
       <section id="services" className="bg-white px-6 py-20">
-        <h2 className="text-center font-display text-m-statement font-bold text-balance text-black">
-          {SERVICES_HEADING.join(" ")}
-        </h2>
-        <p className="mt-3 text-center font-body text-m-body text-black/60">{SERVICES_LEAD}</p>
-        <ServiceList className="mt-8" />
+        <ServicesIntro />
         <h2 className="mt-20 text-center font-display text-m-title font-bold text-black">
           {PROCESS_HEADING.join(" ")}
         </h2>
@@ -373,51 +312,51 @@ export default function MobileServices() {
           <div className="relative aspect-[9/16] w-[min(100%,calc(100svh*9/16))]">
             <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />
 
-            {/* Anchored to the picture, not to the screen: the sentence starts
-                ON the ball, so it has to know where the ball is. All three sit
-                at top 0 and are placed by update() with transforms — their own
-                boxes never change size, which is what makes them safe to
-                measure on every scroll event. */}
-            <div ref={servicesLayerRef} className="absolute inset-0">
-              <h2
-                ref={servicesHeadingRef}
-                className="paper-halo absolute inset-x-[6%] top-0 origin-top text-center font-display text-m-statement font-bold text-balance text-black will-change-transform"
-              >
-                {SERVICES_HEADING.join(" ")}
-              </h2>
-              <p
-                ref={servicesLeadRef}
-                className="paper-halo absolute inset-x-[6%] top-0 text-center font-body text-m-body text-black/60 opacity-0"
-              >
-                {SERVICES_LEAD}
-              </p>
-              <ServiceList listRef={serviceListRef} rowRefs={rowRefs} className="absolute inset-x-[7%] top-0" />
+            {/* Everything on the ball at once — the desktop's full block, not a
+                shorter one. The reading time is the whole stretch before the
+                paper opens, rather than whatever was left after the words had
+                finished arriving, which in the version before this was not
+                enough. The halo keeps it legible over the crumple. */}
+            <div ref={servicesLayerRef} className="paper-halo absolute inset-0 flex flex-col justify-center px-[5%]">
+              <ServicesIntro />
             </div>
           </div>
         </div>
 
         {/* Anchored to the screen rather than to the picture: by the time this
             is up the frame is a flat sheet, so there is no composition left to
-            sit beside. The four stages share one slot and take turns in it. */}
+            sit beside. */}
         <div ref={aboutLayerRef} className="absolute inset-0 opacity-0">
-          <h2 className="paper-halo absolute inset-x-6 top-[12%] text-center font-display text-m-title font-bold text-black">
+          {/* 18%, where it was 12% and sat right under the menu row. */}
+          <h2 className="paper-halo absolute inset-x-6 top-[18%] text-center font-display text-m-title font-bold text-black">
             {PROCESS_HEADING.join(" ")}
           </h2>
-          <div className="absolute inset-x-8 top-[24%] bottom-[20%]">
-            {STAGE_TITLES.map((title, index) => (
-              <ProcessStage
-                key={title}
-                index={index}
-                stageRef={(element) => {
-                  stageRefs.current[index] = element;
-                }}
-                className="absolute inset-0 flex flex-col items-center justify-center opacity-0"
-              />
-            ))}
+          {/* The window the column travels through. Its top and bottom fade into
+              the page, so a stage comes up out of the paper and goes back into
+              it rather than meeting a hard edge. Both spellings of mask-image:
+              iOS Safari before 15.4 reads only the prefixed one. */}
+          <div
+            ref={stageWindowRef}
+            className="absolute inset-x-8 top-[28%] bottom-[14%] overflow-clip [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)] [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)]"
+          >
+            {/* relative, so the stages' offsetTop is measured from the top of
+                this column — the origin update() moves it by. */}
+            <div ref={stageColumnRef} className="relative flex flex-col items-center gap-14 will-change-transform">
+              {STAGE_TITLES.map((title, index) => (
+                <ProcessStage
+                  key={title}
+                  index={index}
+                  stageRef={(element) => {
+                    stageRefs.current[index] = element;
+                  }}
+                  className="flex flex-col items-center"
+                />
+              ))}
+            </div>
           </div>
           {/* Where the reader is in the four. Decoration for sighted readers —
               each stage carries its own numeral for everyone else. */}
-          <div aria-hidden="true" className="absolute inset-x-0 bottom-[13%] flex items-center justify-center gap-2">
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-[8%] flex items-center justify-center gap-2">
             {STAGE_TITLES.map((title, index) => (
               <span
                 key={title}
@@ -442,48 +381,23 @@ export default function MobileServices() {
 }
 
 /**
- * The four services as rows — numeral, title, arrow, a hairline under each —
- * the same shape as the desktop's list rather than four boxes. Titles only: the
- * sentence under each is what the service pages are for.
- *
- * Given refs, the rows start hidden and update() reveals them; without, they
- * are simply there (the reduced-motion layout).
+ * The desktop's services block at the phone's size: the sentence, the lead, and
+ * the four rows with their icons and the sentence under each — the same
+ * ServiceRow the desktop prints, so there is one list and not two.
  */
-function ServiceList({
-  listRef,
-  rowRefs,
-  className,
-}: {
-  listRef?: React.RefObject<HTMLUListElement | null>;
-  rowRefs?: React.RefObject<(HTMLAnchorElement | null)[]>;
-  className?: string;
-}) {
+function ServicesIntro() {
   return (
-    <ul ref={listRef} className={className}>
-      {services.map((service, index) => (
-        <li key={service.title}>
-          <Link
-            ref={
-              rowRefs
-                ? (element) => {
-                    rowRefs.current[index] = element;
-                  }
-                : undefined
-            }
-            href={service.href}
-            className={`flex items-center justify-between border-b border-black/10 py-3.5 ${rowRefs ? "opacity-0" : ""}`}
-          >
-            <span className="paper-halo flex items-baseline gap-3">
-              <span className="font-display text-m-small font-bold text-black/35 tabular-nums">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <span className="font-display text-m-sub font-bold text-black">{service.title}</span>
-            </span>
-            <ArrowIcon className="text-black/50" />
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <>
+      <h2 className="text-center font-display text-m-statement font-bold text-balance text-black">
+        {SERVICES_HEADING.join(" ")}
+      </h2>
+      <p className="mt-2 text-center font-body text-m-small text-black/55">{SERVICES_LEAD}</p>
+      <div className="mt-5">
+        {services.map((service, index) => (
+          <ServiceRow key={service.title} service={service} index={index} compact />
+        ))}
+      </div>
+    </>
   );
 }
 
