@@ -130,7 +130,10 @@ export default function Navbar() {
       // same curve and duration as the menu crossing the header to make room
       // for it — the two are one movement, so they have to be one easing.
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className="fixed left-6 top-[22px] z-50"
+      // Same offset as NavMenu's row, phone and desktop both — see there.
+      // LOGO_CENTER_Y_PX still lands inside the mark at either (22–44 on the
+      // desktop, 32–54 on a phone).
+      className="fixed left-6 top-[32px] z-50 md:top-[22px]"
     >
       <Link href="/" tabIndex={docked ? 0 : -1} aria-label="YEYE">
         <Image
