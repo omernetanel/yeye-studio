@@ -192,6 +192,7 @@ export default function MobileServices() {
   const stageBlockRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const stageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const dotsRef = useRef<HTMLDivElement>(null);
   const dotRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const statementLayerRef = useRef<HTMLDivElement>(null);
 
@@ -203,8 +204,9 @@ export default function MobileServices() {
     const aboutLayer = aboutLayerRef.current;
     const stageBlock = stageBlockRef.current;
     const heading = headingRef.current;
+    const dots = dotsRef.current;
     const statementLayer = statementLayerRef.current;
-    if (!wrapper || !panel || !frames || !servicesLayer || !aboutLayer || !stageBlock || !heading || !statementLayer) {
+    if (!wrapper || !panel || !frames || !servicesLayer || !aboutLayer || !stageBlock || !heading || !dots || !statementLayer) {
       return;
     }
 
@@ -267,6 +269,9 @@ export default function MobileServices() {
       const arriving = clamp01(swapIn * 2 - 1);
       const leaving = clamp01(swapOut * 2);
       const visibility = Math.min(arriving, 1 - leaving);
+      // The dots count stages, so they wait for the first one rather than
+      // showing under the heading while it is still alone on the sheet.
+      if (index === 0) dots.style.opacity = String(arriving);
 
       const stage = stageRefs.current[index];
       if (stage) {
@@ -392,7 +397,11 @@ export default function MobileServices() {
           </div>
           {/* Where the reader is in the four. Decoration for sighted readers —
               each stage carries its own numeral for everyone else. */}
-          <div aria-hidden="true" className="absolute inset-x-0 bottom-[8%] flex items-center justify-center gap-2">
+          <div
+            ref={dotsRef}
+            aria-hidden="true"
+            className="absolute inset-x-0 bottom-[8%] flex items-center justify-center gap-2 opacity-0"
+          >
             {STAGE_TITLES.map((title, index) => (
               <span
                 key={title}
