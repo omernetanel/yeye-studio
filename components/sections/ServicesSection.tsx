@@ -16,22 +16,27 @@ import {
   STAGE_TITLES,
 } from "./process/stages";
 import { cn } from "@/lib/utils";
+import { ScrollFrames, type FrameSequence } from "@/lib/scrub/scroll-frames";
 
 // The words live in lib/content because the mobile page renders the same four
 // services in a layout that shares nothing else with this one. The icons stay
 // here: they belong to this row design.
 const SERVICE_ICONS = [ShoppingBag, Rocket, Layers, PenTool];
 
-const VIDEO_SRC = "/videos/servicesbg.mp4";
-const POSTER_SRC = "/images/servicesbg-poster.jpg";
-// The source is ~8.15s, but the phase math below always reads the real
-// value off the element once its metadata loads (see videoDurationRef) —
-// this is only what renders before that, and a safety fallback if
-// `loadedmetadata` never fires for some reason.
-const VIDEO_DURATION_FALLBACK = 8.15;
-// The clip's own frame rate. Scroll is quantised onto this grid so the scrub
-// only ever seeks when the frame on screen would actually change.
-const VIDEO_FPS = 30;
+// The paper, as the clip's own frames — every one of servicesbg.mp4's 554, at its
+// own 1920×1080 and 30fps. lib/scrub/scroll-frames.ts has why this is not a
+// <video>; MobileServices has the exact command that made them (the same one,
+// pointed at this clip). `v1` is in the path because the files are served
+// immutable, so a re-export goes to a new folder, never over this one.
+const CLIP_FPS = 30;
+const FRAME_COUNT = 554;
+const CLIP_SECONDS = FRAME_COUNT / CLIP_FPS;
+const PAPER: FrameSequence = {
+  frameUrl: (index) => `/frames/services-desktop/v1/${String(index).padStart(3, "0")}.webp`,
+  frameCount: FRAME_COUNT,
+  width: 1920,
+  height: 1080,
+};
 
 // Phase 0 ("lead-in"): SPACER_PX worth of perfectly ordinary scrolling
 // before the panel below goes sticky at all — a plain block, not pinned
@@ -67,7 +72,7 @@ const SPACER_PX = 0;
 //                        ball (CTASection picks up from here as a plain
 //                        static image once the pin releases)
 //
-// video.currentTime maps linearly across the ENTIRE pinned range (progress
+// The clip's time maps linearly across the ENTIRE pinned range (progress
 // 0 -> 1), so it's automatically, exactly reversible on scroll-up.
 // A beat where the Services text sits fully visible once the panel pins,
 // before it starts fading at all. Without it the fade begins so early in
@@ -104,9 +109,10 @@ const CONTENT_SHRINK_SCALE = 0.6;
 const VIDEO_REST_SCALE = 1.10;
 const VIDEO_REST_SHIFT_X_PX = 45;
 
-// servicesbg.mp4 is 16:9; used to locate the picture's own edge inside the
+// The clip's aspect, taken from the frame sequence itself rather than written
+// out a second time; used to locate the picture's own edge inside the
 // letterboxed element so it can be trimmed (see update()).
-const VIDEO_ASPECT = 16 / 9;
+const VIDEO_ASPECT = PAPER.width / PAPER.height;
 const VIDEO_EDGE_TRIM_PX = 2;
 
 // The video zone is deliberately TALLER than the viewport (it is pulled up
@@ -237,10 +243,10 @@ function containedPictureSize(elW: number, elH: number) {
 }
 
 function mapRange(value: number, inMin: number, inMax: number, outMin: number, outMax: number) {
-  // A degenerate range divides by zero, and 0/0 is NaN — which then flows all
-  // the way to video.currentTime and throws. That is not hypothetical: on
-  // mount, update() runs once BEFORE measurePinRange() has given the pin its
-  // real bounds, so both ends are still 0.
+  // A degenerate range divides by zero, and 0/0 is NaN — which then flows into
+  // the frame index and every transform written from it. That is not
+  // hypothetical: on mount, update() runs once BEFORE measurePinRange() has
+  // given the pin its real bounds, so both ends are still 0.
   if (inMax === inMin) return outMin;
   const t = clamp01((value - inMin) / (inMax - inMin));
   return outMin + t * (outMax - outMin);
@@ -637,28 +643,6 @@ function ProcessStations() {
   );
 }
 
-const BackgroundVideo = forwardRef<HTMLVideoElement, { className?: string; autoPlay?: boolean }>(
-  function BackgroundVideo({ className, autoPlay = false }, ref) {
-    return (
-      <video
-        ref={ref}
-        aria-hidden="true"
-        tabIndex={-1}
-        muted
-        playsInline
-        loop={autoPlay}
-        autoPlay={autoPlay}
-        preload="auto"
-        poster={POSTER_SRC}
-        disablePictureInPicture
-        className={className}
-      >
-        <source src={VIDEO_SRC} type="video/mp4" />
-      </video>
-    );
-  }
-);
-
 export default function ServicesSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
   // Only ever rendered on desktop — HomeSwitch hands phones MobileServices.
@@ -669,7 +653,8 @@ export default function ServicesSection() {
   const panelRef = useRef<HTMLDivElement>(null);
   const videoZoneRef = useRef<HTMLDivElement>(null);
   const statementRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const framesRef = useRef<ScrollFrames | null>(null);
   const headingZoneRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLDivElement>(null);
   const servicesContentRef = useRef<HTMLDivElement>(null);
@@ -697,21 +682,21 @@ export default function ServicesSection() {
   // Where the clip's own scrub finishes. Everything between here and pinEnd is
   // the statement's tail, so the clip must not be mapped across it.
   const clipEndScrollYRef = useRef(0);
-  const videoDurationRef = useRef(VIDEO_DURATION_FALLBACK);
-  const videoReadyRef = useRef(false);
-  // Which video frame was last asked for, so an unchanged frame costs nothing.
-  const lastSeekFrameRef = useRef(-1);
-
   const { scrollY } = useScroll();
 
   const update = () => {
     const wrapper = wrapperRef.current;
-    const video = videoRef.current;
+    // The canvas the paper is drawn on. It stands where the video stood and
+    // takes exactly the same transform and clip below: it fits each frame the
+    // way object-fit: contain fitted the video, so every measurement of "the
+    // picture inside the element" still holds.
+    const picture = canvasRef.current;
+    const frames = framesRef.current;
     const headingZone = headingZoneRef.current;
     const heading = headingRef.current;
     const servicesContent = servicesContentRef.current;
     const aboutContent = aboutContentRef.current;
-    if (!wrapper || !video || !headingZone || !heading || !servicesContent || !aboutContent) return;
+    if (!wrapper || !picture || !frames || !headingZone || !heading || !servicesContent || !aboutContent) return;
 
     const rawScrollY = scrollY.get();
     // Against clipEnd, not pinEnd — the statement's tail past clipEnd is not
@@ -719,30 +704,13 @@ export default function ServicesSection() {
     // scrub down and leave the clip finishing after the paper already had.
     const progress = clamp01(mapRange(rawScrollY, pinStartScrollYRef.current, clipEndScrollYRef.current, 0, 1));
 
-    // video.currentTime is a pure linear function of scroll progress
-    // across the whole pinned range, so it's automatically, exactly
-    // reversible on scroll-up; no separate "rewind" logic needed.
-    const targetTime = progressToTime(progress, videoDurationRef.current);
-    // Seek to the FRAME the target time falls in, not to the exact time, and
-    // only when that frame actually changes.
-    //
-    // The old test fired whenever the target moved more than 8ms — a quarter of
-    // a frame at 30fps — so most frames issued a seek that could not change a
-    // single displayed pixel, and each one still costs a full decode. Landing
-    // on the frame's own midpoint also keeps the browser from picking the
-    // neighbouring frame on a rounding boundary, which is what makes a slow
-    // drag flicker between two frames instead of holding one.
-    // Number.isFinite guards the boundary itself: setting currentTime to a
-    // non-finite value throws a TypeError, and this is the one place a bad
-    // number can reach the media element.
-    if (videoReadyRef.current && Number.isFinite(targetTime)) {
-      const frame = Math.round(targetTime * VIDEO_FPS - 0.5);
-      const snapped = (frame + 0.5) / VIDEO_FPS;
-      if (frame !== lastSeekFrameRef.current) {
-        lastSeekFrameRef.current = frame;
-        video.currentTime = snapped;
-      }
-    }
+    // The clip's time is a pure linear function of scroll progress across the
+    // whole pinned range, so it is automatically, exactly reversible on
+    // scroll-up; no separate "rewind" logic needed.
+    const targetTime = progressToTime(progress, CLIP_SECONDS);
+    // The frame the target time falls in. ScrollFrames returns at once when
+    // that is the frame already showing, so most ticks cost nothing.
+    frames.show(Math.floor(targetTime * CLIP_FPS));
 
     const servicesShrinkT = smoothstep(mapRange(targetTime, SERVICES_FADE_START_SECONDS, SERVICES_FADE_END_SECONDS, 0, 1));
 
@@ -766,7 +734,7 @@ export default function ServicesSection() {
       mapRange(targetTime, PLANE_FULLBLEED_START_SECONDS, PLANE_FULLBLEED_END_SECONDS, 0, 1),
     );
     if (fullBleedT > 0 && panel && videoZone) {
-      const { contentW, contentH } = containedPictureSize(video.clientWidth, video.clientHeight);
+      const { contentW, contentH } = containedPictureSize(picture.clientWidth, picture.clientHeight);
       if (contentW > 0 && contentH > 0) {
         const panelW = panel.clientWidth;
         const panelH = panel.clientHeight;
@@ -777,14 +745,14 @@ export default function ServicesSection() {
         // The zone is pulled up above the panel, so the picture's centre and
         // the panel's centre are not the same point; close the gap or the
         // grown frame sits off-centre.
-        const centreShiftY = panelH / 2 - (videoZone.offsetTop + video.clientHeight / 2);
+        const centreShiftY = panelH / 2 - (videoZone.offsetTop + picture.clientHeight / 2);
         scale = lerp(scale, coverScale, fullBleedT);
         shiftX = lerp(shiftX, 0, fullBleedT);
         shiftY = lerp(shiftY, centreShiftY, fullBleedT);
       }
     }
 
-    video.style.transform = `translateX(${shiftX}px) translateY(${shiftY}px) scale(${scale})`;
+    picture.style.transform = `translateX(${shiftX}px) translateY(${shiftY}px) scale(${scale})`;
 
     const statement = statementRef.current;
     if (statement) {
@@ -811,7 +779,7 @@ export default function ServicesSection() {
       statement.style.transform = `translateY(${y}px) scale(${lerp(1, STATEMENT_TAIL_SCALE, tailT)})`;
     }
 
-    // object-contain letterboxes the frame inside the element, so the picture
+    // The contain fit letterboxes the frame inside the element, so the picture
     // has its own edge sitting well inside the element's box — and scaling the
     // element drags that edge around with it. That edge is where a hairline has
     // been showing up. Clipping a couple of pixels off the picture's own bounds
@@ -819,13 +787,13 @@ export default function ServicesSection() {
     // is a plain CSS clip through flat white, which has nothing to resample.
     // Computed from the live box rather than hardcoded, so it tracks the
     // element at any viewport and any scale.
-    const elW = video.clientWidth;
-    const elH = video.clientHeight;
+    const elW = picture.clientWidth;
+    const elH = picture.clientHeight;
     if (elW > 0 && elH > 0) {
       const { contentW, contentH } = containedPictureSize(elW, elH);
       const insetX = (elW - contentW) / 2 + VIDEO_EDGE_TRIM_PX;
       const insetY = (elH - contentH) / 2 + VIDEO_EDGE_TRIM_PX;
-      video.style.clipPath = `inset(${insetY}px ${insetX}px)`;
+      picture.style.clipPath = `inset(${insetY}px ${insetX}px)`;
     }
 
     // The heading exits as a plain fade — no scale/shrink of its own
@@ -990,27 +958,13 @@ export default function ServicesSection() {
   useLayoutEffect(() => {
     if (skipDesktopMotion) return;
     const wrapper = wrapperRef.current;
-    const video = videoRef.current;
-    if (!wrapper || !video) return;
+    const canvas = canvasRef.current;
+    if (!wrapper || !canvas) return;
 
-    // iOS Safari can leave programmatic currentTime seeks doing nothing
-    // visually until the video has been through one real play/pause cycle
-    // — priming it here (safe without a user gesture since it's muted)
-    // is what makes every seek afterward actually paint.
-    const handleLoadedMetadata = () => {
-      if (Number.isFinite(video.duration) && video.duration > 0) {
-        videoDurationRef.current = video.duration;
-      }
-      video.play().then(() => video.pause()).catch(() => {});
-      videoReadyRef.current = true;
-      update();
-    };
-
-    if (video.readyState >= 1) {
-      handleLoadedMetadata();
-    } else {
-      video.addEventListener("loadedmetadata", handleLoadedMetadata, { once: true });
-    }
+    // Loads itself as the section comes within reach, sizes itself to the
+    // canvas, and releases everything it holds on the way out.
+    const frames = new ScrollFrames(canvas, PAPER);
+    framesRef.current = frames;
 
     measureHeadingZoneHeight();
     measureShrinkOrigins();
@@ -1030,8 +984,9 @@ export default function ServicesSection() {
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
       ro.disconnect();
+      frames.dispose();
+      framesRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [skipDesktopMotion]);
@@ -1093,28 +1048,25 @@ export default function ServicesSection() {
             the footage, which buys the ball the height it needs to fit the
             screen instead of being pushed down and cropped. */}
         <div ref={videoZoneRef} className="relative -mt-[86px] min-h-0 flex-1 overflow-hidden">
-          {/* bg-white keeps object-contain's letterbox margin the same colour
-              as the page.
+          {/* The paper, drawn frame by frame by ScrollFrames — see
+              lib/scrub/scroll-frames.ts for why this is no longer a <video>.
+              It fits each frame the way object-fit: contain fitted the clip,
+              and bg-white keeps that fit's letterbox margin the colour of the
+              page.
 
               SOLVED: the thin vertical line that used to show beside the ball
-              was object-contain's own letterbox edge. The picture sits well
-              inside the element's box, and scaling the element dragged that
-              edge around with it, leaving a row of resampled pixels. It is cut
-              off with a clip-path inset in update() — computed from the live
-              box, so it holds at any viewport and any scale.
+              was the letterbox's own edge. The picture sits well inside the
+              element's box, and scaling the element dragged that edge around
+              with it, leaving a row of resampled pixels. It is cut off with a
+              clip-path inset in update() — computed from the live box, so it
+              holds at any viewport and any scale.
 
-              Two earlier theories were measured and ruled out, and are recorded
-              so they are not re-tried: the letterbox margin's default black
-              backing (bg-white changed nothing), and the clip's limited colour
-              range rendering the video rect as #EBEBEB (a full-range re-encode
-              changed nothing, and broke the GOP in the process).
-
-              If this clip is ever re-encoded, it MUST keep a dense GOP
-              (-g 5; the source carries a keyframe every 5 frames). The
-              scroll scrub seeks currentTime on every tick, so a default
-              GOP makes each seek decode dozens of frames and visibly
-              wrecks the animation. */}
-          <BackgroundVideo ref={videoRef} className="absolute inset-0 h-full w-full bg-white object-contain" />
+              Two earlier theories were measured against the video and ruled
+              out, and are recorded so they are not re-tried: the letterbox
+              margin's default black backing (bg-white changed nothing), and
+              the clip's limited colour range rendering the picture as #EBEBEB
+              (a full-range re-encode changed nothing). */}
+          <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full bg-white" />
 
           {/* Two content layers share the same on-screen slot — Services
               fades/shrinks out first (as the paper unfolds), then About

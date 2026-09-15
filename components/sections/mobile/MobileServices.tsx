@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { services } from "@/lib/content";
+import { ScrollFrames, type FrameSequence } from "@/lib/scrub/scroll-frames";
 import {
   ICONS,
   ICON_MOTION,
@@ -13,15 +14,29 @@ import {
   STAGE_TITLES,
 } from "../process/stages";
 
-const CLIP_SRC = "/mobile/videos/servicesbg-mobile.mp4";
-const CLIP_POSTER = "/mobile/images/servicesbg-mobile-poster.jpg";
-
-// The clip's own frame rate and length, measured off the file: 458 frames at
-// 30fps. Scroll is quantised onto that grid so a seek only ever goes out when
-// the frame on screen would actually change — without it every animation frame
-// asks for a decode the viewer cannot see.
+// The paper, as the clip's own frames — every one of servicesbg-mobile.mp4's 458,
+// at its own 720×1280 and 30fps, so nothing is thinned out against the video it
+// replaces. lib/scrub/scroll-frames.ts has why this is not a <video>. Made with:
+//
+//   ffmpeg -i servicesbg-mobile.mp4
+//     -vf "scale=in_range=tv:in_color_matrix=bt709:out_range=pc,format=rgb24"
+//     -c:v libwebp -quality 72 -compression_level 6 -start_number 0 %03d.webp
+//
+// The clip is stored in limited range; converting to full-range RGB explicitly
+// means the encoder never has to guess it. Measured against the video as the
+// browser decodes it, the whites are exact and the tones within 1–2 levels.
+// Quality 72 is where lower stops saving weight (62 saves 6%) and starts
+// costing detail. `v1` is in the path because the files are served immutable —
+// see next.config.ts — so a re-export goes to a new folder, never over this one.
 const CLIP_FPS = 30;
-const CLIP_SECONDS = 458 / CLIP_FPS;
+const FRAME_COUNT = 458;
+const CLIP_SECONDS = FRAME_COUNT / CLIP_FPS;
+const PAPER: FrameSequence = {
+  frameUrl: (index) => `/frames/services-mobile/v1/${String(index).padStart(3, "0")}.webp`,
+  frameCount: FRAME_COUNT,
+  width: 720,
+  height: 1280,
+};
 
 // Cues taken from the edit, written the way they were read off it —
 // seconds plus frames at 30fps.
@@ -113,20 +128,20 @@ export default function MobileServices() {
 
   const wrapperRef = useRef<HTMLElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const framesRef = useRef<ScrollFrames | null>(null);
   const servicesLayerRef = useRef<HTMLDivElement>(null);
   const aboutLayerRef = useRef<HTMLDivElement>(null);
   const statementLayerRef = useRef<HTMLDivElement>(null);
-  const seekFrameRef = useRef(-1);
 
   const update = () => {
     const wrapper = wrapperRef.current;
     const panel = panelRef.current;
-    const video = videoRef.current;
+    const frames = framesRef.current;
     const servicesLayer = servicesLayerRef.current;
     const aboutLayer = aboutLayerRef.current;
     const statementLayer = statementLayerRef.current;
-    if (!wrapper || !panel || !video || !servicesLayer || !aboutLayer || !statementLayer) return;
+    if (!wrapper || !panel || !frames || !servicesLayer || !aboutLayer || !statementLayer) return;
 
     // The panel's own height, not window.innerHeight. Both are one screen, but
     // the panel is sized in svh — the height with the browser chrome showing,
@@ -139,13 +154,9 @@ export default function MobileServices() {
     const progress = clamp01(-wrapper.getBoundingClientRect().top / travel);
     const time = progressToTime(progress);
 
-    const frame = Math.min(Math.round(time * CLIP_FPS), 458 - 1);
-    if (frame !== seekFrameRef.current) {
-      seekFrameRef.current = frame;
-      // Seek to the middle of the frame's own slot rather than its edge, so
-      // rounding never lands a hair before it and decodes the one before.
-      video.currentTime = (frame + 0.5) / CLIP_FPS;
-    }
+    // The frame the scroll position lands on. ScrollFrames returns at once when
+    // that is the frame already showing, so this is free on most scroll events.
+    frames.show(time * CLIP_FPS);
 
     servicesLayer.style.opacity = String(fadeOut(time, CUE_SERVICES_OUT));
 
@@ -160,31 +171,23 @@ export default function MobileServices() {
 
   useLayoutEffect(() => {
     if (prefersReducedMotion) return;
-    const video = videoRef.current;
-    if (!video) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    // iOS Safari can leave programmatic currentTime seeks doing nothing
-    // visually until the video has been through one real play/pause cycle —
-    // priming it here (safe without a gesture since it is muted) is what makes
-    // every seek afterwards actually paint.
-    const handleLoadedMetadata = () => {
-      video.play().then(() => video.pause()).catch(() => {});
-      update();
-    };
-
-    if (video.readyState >= 1) {
-      handleLoadedMetadata();
-    } else {
-      video.addEventListener("loadedmetadata", handleLoadedMetadata, { once: true });
-    }
-
+    // Owns everything about the paper from here: it starts downloading frames
+    // only once the section is within a screen and a half, keeps its backing
+    // store matched to the canvas, and on the way out cancels any download
+    // still running and frees every decoded frame it holds.
+    const frames = new ScrollFrames(canvas, PAPER);
+    framesRef.current = frames;
     update();
 
     const handleResize = () => update();
     window.addEventListener("resize", handleResize);
     return () => {
       window.removeEventListener("resize", handleResize);
-      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      frames.dispose();
+      framesRef.current = null;
     };
   }, [prefersReducedMotion]);
 
@@ -223,16 +226,7 @@ export default function MobileServices() {
             margins that leaves are invisible against the page. */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative aspect-[9/16] w-[min(100%,calc(100svh*9/16))]">
-            <video
-              ref={videoRef}
-              className="absolute inset-0 h-full w-full object-contain"
-              src={CLIP_SRC}
-              poster={CLIP_POSTER}
-              muted
-              playsInline
-              preload="auto"
-              aria-hidden="true"
-            />
+            <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />
 
             {/* Anchored to the picture, not to the screen, because both of
                 these sit in the gaps the paper ball leaves: the heading in the
@@ -337,7 +331,7 @@ const CONNECTOR_BOW = 52;
  * the words.
  *
  * Drawn as one SVG rather than laid out in HTML for the same reason the desktop
- * is: the sheet it sits on is a video frame that shrinks, and a drawing that
+ * is: the sheet it sits on is a frame of the clip that shrinks, and a drawing that
  * scales as a unit stays in proportion with it. An HTML stack would reflow.
  */
 function ProcessDiagram() {
