@@ -31,16 +31,20 @@ export type DropState = {
 
 type Props = {
   sectionRef: RefObject<HTMLElement | null>;
-  lineRef: RefObject<HTMLElement | null>;
+  /** The impact line the balloons collide with. The contact stage has none. */
+  lineRef?: RefObject<HTMLElement | null>;
   stateRef: RefObject<DropState>;
   /**
-   * Nine balloons instead of seventeen. Not a screen-size tweak — a phone has
-   * to solve the same collisions in three passes on a tenth of the silicon, and
-   * this is the one thing in the section with a per-frame cost that grows with
-   * the count. The choreography is the same shape either way: a couple over the
-   * copy, a handful at the close.
+   * "mobile": nine balloons instead of seventeen. Not a screen-size tweak — a
+   * phone has to solve the same collisions in three passes on a tenth of the
+   * silicon, and this is the one thing in the section with a per-frame cost that
+   * grows with the count. The choreography is the same shape either way: a
+   * couple over the copy, a handful at the close.
+   *
+   * "contact": the phone's last two, one silver and one blue, falling through
+   * the contact stage as its picture leaves the top of the screen.
    */
-  variant?: "desktop" | "mobile";
+  variant?: "desktop" | "mobile" | "contact";
 };
 
 const SOURCES = ["/images/ball1.webp", "/images/ball2.webp"];
@@ -154,6 +158,19 @@ const MOBILE_CAST: readonly CastEntry[] = [
   { cue: "wall", at: 500, x: 0.44, depth: 1, type: 0, settles: true, front: true },
 ] as const;
 
+/**
+ * The contact stage's pair on a phone: silver first, then blue, falling from the
+ * top of the section as its picture starts to leave the screen, and gone at the
+ * section's bottom edge — the clip there is what keeps them off the projects.
+ * Neither settles; there is no heap to leave at the foot of a form.
+ */
+const CONTACT_CAST: readonly CastEntry[] = [
+  { cue: "drop", at: 0, x: 0.3, depth: 1, type: 0, settles: false, front: true },
+  { cue: "drop", at: 900, x: 0.72, depth: 0.5, type: 1, settles: false, front: false },
+] as const;
+
+const CASTS = { desktop: CAST, mobile: MOBILE_CAST, contact: CONTACT_CAST } as const;
+
 // Rendered width, as a fraction of the screen's short side. Sized off the short
 // side so a balloon is the same share of the picture on a phone as on a laptop.
 //
@@ -183,10 +200,7 @@ function sizeFor(depth: number, short: number) {
 }
 
 export default function BalloonDrop({ sectionRef, lineRef, stateRef, variant = "desktop" }: Props) {
-  const cast = useMemo<readonly CastEntry[]>(
-    () => (variant === "mobile" ? MOBILE_CAST : CAST),
-    [variant],
-  );
+  const cast = useMemo<readonly CastEntry[]>(() => CASTS[variant], [variant]);
   const nodesRef = useRef<(HTMLImageElement | null)[]>([]);
   const layersRef = useRef<(HTMLDivElement | null)[]>([]);
   const balloonsRef = useRef<Balloon[]>([]);
@@ -199,12 +213,13 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef, variant = "
     // contact stage that follows is pulled up over the last of it, so this
     // section's bottom sits partway down that stage's photograph: clipped there,
     // balloons vanished over a band of open black above the picture and cut
-    // across the picture itself. The stage's first image is where the black
-    // really stops, so that is the floor and the clip. Found once — the order of
-    // the page does not change under it.
+    // across the picture itself. The stage's picture is where the black really
+    // stops, so that is the clip. Marked with an attribute rather than found as
+    // "the first image": the stage carries balloons of its own now, and theirs
+    // come first. Found once — the order of the page does not change under it.
     const edge =
       variant === "mobile"
-        ? (section.nextElementSibling?.querySelector<HTMLElement>("img, video") ?? null)
+        ? (section.nextElementSibling?.querySelector<HTMLElement>("[data-balloon-floor]") ?? null)
         : null;
 
     let frame = 0;
@@ -307,7 +322,7 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef, variant = "
       // between this being free and this being the reason the page stutters.
       const sectionBox = section.getBoundingClientRect();
       const blackBottom = edge ? Math.min(sectionBox.bottom, edge.getBoundingClientRect().top) : sectionBox.bottom;
-      const line = lineRef.current;
+      const line = lineRef?.current;
       // The GLYPHS, not the paragraph. A Range over the element's contents
       // yields one rect per line box, each only as wide as the words actually
       // on it — where the element's own box is the full width of the column and
@@ -354,7 +369,11 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef, variant = "
       // So they keep falling the whole way down and the heap gathers at the end
       // of the section, which is also the only place it can gather without ever
       // crossing into the next one.
-      const floorY = blackBottom;
+      // The floor stays at the section's own bottom even where the clip is
+      // higher. On a phone that is behind the contact stage's picture, so the
+      // balloons meant to come to rest fall on into it and are gone. With the
+      // floor on the picture's top edge they stopped there and sat on it.
+      const floorY = sectionBox.bottom;
       const wallTop = wallBox ? wallBox[0].top : 0;
       const floorVelocity = elapsed > 0 ? (floorY - lastFloor) / elapsed : 0;
       const wallVelocity = wallBox && lastWallTop !== 0 && elapsed > 0 ? (wallTop - lastWallTop) / elapsed : 0;

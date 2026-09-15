@@ -6,6 +6,7 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
+import BalloonDrop, { type DropState } from "@/components/sections/about/BalloonDrop";
 
 const VIDEO_SRC = "/videos/hearmeoutbgvid.mp4";
 // The plate ships at half its nominal pixel size (3344x1882 against a ROOM_W
@@ -284,6 +285,11 @@ export default function ContactStage() {
   // Its own element, attached in both branches, so the gate does not depend on
   // which one rendered.
   const gateRef = useRef<HTMLDivElement>(null);
+  // The phone's two balloons, armed while the picture's top is above the top of
+  // the screen. Not latched here: BalloonDrop latches its own start, and resets
+  // once the section is scrolled back below the screen.
+  const balloons = isMobile && !prefersReducedMotion;
+  const dropStateRef = useRef<DropState>({ armed: false, wallLive: false, leaving: false });
   const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
   const [tail, setTail] = useState<{ height: number; width: number; left: number; top: number } | null>(null);
 
@@ -410,6 +416,8 @@ export default function ContactStage() {
 
   useMotionValueEvent(scrollY, "change", () => {
     if (!skipPin) update();
+    const gate = gateRef.current;
+    if (balloons && gate) dropStateRef.current.armed = gate.getBoundingClientRect().top < 0;
   });
 
   // Mobile and reduced motion: no pin and no zoom — the clip is just a
@@ -448,10 +456,12 @@ export default function ContactStage() {
       // until the picture itself covers them. The switch is 2px inside the
       // overlap so the fractional-pixel seam above still has black on both sides.
       <section
+        ref={wrapperRef}
         id="contact"
         data-nav-dark="true"
         className="relative z-20 -mt-[42svh] overflow-hidden bg-[linear-gradient(to_bottom,transparent_calc(42svh_-_2px),black_calc(42svh_-_2px))] py-24"
       >
+        {balloons && <BalloonDrop sectionRef={wrapperRef} stateRef={dropStateRef} variant="contact" />}
         {/* The plate, framed rather than filled. The zoom does not run on a
             phone, so what is left of this section is the composition it ends on
             — and a composition wants black around it, not a screen it bleeds
@@ -466,7 +476,9 @@ export default function ContactStage() {
             loses only the wall at the ends. The left offset puts the cut-out's
             own centre on the frame's centre; every number is derived from the
             same four the desktop zoom uses, so nothing here is nudged by eye. */}
-        <div ref={gateRef} className="relative aspect-square w-full overflow-hidden">
+        {/* data-balloon-floor: where the balloons falling out of "who I am"
+            stop being visible — see BalloonDrop. */}
+        <div ref={gateRef} data-balloon-floor className="relative aspect-square w-full overflow-hidden">
           <div
             className="absolute top-0"
             style={{
