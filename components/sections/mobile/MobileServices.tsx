@@ -71,7 +71,7 @@ const FADE_SECONDS = 0.35;
  */
 
 /** The hold: the clip stays on the flat sheet while the four stages go by. */
-const STAGES_BEAT = { screens: 3.2, time: CUE_PAPER_FLAT };
+const STAGES_BEAT = { screens: 3.8, time: CUE_PAPER_FLAT };
 
 const BEATS: readonly { screens: number; time: number }[] = [
   { screens: 0, time: 0 },
@@ -142,6 +142,23 @@ const STAGES_END = 0.76;
 /** How much of the gap between two stages the swap takes. The rest is still. */
 const SWAP_SPAN = 0.24;
 const SWAP_RISE_PX = 28;
+/**
+ * Where the position starts: a full swap before the first stage, so the first
+ * stage arrives the same way every later one does — after the heading has
+ * settled — and rests for as long as each of them.
+ */
+const FIRST_ARRIVAL = -0.5 - SWAP_SPAN / 2;
+/**
+ * THE HEADING comes up alone in the exact centre of the screen while the paper
+ * opens, and over the last HEADING_RISE_SECONDS of the opening it rises to its
+ * place above the stages. Only then does the first stage come in.
+ */
+const HEADING_RISE_SECONDS = 0.5;
+
+/** Eases both ends of a 0 → 1 move, so the heading lifts off and lands softly. */
+function smoothstep(t: number) {
+  return t * t * (3 - 2 * t);
+}
 /** How small the stages get as they go back into the folding paper. */
 const COLLAPSED_SCALE = 0.55;
 
@@ -172,6 +189,8 @@ export default function MobileServices() {
   const framesRef = useRef<ScrollFrames | null>(null);
   const servicesLayerRef = useRef<HTMLDivElement>(null);
   const aboutLayerRef = useRef<HTMLDivElement>(null);
+  const stageBlockRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const stageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dotRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const statementLayerRef = useRef<HTMLDivElement>(null);
@@ -182,8 +201,12 @@ export default function MobileServices() {
     const frames = framesRef.current;
     const servicesLayer = servicesLayerRef.current;
     const aboutLayer = aboutLayerRef.current;
+    const stageBlock = stageBlockRef.current;
+    const heading = headingRef.current;
     const statementLayer = statementLayerRef.current;
-    if (!wrapper || !panel || !frames || !servicesLayer || !aboutLayer || !statementLayer) return;
+    if (!wrapper || !panel || !frames || !servicesLayer || !aboutLayer || !stageBlock || !heading || !statementLayer) {
+      return;
+    }
 
     // Every measurement first, before any style below is written: a read after a
     // write forces a layout on every scroll event.
@@ -196,6 +219,13 @@ export default function MobileServices() {
     const wrapperBox = wrapper.getBoundingClientRect();
     const travel = wrapperBox.height - panel.offsetHeight;
     if (travel <= 0) return;
+    // How far the heading's place sits above the middle of the screen. Layout
+    // offsets, which ignore the transforms written below — the heading's own
+    // rise and the layer's shrink — so this target never moves under its own
+    // animation. The stage block is laid out once and does not change height
+    // as stages swap, since all four share one grid cell.
+    const headingOffset =
+      panel.offsetHeight / 2 - (stageBlock.offsetTop + heading.offsetTop + heading.offsetHeight / 2);
 
     const progress = clamp01(-wrapperBox.top / travel);
     const time = progressToTime(progress);
@@ -221,12 +251,15 @@ export default function MobileServices() {
     // Where the reader is in the four, as a continuous position — 1.5 is halfway
     // between the second and the third. Read off the scroll inside the hold, not
     // off clip time, which is standing still there.
+    const rise = smoothstep(clamp01((time - (CUE_PAPER_FLAT - HEADING_RISE_SECONDS)) / HEADING_RISE_SECONDS));
+    heading.style.transform = `translateY(${(1 - rise) * headingOffset}px)`;
+
     const onSheet = clamp01((progress - STAGES_FROM) / (STAGES_TO - STAGES_FROM));
-    const position = clamp01(onSheet / STAGES_END) * (STAGE_COUNT - 1);
+    const position = lerp(FIRST_ARRIVAL, STAGE_COUNT - 1, clamp01(onSheet / STAGES_END));
 
     for (let index = 0; index < STAGE_COUNT; index++) {
       // 0 → 1 across the swap into this stage, and across the swap out of it.
-      const swapIn = index === 0 ? 1 : clamp01((position - (index - 0.5 - SWAP_SPAN / 2)) / SWAP_SPAN);
+      const swapIn = clamp01((position - (index - 0.5 - SWAP_SPAN / 2)) / SWAP_SPAN);
       const swapOut =
         index === STAGE_COUNT - 1 ? 0 : clamp01((position - (index + 0.5 - SWAP_SPAN / 2)) / SWAP_SPAN);
       // The outgoing stage takes the first half of the swap, the incoming one the
@@ -335,8 +368,11 @@ export default function MobileServices() {
               far above the stage and read as detached from it. The grid cell is
               as tall as the tallest stage, so the block — and the heading with
               it — holds still as the stages swap. */}
-          <div className="absolute inset-x-6 top-[8%] bottom-[14%] flex flex-col items-center justify-center">
-            <h2 className="paper-halo text-center font-display text-m-title font-bold text-black">
+          <div
+            ref={stageBlockRef}
+            className="absolute inset-x-6 top-[8%] bottom-[14%] flex flex-col items-center justify-center"
+          >
+            <h2 ref={headingRef} className="paper-halo text-center font-display text-m-title font-bold text-black">
               {PROCESS_HEADING.join(" ")}
             </h2>
             {/* All four stacked in one grid cell, so each stage takes the same
