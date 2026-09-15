@@ -3,14 +3,16 @@
 import { useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { useMotionValueEvent, useScroll } from "framer-motion";
+import ArrowIcon from "@/components/ui/ArrowIcon";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
-import { services } from "@/lib/content";
+import { SERVICES_HEADING, SERVICES_LEAD, services } from "@/lib/content";
 import { ScrollFrames, type FrameSequence } from "@/lib/scrub/scroll-frames";
 import {
   ICONS,
   ICON_MOTION,
   IconExtras,
   PROCESS_HEADING,
+  STAGE_LINES,
   STAGE_TITLES,
 } from "../process/stages";
 
@@ -68,11 +70,17 @@ const FADE_SECONDS = 0.35;
  * Because it is arithmetic in both directions rather than a played timeline,
  * scrolling back up runs the paper backwards through exactly the same frames.
  */
+//
+// The two reading stretches are long because each is now a sequence, not a
+// single card: on the ball, the sentence rises and the four services arrive one
+// by one; on the open sheet, the four stages of the work follow each other, one
+// at a time. Something changes on every screen of both, so length here is
+// reading time, never a hold.
 const BEATS: readonly { screens: number; time: number }[] = [
   { screens: 0, time: 0 },
-  { screens: 1.5, time: CUE_SERVICES_OUT }, // the ball sits still; read the four services
+  { screens: 2.8, time: CUE_SERVICES_OUT }, // on the ball: the sentence, then the services
   { screens: 1.3, time: CUE_PAPER_FLAT }, // it opens
-  { screens: 1.9, time: CUE_ABOUT_OUT }, // flat and legible: the process is on it
+  { screens: 3.2, time: CUE_ABOUT_OUT }, // on the sheet: the four stages, 0.8 screens each
   { screens: 2.2, time: CUE_STATEMENT_IN }, // crumple and flight, at speed
   { screens: 1.8, time: CLIP_SECONDS }, // the closing line rises as the sheet lands
 ];
@@ -114,6 +122,56 @@ function fadeOut(time: number, until: number) {
   return clamp01((until - time) / FADE_SECONDS);
 }
 
+// ON THE BALL — the stretch before the paper opens, as fractions of it. Clip time
+// is linear in scroll inside a beat, so these are fractions of scroll too.
+//
+// The sentence starts centred on the ball, rises and settles smaller at the top;
+// the lead follows it; then the four services arrive one after another. The last
+// one is in with a sixth of the stretch to spare — about half a screen to read
+// the list whole before the paper opens and takes it away.
+const HEADING_RISE: [number, number] = [0.12, 0.34];
+const LEAD_IN: [number, number] = [0.28, 0.4];
+const ROWS_START = 0.34;
+const ROW_STAGGER = 0.07;
+const ROW_DURATION = 0.09;
+// Where the sentence sits, as fractions of the picture's height: its centre on
+// the ball at the start, its top once it has settled.
+const HEADING_START_CENTRE = 0.36;
+const HEADING_SETTLED_TOP = 0.07;
+const HEADING_SETTLED_SCALE = 0.72;
+const LEAD_GAP_PX = 10;
+const LIST_GAP_PX = 22;
+
+// ON THE SHEET — the four stages, one at a time. They finish at STAGES_END of the
+// flat stretch rather than at its end, so the last stage is read whole before the
+// sheet starts to crumple and the layer fades, not read while it fades.
+const STAGE_COUNT = STAGE_TITLES.length;
+const STAGES_END = 0.76;
+// How much of a stage its exit takes, before the boundary, and the next stage's
+// entrance takes, after it — in stages. The two never overlap: the outgoing
+// stage is gone exactly at the boundary and the next only starts there. The
+// first version spread one swap across both sides at once, and mid-swap the two
+// stages sat in the same slot at half strength each — two icons, two titles and
+// two sentences printed over one another.
+const STAGE_SWAP = 0.14;
+const STAGE_TRAVEL_PX = 36;
+const DOT_PX = 6;
+const DOT_ACTIVE_PX = 20;
+
+/** 0 before `range[0]`, 1 after `range[1]`, linear between. */
+function ramp(value: number, [from, to]: [number, number]) {
+  return clamp01((value - from) / (to - from));
+}
+
+/** Smoothstep — eases every reveal in and out instead of starting and stopping dead. */
+function ease(t: number) {
+  return t * t * (3 - 2 * t);
+}
+
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t;
+}
+
 /**
  * The services section, rebuilt for the phone around a 9:16 cut of the clip.
  *
@@ -121,6 +179,11 @@ function fadeOut(time: number, until: number) {
  * three beats on a 16:9 clip it has to scale and shift into place; this cut is
  * already framed for the screen, so the picture never moves and the only thing
  * scroll drives is which frame is showing and which words are over it.
+ *
+ * Both reading stretches are sequences the reader scrolls through rather than
+ * cards laid out all at once: a grid of four boxes beside a small heading read
+ * as a form, and a column of four icons and titles read as a list with no story
+ * in it. Here the page says one thing at a time, and the scroll is what turns it.
  */
 export default function MobileServices() {
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -131,7 +194,13 @@ export default function MobileServices() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const framesRef = useRef<ScrollFrames | null>(null);
   const servicesLayerRef = useRef<HTMLDivElement>(null);
+  const servicesHeadingRef = useRef<HTMLHeadingElement>(null);
+  const servicesLeadRef = useRef<HTMLParagraphElement>(null);
+  const serviceListRef = useRef<HTMLUListElement>(null);
+  const rowRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const aboutLayerRef = useRef<HTMLDivElement>(null);
+  const stageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const dotRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const statementLayerRef = useRef<HTMLDivElement>(null);
 
   const update = () => {
@@ -139,29 +208,96 @@ export default function MobileServices() {
     const panel = panelRef.current;
     const frames = framesRef.current;
     const servicesLayer = servicesLayerRef.current;
+    const heading = servicesHeadingRef.current;
+    const lead = servicesLeadRef.current;
+    const list = serviceListRef.current;
     const aboutLayer = aboutLayerRef.current;
     const statementLayer = statementLayerRef.current;
-    if (!wrapper || !panel || !frames || !servicesLayer || !aboutLayer || !statementLayer) return;
+    if (!wrapper || !panel || !frames || !servicesLayer || !heading || !lead || !list || !aboutLayer || !statementLayer) {
+      return;
+    }
 
+    // Every measurement first, before any style below is written: a read after a
+    // write forces a layout on every scroll event. None of these boxes is resized
+    // by what is written here — only transformed — so they are stable to read.
+    //
     // The panel's own height, not window.innerHeight. Both are one screen, but
     // the panel is sized in svh — the height with the browser chrome showing,
     // which does not move — while innerHeight grows and shrinks as the address
     // bar hides on scroll. Measuring the moving one would shift the whole
     // mapping mid-scrub, which reads as the clip jumping under the finger.
-    const travel = wrapper.getBoundingClientRect().height - panel.offsetHeight;
+    const wrapperBox = wrapper.getBoundingClientRect();
+    const travel = wrapperBox.height - panel.offsetHeight;
     if (travel <= 0) return;
+    const pictureHeight = servicesLayer.offsetHeight;
+    const headingHeight = heading.offsetHeight;
+    const leadHeight = lead.offsetHeight;
 
-    const progress = clamp01(-wrapper.getBoundingClientRect().top / travel);
+    const progress = clamp01(-wrapperBox.top / travel);
     const time = progressToTime(progress);
 
     // The frame the scroll position lands on. ScrollFrames returns at once when
     // that is the frame already showing, so this is free on most scroll events.
     frames.show(time * CLIP_FPS);
 
-    servicesLayer.style.opacity = String(fadeOut(time, CUE_SERVICES_OUT));
+    // ON THE BALL.
+    const onBall = clamp01(time / CUE_SERVICES_OUT);
+    const servicesOpacity = fadeOut(time, CUE_SERVICES_OUT);
+    servicesLayer.style.opacity = String(servicesOpacity);
 
+    const rise = ease(ramp(onBall, HEADING_RISE));
+    const headingTop = lerp(
+      pictureHeight * HEADING_START_CENTRE - headingHeight / 2,
+      pictureHeight * HEADING_SETTLED_TOP,
+      rise
+    );
+    heading.style.transform = `translateY(${headingTop}px) scale(${lerp(1, HEADING_SETTLED_SCALE, rise)})`;
+
+    // Laid out from where the sentence ENDS UP, not from where it is: the lead
+    // and the list only appear once it has settled, so there is nothing to gain
+    // from chasing it, and a target that moves every frame reads as a jump.
+    const leadTop = pictureHeight * HEADING_SETTLED_TOP + headingHeight * HEADING_SETTLED_SCALE + LEAD_GAP_PX;
+    const leadIn = ease(ramp(onBall, LEAD_IN));
+    lead.style.opacity = String(leadIn);
+    lead.style.transform = `translateY(${leadTop + (1 - leadIn) * 12}px)`;
+    list.style.transform = `translateY(${leadTop + leadHeight + LIST_GAP_PX}px)`;
+
+    rowRefs.current.forEach((row, index) => {
+      if (!row) return;
+      const start = ROWS_START + index * ROW_STAGGER;
+      const shown = ease(ramp(onBall, [start, start + ROW_DURATION]));
+      row.style.opacity = String(shown);
+      row.style.transform = `translateY(${(1 - shown) * 14}px)`;
+      // A link is tappable only while it can actually be seen. Both conditions,
+      // because a child's pointer-events: auto would override a hidden parent's.
+      row.style.pointerEvents = shown > 0.5 && servicesOpacity > 0.5 ? "auto" : "none";
+    });
+
+    // ON THE SHEET.
     const aboutOpacity = Math.min(fadeIn(time, CUE_ABOUT_IN), fadeOut(time, CUE_ABOUT_OUT));
     aboutLayer.style.opacity = String(aboutOpacity);
+
+    const onSheet = clamp01((time - CUE_PAPER_FLAT) / (CUE_ABOUT_OUT - CUE_PAPER_FLAT));
+    const stagePosition = clamp01(onSheet / STAGES_END) * STAGE_COUNT;
+    for (let index = 0; index < STAGE_COUNT; index++) {
+      // The first stage is already up when the sheet arrives, and the last one
+      // leaves with the sheet — neither has a swap of its own on that side.
+      const enter = index === 0 ? 1 : ease(ramp(stagePosition, [index, index + STAGE_SWAP]));
+      const leave = index === STAGE_COUNT - 1 ? 0 : ease(ramp(stagePosition, [index + 1 - STAGE_SWAP, index + 1]));
+      const shown = enter * (1 - leave);
+      const stage = stageRefs.current[index];
+      if (stage) {
+        stage.style.opacity = String(shown);
+        // Rises in from below and leaves upward, so the stages read as one
+        // column moving past rather than as slides swapped in place.
+        stage.style.transform = `translateY(${(1 - enter - leave) * STAGE_TRAVEL_PX}px)`;
+      }
+      const dot = dotRefs.current[index];
+      if (dot) {
+        dot.style.width = `${lerp(DOT_PX, DOT_ACTIVE_PX, shown)}px`;
+        dot.style.opacity = String(lerp(0.2, 1, shown));
+      }
+    }
 
     const statementOpacity = fadeIn(time, CUE_STATEMENT_IN);
     statementLayer.style.opacity = String(statementOpacity);
@@ -197,12 +333,21 @@ export default function MobileServices() {
   });
 
   if (prefersReducedMotion) {
+    // Everything the scroll would have revealed, simply laid out in order.
     return (
-      <section id="services" className="bg-white px-6 py-20 text-right">
-        <ServicesHeading />
-        <ServiceGrid className="mt-8" />
-        <div className="mt-20">
-          <ProcessDiagram />
+      <section id="services" className="bg-white px-6 py-20">
+        <h2 className="text-center font-display text-m-statement font-bold text-balance text-black">
+          {SERVICES_HEADING.join(" ")}
+        </h2>
+        <p className="mt-3 text-center font-body text-m-body text-black/60">{SERVICES_LEAD}</p>
+        <ServiceList className="mt-8" />
+        <h2 className="mt-20 text-center font-display text-m-title font-bold text-black">
+          {PROCESS_HEADING.join(" ")}
+        </h2>
+        <div className="mt-12 space-y-16">
+          {STAGE_TITLES.map((title, index) => (
+            <ProcessStage key={title} index={index} className="flex flex-col items-center" />
+          ))}
         </div>
         <Statement className="mt-20" />
       </section>
@@ -228,24 +373,61 @@ export default function MobileServices() {
           <div className="relative aspect-[9/16] w-[min(100%,calc(100svh*9/16))]">
             <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />
 
-            {/* Anchored to the picture, not to the screen, because both of
-                these sit in the gaps the paper ball leaves: the heading in the
-                empty column beside it, the grid in the empty band below. */}
+            {/* Anchored to the picture, not to the screen: the sentence starts
+                ON the ball, so it has to know where the ball is. All three sit
+                at top 0 and are placed by update() with transforms — their own
+                boxes never change size, which is what makes them safe to
+                measure on every scroll event. */}
             <div ref={servicesLayerRef} className="absolute inset-0">
-              <ServicesHeading className="absolute top-[7%] left-[6%] w-[44%]" />
-              <ServiceGrid className="absolute inset-x-[5%] bottom-[3%]" />
+              <h2
+                ref={servicesHeadingRef}
+                className="paper-halo absolute inset-x-[6%] top-0 origin-top text-center font-display text-m-statement font-bold text-balance text-black will-change-transform"
+              >
+                {SERVICES_HEADING.join(" ")}
+              </h2>
+              <p
+                ref={servicesLeadRef}
+                className="paper-halo absolute inset-x-[6%] top-0 text-center font-body text-m-body text-black/60 opacity-0"
+              >
+                {SERVICES_LEAD}
+              </p>
+              <ServiceList listRef={serviceListRef} rowRefs={rowRefs} className="absolute inset-x-[7%] top-0" />
             </div>
           </div>
         </div>
 
-        {/* Anchored to the screen rather than to the picture: by the time
-            either of these is up the frame is a flat sheet or empty white, so
-            there is no composition left to sit beside. */}
-        <div
-          ref={aboutLayerRef}
-          className="absolute inset-0 flex flex-col justify-center px-7 opacity-0"
-        >
-          <ProcessDiagram />
+        {/* Anchored to the screen rather than to the picture: by the time this
+            is up the frame is a flat sheet, so there is no composition left to
+            sit beside. The four stages share one slot and take turns in it. */}
+        <div ref={aboutLayerRef} className="absolute inset-0 opacity-0">
+          <h2 className="paper-halo absolute inset-x-6 top-[12%] text-center font-display text-m-title font-bold text-black">
+            {PROCESS_HEADING.join(" ")}
+          </h2>
+          <div className="absolute inset-x-8 top-[24%] bottom-[20%]">
+            {STAGE_TITLES.map((title, index) => (
+              <ProcessStage
+                key={title}
+                index={index}
+                stageRef={(element) => {
+                  stageRefs.current[index] = element;
+                }}
+                className="absolute inset-0 flex flex-col items-center justify-center opacity-0"
+              />
+            ))}
+          </div>
+          {/* Where the reader is in the four. Decoration for sighted readers —
+              each stage carries its own numeral for everyone else. */}
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-[13%] flex items-center justify-center gap-2">
+            {STAGE_TITLES.map((title, index) => (
+              <span
+                key={title}
+                ref={(element) => {
+                  dotRefs.current[index] = element;
+                }}
+                className="block h-1.5 w-1.5 rounded-full bg-black opacity-20"
+              />
+            ))}
+          </div>
         </div>
 
         {/* 22%, not 11%. The clip is 9:16 inside a screen that is taller than
@@ -259,35 +441,45 @@ export default function MobileServices() {
   );
 }
 
-function ServicesHeading({ className }: { className?: string }) {
-  return (
-    <h2
-      className={`font-display text-m-title font-bold text-balance text-black ${className ?? ""}`}
-    >
-      מה אני עושה
-    </h2>
-  );
-}
-
 /**
- * Titles only. The sentence under each one is what the service pages are for,
- * and at this size four of them turns a glance into a wall of text.
+ * The four services as rows — numeral, title, arrow, a hairline under each —
+ * the same shape as the desktop's list rather than four boxes. Titles only: the
+ * sentence under each is what the service pages are for.
+ *
+ * Given refs, the rows start hidden and update() reveals them; without, they
+ * are simply there (the reduced-motion layout).
  */
-function ServiceGrid({ className }: { className?: string }) {
+function ServiceList({
+  listRef,
+  rowRefs,
+  className,
+}: {
+  listRef?: React.RefObject<HTMLUListElement | null>;
+  rowRefs?: React.RefObject<(HTMLAnchorElement | null)[]>;
+  className?: string;
+}) {
   return (
-    <ul className={`grid grid-cols-2 gap-2.5 ${className ?? ""}`}>
+    <ul ref={listRef} className={className}>
       {services.map((service, index) => (
         <li key={service.title}>
           <Link
+            ref={
+              rowRefs
+                ? (element) => {
+                    rowRefs.current[index] = element;
+                  }
+                : undefined
+            }
             href={service.href}
-            className="flex aspect-[4/3] flex-col justify-between rounded-lg border border-black/12 bg-white/70 p-3 text-right backdrop-blur-[2px]"
+            className={`flex items-center justify-between border-b border-black/10 py-3.5 ${rowRefs ? "opacity-0" : ""}`}
           >
-            <span className="font-display text-m-small leading-none font-bold text-black/35">
-              {String(index + 1).padStart(2, "0")}
+            <span className="paper-halo flex items-baseline gap-3">
+              <span className="font-display text-m-small font-bold text-black/35 tabular-nums">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span className="font-display text-m-sub font-bold text-black">{service.title}</span>
             </span>
-            <span className="font-display text-m-sub font-bold text-balance text-black">
-              {service.title}
-            </span>
+            <ArrowIcon className="text-black/50" />
           </Link>
         </li>
       ))}
@@ -295,179 +487,57 @@ function ServiceGrid({ className }: { className?: string }) {
   );
 }
 
-// The drawing's own coordinate space. Everything below is in these units, and
-// the viewBox is what turns them into whatever width the phone gives us — so
-// the whole diagram scales as one piece and nothing has to be measured.
-const ART_W = 600;
-const ART_H = 1000;
-// The column the icons stand in, and the four heights they stand at. The right
-// side, because this is RTL and that is where a line starts.
-const ICON_X = 498;
-const ROW_Y = [140, 380, 620, 860];
-// Where the connector leaves one icon and where it arrives at the next: the
-// icons are about 110 units tall, so this clears the tallest of them.
-const CONNECTOR_CLEARANCE = 66;
-// How far each connector bows sideways. Alternating, so the four stations read
-// as one line winding down the page rather than a stack joined by dashes —
-// the same idea as the desktop's single broken ellipse, stood on end.
-const CONNECTOR_BOW = 52;
-
 /**
- * The process, drawn on the open sheet — in the slot the "who I am" block used
- * to occupy and on the same cues: that slot is "whatever is printed on the
- * paper while it is open", and a diagram uses an open page better than a column
- * of prose did. "Who I am" is a section of its own now, so leaving it here as
- * well showed it twice on the phone.
+ * One stage of the work, given the whole of the open sheet: its icon large and
+ * moving, the numeral, the title, and the sentence under it that says what
+ * actually happens there. Printed on the sheet in the slot the "who I am" block
+ * used to occupy, on the same cues.
  *
- * This is the desktop's diagram rearranged, not a different idea: same four
- * stations, same artwork, same numerals, connected by one line that turns four
- * separate items into a route. What changes is the shape it is laid out on. The
- * desktop has a landscape sheet and puts the stations on an ellipse; a phone
- * sheet is a tall column, and a ring in a column is a ring with nothing in it.
+ * It used to be all four at once as a column of small icons and titles down one
+ * side of the page. Four steps and no words under any of them read as a list
+ * with nothing in it, and squeezing the sentences in would have made it a wall.
+ * One at a time, each stage has room to say what it is.
  *
- * Titles only, no copy under them. This is printed on a sheet that is open for
- * about two screens of scrolling — long enough to take in four steps, nowhere
- * near long enough to read eight lines of explanation. The service pages carry
- * the words.
- *
- * Drawn as one SVG rather than laid out in HTML for the same reason the desktop
- * is: the sheet it sits on is a frame of the clip that shrinks, and a drawing that
- * scales as a unit stays in proportion with it. An HTML stack would reflow.
+ * The icon needs no position of its own, so its animation class sits straight
+ * on the group — the desktop splits position and motion across two groups only
+ * because there the position is an SVG transform, which a CSS animation would
+ * overwrite.
  */
-function ProcessDiagram() {
+function ProcessStage({
+  index,
+  stageRef,
+  className,
+}: {
+  index: number;
+  stageRef?: (element: HTMLDivElement | null) => void;
+  className?: string;
+}) {
+  const number = String(index + 1).padStart(2, "0");
   return (
-    <svg
-      viewBox={`0 0 ${ART_W} ${ART_H}`}
-      className="mx-auto max-h-[76svh] w-full"
-      role="img"
-      aria-label={`ארבעת שלבי העבודה: ${STAGE_TITLES.join(", ")}`}
-    >
-      <defs>
-        <marker
-          id="mobile-process-arrowhead"
-          viewBox="0 0 10 10"
-          refX="9"
-          refY="5"
-          markerWidth="6"
-          markerHeight="6"
-          orient="auto"
+    <div ref={stageRef} className={`text-center ${className ?? ""}`}>
+      <svg viewBox="-60 -60 120 120" aria-hidden="true" className="h-24 w-24 overflow-visible text-black/55">
+        <g
+          className={ICON_MOTION[number]}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="currentColor" strokeWidth="1.8" />
-        </marker>
-
-        {/* The same halo the desktop uses, and gentler than it on purpose: the
-            sheet under the desktop diagram is covered in pencil work, and this
-            one is bare white with nothing but the crumple's own shadows on it.
-            Set as strong as the desktop's, it would read as a white cloud on
-            white paper. Enough to keep the type off the creases, no more. */}
-        <filter id="mobile-process-halo" x="-25%" y="-25%" width="150%" height="150%">
-          <feMorphology in="SourceAlpha" operator="dilate" radius="2" result="spread" />
-          <feGaussianBlur in="spread" stdDeviation="5" result="soft" />
-          <feComponentTransfer in="soft" result="halo">
-            <feFuncR type="linear" slope="0" intercept="1" />
-            <feFuncG type="linear" slope="0" intercept="1" />
-            <feFuncB type="linear" slope="0" intercept="1" />
-            <feFuncA type="linear" slope="1.4" intercept="0" />
-          </feComponentTransfer>
-          <feMerge>
-            <feMergeNode in="halo" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-
-      <g
-        className="text-black/40"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-      >
-        {ROW_Y.slice(0, -1).map((y, index) => {
-          const from = y + CONNECTOR_CLEARANCE;
-          const to = ROW_Y[index + 1] - CONNECTOR_CLEARANCE;
-          const bow = index % 2 === 0 ? -CONNECTOR_BOW : CONNECTOR_BOW;
-          const lean = (to - from) * 0.34;
-          return (
-            <path
-              key={y}
-              d={`M ${ICON_X} ${from} C ${ICON_X + bow} ${from + lean} ${ICON_X + bow} ${to - lean} ${ICON_X} ${to}`}
-              markerEnd="url(#mobile-process-arrowhead)"
-            />
-          );
-        })}
-      </g>
-
-      {/* One filter over the whole block, not one per element: applied per
-          piece, every glyph would glow onto its neighbour and the words would
-          end up sitting in a bank of white. */}
-      <g direction="rtl" filter="url(#mobile-process-halo)">
-        {/* The desktop's heading, on one line instead of two: it sits in the
-            corner of a landscape sheet there and has to fold, and there is no
-            reason to fold it in a column that is wider than it is.
-            Right-aligned to the icon column rather than centred over the page —
-            the drawing hangs off that column, and a heading floating in the
-            middle of the sheet reads as belonging to nothing. */}
-        <text
-          x={ICON_X + 52}
-          y={40}
-          textAnchor="start"
-          className="fill-black font-display text-[40px] font-bold"
-        >
-          {PROCESS_HEADING.join(" ")}
-        </text>
-
-        {STAGE_TITLES.map((step, index) => {
-          const number = String(index + 1).padStart(2, "0");
-          const y = ROW_Y[index];
-          return (
-            <g key={step}>
-              {/* TWO GROUPS, AND THAT IS THE POINT OF THEM. The outer one
-                  carries the position as an SVG `transform` attribute; the
-                  inner one carries the animation, which is a CSS `transform`
-                  property. On one element they do not combine — the CSS
-                  property wins outright and the attribute is thrown away, so
-                  every animated icon loses its placement and stacks up at 0,0. */}
-              <g transform={`translate(${ICON_X} ${y})`}>
-                <g
-                  className={`text-black/45 ${ICON_MOTION[number]}`}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {ICONS[number].map((part) => (
-                    <path key={part.d} d={part.d} className={part.cls} />
-                  ))}
-                  <IconExtras number={number} />
-                </g>
-              </g>
-
-              {/* textAnchor start under direction rtl is the RIGHT edge, so
-                  both of these hang off the same line beside the icon column
-                  and run leftward into the page. */}
-              <text
-                x={ICON_X - 92}
-                y={y - 24}
-                textAnchor="start"
-                className="fill-black/30 font-display text-[34px] font-bold"
-              >
-                {number}
-              </text>
-              <text
-                x={ICON_X - 92}
-                y={y + 32}
-                textAnchor="start"
-                className="fill-black font-display text-[42px] font-bold"
-              >
-                {step}
-              </text>
-            </g>
-          );
-        })}
-      </g>
-    </svg>
+          {ICONS[number].map((part) => (
+            <path key={part.d} d={part.d} className={part.cls} />
+          ))}
+          <IconExtras number={number} />
+        </g>
+      </svg>
+      <span className="mt-7 block font-display text-m-small font-bold tracking-[0.2em] text-black/35">{number}</span>
+      <h3 className="paper-halo mt-2 font-display text-m-statement font-bold text-balance text-black">
+        {STAGE_TITLES[index]}
+      </h3>
+      <p className="paper-halo mx-auto mt-3 max-w-[30ch] font-body text-m-body text-balance text-black/60">
+        {STAGE_LINES[index].join(" ")}
+      </p>
+    </div>
   );
 }
 

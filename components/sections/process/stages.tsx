@@ -10,9 +10,9 @@
  * it was the English word "process" against "איך אני עובד?". Two files, two
  * answers to the same question. Now there is one.
  *
- * What is NOT here is anything about arrangement — coordinates, sizes, the
- * sentence under each title on the desktop. Those belong to whichever layout is
- * doing the drawing.
+ * What is NOT here is anything about arrangement: coordinates and sizes belong
+ * to whichever layout is doing the drawing. The sentence under each title is
+ * here, because both layouts print it.
  *
  * Every icon is drawn around its OWN origin, so a layout only has to say where
  * the centre of a station is.
@@ -39,6 +39,18 @@ export const STAGE_TITLES = [
   "מעצבים את החוויה",
   "בונים את זה נכון",
   "עולים לאוויר",
+];
+
+/**
+ * The sentence under each title, as the two lines the desktop sets it in. That
+ * drawing is SVG, which does not wrap, so its breaks are chosen by hand; the
+ * phone joins the pair and lets the browser wrap to its own width.
+ */
+export const STAGE_LINES = [
+  ["לפני הכול יושבים ומדברים: מה המטרה, מי הקהל,", "ומה כבר לא עובד. אתר טוב מתחיל בהבנה."],
+  ["כל מסך, כל מרווח וכל צבע נבחרים בכוונה —", "שהגולש ידע לאן ללכת, לא רק שיהיה לו יפה."],
+  ["קוד נקי ומהיר שבנוי להחזיק שנים, בלי הפתעות", "כשתרצו לשנות או להוסיף משהו."],
+  ["ביום ההשקה אני שם, וגם הרבה אחריו —", "ממשיכים לתקן, לשפר ולגדול יחד."],
 ];
 
 export type IconPart = { d: string; cls?: string };

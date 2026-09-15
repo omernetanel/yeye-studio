@@ -11,6 +11,14 @@
  * would cost more than the duplication it saves.
  */
 
+/**
+ * The services section's opening line, as the two lines it is set in, and the
+ * lead into the list under it. Both layouts print these words — the phone gets
+ * the desktop's sentence, not a shorter one written for it.
+ */
+export const SERVICES_HEADING = ["אני בונה פתרונות דיגיטליים", "לעסקים שרוצים תוצאות."];
+export const SERVICES_LEAD = "ובתכל’ס, זה מה שאני עושה:";
+
 export const services = [
   {
     title: "חנויות אונליין",

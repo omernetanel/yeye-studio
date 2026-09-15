@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { ArrowLeft, Layers, PenTool, Rocket, ShoppingBag } from "lucide-react";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
-import { services } from "@/lib/content";
+import { SERVICES_HEADING, SERVICES_LEAD, services } from "@/lib/content";
 // The words and the artwork, shared with the phone's own arrangement of the
 // same four stages. Only the layout below is the desktop's own.
 import {
@@ -13,6 +13,7 @@ import {
   ICON_MOTION,
   IconExtras,
   PROCESS_HEADING,
+  STAGE_LINES,
   STAGE_TITLES,
 } from "./process/stages";
 import { cn } from "@/lib/utils";
@@ -334,11 +335,11 @@ const ServicesHeading = forwardRef<HTMLDivElement>(function ServicesHeading(_pro
           on two lines, so 72px would tower over the rest of the panel and
           eat the height the list and the ball need. */}
       <h2 className="font-display text-4xl leading-[1.2] font-bold text-black md:text-[44px]">
-        אני בונה פתרונות דיגיטליים
+        {SERVICES_HEADING[0]}
         <br />
-        לעסקים שרוצים תוצאות.
+        {SERVICES_HEADING[1]}
       </h2>
-      <p className="mt-2 font-body text-[15px] leading-[1.8] text-black/55">ובתכל&rsquo;ס, זה מה שאני עושה:</p>
+      <p className="mt-2 font-body text-[15px] leading-[1.8] text-black/55">{SERVICES_LEAD}</p>
     </div>
   );
 });
@@ -462,41 +463,16 @@ function ProcessDiagram({ headingRef }: { headingRef: RefObject<HTMLHeadingEleme
 // not look like it is missing the picture that used to sit beside it.
 //
 // `titleY` is the baseline of the heading; everything else is measured off it.
-// The title itself is NOT here — it comes from STAGE_TITLES in the order these
-// are written, because the phone prints the same four words and a second copy
-// of them had already drifted.
-// The copy lines are, because they are the desktop's alone, and they are split
-// by hand because SVG text does not wrap. That is the price of placing every
-// glyph exactly where it belongs on the page.
+// The words are NOT here — the title and the two lines under it come from
+// STAGE_TITLES and STAGE_LINES, in the order these are written, because the
+// phone prints the same stages and a second copy of them had already drifted.
+// The lines there are split by hand for this drawing, because SVG text does not
+// wrap. That is the price of placing every glyph exactly where it belongs.
 const STATIONS = [
-  {
-    number: "01",
-    cx: 960,
-    titleY: 305,
-    iconDy: -20,
-    lines: ["לפני הכול יושבים ומדברים: מה המטרה, מי הקהל,", "ומה כבר לא עובד. אתר טוב מתחיל בהבנה."],
-  },
-  {
-    number: "02",
-    cx: 1625,
-    titleY: 616,
-    iconDy: -10,
-    lines: ["כל מסך, כל מרווח וכל צבע נבחרים בכוונה —", "שהגולש ידע לאן ללכת, לא רק שיהיה לו יפה."],
-  },
-  {
-    number: "03",
-    cx: 960,
-    titleY: 928,
-    iconDy: 0,
-    lines: ["קוד נקי ומהיר שבנוי להחזיק שנים, בלי הפתעות", "כשתרצו לשנות או להוסיף משהו."],
-  },
-  {
-    number: "04",
-    cx: 295,
-    titleY: 616,
-    iconDy: -9,
-    lines: ["ביום ההשקה אני שם, וגם הרבה אחריו —", "ממשיכים לתקן, לשפר ולגדול יחד."],
-  },
+  { number: "01", cx: 960, titleY: 305, iconDy: -20 },
+  { number: "02", cx: 1625, titleY: 616, iconDy: -10 },
+  { number: "03", cx: 960, titleY: 928, iconDy: 0 },
+  { number: "04", cx: 295, titleY: 616, iconDy: -9 },
 ] as const;
 
 // The arrows, as arcs of ONE ellipse — the one that passes through all four
@@ -626,7 +602,7 @@ function ProcessStations() {
             <text x={station.cx} y={station.titleY} className="fill-black font-display text-[44px] font-bold">
               {STAGE_TITLES[stationIndex]}
             </text>
-            {station.lines.map((line, index) => (
+            {STAGE_LINES[stationIndex].map((line, index) => (
               <text
                 key={line}
                 x={station.cx}
