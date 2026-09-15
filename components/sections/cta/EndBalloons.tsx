@@ -25,10 +25,13 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
  * whole way down, so the constants below are the sim's.
  */
 
-// Terminal velocity is GRAVITY / DRAG — 274px/s, which is what makes them read
-// as foil and not as stones.
-const GRAVITY = 520;
-const DRAG = 1.9;
+// Terminal velocity is GRAVITY / DRAG — 152px/s here, a little over half the
+// 274 the balloons in "מי אני" fall at. Those are a shower of seventeen and the
+// speed is the event; these two are the last thing that happens on the page,
+// with nothing else moving on the screen and no reason to hurry. Slow enough to
+// watch the whole way down and still see them hit.
+const GRAVITY = 320;
+const DRAG = 2.1;
 const ROCK_DEGREES = 26;
 const ROCK_SPEED = 1.05;
 
@@ -93,6 +96,7 @@ type Body = {
 export default function EndBalloons() {
   const prefersReducedMotion = usePrefersReducedMotion();
   const layerRef = useRef<HTMLDivElement>(null);
+  const floorRef = useRef<HTMLDivElement>(null);
   const ballRefs = useRef<(HTMLImageElement | null)[]>([]);
 
   useEffect(() => {
@@ -243,11 +247,18 @@ export default function EndBalloons() {
       frame = requestAnimationFrame(step);
     };
 
-    // The end of the site is "this section has the screen", not "this section
-    // has appeared" — the negative bottom margin pulls the observer's lower
-    // edge up so the drop begins once the close is actually being read. It
-    // re-arms on the way out, so scrolling back up and down again runs it
+    // WATCHED AT THE SECTION'S BOTTOM EDGE, not anywhere in its middle. This
+    // used to watch the layer itself with a negative bottom margin, which fires
+    // while the close is arriving — the balloons came down the moment the
+    // section was uncovered, over a reader who was still on their way to it. A
+    // one-pixel marker on the floor of the section only comes into view once
+    // there is nothing left below it, which is the actual end of the site and
+    // the moment worth marking.
+    //
+    // It re-arms on the way out, so scrolling back up and down again runs it
     // afresh rather than leaving a page that can only do this once.
+    const floor = floorRef.current;
+    if (!floor) return;
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -255,9 +266,9 @@ export default function EndBalloons() {
           else stop();
         }
       },
-      { threshold: 0, rootMargin: "0px 0px -45% 0px" },
+      { threshold: 0 },
     );
-    observer.observe(layer);
+    observer.observe(floor);
 
     return () => {
       observer.disconnect();
@@ -273,6 +284,9 @@ export default function EndBalloons() {
     // behind the words. The section's overflow-hidden is what they leave
     // through — it crops them at its left edge, which is the page's.
     <div ref={layerRef} aria-hidden="true" className="pointer-events-none absolute inset-0">
+      {/* The trip wire, on the floor of the section. See the observer. */}
+      <div ref={floorRef} className="absolute inset-x-0 bottom-0 h-px" />
+
       {CAST.map((entry, index) => (
         // eslint-disable-next-line @next/next/no-img-element
         <img
