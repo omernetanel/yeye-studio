@@ -6,8 +6,15 @@ import { useMotionValueEvent, useScroll } from "framer-motion";
 import { ArrowLeft, Layers, PenTool, Rocket, ShoppingBag } from "lucide-react";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { services } from "@/lib/content";
-// The artwork, shared with the phone's own arrangement of the same four stages.
-import { ICONS, ICON_MOTION, IconExtras } from "./process/icons";
+// The words and the artwork, shared with the phone's own arrangement of the
+// same four stages. Only the layout below is the desktop's own.
+import {
+  ICONS,
+  ICON_MOTION,
+  IconExtras,
+  PROCESS_HEADING,
+  STAGE_TITLES,
+} from "./process/stages";
 import { cn } from "@/lib/utils";
 
 // The words live in lib/content because the mobile page renders the same four
@@ -383,9 +390,9 @@ function ProcessDiagram({ headingRef }: { headingRef: RefObject<HTMLHeadingEleme
           className="absolute top-0 right-0 z-10 font-display text-[26px] leading-[1.05] font-bold text-black will-change-transform md:text-[40px]"
           style={{ opacity: 0 }}
         >
-          איך אני
+          {PROCESS_HEADING[0]}
           <br />
-          עובד?
+          {PROCESS_HEADING[1]}
         </h3>
 
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -428,15 +435,18 @@ function ProcessDiagram({ headingRef }: { headingRef: RefObject<HTMLHeadingEleme
 // not look like it is missing the picture that used to sit beside it.
 //
 // `titleY` is the baseline of the heading; everything else is measured off it.
-// Lines are split by hand because SVG text does not wrap. That is the price of
-// placing every glyph exactly where it belongs on the page.
+// The title itself is NOT here — it comes from STAGE_TITLES in the order these
+// are written, because the phone prints the same four words and a second copy
+// of them had already drifted.
+// The copy lines are, because they are the desktop's alone, and they are split
+// by hand because SVG text does not wrap. That is the price of placing every
+// glyph exactly where it belongs on the page.
 const STATIONS = [
   {
     number: "01",
     cx: 960,
     titleY: 305,
     iconDy: -20,
-    title: "מבינים את העסק",
     lines: ["לפני הכול יושבים ומדברים: מה המטרה, מי הקהל,", "ומה כבר לא עובד. אתר טוב מתחיל בהבנה."],
   },
   {
@@ -444,7 +454,6 @@ const STATIONS = [
     cx: 1625,
     titleY: 616,
     iconDy: -10,
-    title: "מעצבים את החוויה",
     lines: ["כל מסך, כל מרווח וכל צבע נבחרים בכוונה —", "שהגולש ידע לאן ללכת, לא רק שיהיה לו יפה."],
   },
   {
@@ -452,7 +461,6 @@ const STATIONS = [
     cx: 960,
     titleY: 928,
     iconDy: 0,
-    title: "בונים את זה נכון",
     lines: ["קוד נקי ומהיר שבנוי להחזיק שנים, בלי הפתעות", "כשתרצו לשנות או להוסיף משהו."],
   },
   {
@@ -460,7 +468,6 @@ const STATIONS = [
     cx: 295,
     titleY: 616,
     iconDy: -9,
-    title: "עולים לאוויר",
     lines: ["ביום ההשקה אני שם, וגם הרבה אחריו —", "ממשיכים לתקן, לשפר ולגדול יחד."],
   },
 ] as const;
@@ -483,7 +490,7 @@ function ProcessStations() {
       viewBox="0 0 1920 1080"
       className="absolute inset-0 h-full w-full"
       role="img"
-      aria-label="ארבעת שלבי העבודה: מבינים את העסק, מעצבים את החוויה, בונים את זה נכון, עולים לאוויר"
+      aria-label={`ארבעת שלבי העבודה: ${STAGE_TITLES.join(", ")}`}
     >
       <defs>
         {/* orient="auto" turns the head to follow the path, so one marker
@@ -553,7 +560,7 @@ function ProcessStations() {
           sit in a bank of white. One filter over the group means the halo is
           computed from the block's silhouette. */}
       <g direction="rtl" textAnchor="middle" filter="url(#process-halo)">
-        {STATIONS.map((station) => (
+        {STATIONS.map((station, stationIndex) => (
           <g key={station.number}>
             {/* TWO GROUPS, AND THAT IS THE POINT OF THEM.
                 The outer one carries the position as an SVG `transform`
@@ -590,7 +597,7 @@ function ProcessStations() {
               {station.number}
             </text>
             <text x={station.cx} y={station.titleY} className="fill-black font-display text-[44px] font-bold">
-              {station.title}
+              {STAGE_TITLES[stationIndex]}
             </text>
             {station.lines.map((line, index) => (
               <text
