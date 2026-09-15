@@ -23,9 +23,24 @@ const BASE_URL = "https://yeyelabs.com";
  * viewport-fit=cover is what lets the page reach under those bars in the first
  * place — without it iOS letterboxes the whole document inside the safe area
  * and the tint has nothing to do.
+ *
+ * DECLARED TWICE, ONCE PER SCHEME, AND THAT IS THE WHOLE FIX. A single
+ * theme-color with no media query looks like it covers both cases and does not:
+ * a browser running in dark mode treats one bare colour as "the light-mode
+ * colour", finds nothing declared for the scheme it is actually in, and paints
+ * its own dark chrome instead. That is why a white page still sat between two
+ * black bars on a phone whose browser was in night mode. Naming white for the
+ * dark scheme as well is what makes it stop guessing.
+ *
+ * `color-scheme: light` in globals.css is the other half: it tells the engine
+ * this page has no dark rendering, so the browser's force-dark pass leaves the
+ * content alone rather than inverting a site that is white by design.
  */
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#ffffff" },
+  ],
   viewportFit: "cover",
 };
 
