@@ -125,22 +125,23 @@ function fadeOut(time: number, until: number) {
   return clamp01((until - time) / FADE_SECONDS);
 }
 
-// ON THE SHEET — the four stages as one column that travels up with the scroll,
-// the stage passing through the middle of the window at full strength and its
-// neighbours faded back. It reaches the last stage at STAGES_END of the hold
-// rather than at its end, so that stage sits still in the middle for a moment
-// before the words shrink back into the page.
+// ON THE SHEET — the four stages one at a time, in the same place, while the
+// clip holds. Each stage sits still for most of its share of the scroll and hands
+// over to the next in a short swap: the outgoing one lifts away as the incoming
+// one rises in under it. It reaches the last stage at STAGES_END of the hold
+// rather than at its end, so that stage stays a moment before the words shrink
+// back into the page.
 //
-// A column and not a sequence. The version before this faded one stage out and
-// the next one in, and between them the sheet was blank for a moment on every
-// swap — reading as the page losing its content under the finger. A column that
-// moves with the hand always has something on it, and moves the way scrolling
-// moves.
+// A step at a time, by the user's choice, over the column that moved with the
+// scroll. The two stages never share the page: letting them cross, even briefly,
+// stacked two icons and two titles on top of each other mid-swap. Instead the
+// swap is short, so the moment between them is a flicker of scroll rather than
+// a blank sheet.
 const STAGE_COUNT = STAGE_TITLES.length;
 const STAGES_END = 0.76;
-const STAGE_DIM_OPACITY = 0.22;
-const DOT_PX = 6;
-const DOT_ACTIVE_PX = 20;
+/** How much of the gap between two stages the swap takes. The rest is still. */
+const SWAP_SPAN = 0.24;
+const SWAP_RISE_PX = 28;
 /** How small the stages get as they go back into the folding paper. */
 const COLLAPSED_SCALE = 0.55;
 
@@ -171,8 +172,6 @@ export default function MobileServices() {
   const framesRef = useRef<ScrollFrames | null>(null);
   const servicesLayerRef = useRef<HTMLDivElement>(null);
   const aboutLayerRef = useRef<HTMLDivElement>(null);
-  const stageWindowRef = useRef<HTMLDivElement>(null);
-  const stageColumnRef = useRef<HTMLDivElement>(null);
   const stageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dotRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const statementLayerRef = useRef<HTMLDivElement>(null);
@@ -183,16 +182,11 @@ export default function MobileServices() {
     const frames = framesRef.current;
     const servicesLayer = servicesLayerRef.current;
     const aboutLayer = aboutLayerRef.current;
-    const stageWindow = stageWindowRef.current;
-    const stageColumn = stageColumnRef.current;
     const statementLayer = statementLayerRef.current;
-    if (!wrapper || !panel || !frames || !servicesLayer || !aboutLayer || !stageWindow || !stageColumn || !statementLayer) {
-      return;
-    }
+    if (!wrapper || !panel || !frames || !servicesLayer || !aboutLayer || !statementLayer) return;
 
     // Every measurement first, before any style below is written: a read after a
-    // write forces a layout on every scroll event. None of these boxes is resized
-    // by what is written here — only transformed — so they are stable to read.
+    // write forces a layout on every scroll event.
     //
     // The panel's own height, not window.innerHeight. Both are one screen, but
     // the panel is sized in svh — the height with the browser chrome showing,
@@ -202,11 +196,6 @@ export default function MobileServices() {
     const wrapperBox = wrapper.getBoundingClientRect();
     const travel = wrapperBox.height - panel.offsetHeight;
     if (travel <= 0) return;
-    const windowHeight = stageWindow.clientHeight;
-    // Where each stage's middle sits inside the column. These are layout offsets,
-    // which the column's own transform never changes, so they hold still while it
-    // moves.
-    const stageMiddles = stageRefs.current.map((stage) => (stage ? stage.offsetTop + stage.offsetHeight / 2 : 0));
 
     const progress = clamp01(-wrapperBox.top / travel);
     const time = progressToTime(progress);
@@ -229,27 +218,31 @@ export default function MobileServices() {
     aboutLayer.style.opacity = String(Math.min(fadeIn(time, CUE_ABOUT_IN), 1 - collapse));
     aboutLayer.style.transform = `scale(${lerp(1, COLLAPSED_SCALE, collapse)})`;
 
-    // Which stage is in the middle of the window, as a continuous position —
-    // 1.5 is halfway between the second and the third. Read off the scroll inside
-    // the hold, not off clip time, which is standing still there.
+    // Where the reader is in the four, as a continuous position — 1.5 is halfway
+    // between the second and the third. Read off the scroll inside the hold, not
+    // off clip time, which is standing still there.
     const onSheet = clamp01((progress - STAGES_FROM) / (STAGES_TO - STAGES_FROM));
     const position = clamp01(onSheet / STAGES_END) * (STAGE_COUNT - 1);
-    const from = Math.floor(position);
-    const to = Math.min(STAGE_COUNT - 1, from + 1);
-    // Travels between the stages' real middles rather than by a fixed step, so a
-    // stage whose sentence runs a line longer still lands centred.
-    const middle = lerp(stageMiddles[from], stageMiddles[to], position - from);
-    stageColumn.style.transform = `translateY(${windowHeight / 2 - middle}px)`;
 
     for (let index = 0; index < STAGE_COUNT; index++) {
-      const nearness = 1 - clamp01(Math.abs(index - position));
+      // 0 → 1 across the swap into this stage, and across the swap out of it.
+      const swapIn = index === 0 ? 1 : clamp01((position - (index - 0.5 - SWAP_SPAN / 2)) / SWAP_SPAN);
+      const swapOut =
+        index === STAGE_COUNT - 1 ? 0 : clamp01((position - (index + 0.5 - SWAP_SPAN / 2)) / SWAP_SPAN);
+      // The outgoing stage takes the first half of the swap, the incoming one the
+      // second, so they meet at nothing and never overlap.
+      const arriving = clamp01(swapIn * 2 - 1);
+      const leaving = clamp01(swapOut * 2);
+      const visibility = Math.min(arriving, 1 - leaving);
+
       const stage = stageRefs.current[index];
-      if (stage) stage.style.opacity = String(lerp(STAGE_DIM_OPACITY, 1, nearness));
-      const dot = dotRefs.current[index];
-      if (dot) {
-        dot.style.width = `${lerp(DOT_PX, DOT_ACTIVE_PX, nearness)}px`;
-        dot.style.opacity = String(lerp(0.2, 1, nearness));
+      if (stage) {
+        stage.style.opacity = String(visibility);
+        stage.style.transform = `translateY(${((1 - arriving) - leaving) * SWAP_RISE_PX}px)`;
       }
+      // Round dots only: the current one darkens, it never stretches into a bar.
+      const dot = dotRefs.current[index];
+      if (dot) dot.style.opacity = String(lerp(0.2, 1, visibility));
     }
 
     const statementOpacity = fadeIn(time, CUE_STATEMENT_IN);
@@ -341,28 +334,19 @@ export default function MobileServices() {
           <h2 className="paper-halo absolute inset-x-6 top-[18%] text-center font-display text-m-title font-bold text-black">
             {PROCESS_HEADING.join(" ")}
           </h2>
-          {/* The window the column travels through. Its top and bottom fade into
-              the page, so a stage comes up out of the paper and goes back into
-              it rather than meeting a hard edge. Both spellings of mask-image:
-              iOS Safari before 15.4 reads only the prefixed one. */}
-          <div
-            ref={stageWindowRef}
-            className="absolute inset-x-8 top-[28%] bottom-[14%] overflow-clip [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)] [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)]"
-          >
-            {/* relative, so the stages' offsetTop is measured from the top of
-                this column — the origin update() moves it by. */}
-            <div ref={stageColumnRef} className="relative flex flex-col items-center gap-14 will-change-transform">
-              {STAGE_TITLES.map((title, index) => (
-                <ProcessStage
-                  key={title}
-                  index={index}
-                  stageRef={(element) => {
-                    stageRefs.current[index] = element;
-                  }}
-                  className="flex flex-col items-center"
-                />
-              ))}
-            </div>
+          {/* All four stacked in one grid cell, centred in the space under the
+              heading, so each stage takes the same place as the one before. */}
+          <div className="absolute inset-x-8 top-[28%] bottom-[14%] grid place-items-center">
+            {STAGE_TITLES.map((title, index) => (
+              <ProcessStage
+                key={title}
+                index={index}
+                stageRef={(element) => {
+                  stageRefs.current[index] = element;
+                }}
+                className="flex flex-col items-center opacity-0 [grid-area:1/1]"
+              />
+            ))}
           </div>
           {/* Where the reader is in the four. Decoration for sighted readers —
               each stage carries its own numeral for everyone else. */}
