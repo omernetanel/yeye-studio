@@ -121,11 +121,12 @@ const CAST: readonly CastEntry[] = [
  * falling down the middle.
  */
 const MOBILE_CAST: readonly CastEntry[] = [
-  // Two over the cards, and neither on the cue's own instant. The first used to
-  // go at zero, which meant it was already falling before the card that armed
-  // it had finished arriving — the balloon beat the thing it was reacting to.
-  { cue: "drop", at: 700, x: 0.71, depth: 1, type: 0, settles: false, front: true },
-  { cue: "drop", at: 3000, x: 0.21, depth: 0, type: 1, settles: false, front: false },
+  // Two just ahead of the close. MobileAbout arms them a little before the
+  // close's own cue rather than on the first card, so they lead the fall
+  // instead of arriving on their own early in the section. Closer together than
+  // they were, so both are in the air before the rest begin.
+  { cue: "drop", at: 0, x: 0.71, depth: 1, type: 0, settles: false, front: true },
+  { cue: "drop", at: 1100, x: 0.21, depth: 0, type: 1, settles: false, front: false },
 
   // Falling past on the way to the close. Spread wide and unevenly: at a second
   // apart, balloons on a 375px column are never fewer than three on screen at

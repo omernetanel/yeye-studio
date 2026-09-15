@@ -99,6 +99,11 @@ const CLOSER_PULL_VH = 25;
 // arrived on an empty screen and read as a section of its own rather than as
 // the end of this one.
 const CLOSER_LEAD_VH = 0.7;
+// How far ahead of the close's own lead-in the first two balloons are released:
+// enough that they are already falling when the rest begin, not so much that
+// they fall alone. Measured at 375×812 this is about 120px of scroll before the
+// rest; 0.35 released them earlier than the first card had.
+const DROP_AHEAD_VH = 0.1;
 const CLOSER_ARRIVE = [0, 0.16] as const;
 const CLOSER_BALLOONS_AT = 0.04;
 const CLOSER_DRAW = [0.42, 0.82] as const;
@@ -212,25 +217,6 @@ export default function MobileAbout() {
       el.style.transform = seen ? "translateY(0)" : "translateY(30px)";
     });
 
-    // THE FIRST BALLOONS ARE ARMED HERE, on the cards — not on the close.
-    //
-    // They were armed by the closing stage, which meant every one of them
-    // arrived inside the same pinned panel, in a heap, and the one thing they
-    // exist to do was lost. The whole trick is that the reader has spent the
-    // section learning that nothing moves unless they move it, and then
-    // something falls on its own. That has to happen while there is still
-    // something to fall past.
-    //
-    // Not the same threshold the card itself uses. A card counts as seen the
-    // moment its top edge crosses 82% of the screen, which is while it is still
-    // sliding up from the bottom; arming there put the first balloon in the air
-    // before the card had finished arriving. This waits until the card is
-    // properly on screen.
-    const first = claimsRef.current[0];
-    if (first && !dropStateRef.current.armed) {
-      dropStateRef.current.armed = first.getBoundingClientRect().top < screen * 0.5;
-    }
-
     const stage = closerStageRef.current;
     const line = closerLineRef.current;
     const swash = closerSwashRef.current;
@@ -240,6 +226,14 @@ export default function MobileAbout() {
     const travel = box.height - screen;
     if (travel <= 0) return;
     const closerLead = screen * CLOSER_LEAD_VH;
+
+    // THE FIRST TWO BALLOONS are armed a little ahead of the close, so they
+    // fall just before the rest rather than on their own, early in the section.
+    // Armed off the first card, they came down while the reader was still in
+    // the copy, and read as a stray event rather than the start of the fall.
+    if (!dropStateRef.current.armed) {
+      dropStateRef.current.armed = box.top < closerLead + screen * DROP_AHEAD_VH;
+    }
     const progress = clamp01((closerLead - box.top) / (travel + closerLead));
 
     const arrive = span(progress, CLOSER_ARRIVE);
