@@ -330,23 +330,29 @@ export default function MobileServices() {
             is up the frame is a flat sheet, so there is no composition left to
             sit beside. */}
         <div ref={aboutLayerRef} className="absolute inset-0 opacity-0">
-          {/* 18%, where it was 12% and sat right under the menu row. */}
-          <h2 className="paper-halo absolute inset-x-6 top-[18%] text-center font-display text-m-title font-bold text-black">
-            {PROCESS_HEADING.join(" ")}
-          </h2>
-          {/* All four stacked in one grid cell, centred in the space under the
-              heading, so each stage takes the same place as the one before. */}
-          <div className="absolute inset-x-8 top-[28%] bottom-[14%] grid place-items-center">
-            {STAGE_TITLES.map((title, index) => (
-              <ProcessStage
-                key={title}
-                index={index}
-                stageRef={(element) => {
-                  stageRefs.current[index] = element;
-                }}
-                className="flex flex-col items-center opacity-0 [grid-area:1/1]"
-              />
-            ))}
+          {/* The heading and the stages as one block, centred between the menu
+              row and the dots. Pinned to the top on its own, the heading hung
+              far above the stage and read as detached from it. The grid cell is
+              as tall as the tallest stage, so the block — and the heading with
+              it — holds still as the stages swap. */}
+          <div className="absolute inset-x-6 top-[8%] bottom-[14%] flex flex-col items-center justify-center">
+            <h2 className="paper-halo text-center font-display text-m-title font-bold text-black">
+              {PROCESS_HEADING.join(" ")}
+            </h2>
+            {/* All four stacked in one grid cell, so each stage takes the same
+                place as the one before. */}
+            <div className="mt-10 grid w-full place-items-center px-2">
+              {STAGE_TITLES.map((title, index) => (
+                <ProcessStage
+                  key={title}
+                  index={index}
+                  stageRef={(element) => {
+                    stageRefs.current[index] = element;
+                  }}
+                  className="flex flex-col items-center opacity-0 [grid-area:1/1]"
+                />
+              ))}
+            </div>
           </div>
           {/* Where the reader is in the four. Decoration for sighted readers —
               each stage carries its own numeral for everyone else. */}
