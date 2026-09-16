@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { BarChart3, Bell, Calendar, Compass, Gauge, Languages, Layers, Palette, Smartphone, Sparkles, Users } from "lucide-react";
 import Button from "@/components/ui/Button";
-import Card from "@/components/ui/Card";
+import BorderGlowCard from "@/components/ui/BorderGlowCard";
 import LiveProjectPreview from "@/components/projects/LiveProjectPreview";
 import type { Project, ProjectFeatureIcon } from "@/lib/projects";
 
@@ -120,13 +120,16 @@ export default function ProjectPageClient({ project }: Props) {
                   viewport={{ once: true, margin: "-60px" }}
                   transition={{ duration: 0.6, ease: "easeOut", delay: (i % 3) * 0.1 }}
                 >
-                  <Card light className="flex h-full flex-col items-center gap-3 text-center">
-                    <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-accent/25 bg-[radial-gradient(circle_at_30%_30%,color-mix(in_srgb,var(--color-accent)_35%,transparent)_0%,rgba(255,255,255,0.4)_75%)]">
-                      <Icon size={24} strokeWidth={1.5} className="text-accent drop-shadow-[0_0_6px_rgba(74,74,74,0.35)]" />
+                  {/* The benefit cards from the home page — see TypesGrid. */}
+                  <BorderGlowCard className="h-full p-7">
+                    <div className="flex flex-col items-center gap-3 text-center">
+                      <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-white/15 bg-white/[0.06]">
+                        <Icon size={24} strokeWidth={1.5} className="text-white" />
+                      </div>
+                      <h3 className="font-display text-[15px] font-bold text-white">{feature.title}</h3>
+                      <p className="font-body text-[13px] leading-[1.65] text-white/55">{feature.description}</p>
                     </div>
-                    <h3 className="font-display text-[15px] font-bold text-black">{feature.title}</h3>
-                    <p className="font-body text-[13px] leading-[1.65] text-black/50">{feature.description}</p>
-                  </Card>
+                  </BorderGlowCard>
                 </motion.div>
               );
             })}
@@ -160,24 +163,22 @@ export default function ProjectPageClient({ project }: Props) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.6 }}
-            className="relative mt-24 overflow-hidden rounded-3xl border border-black/10 bg-white/30 px-6 py-16 text-center shadow-[0_20px_45px_rgba(0,0,0,0.08)] md:py-20"
+            className="mt-24"
           >
-            <motion.div
-              animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.3, 0.15] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="pointer-events-none absolute top-1/2 left-1/2 h-[300px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[60px]"
-              style={{ background: "radial-gradient(ellipse, rgba(74,74,74,0.3) 0%, transparent 70%)" }}
-            />
-
-            <div className="relative z-10">
-              <h2 className="mb-4 font-display text-[clamp(28px,4vw,44px)] leading-[1.15] font-extrabold text-black">
+            {/* The closing box as one of the site's cards too, and the biggest of
+                them: a black panel with the light around it, so the page ends
+                on something rather than on another white block. */}
+            <BorderGlowCard className="px-6 py-16 text-center md:py-20">
+              <h2 className="mb-4 font-display text-[clamp(28px,4vw,44px)] leading-[1.15] font-extrabold text-white">
                 {story.ctaTitle}
               </h2>
-              <p className="mx-auto mb-8 max-w-[560px] font-body text-[16px] leading-[1.8] text-black/55">
+              <p className="mx-auto mb-8 max-w-[560px] font-body text-[16px] leading-[1.8] text-white/55">
                 {story.ctaText}
               </p>
-              <Button href="/#cta">בוא נדבר</Button>
-            </div>
+              <Button href="/#cta" className="!border-white !bg-none !bg-white !text-black !shadow-none">
+                בוא נדבר
+              </Button>
+            </BorderGlowCard>
           </motion.div>
         </div>
       )}

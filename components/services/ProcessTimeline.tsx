@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
+import BorderGlowCard from "@/components/ui/BorderGlowCard";
 
 interface Step {
   number: string;
@@ -17,11 +18,14 @@ interface ProcessTimelineProps {
 
 function StepCard({ step }: { step: Step }) {
   return (
-    <div className="flex flex-col gap-2.5 rounded-2xl border border-black/10 bg-white/30 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
-      <span className="font-display text-[11px] tracking-[0.08em] text-accent">{step.number}</span>
-      <h3 className="font-display text-[15px] font-bold text-black">{step.title}</h3>
-      <p className="font-body text-[13px] leading-[1.7] text-black/50">{step.description}</p>
-    </div>
+    // The benefit cards from the home page — see TypesGrid.
+    <BorderGlowCard className="p-5">
+      <div className="flex flex-col gap-2.5">
+        <span className="font-display text-[11px] tracking-[0.08em] text-white/45">{step.number}</span>
+        <h3 className="font-display text-[15px] font-bold text-white">{step.title}</h3>
+        <p className="font-body text-[13px] leading-[1.7] text-white/55">{step.description}</p>
+      </div>
+    </BorderGlowCard>
   );
 }
 

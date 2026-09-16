@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Card from "@/components/ui/Card";
+import BorderGlowCard from "@/components/ui/BorderGlowCard";
 import SwipeCarousel from "@/components/ui/SwipeCarousel";
 
 interface TypeItem {
@@ -17,11 +17,15 @@ interface TypesGridProps {
 
 function TypeCardContent({ item }: { item: TypeItem }) {
   return (
-    <Card light className="flex h-full flex-col gap-3">
-      <h3 className="font-display text-lg font-bold text-black">{item.title}</h3>
-      <p className="font-body text-sm leading-[1.7] text-black/50">{item.description}</p>
-      <p className="mt-1 font-display text-[12.5px] text-accent">{item.use}</p>
-    </Card>
+    // The benefit cards from the home page, so every card on the site is one
+    // object: black face, a light turning around the edge.
+    <BorderGlowCard className="h-full p-7">
+      <div className="flex flex-col gap-3">
+        <h3 className="font-display text-lg font-bold text-white">{item.title}</h3>
+        <p className="font-body text-sm leading-[1.7] text-white/55">{item.description}</p>
+        <p className="mt-1 font-display text-[12.5px] text-white/80">{item.use}</p>
+      </div>
+    </BorderGlowCard>
   );
 }
 
