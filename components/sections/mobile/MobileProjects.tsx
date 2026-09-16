@@ -127,7 +127,7 @@ export default function MobileProjects() {
     // old pair left. That pairing was matched to a close that opened with a
     // 250px block of balloons; the clip is the ground of that section now, so
     // the number it was matched to is gone.
-    <section id="projects" className="relative bg-white pt-24 pb-12">
+    <section id="projects" className="relative bg-white pt-24 pb-4">
       <h2
         ref={headingRef}
         className="mb-10 px-6 text-center font-display text-m-display font-extrabold tracking-tight text-black will-change-transform"

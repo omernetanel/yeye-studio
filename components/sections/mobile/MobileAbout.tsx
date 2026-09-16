@@ -6,7 +6,6 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import HeadingSwash from "@/components/ui/HeadingSwash";
 import BalloonDrop, { type DropState } from "@/components/sections/about/BalloonDrop";
 import BorderGlowCard from "@/components/ui/BorderGlowCard";
-import SwipeCarousel from "@/components/ui/SwipeCarousel";
 import { ABOUT_FACTS_HEADING, aboutFacts } from "@/lib/content";
 
 /**
@@ -97,6 +96,10 @@ const PORTRAIT_SETTLED = 0.88;
 const LINE_IN_FROM = 0.92;
 const LINE_IN_TO = 0.62;
 
+// Where a claim card opens, and how far it rises into place.
+const CLAIM_IN_VH = 0.85;
+const CLAIM_RISE_PX = 24;
+
 // How far into the screen a scrolling element must come before it is fully in.
 const RISE_VH = 0.42;
 const RISE_PX = 26;
@@ -154,6 +157,11 @@ export default function MobileAbout() {
   const portraitRef = useRef<HTMLDivElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
+  // Each claim, and whether it has already opened. One way only: a card that
+  // has been read is not arriving any more, and watching three of them fold
+  // themselves away on the way back up reads as the page undoing itself.
+  const claimsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const claimsSeenRef = useRef<boolean[]>([]);
   const closerStageRef = useRef<HTMLDivElement>(null);
   const closerLineRef = useRef<HTMLParagraphElement>(null);
   const closerSwashRef = useRef<HTMLDivElement>(null);
@@ -238,6 +246,16 @@ export default function MobileAbout() {
       cards.style.transform = `translateY(${lerp(RISE_PX, 0, t).toFixed(1)}px)`;
     }
 
+    // And each claim opens on its own as it comes up, once.
+    claimsRef.current.forEach((claim, index) => {
+      if (!claim || claimsSeenRef.current[index]) return;
+      if (claim.getBoundingClientRect().top < screen * CLAIM_IN_VH) {
+        claimsSeenRef.current[index] = true;
+        claim.style.opacity = "1";
+        claim.style.transform = "translateY(0)";
+      }
+    });
+
     const stage = closerStageRef.current;
     const line = closerLineRef.current;
     const swash = closerSwashRef.current;
@@ -297,6 +315,7 @@ export default function MobileAbout() {
         closerLineRef.current,
         ...greetLinesRef.current,
         cardsRef.current,
+        ...claimsRef.current,
       ]) {
         if (el) {
           el.style.opacity = "1";
@@ -438,14 +457,23 @@ export default function MobileAbout() {
               to: "01" on a card that arrives on its own says the reader has
               missed something, where the dots under it say how many there are
               without numbering anything. */}
-          {/* THE ROW LOOPS, which is also what puts the first claim in the
-              middle with a card either side of it: in a loop nothing is first,
-              so the one being read always has a neighbour on both sides. The
-              claims stay in their own order and the dots count them straight —
-              the reader opens on the first, and the first dot is lit. */}
-          <SwipeCarousel className="mt-6" slideWidth="72vw" tone="dark" centred loop>
-            {aboutFacts.map((fact) => (
-              <BorderGlowCard key={fact.title} className="h-full px-5 py-8 text-center">
+          {/* THREE CARDS IN A COLUMN, each opening as it comes up and then
+              staying. Not a carousel any more: that one wrote a scale to every
+              slide on every scroll frame, slipped the track back a copy at the
+              ends, and re-picked which card was "active" as it went — on a
+              phone that read as sticking and flickering. Nothing here is a
+              function of scroll position, so there is nothing to stutter and
+              nothing to undo on the way back up. */}
+          <div className="mt-6 space-y-4">
+            {aboutFacts.map((fact, index) => (
+              <BorderGlowCard
+                key={fact.title}
+                className="px-5 py-7 text-center [transition:opacity_600ms_ease-out,transform_600ms_ease-out]"
+                innerRef={(el) => {
+                  claimsRef.current[index] = el;
+                }}
+                style={{ opacity: 0, transform: `translateY(${CLAIM_RISE_PX}px)` }}
+              >
                 <h4 className="font-display text-m-sub font-bold text-balance text-white">
                   {fact.title}
                 </h4>
@@ -454,7 +482,7 @@ export default function MobileAbout() {
                 </p>
               </BorderGlowCard>
             ))}
-          </SwipeCarousel>
+          </div>
         </div>
       </div>
 

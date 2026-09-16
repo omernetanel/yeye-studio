@@ -56,6 +56,8 @@ export default function CTASection() {
       // bottom of the section and it put them after the ask rather than before
       // it. The old numbers — 96 above and 96 below — are what made this read as
       // three things with fields of white between them.
+      // EQUAL AIR EITHER SIDE OF THE BALLOONS: 48 up here against the work
+      // section's own 16, which comes to the 64 the clip leaves under itself.
       className="relative overflow-hidden bg-white px-6 pt-12 pb-20 text-center md:ps-[106px] md:pe-10 md:py-28 md:text-right"
     >
       {particles.map((p, i) => (
@@ -92,7 +94,15 @@ export default function CTASection() {
         playsInline
         preload="metadata"
         aria-hidden="true"
-        className="relative z-0 mb-10 block h-[210px] w-full rounded-2xl object-cover object-left-bottom md:absolute md:inset-0 md:mb-0 md:h-full md:w-full md:origin-bottom-left md:translate-x-[3%] md:scale-[0.82] md:rounded-none md:object-left-bottom"
+        // CENTRED BY ARITHMETIC, not by object-position alone. The balloons sit
+        // between 2% and 57% of this clip's own frame — it was shot for the
+        // desktop, where they belong at the far left of a wide section — so
+        // their centre is at 29%, nearer the edge than half a crop window is
+        // wide. At 210px tall no horizontal position could bring them to the
+        // middle: the window simply ran out of picture. 280px scales the clip
+        // up until the window is half its width, and 8% then puts the balloons'
+        // own centre on the middle of the frame.
+        className="relative z-0 mb-16 block h-[280px] w-full rounded-2xl object-cover object-[8%_100%] md:absolute md:inset-0 md:mb-0 md:h-full md:w-full md:origin-bottom-left md:translate-x-[3%] md:scale-[0.82] md:rounded-none md:object-left-bottom"
       />
 
       {/* The copy, held to a 620px column on the right — the clip runs behind

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,12 +21,17 @@ import { cn } from "@/lib/utils";
 export default function BorderGlowCard({
   children,
   className,
+  innerRef,
+  style,
 }: {
   children: ReactNode;
   className?: string;
+  /** The card's own element, for a caller that animates its arrival. */
+  innerRef?: (element: HTMLDivElement | null) => void;
+  style?: CSSProperties;
 }) {
   return (
-    <div className={cn("border-glow", className)}>
+    <div ref={innerRef} style={style} className={cn("border-glow", className)}>
       <span aria-hidden="true" className="border-glow-sweep" />
       <span aria-hidden="true" className="border-glow-edge">
         <span className="border-glow-sweep" />
