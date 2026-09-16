@@ -46,7 +46,8 @@ export default function PrinciplesGrid({ title, items }: PrinciplesGridProps) {
           {title}
         </motion.h2>
 
-        <SwipeCarousel className="sm:hidden" slideWidth="78%">
+        {/* Centred from the first card — see TypesGrid. */}
+        <SwipeCarousel className="-mx-6 sm:hidden" slideWidth="78vw" centred>
           {items.map((item) => (
             <PrincipleCardContent key={item.title} item={item} />
           ))}

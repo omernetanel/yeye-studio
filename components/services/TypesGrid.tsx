@@ -43,7 +43,9 @@ export default function TypesGrid({ title, items }: TypesGridProps) {
           {title}
         </motion.h2>
 
-        <SwipeCarousel className="sm:hidden" slideWidth="82%">
+        {/* -mx-6 so the track spans the screen, and vw with `centred` so the
+            first card opens in the middle with a peek either side. */}
+        <SwipeCarousel className="-mx-6 sm:hidden" slideWidth="82vw" centred>
           {items.map((item) => (
             <TypeCardContent key={item.title} item={item} />
           ))}

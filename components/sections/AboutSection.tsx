@@ -640,7 +640,7 @@ export default function AboutSection() {
               className="font-display text-[36px] leading-[1.12] font-bold text-balance text-white will-change-transform md:text-[60px]"
               style={{ opacity: 0 }}
             >
-              אני כאן להפוך את הרעיון שלך
+              אני כאן להפוך את הרעיון שלכם
               <br />
               למוצר שמייצר אימפקט.
             </p>

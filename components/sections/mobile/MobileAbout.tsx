@@ -523,12 +523,12 @@ export default function MobileAbout() {
             >
               {/* The manual break is gone and text-balance decides instead.
                   Same words, in the same order. The desktop break — after
-                  "שלך" — leaves a first line of twenty-seven characters, and on
-                  a 327px column that caps the type at 23px before it wraps to
-                  four lines. Balanced, the two halves come out even and the
-                  same two lines hold at 27. A hand-placed break is only ever
-                  right at one width, and this is not that width. */}
-              אני כאן להפוך את הרעיון שלך למוצר שמייצר אימפקט.
+                  "שלכם" — leaves a first line of twenty-eight characters, which a
+                  327px column cannot hold at this size. Balanced, the lines come
+                  out even: three at 25px since "שלך" became "שלכם" (two would
+                  need 23px on a 375 phone, and still three on a 360 one). A
+                  hand-placed break is only ever right at one width. */}
+              אני כאן להפוך את הרעיון שלכם למוצר שמייצר אימפקט.
             </p>
             <div ref={closerSwashRef} className="mt-7" style={{ clipPath: "inset(0 100% 0 0)" }}>
               <HeadingSwash className="w-[220px] text-white" />

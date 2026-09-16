@@ -27,16 +27,19 @@ export default function SubPageNav() {
             row belongs. The logo Navbar owns is pinned physically left, so the
             space kept clear for it is padding-inline-END here — reserving it at
             the start instead is what was pushing the row into the logo. */}
-        <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-start gap-6 px-6 pe-[120px]">
+        {/* Tighter on a phone, and without the dots: at desktop spacing the
+            four links did not fit beside the logo and "צור קשר" broke onto two
+            lines. */}
+        <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-start gap-4 px-6 pe-[88px] sm:gap-6 sm:pe-[120px]">
           {LINKS.map((link, i) => (
             <div key={link.href + link.label} className="flex items-center gap-6">
               <Link
                 href={link.href}
-                className="font-display text-[14px] text-black/60 transition-colors hover:text-black"
+                className="font-display text-[13px] whitespace-nowrap text-black/60 transition-colors hover:text-black sm:text-[14px]"
               >
                 {link.label}
               </Link>
-              {i < LINKS.length - 1 && <span aria-hidden className="text-black/20">·</span>}
+              {i < LINKS.length - 1 && <span aria-hidden className="hidden text-black/20 sm:inline">·</span>}
             </div>
           ))}
         </div>

@@ -211,7 +211,9 @@ export default function SwipeCarousel({
                 "rounded-full transition-all duration-300",
                 tone === "dark"
                   ? cn("h-2 w-2", i === activeDot ? "bg-white" : "bg-white/25")
-                  : cn("h-1.5 bg-primary", i === activeDot ? "w-6" : "w-1.5 bg-white/15")
+                  // The resting dots were white at 15% — invisible on the white
+                  // pages this tone is for, so only the active one ever showed.
+                  : cn("h-1.5", i === activeDot ? "w-6 bg-black" : "w-1.5 bg-black/20")
               )}
             />
           ))}
