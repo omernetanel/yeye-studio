@@ -451,8 +451,9 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
             }}
             aria-label={item.title}
             aria-current={index === facing}
-            className={`h-[2px] rounded-full transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black ${
-              index === facing ? "w-8 bg-black" : "w-5 bg-black/20 hover:bg-black/40"
+            // 4px thick and longer: at two pixels the indicator was easy to miss.
+            className={`h-1 rounded-full transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black ${
+              index === facing ? "w-12 bg-black" : "w-7 bg-black/25 hover:bg-black/45"
             }`}
           />
         ))}

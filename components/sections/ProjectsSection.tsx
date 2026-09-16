@@ -51,9 +51,9 @@ const LEAD_VH = 0.5;
 // line straight after.
 const FOLD = [0, 0.42] as const;
 const SETTLE = [0.42, 0.62] as const;
-// Then the work. The gap between SETTLE ending and GALLERY starting is the beat
-// the heading stands alone in, and it is the only reason to pin at all.
-const GALLERY = [0.64, 0.94] as const;
+// Then the work, rising WHILE the heading settles rather than after it: waiting
+// for the settle left a beat of a lone heading that read as a stall.
+const GALLERY = [0.45, 0.8] as const;
 // And the links stay shut until it is actually up. The gallery's hit targets
 // cover most of the panel, so leaving them live from the top of the section
 // means a reader can click a project that is not on screen yet.

@@ -97,7 +97,9 @@ export default function MobileProjects() {
     if (heading) {
       const at = heading.getBoundingClientRect().top / screen;
       const settle = smoothstep((HEADING_SETTLE[0] - at) / (HEADING_SETTLE[0] - HEADING_SETTLE[1]));
-      settled = settle >= 1;
+      // Half way down is enough: the cards arrive while the heading is still
+      // shrinking, one movement rather than two in a row.
+      settled = settle >= 0.5;
       heading.style.opacity = "1";
       stackHeading(
         heading,
@@ -111,8 +113,8 @@ export default function MobileProjects() {
     }
 
     cardsRef.current.forEach((card, index) => {
-      // Held until the heading has settled: standing big, it reaches down over
-      // where the first card sits.
+      // Held until the heading is half settled: standing big, it reaches down
+      // over where the first card sits.
       if (!card || seenRef.current[index] || !settled) return;
       if (card.getBoundingClientRect().top < screen * CARD_IN_VH) {
         seenRef.current[index] = true;
@@ -223,10 +225,12 @@ export default function MobileProjects() {
           dots. Dots count the projects, which is a number nobody needs; a line
           answers the only question the reader actually has, which is whether
           there is more. */}
-      <div className="mx-[7vw] mt-7 h-px bg-black/10">
+      {/* 4px and near-black: at a hairline in pale grey it was easy to miss,
+          and it is the only sign there is more to swipe to. */}
+      <div className="mx-[7vw] mt-7 h-1 overflow-hidden rounded-full bg-black/10">
         <div
           ref={progressRef}
-          className="h-px origin-left bg-black/45 transition-transform duration-150 ease-out"
+          className="h-1 origin-left rounded-full bg-black/80 transition-transform duration-150 ease-out"
           style={{ transform: "scaleX(0)" }}
         />
       </div>
