@@ -122,12 +122,12 @@ export default function MobileProjects() {
   });
 
   return (
-    // pb-[92px] against the CTA's own pt-16: the two together come to the same
-    // 128px the clip leaves above "בואו נבנה משהו" inside that section, so the
-    // seam between the work and the close reads as the same beat as the one
-    // inside it rather than as a wider or narrower one. Measured, not guessed —
-    // 92 is what was left after the round number came out 28px short.
-    <section id="projects" className="relative bg-white pt-24 pb-[92px]">
+    // pb-12 against the CTA's own pt-14: 48 + 56 comes to a little over a
+    // hundred, which is one beat between two sections rather than the 156 the
+    // old pair left. That pairing was matched to a close that opened with a
+    // 250px block of balloons; the clip is the ground of that section now, so
+    // the number it was matched to is gone.
+    <section id="projects" className="relative bg-white pt-24 pb-12">
       <h2
         ref={headingRef}
         className="mb-10 px-6 text-center font-display text-m-display font-extrabold tracking-tight text-black will-change-transform"

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import type { GalleryItem } from "@/components/ui/CylinderGallery";
 
@@ -64,6 +64,15 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
   const labelsRef = useRef<(HTMLSpanElement | null)[]>([]);
   const hitsRef = useRef<(HTMLAnchorElement | null)[]>([]);
   const prefersReducedMotion = usePrefersReducedMotion();
+  // Which panel is facing the reader, for the indicator below. State, because
+  // the indicator is React's to draw — the fan itself never re-renders.
+  const [facing, setFacing] = useState(0);
+  // The way in for the controls: the position the fan is drifting through lives
+  // inside the effect, and this is how a click outside it asks for a move.
+  const goToRef = useRef<((index: number) => void) | null>(null);
+  // The same number as `facing`, readable inside the draw loop without making
+  // the effect depend on it.
+  const facingRef = useRef(0);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -135,6 +144,23 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
       const boxes = slotsRef.current.map((slot) =>
         slot && slot.style.visibility !== "hidden" ? slot.getBoundingClientRect() : null,
       );
+      // Which one is facing the reader, for the indicator underneath. Only on a
+      // change: this runs every frame, and setting state each time would
+      // re-render the component sixty times a second for nothing.
+      let nearest = 0;
+      let nearestAway = Infinity;
+      slotsRef.current.forEach((_, index) => {
+        const away = Math.abs(offsetOf(index));
+        if (away < nearestAway) {
+          nearestAway = away;
+          nearest = index;
+        }
+      });
+      if (nearest !== facingRef.current) {
+        facingRef.current = nearest;
+        setFacing(nearest);
+      }
+
       boxes.forEach((box, index) => {
         const hit = hitsRef.current[index];
         if (!hit) return;
@@ -152,6 +178,16 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
     };
 
     draw();
+
+    // Asked for by the arrows and the dashes below. It sets the position rather
+    // than animating to it and lets the drift carry on from there — the fan is
+    // never on a detent anyway, so a tween to an exact index would be the only
+    // moment in the whole thing that snaps.
+    goToRef.current = (index: number) => {
+      position = index;
+      velocity = 0;
+      draw();
+    };
 
     const tick = (now: number) => {
       frame = requestAnimationFrame(tick);
@@ -283,7 +319,15 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
     };
   }, [items, prefersReducedMotion]);
 
+  const step = (by: number) => {
+    const next = (facing + by + items.length) % items.length;
+    goToRef.current?.(next);
+    setFacing(next);
+    facingRef.current = next;
+  };
+
   return (
+    <>
     <div
       ref={stageRef}
       // z-20 for the same reason the arc carries one: the heading above is at
@@ -359,5 +403,53 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
         />
       ))}
     </div>
+
+    {/* THE INDICATOR, as the reference has it: a dash per piece of work with
+        an arrow either side. It is not decoration — the fan drifts on its own,
+        and without this there is nothing on the page saying how many there are
+        or which one is facing you.
+
+        Real buttons, not divs with handlers: this is the only keyboard way
+        through the work, since the panels themselves are a picture layer and
+        the links over them are reached by tab in their own order. */}
+    <div className="mt-8 flex items-center justify-center gap-5">
+      <button
+        type="button"
+        onClick={() => step(-1)}
+        aria-label="העבודה הקודמת"
+        className="flex h-9 w-9 items-center justify-center rounded-full text-[18px] leading-none text-black/45 transition-colors hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+      >
+        ›
+      </button>
+
+      <div className="flex items-center gap-2">
+        {items.map((item, index) => (
+          <button
+            key={item.href}
+            type="button"
+            onClick={() => {
+              goToRef.current?.(index);
+              facingRef.current = index;
+              setFacing(index);
+            }}
+            aria-label={item.title}
+            aria-current={index === facing}
+            className={`h-[2px] rounded-full transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black ${
+              index === facing ? "w-8 bg-black" : "w-5 bg-black/20 hover:bg-black/40"
+            }`}
+          />
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => step(1)}
+        aria-label="העבודה הבאה"
+        className="flex h-9 w-9 items-center justify-center rounded-full text-[18px] leading-none text-black/45 transition-colors hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+      >
+        ‹
+      </button>
+    </div>
+    </>
   );
 }
