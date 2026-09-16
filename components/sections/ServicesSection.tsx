@@ -6,14 +6,7 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { SERVICES_HEADING, SERVICES_LEAD, services } from "@/lib/content";
 // The words and the artwork, shared with the phone's own arrangement of the
 // same four stages. Only the layout below is the desktop's own.
-import {
-  ICONS,
-  ICON_MOTION,
-  IconExtras,
-  PROCESS_HEADING,
-  STAGE_LINES,
-  STAGE_TITLES,
-} from "./process/stages";
+import { PROCESS_HEADING, STAGE_LINES, STAGE_TITLES } from "./process/stages";
 // The row itself is shared with the phone, which prints the same four at a
 // smaller size — see there.
 import ServiceRow from "./services/ServiceRow";
@@ -80,27 +73,32 @@ const SPACER_PX = 0;
 const SERVICES_HOLD_SECONDS = 0.5;
 const SERVICES_FADE_START_SECONDS = 2 + 2 / 30 - 0.8 + SERVICES_HOLD_SECONDS;
 const SERVICES_FADE_END_SECONDS = 2 + 29 / 30 - 1.1 + SERVICES_HOLD_SECONDS;
-const ABOUT_FADE_IN_START_SECONDS = SERVICES_FADE_END_SECONDS + 0.5;
-const ABOUT_FADE_IN_END_SECONDS = 3.4 - 0.8 + 0.5 + SERVICES_HOLD_SECONDS;
 const ABOUT_FADE_OUT_START_SECONDS = 5 + 6 / 30 - 0.5;
 const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 
-// The heading on the sheet runs on its own clock, inside the drawing's: it
-// comes up after the drawing has started arriving, and it leaves a full second
-// before the drawing does.
+// THE PROCESS, ONE THING AT A TIME, on the SHEET CLOCK (see sheetSeconds()):
+// clip seconds that keep counting through the freeze on the open paper, so the
+// choreography can run while the paper holds still. Everything here happens
+// between the paper lying flat (2.97s) and the block shrinking back into it.
 //
-// Those two pull against each other. The drawing is not fully in until 3.60s
-// and the heading has to be gone from 3.70s, so the entrance has to finish
-// inside that gap — the heading stands at full strength for about a tenth of a
-// second before it starts going again. If it wants a life of its own, the
-// second below is the number to reduce.
-const HEADING_LEAD_SECONDS = 1;
-const HEADING_IN_START_SECONDS = ABOUT_FADE_IN_START_SECONDS + 0.3;
-const HEADING_IN_END_SECONDS = ABOUT_FADE_IN_END_SECONDS;
-const HEADING_OUT_START_SECONDS = ABOUT_FADE_OUT_START_SECONDS - HEADING_LEAD_SECONDS;
-const HEADING_OUT_END_SECONDS = ABOUT_FADE_OUT_END_SECONDS - HEADING_LEAD_SECONDS;
-// How far it lifts as it comes up, in the diagram's own pixels.
+// It used to arrive all at once — heading, drawing, four stations, four icons —
+// inside about a second, and read as clutter. Now: the heading alone and big,
+// then it shrinks to one line at the top while the drawing fades in under it,
+// then the stations one by one, each arrow drawing itself towards the next.
+const HEADING_IN = [2.95, 3.4] as const;
+const HEADING_SETTLE = [3.6, 4.2] as const;
+// How much bigger the heading stands before it settles, and how far it rises
+// as it comes up, in its own settled pixels.
+const HEADING_BIG_SCALE = 2.4;
 const HEADING_RISE_PX = 26;
+const STATIONS_START = 4.3;
+const STATION_STEP = 0.6;
+const STATION_IN = 0.35;
+// Each arrow draws in the gap after its station, towards the next one. The
+// fourth closes the circle back to the first.
+const ARROW_DELAY = 0.4;
+const ARROW_DRAW = 0.2;
+const STATION_RISE_PX = 18;
 const CONTENT_SHRINK_SCALE = 0.6;
 const VIDEO_REST_SCALE = 1.10;
 const VIDEO_REST_SHIFT_X_PX = 45;
@@ -198,11 +196,25 @@ const HEADING_ZONE_PADDING_BOTTOM_PX = 8;
 //   scroll-per-second equal:  (1 - Sn)/Dn * Hn = (1 - So)/Do * Ho
 //   hold length equal:        Sn * Hn          = So * Ho
 // With Do = 8.133s, So = 0.13 and Dn = 18.467s that gives Hn = 2.1053 * Ho
-// and Sn = 0.13 / 2.1053. Both numbers below are those results.
+// and Sn = 0.13 / 2.1053.
+//
+// Since lengthened to carry the process one stage at a time: the moving
+// stretches keep exactly the scroll they had (1617vh at a 900px screen), and
+// the hold grew to 2.4 clip-seconds' worth of that same rate — 210vh — with the
+// section height grown by the same amount. The share is 210 / 1828.
 const TIME_HOLDS: { at: number; share: number }[] = [
-  { at: 3.7, share: 0.0617 }, // "מי אני" fully up, paper flat
+  { at: 3.7, share: 0.1149 }, // the process, paper flat
 ];
 const TOTAL_HOLD_SHARE = TIME_HOLDS.reduce((sum, h) => sum + h.share, 0);
+
+// The sheet clock: clip seconds as if the clip never froze. Every hold is paid
+// for at the moving rate, so this is simply progress over that rate — it runs
+// on through a freeze while the clip time stands still. Past the hold it is
+// ahead of the clip by the hold's length — 2.4s, so the block's exit at 4.7s
+// clip time is 7.1s here, and the last arrow has to be drawn before that.
+function sheetSeconds(progress: number) {
+  return (progress * CLIP_SECONDS) / (1 - TOTAL_HOLD_SHARE);
+}
 
 function progressToTime(progress: number, duration: number) {
   // Scroll-per-second for the moving stretches, once the holds have taken
@@ -314,8 +326,8 @@ function ServicesListBlock() {
 /**
  * The process, drawn on the open sheet.
  *
- * It sits in the slot the "who I am" block used to occupy, on the same cues and
- * with the same grow-and-shrink, because that slot is exactly "whatever is
+ * It sits in the slot the "who I am" block used to occupy, and shrinks back
+ * into the paper on the same cue, because that slot is exactly "whatever is
  * printed on the paper while it is open" — and a diagram is a better use of an
  * open page than a column of prose was, since it is a thing to look at rather
  * than to read around.
@@ -339,24 +351,34 @@ function ServicesListBlock() {
  * printed underneath reads as one drawing. Anything out of place shows up as a
  * ghost. When the background-only plate arrives, only the src changes.
  */
-function ProcessDiagram({ headingRef }: { headingRef: RefObject<HTMLHeadingElement | null> }) {
+function ProcessDiagram({ sheetRef }: { sheetRef: RefObject<HTMLDivElement | null> }) {
   return (
     <div className="mx-auto w-full max-w-[1500px] px-6">
       {/* Held a little inside the sheet's width. At full bleed the drawing runs
           to the edges of the page it is printed on, which reads as a background
           rather than as something drawn there. */}
-      <div className="relative mx-auto w-[79%]">
-        {/* Top right, which under RTL is where a page begins. right-0 rather
-            than a logical property on purpose: this is pinned to the physical
-            corner of the sheet, not to the start of a line of text. */}
+      <div ref={sheetRef} className="relative mx-auto w-[79%]">
+        {/* Laid out in its SETTLED form — one line, centred at the top — and
+            each half moved from there by update(). Two lines standing big in the
+            middle of the sheet and one line at the top are different line
+            breaks, which a transform on one block cannot turn into each other;
+            two halves that travel can. The offsets are layout values, so they
+            are never read off anything mid-animation. */}
         <h3
-          ref={headingRef}
-          className="absolute top-0 right-0 z-10 font-display text-[26px] leading-[1.05] font-bold text-black will-change-transform md:text-[40px]"
-          style={{ opacity: 0 }}
+          data-process-heading
+          aria-label={PROCESS_HEADING.join(" ")}
+          className="absolute inset-x-0 top-0 z-10 flex justify-center gap-[0.28em] font-display text-[40px] leading-[1.05] font-bold text-black"
         >
-          {PROCESS_HEADING[0]}
-          <br />
-          {PROCESS_HEADING[1]}
+          {PROCESS_HEADING.map((line) => (
+            <span
+              key={line}
+              aria-hidden="true"
+              className="block whitespace-nowrap will-change-transform"
+              style={{ opacity: 0 }}
+            >
+              {line}
+            </span>
+          ))}
         </h3>
 
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -379,10 +401,12 @@ function ProcessDiagram({ headingRef }: { headingRef: RefObject<HTMLHeadingEleme
           //   "format=rgba,lumakey=threshold=0.97:tolerance=0.03:softness=0.12"
           //   whatido-alpha.png
           src="/images/whatido-alpha.png"
+          data-process-drawing
           alt=""
           width={1920}
           height={1080}
           className="block h-auto w-full"
+          style={{ opacity: 0 }}
           draggable={false}
         />
 
@@ -405,10 +429,10 @@ function ProcessDiagram({ headingRef }: { headingRef: RefObject<HTMLHeadingEleme
 // The lines there are split by hand for this drawing, because SVG text does not
 // wrap. That is the price of placing every glyph exactly where it belongs.
 const STATIONS = [
-  { number: "01", cx: 960, titleY: 305, iconDy: -20 },
-  { number: "02", cx: 1625, titleY: 616, iconDy: -10 },
-  { number: "03", cx: 960, titleY: 928, iconDy: 0 },
-  { number: "04", cx: 295, titleY: 616, iconDy: -9 },
+  { number: "01", cx: 960, titleY: 305 },
+  { number: "02", cx: 1625, titleY: 616 },
+  { number: "03", cx: 960, titleY: 928 },
+  { number: "04", cx: 295, titleY: 616 },
 ] as const;
 
 // The arrows, as arcs of ONE ellipse — the one that passes through all four
@@ -486,12 +510,16 @@ function ProcessStations() {
       </defs>
 
       <g className="text-black/45" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+        {/* pathLength 1 so the draw is a dash offset from 1 to 0 whatever the
+            arc's real length. The head is attached by update() only once the
+            line has reached it — a marker sits at the path's end regardless of
+            the dash, and would arrive before the line did. */}
         {ARROWS.map((d) => (
-          <path key={d} d={d} markerEnd="url(#process-arrowhead)" />
+          <path key={d} d={d} data-process-arrow pathLength={1} strokeDasharray="1" strokeDashoffset="1" />
         ))}
       </g>
 
-      {/* Each station stacks on its own centre: icon, numeral, heading, copy.
+      {/* Each station stacks on its own centre: numeral, heading, copy.
           direction rtl and a middle anchor because the copy is Hebrew and every
           station is centred on itself, not set in a column. */}
       {/* The halo is on the whole block rather than on each piece: applied per
@@ -500,34 +528,12 @@ function ProcessStations() {
           computed from the block's silhouette. */}
       <g direction="rtl" textAnchor="middle" filter="url(#process-halo)">
         {STATIONS.map((station, stationIndex) => (
-          <g key={station.number}>
-            {/* TWO GROUPS, AND THAT IS THE POINT OF THEM.
-                The outer one carries the position as an SVG `transform`
-                attribute; the inner one carries the animation, which is a CSS
-                `transform` property. Put on one element they do not combine —
-                the CSS property wins outright and the attribute is discarded,
-                so every animated icon lost its placement and stacked up in the
-                corner of the drawing at 0,0.
-                iconDy on the outer one corrects for the artwork: the four icons
-                are not the same height, so one shared offset left the rocket
-                sitting closer to its numeral than the browser window was to
-                its. Measured per station, so all four gaps come out the same. */}
-            <g transform={`translate(${station.cx} ${station.titleY - 246 + station.iconDy})`}>
-              <g
-                className={`text-black/45 ${ICON_MOTION[station.number]}`}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                {ICONS[station.number].map((part) => (
-                  <path key={part.d} d={part.d} className={part.cls} />
-                ))}
-                <IconExtras number={station.number} />
-              </g>
-            </g>
-
+          // No icons any more: arriving one at a time, the numeral is enough to
+          // lead the eye, and four animated drawings over a pencil plate were
+          // most of what read as clutter. Positions are attributes on the
+          // children, so the CSS transform update() writes here moves the whole
+          // station without discarding any of them.
+          <g key={station.number} data-process-station style={{ opacity: 0 }}>
             <text
               x={station.cx}
               y={station.titleY - 92}
@@ -571,7 +577,7 @@ export default function ServicesSection() {
   const headingRef = useRef<HTMLDivElement>(null);
   const servicesContentRef = useRef<HTMLDivElement>(null);
   const aboutContentRef = useRef<HTMLDivElement>(null);
-  const processHeadingRef = useRef<HTMLHeadingElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
   // About's exit-phase transform-origin (screen center, in pixels relative
   // to its own box) — measured live in update() while About is fully
   // visible. "50% 50%" (its own center, which sits near screen center
@@ -756,49 +762,68 @@ export default function ServicesSection() {
     // swallow a click/hover.
     servicesContent.style.pointerEvents = servicesShrinkT > 0.5 ? "none" : "auto";
 
-    const aboutFadeInT = smoothstep(mapRange(targetTime, ABOUT_FADE_IN_START_SECONDS, ABOUT_FADE_IN_END_SECONDS, 0, 1));
+    // The block as a whole only LEAVES: it shrinks back into the centre of the
+    // screen as the paper re-crumples. Its arrival is its parts, one at a time,
+    // below — so the block itself is simply there, at full size, until then.
     const aboutShrinkT = smoothstep(mapRange(targetTime, ABOUT_FADE_OUT_START_SECONDS, ABOUT_FADE_OUT_END_SECONDS, 0, 1));
-    // Same combined curve drives both opacity and scale — small and
-    // invisible before it starts, growing to full size as it fades in,
-    // then shrinking back down as it fades out, instead of popping in at
-    // full size the instant opacity starts rising.
-    const aboutGrowT = aboutFadeInT * (1 - aboutShrinkT);
-    // Both the entrance and the exit scale about the centre of the screen, so
-    // the block grows out of that point and collapses straight back into it
-    // rather than drifting toward a corner on the way out.
-    //
-    // The origin is recomputed on every frame where the block is at its own
-    // full size, from its live box: the element is centred by flex, but the
-    // panel it sits in is only one screen tall while the block's own box is
-    // not necessarily the same height, so "the middle of the element" and
-    // "the middle of the screen" are not the same point and the difference
-    // moves with the viewport. Measuring it live also means a fast flick that
-    // skips the fully-grown frame entirely cannot leave a stale origin behind
-    // — the fallback below is already screen-centre in element terms.
-    // The block is centred on the screen, so its own centre IS the screen
-    // centre and a plain 50% 50% origin grows it out of that point and
-    // collapses it straight back into it. Nothing measured, so there is no
-    // origin that can go stale when a fast flick skips a frame.
     aboutContent.style.transformOrigin = "50% 50%";
-    aboutContent.style.opacity = String(aboutGrowT);
-    aboutContent.style.transform = `translateY(${ABOUT_SHIFT_Y_PX}px) scale(${lerp(CONTENT_SHRINK_SCALE, 1, aboutGrowT)})`;
+    aboutContent.style.opacity = String(1 - aboutShrinkT);
+    aboutContent.style.transform = `translateY(${ABOUT_SHIFT_Y_PX}px) scale(${lerp(1, CONTENT_SHRINK_SCALE, aboutShrinkT)})`;
 
-    // The heading over the drawing, on its own clock inside the block's. Its
-    // opacity multiplies with the block's, so this is only ever a fraction of
-    // whatever the sheet is already showing — it can come up later and leave
-    // earlier, but it can never outlive the page it is printed on.
-    const processHeading = processHeadingRef.current;
-    if (processHeading) {
-      const headingIn = smoothstep(
-        mapRange(targetTime, HEADING_IN_START_SECONDS, HEADING_IN_END_SECONDS, 0, 1),
-      );
-      const headingOut = smoothstep(
-        mapRange(targetTime, HEADING_OUT_START_SECONDS, HEADING_OUT_END_SECONDS, 0, 1),
-      );
-      const headingT = headingIn * (1 - headingOut);
-      processHeading.style.opacity = String(headingT);
-      processHeading.style.transform = `translateY(${lerp(HEADING_RISE_PX, 0, headingIn).toFixed(2)}px)`;
+    const sheet = sheetRef.current;
+    if (sheet) animateProcess(sheet, sheetSeconds(progress));
+  };
+
+  // The process on the open sheet, on the sheet clock — see HEADING_IN. Every
+  // position read here is a layout offset, never a live rect, so nothing is
+  // measured off an element that is itself moving.
+  const animateProcess = (sheet: HTMLDivElement, seconds: number) => {
+    const heading = sheet.querySelector<HTMLElement>("[data-process-heading]");
+    const drawing = sheet.querySelector<HTMLElement>("[data-process-drawing]");
+    if (!heading || !drawing) return;
+
+    const headingIn = smoothstep(mapRange(seconds, HEADING_IN[0], HEADING_IN[1], 0, 1));
+    const settle = smoothstep(mapRange(seconds, HEADING_SETTLE[0], HEADING_SETTLE[1], 0, 1));
+
+    // The two halves of the heading, each from its place in the big two-line
+    // stack at the middle of the sheet to its place in the settled line.
+    const lines = heading.children;
+    const sheetW = sheet.offsetWidth;
+    const sheetH = sheet.offsetHeight;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i] as HTMLElement;
+      const settledX = heading.offsetLeft + line.offsetLeft + line.offsetWidth / 2;
+      const settledY = heading.offsetTop + line.offsetTop + line.offsetHeight / 2;
+      const bigLineHeight = line.offsetHeight * HEADING_BIG_SCALE;
+      const bigY = sheetH / 2 + (i - (lines.length - 1) / 2) * bigLineHeight;
+      const rise = lerp(HEADING_RISE_PX * HEADING_BIG_SCALE, 0, headingIn);
+      const x = lerp(sheetW / 2 - settledX, 0, settle);
+      const y = lerp(bigY - settledY, 0, settle) + rise;
+      line.style.opacity = String(headingIn);
+      line.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${lerp(HEADING_BIG_SCALE, 1, settle).toFixed(4)})`;
     }
+
+    // The drawing fades in while the heading makes room for it.
+    drawing.style.opacity = String(settle);
+
+    const stations = sheet.querySelectorAll<SVGGElement>("[data-process-station]");
+    const arrows = sheet.querySelectorAll<SVGPathElement>("[data-process-arrow]");
+    stations.forEach((station, i) => {
+      const start = STATIONS_START + i * STATION_STEP;
+      const t = smoothstep(mapRange(seconds, start, start + STATION_IN, 0, 1));
+      station.style.opacity = String(t);
+      station.style.transform = `translateY(${lerp(STATION_RISE_PX, 0, t).toFixed(2)}px)`;
+
+      const arrow = arrows[i];
+      if (!arrow) return;
+      const drawn = clamp01(mapRange(seconds, start + ARROW_DELAY, start + ARROW_DELAY + ARROW_DRAW, 0, 1));
+      arrow.style.strokeDashoffset = String(1 - drawn);
+      const head = drawn >= 0.98;
+      if (head !== arrow.hasAttribute("marker-end")) {
+        if (head) arrow.setAttribute("marker-end", "url(#process-arrowhead)");
+        else arrow.removeAttribute("marker-end");
+      }
+    });
   };
 
   const measurePinRange = () => {
@@ -924,7 +949,8 @@ export default function ServicesSection() {
     // scroll they had and run the whole thing at 2.27x speed.
     // 1663vh+547px of clip scrub, plus STATEMENT_TAIL_VH + STATEMENT_PARK_VH
     // for the statement's own tail after the clip has finished.
-    <section ref={wrapperRef} id="services" className="relative h-[calc(1748vh+547px)] bg-white">
+    // Then 104vh more for the longer hold on the open sheet — see TIME_HOLDS.
+    <section ref={wrapperRef} id="services" className="relative h-[calc(1852vh+547px)] bg-white">
       {/* SPACER_PX of perfectly ordinary scrolling before the panel below
           goes sticky — see its own comment up top. */}
       <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />
@@ -1003,7 +1029,7 @@ export default function ServicesSection() {
           className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-6"
           style={{ opacity: 0 }}
         >
-          <ProcessDiagram headingRef={processHeadingRef} />
+          <ProcessDiagram sheetRef={sheetRef} />
         </div>
 
         {/* The closing statement, delivered inside the pinned frame rather than
