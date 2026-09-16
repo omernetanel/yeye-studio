@@ -176,7 +176,7 @@ export default function ProjectPageClient({ project }: Props) {
               <p className="mx-auto mb-8 max-w-[560px] font-body text-[16px] leading-[1.8] text-black/55">
                 {story.ctaText}
               </p>
-              <Button href="/contact">בוא נדבר</Button>
+              <Button href="/#cta">בוא נדבר</Button>
             </div>
           </motion.div>
         </div>

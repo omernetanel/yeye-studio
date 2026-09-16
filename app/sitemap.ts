@@ -10,7 +10,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: BASE_URL, priority: 1 },
     { url: `${BASE_URL}/projects`, priority: 0.8 },
-    { url: `${BASE_URL}/contact`, priority: 0.8 },
     ...serviceSlugs.map((slug) => ({ url: `${BASE_URL}/services/${slug}`, priority: 0.7 })),
   ];
 

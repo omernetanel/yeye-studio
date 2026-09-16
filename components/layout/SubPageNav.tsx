@@ -10,7 +10,7 @@ const LINKS = [
   { label: "עבודות", href: "/projects" },
   { label: "שירותים", href: "/#services" },
   { label: "מי אני", href: "/#about" },
-  { label: "צור קשר", href: "/contact" },
+  { label: "צור קשר", href: "/#cta" },
 ];
 
 /**

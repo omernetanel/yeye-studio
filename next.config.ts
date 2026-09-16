@@ -11,6 +11,12 @@ const nextConfig: NextConfig = {
   // could move. These never change in place: a re-export goes to a new version
   // folder (v1 → v2) and the code points at it, so a year and `immutable` is
   // safe, and the browser serves them from disk without asking.
+  // The contact page is gone: every way to get in touch is the form at the end
+  // of the home page. Old links and search results land on it instead of a 404.
+  async redirects() {
+    return [{ source: "/contact", destination: "/#cta", permanent: true }];
+  },
+
   async headers() {
     return [
       {

@@ -18,7 +18,7 @@ export default function ServiceFinalCTA({ title }: ServiceFinalCTAProps) {
       >
         <h2 className="mb-4 font-display text-[clamp(28px,4vw,42px)] font-extrabold text-black">{title}</h2>
         <p className="mb-8 font-body text-lg text-black/50">ייעוץ ראשוני ללא עלות. אשמח לשמוע על הפרויקט שלך.</p>
-        <Button href="/contact">בוא נתחיל</Button>
+        <Button href="/#cta">בוא נתחיל</Button>
       </motion.div>
     </section>
   );
