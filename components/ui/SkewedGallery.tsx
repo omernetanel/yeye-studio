@@ -52,6 +52,9 @@ const FRICTION = 2.6;
 const DRAG_THRESHOLD_PX = 6;
 // Steps a second, unattended. A drift, not a carousel advancing.
 const IDLE_SPEED = 0.06;
+// What one press of an arrow adds to the speed, and the most it can reach.
+const NUDGE_STEP = 1.1;
+const NUDGE_CAP = 2.6;
 
 function lerp(from: number, to: number, t: number) {
   return from + (to - from) * t;
@@ -70,6 +73,11 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
   // The way in for the controls: the position the fan is drifting through lives
   // inside the effect, and this is how a click outside it asks for a move.
   const goToRef = useRef<((index: number) => void) | null>(null);
+  // The arrows do not go anywhere: they push the fan along in the direction
+  // pressed and let it run down, which is the same motion a drag produces. A
+  // jump to the next piece of work was the one thing in the section that moved
+  // without the reader moving it.
+  const nudgeRef = useRef<((direction: number) => void) | null>(null);
   // The same number as `facing`, readable inside the draw loop without making
   // the effect depend on it.
   const facingRef = useRef(0);
@@ -187,6 +195,13 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
       position = index;
       velocity = 0;
       draw();
+    };
+
+    // A press adds to whatever the fan is already doing, so holding the arrow
+    // down builds speed rather than restarting the same hop. Capped, or a row
+    // of quick presses throws it across several panels at once.
+    nudgeRef.current = (direction: number) => {
+      velocity = Math.max(-NUDGE_CAP, Math.min(NUDGE_CAP, velocity + direction * NUDGE_STEP));
     };
 
     const tick = (now: number) => {
@@ -319,12 +334,6 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
     };
   }, [items, prefersReducedMotion]);
 
-  const step = (by: number) => {
-    const next = (facing + by + items.length) % items.length;
-    goToRef.current?.(next);
-    setFacing(next);
-    facingRef.current = next;
-  };
 
   return (
     <>
@@ -413,9 +422,14 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
         through the work, since the panels themselves are a picture layer and
         the links over them are reached by tab in their own order. */}
     <div className="mt-8 flex items-center justify-center gap-5">
+      {/* THE FAN MOVES TOWARDS THE ARROW THAT WAS PRESSED, which is the only
+          rule here that does not depend on reading direction: press the one on
+          the right and the work travels right. Measured rather than reasoned —
+          in this RTL row the first button renders on the right, and a positive
+          nudge carries the panels left. */}
       <button
         type="button"
-        onClick={() => step(-1)}
+        onClick={() => nudgeRef.current?.(-1)}
         aria-label="העבודה הקודמת"
         className="flex h-9 w-9 items-center justify-center rounded-full text-[18px] leading-none text-black/45 transition-colors hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
       >
@@ -443,7 +457,7 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
 
       <button
         type="button"
-        onClick={() => step(1)}
+        onClick={() => nudgeRef.current?.(1)}
         aria-label="העבודה הבאה"
         className="flex h-9 w-9 items-center justify-center rounded-full text-[18px] leading-none text-black/45 transition-colors hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
       >
