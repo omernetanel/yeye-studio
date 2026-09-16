@@ -372,7 +372,7 @@ export default function HeroSection() {
                    only repaints on layout changes. */
                 <Link
                   ref={ctaContactRef}
-                  href="/#contact"
+                  href="/#cta"
                   className="inline-flex items-center gap-2 rounded-full border border-transparent px-8 py-3.5 font-display text-[16px] leading-6 font-medium whitespace-nowrap text-transparent"
                 >
                   <span ref={ctaContactLabelRef}>קבעו פגישה</span>
@@ -380,7 +380,7 @@ export default function HeroSection() {
                 </Link>
               ) : (
                 <Button
-                  href="/#contact"
+                  href="/#cta"
                   variant="primary"
                   className="!border-black !bg-none !bg-black !text-white !shadow-none py-3.5 text-[16px]"
                 >
@@ -572,7 +572,7 @@ export default function HeroSection() {
                 <Button href="/#projects" variant="primary" className="!border !border-black !bg-none !bg-white !text-black !shadow-none px-10 py-4 text-lg">
                   העבודות שלי
                 </Button>
-                <Button href="/#contact" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
+                <Button href="/#cta" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
                   קבעו פגישה
                 </Button>
               </div>
@@ -594,7 +594,7 @@ export default function HeroSection() {
                 </Link>
                 <Link
                   ref={ctaContactRef}
-                  href="/#contact"
+                  href="/#cta"
                   className="inline-flex items-center gap-2 rounded-full border border-transparent px-10 py-4 font-display text-lg font-medium text-transparent"
                 >
                   <span ref={ctaContactLabelRef}>קבעו פגישה</span>

@@ -86,18 +86,19 @@ const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 // inside about a second, and read as clutter. Now: the heading alone and big,
 // then it shrinks to one line at the top while the drawing fades in under it,
 // then the stations one by one, each arrow drawing itself towards the next.
-// Not before the paper is essentially flat: at 2.95 it came up over a sheet
-// that was visibly still opening.
-// It folds in a letter at a time (FoldText), at its full size.
-const HEADING_IN = [3.3, 4.0] as const;
+// It folds in a letter at a time (FoldText), at its full size — and only once
+// the paper is open AND frozen (the hold starts at 3.7). Folding while the sheet
+// was still settling, the fold was lost in the paper's own movement. A whole
+// second of it, so there is scroll enough to see each letter turn.
+const HEADING_IN = [3.8, 4.8] as const;
 // A real pause standing big before it settles — at 0.2s it read as shrinking
 // the moment it had arrived — and a slower settle.
-const HEADING_SETTLE = [4.4, 5.2] as const;
+const HEADING_SETTLE = [5.4, 6.2] as const;
 // How much bigger the heading stands before it settles (234px against the
 // settled 52).
 const HEADING_BIG_SCALE = 4.5;
 const DRAWING_OPACITY = 0.5;
-const STATIONS_START = 5.3;
+const STATIONS_START = 6.3;
 const STATION_STEP = 0.6;
 const STATION_IN = 0.35;
 // Each arrow draws in the gap after its station, towards the next one. The
@@ -206,18 +207,18 @@ const HEADING_ZONE_PADDING_BOTTOM_PX = 8;
 //
 // Since lengthened to carry the process one stage at a time: the moving
 // stretches keep exactly the scroll they had (1617vh at a 900px screen), and
-// the hold grew to 3.6 clip-seconds' worth of that same rate — 315vh — with the
-// section height grown by the same amount. The share is 315 / 1933.
+// the hold grew to 4.6 clip-seconds' worth of that same rate — 403vh — with the
+// section height grown by the same amount. The share is 403 / 2021.
 const TIME_HOLDS: { at: number; share: number }[] = [
-  { at: 3.7, share: 0.163 }, // the process, paper flat
+  { at: 3.7, share: 0.1994 }, // the process, paper flat
 ];
 const TOTAL_HOLD_SHARE = TIME_HOLDS.reduce((sum, h) => sum + h.share, 0);
 
 // The sheet clock: clip seconds as if the clip never froze. Every hold is paid
 // for at the moving rate, so this is simply progress over that rate — it runs
 // on through a freeze while the clip time stands still. Past the hold it is
-// ahead of the clip by the hold's length — 3.6s, so the block's exit at 4.7s
-// clip time is 8.3s here, and the last arrow (7.7s) has to be drawn before that.
+// ahead of the clip by the hold's length — 4.6s, so the block's exit at 4.7s
+// clip time is 9.3s here, and the last arrow (8.7s) has to be drawn before that.
 function sheetSeconds(progress: number) {
   return (progress * CLIP_SECONDS) / (1 - TOTAL_HOLD_SHARE);
 }
@@ -975,8 +976,8 @@ export default function ServicesSection() {
     // scroll they had and run the whole thing at 2.27x speed.
     // 1663vh+547px of clip scrub, plus STATEMENT_TAIL_VH + STATEMENT_PARK_VH
     // for the statement's own tail after the clip has finished.
-    // Then 209vh more for the longer hold on the open sheet — see TIME_HOLDS.
-    <section ref={wrapperRef} id="services" className="relative h-[calc(1957vh+547px)] bg-white">
+    // Then 297vh more for the longer hold on the open sheet — see TIME_HOLDS.
+    <section ref={wrapperRef} id="services" className="relative h-[calc(2045vh+547px)] bg-white">
       {/* SPACER_PX of perfectly ordinary scrolling before the panel below
           goes sticky — see its own comment up top. */}
       <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />

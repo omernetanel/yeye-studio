@@ -20,21 +20,32 @@ import { useIsMobile } from "@/lib/use-mobile";
  * of the section's pin travel — its height less a viewport — which is zero for
  * an ordinary section, so the same arithmetic covers both kinds.
  */
-type Target = { label: string; id: string; at: number };
+// `at` per layout where the phone's section is built differently from the
+// desktop's and the same fraction lands somewhere else in it.
+type Target = { label: string; id: string; at: number | { desktop: number; mobile: number } };
 
 const TARGETS: Target[] = [
   { label: "הבית", id: "hero", at: 0 },
-  // The sheet open and the drawing on it, rather than the sheet still inset.
-  { label: "מה אני עושה", id: "services", at: 0.55 },
-  // Past the greeting and the portrait's arrival, on the three claims.
-  { label: "מי אני", id: "about", at: 0.42 },
-  // After the heading has settled and the arc is up.
-  { label: "פרויקטים", id: "projects", at: 0.94 },
+  // The services themselves — the heading and the list, which is what the
+  // label promises. Further in is the process, which is a different section in
+  // all but markup.
+  { label: "מה אני עושה", id: "services", at: 0 },
+  // Past the greeting and the portrait's arrival, on the three claims. The
+  // phone's claims are cards under the portrait, further down its section:
+  // 0.42 there stopped on the paragraphs above them.
+  { label: "מי אני", id: "about", at: { desktop: 0.42, mobile: 0.56 } },
+  // After the heading has settled and the arc is up. 0.75 on desktop because
+  // the section runs on past its pin — the button under the arc — and 0.94 of
+  // the whole of it carried the heading off the top of the screen. The phone's
+  // section is not pinned: its top is where the heading is already settled.
+  { label: "פרויקטים", id: "projects", at: { desktop: 0.75, mobile: 0 } },
 ];
 
 // The contact stage is deliberately absent: it is a section you arrive at by
-// reading, not one you jump into. The way to it from here is the CTA below.
+// reading, not one you jump into. The way to it from here is the CTA below —
+// and every "contact" link on the page lands there too.
 const CTA: Target = { label: "בואו נדבר", id: "cta", at: 0 };
+const ALL_TARGETS = [...TARGETS, CTA];
 
 export default function NavMenu() {
   const [open, setOpen] = useState(false);
@@ -120,19 +131,52 @@ export default function NavMenu() {
     };
   }, [open]);
 
-  const go = (target: Target) => {
+  const go = (target: Target, immediate = false) => {
     setOpen(false);
     const section = document.getElementById(target.id);
     if (!section) return;
     const top = section.getBoundingClientRect().top + window.scrollY;
     // Zero for a section that is not pinned, so this one line serves both.
     const run = Math.max(0, section.offsetHeight - window.innerHeight);
-    const to = top + run * target.at;
+    const at = typeof target.at === "number" ? target.at : isMobile ? target.at.mobile : target.at.desktop;
+    const to = top + run * at;
     // Through Lenis, never around it: a native smooth scroll would run its own
     // easing alongside Lenis's and the two would fight the whole way down.
-    if (lenis) lenis.scrollTo(to, { duration: 1.6 });
-    else window.scrollTo({ top: to, behavior: "smooth" });
+    if (lenis) lenis.scrollTo(to, immediate ? { immediate: true } : { duration: 1.6 });
+    else window.scrollTo({ top: to, behavior: immediate ? "instant" : "smooth" });
   };
+
+  // EVERY hash link on the page lands where the menu would, not just the
+  // menu's own buttons. The hero's "my work" and "book a meeting" are plain
+  // links to /#projects and /#cta, and a plain hash jump drops the reader on
+  // the first frame of a pinned run — the frame that means nothing, see above.
+  // Captured on the document so it runs before the link's own navigation, which
+  // stands down when the event is already handled.
+  //
+  // And arriving from another page with a hash does the same, once.
+  useEffect(() => {
+    if (pathname !== "/") return;
+    const onClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const href = (event.target as Element | null)?.closest?.("a[href]")?.getAttribute("href");
+      const target = href && ALL_TARGETS.find((t) => href === `/#${t.id}` || href === `#${t.id}`);
+      if (!target) return;
+      event.preventDefault();
+      go(target);
+    };
+    document.addEventListener("click", onClick, true);
+
+    const arrived = ALL_TARGETS.find((t) => window.location.hash === `#${t.id}`);
+    const frame = arrived ? requestAnimationFrame(() => go(arrived, true)) : null;
+
+    return () => {
+      document.removeEventListener("click", onClick, true);
+      if (frame !== null) cancelAnimationFrame(frame);
+    };
+    // go reads lenis and isMobile, which are the deps; it is recreated each
+    // render and listing it would re-arm this on every one.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, lenis, isMobile]);
 
   // The targets only exist on the home page.
   if (pathname !== "/") return null;
