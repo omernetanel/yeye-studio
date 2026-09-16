@@ -50,13 +50,13 @@ export default function CTASection() {
   return (
     <section
       id="cta"
-      // THE PHONE ENDS ON THE BALLOONS, not beside them. The clip used to be a
-      // 250px block above the copy with 96px under it, which — on top of the
-      // work section's own bottom padding — left a field of white between the
-      // last project and the close, and another between the balloons and the
-      // words. Now it is the ground of the section, as it already was on a
-      // desktop: the bottom padding here is the room it sits in.
-      className="relative overflow-hidden bg-white px-6 pt-14 pb-[300px] text-center md:ps-[106px] md:pe-10 md:py-28 md:pb-28 md:text-right"
+      // On a phone the balloons open the close, between the work and the form,
+      // and the spacing around them is the whole point: 48 above from the work
+      // section, 40 below to the heading. They were tried as a band across the
+      // bottom of the section and it put them after the ask rather than before
+      // it. The old numbers — 96 above and 96 below — are what made this read as
+      // three things with fields of white between them.
+      className="relative overflow-hidden bg-white px-6 pt-12 pb-20 text-center md:ps-[106px] md:pe-10 md:py-28 md:text-right"
     >
       {particles.map((p, i) => (
         <motion.div
@@ -92,7 +92,7 @@ export default function CTASection() {
         playsInline
         preload="metadata"
         aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 z-0 block h-[280px] w-full object-cover object-bottom md:inset-0 md:h-full md:origin-bottom-left md:translate-x-[3%] md:scale-[0.82] md:object-left-bottom"
+        className="relative z-0 mb-10 block h-[210px] w-full rounded-2xl object-cover object-left-bottom md:absolute md:inset-0 md:mb-0 md:h-full md:w-full md:origin-bottom-left md:translate-x-[3%] md:scale-[0.82] md:rounded-none md:object-left-bottom"
       />
 
       {/* The copy, held to a 620px column on the right — the clip runs behind

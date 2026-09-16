@@ -421,19 +421,22 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
         Real buttons, not divs with handlers: this is the only keyboard way
         through the work, since the panels themselves are a picture layer and
         the links over them are reached by tab in their own order. */}
-    <div className="mt-8 flex items-center justify-center gap-5">
-      {/* THE FAN MOVES TOWARDS THE ARROW THAT WAS PRESSED, which is the only
-          rule here that does not depend on reading direction: press the one on
-          the right and the work travels right. Measured rather than reasoned —
-          in this RTL row the first button renders on the right, and a positive
-          nudge carries the panels left. */}
+    {/* dir="ltr" ON THE ROW, and this is the whole fix. Which side a button
+        lands on was being decided by the page's RTL, and that mapping did not
+        agree between what was measured here and what the reader actually saw —
+        the arrows came out mirrored twice. Forced to LTR, the first button is
+        the left one everywhere, so "left arrow moves the work left" is true by
+        construction rather than by luck. The labels stay Hebrew. */}
+    <div dir="ltr" className="mt-8 flex items-center justify-center gap-5">
+      {/* THE FAN MOVES TOWARDS THE ARROW THAT WAS PRESSED. A positive nudge
+          carries the panels left, so the left-hand button takes it. */}
       <button
         type="button"
-        onClick={() => nudgeRef.current?.(-1)}
-        aria-label="העבודה הקודמת"
+        onClick={() => nudgeRef.current?.(1)}
+        aria-label="העבודה הבאה"
         className="flex h-9 w-9 items-center justify-center rounded-full text-[18px] leading-none text-black/45 transition-colors hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
       >
-        ›
+        ‹
       </button>
 
       <div className="flex items-center gap-2">
@@ -457,11 +460,11 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
 
       <button
         type="button"
-        onClick={() => nudgeRef.current?.(1)}
-        aria-label="העבודה הבאה"
+        onClick={() => nudgeRef.current?.(-1)}
+        aria-label="העבודה הקודמת"
         className="flex h-9 w-9 items-center justify-center rounded-full text-[18px] leading-none text-black/45 transition-colors hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
       >
-        ‹
+        ›
       </button>
     </div>
     </>
