@@ -13,7 +13,7 @@ const VIDEO_SRC = "/videos/hearmeoutbgvid.mp4";
 // of 6688). That is fine and deliberate: the composition below is expressed in
 // the plate's own coordinate space and the <img> is laid out at the full
 // ROOM_W regardless, so the file's own resolution is free to differ from it.
-const ROOM_SRC = "/images/bghearmeout.png";
+const ROOM_SRC = "/images/bghearmeout.webp";
 
 // How far ahead of the stage the clip starts downloading, as a share of the
 // viewport. Generous on purpose: the clip is full-screen from the very first

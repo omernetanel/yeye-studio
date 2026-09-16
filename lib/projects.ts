@@ -53,7 +53,7 @@ export const projects: Project[] = [
     description:
       "מערכת ניהול לעסקי שירות שבניתי בעברית מהיסוד, לא תרגמתי אליה תבנית באנגלית.\nיומן, לקוחות, דוחות והתראות, בממשק RTL אמיתי.",
     url: "https://lynko-liard.vercel.app/demo",
-    image: "/images/lynkolayout.png",
+    image: "/images/lynkolayout.webp",
     tags: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion", "RTL קודם"],
     story: {
       storyTitle: "למה בניתי את זה ככה",
@@ -114,7 +114,7 @@ export const projects: Project[] = [
     category: "דף נחיתה שיווקי",
     description: "דף שיווקי בעברית מלאה, שבנוי לספר את הסיפור של המוצר תוך כדי גלילה, לא רק לתאר אותו.",
     url: "https://lynko-liard.vercel.app/",
-    image: "/images/lynkolayoutage.png",
+    image: "/images/lynkolayoutage.webp",
     tags: ["Next.js", "Framer Motion", "Tailwind CSS", "RTL קודם"],
     story: {
       storyTitle: "פרויקט עצמאי, לא עוד עמוד במערכת",
@@ -170,7 +170,7 @@ export const projects: Project[] = [
     category: "דף נחיתה",
     description: "דף נחיתה שבניתי עבור Sorozin Chef.",
     url: "https://omernetanel.github.io/sorozinchef/",
-    image: "/images/sorozinchefpweb.png",
+    image: "/images/sorozinchefpweb.webp",
     external: true,
   },
   {
@@ -184,7 +184,7 @@ export const projects: Project[] = [
     // (for any external project) turns into a genuine 404. Swap this to
     // external:false and add a `story` once the real project page exists.
     url: "/projects/lby-studio",
-    image: "/images/lbysreenweb.png",
+    image: "/images/lbysreenweb.webp",
     external: true,
   },
 ];
