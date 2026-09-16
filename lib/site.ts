@@ -30,6 +30,13 @@ export const SITE_BACKGROUND = "#ffffff";
  */
 export const SITE_BACKGROUND_DARK = "#000000";
 
+/**
+ * The studio's WhatsApp number, in the international form wa.me expects —
+ * country code, no plus, no leading zero. ONE place: it was written out as its
+ * own constant in four files, which is how a number change turns into a hunt.
+ */
+export const WHATSAPP_NUMBER = "972552759445";
+
 /** Title for any page that is not the homepage. */
 export function pageTitle(label: string) {
   return `${label} | ${SITE_NAME}`;

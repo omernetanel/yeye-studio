@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-
-const WHATSAPP_NUMBER = "972552434775";
+import { WHATSAPP_NUMBER } from "@/lib/site";
 
 /**
  * The one thing on the page that is always reachable.

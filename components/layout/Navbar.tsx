@@ -48,6 +48,9 @@ export default function Navbar() {
   // The chrome colour last written, so the meta tags are only touched when the
   // answer actually changes rather than on every scroll frame.
   const chromeDarkRef = useRef(false);
+  // A strip exactly as tall as the status bar, fixed to the top of the screen.
+  // See the comment where it is rendered for why it exists at all.
+  const tintRef = useRef<HTMLDivElement>(null);
 
   const checkTheme = () => {
     const img = imgRef.current;
@@ -87,6 +90,7 @@ export default function Navbar() {
       // clock stayed on white over the black sections. Over one of those, the
       // document is dark for as long as it is there, and says so.
       document.documentElement.style.colorScheme = topDark ? "dark" : "light";
+      if (tintRef.current) tintRef.current.style.backgroundColor = colour;
     }
   };
 
@@ -151,6 +155,17 @@ export default function Navbar() {
   useMotionValueEvent(scrollY, "change", scheduleCheck);
 
   return (
+    <>
+    {/* iOS 26 Safari ignores theme-color and tints the status bar from a fixed
+        element touching the top edge of the screen. This strip is exactly the
+        status bar's height (zero where there is no notch) and takes the same
+        colour as the tags above, so the clock sits on black over dark sections. */}
+    <div
+      ref={tintRef}
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-x-0 top-0 z-[60]"
+      style={{ height: "env(safe-area-inset-top)", backgroundColor: SITE_BACKGROUND }}
+    />
     <motion.div
       initial={false}
       animate={{ opacity: docked ? 1 : 0 }}
@@ -178,5 +193,6 @@ export default function Navbar() {
         />
       </Link>
     </motion.div>
+    </>
   );
 }

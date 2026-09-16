@@ -10,6 +10,7 @@ import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { WHATSAPP_NUMBER } from "@/lib/site";
 
 const projectTypes = ["חנות אונליין", "דף נחיתה", "אתר תדמית", "מערכת ניהול", "אחר"];
 
@@ -40,7 +41,7 @@ export default function ContactPage() {
       const msg = encodeURIComponent(
         `היי YEYE Digital! אני ${form.from_name}, מחפש ${form.project_type}. ${form.business_description}`
       );
-      window.open(`https://wa.me/972552434775?text=${msg}`, "_blank");
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
     } catch {
       setStatus("error");
     }

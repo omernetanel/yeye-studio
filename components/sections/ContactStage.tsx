@@ -521,7 +521,11 @@ export default function ContactStage() {
         {/* And the ask underneath it. No heading over the picture: the block
             below already opens with one, so putting a second line above the
             plate would explain the shot before it had been looked at. */}
-        <div className="mt-[9svh]">
+        {/* relative z-10, like the picture above it: this stage's balloons fall
+            in the layer at z-[5], and a form without a level of its own is
+            painted underneath that layer — they dropped straight across the
+            fields. Lifted to the picture's level, they pass behind both. */}
+        <div className="relative z-10 mt-[9svh]">
           <ContactForm />
         </div>
       </section>

@@ -117,6 +117,8 @@ const CLOSER_STAGE_VH = 2.8;
 // gap left by three stacked blocks; against a single card it did the opposite,
 // and the brief here is a wider gap, not a tighter one.
 const CLOSER_LEAD_VH = 0.7;
+// How far the close is drawn up towards the last card.
+const CLOSER_PULL_SVH = 16;
 // THE BALLOONS WAIT FOR THE LINE. The first two — one blue, one silver — go
 // when the top of the impact line has come up to 30% of the screen from the
 // bottom, and the rest on the same cue, a beat behind them by their own clock
@@ -464,7 +466,7 @@ export default function MobileAbout() {
               phone that read as sticking and flickering. Nothing here is a
               function of scroll position, so there is nothing to stutter and
               nothing to undo on the way back up. */}
-          <div className="mt-6 space-y-4">
+          <div className="mt-6 space-y-6">
             {aboutFacts.map((fact, index) => (
               <BorderGlowCard
                 key={fact.title}
@@ -501,7 +503,11 @@ export default function MobileAbout() {
           above finishes leaving, the balloons fall, and the rule draws. */}
       <div
         ref={closerStageRef}
-        style={{ height: `${CLOSER_STAGE_VH * 100}svh` }}
+        // Pulled up a little into the cards' space: laid out after them in
+        // plain flow, the line sat a screen and a half below the last card. The
+        // line's arrival and the balloons are both keyed to the line's own place
+        // on screen, so moving the stage moves them with it.
+        style={{ height: `${CLOSER_STAGE_VH * 100}svh`, marginTop: `-${CLOSER_PULL_SVH}svh` }}
       >
         {/* Centred in the panel. It was held near the top for one round to
             close the gap from the last card — but that gap is the lead-in's job

@@ -94,15 +94,15 @@ export default function CTASection() {
         playsInline
         preload="metadata"
         aria-hidden="true"
-        // CENTRED BY ARITHMETIC, not by object-position alone. The balloons sit
-        // between 2% and 57% of this clip's own frame — it was shot for the
-        // desktop, where they belong at the far left of a wide section — so
-        // their centre is at 29%, nearer the edge than half a crop window is
-        // wide. At 210px tall no horizontal position could bring them to the
-        // middle: the window simply ran out of picture. 280px scales the clip
-        // up until the window is half its width, and 8% then puts the balloons'
-        // own centre on the middle of the frame.
-        className="relative z-0 mb-16 block h-[280px] w-full rounded-2xl object-cover object-[8%_100%] md:absolute md:inset-0 md:mb-0 md:h-full md:w-full md:origin-bottom-left md:translate-x-[3%] md:scale-[0.82] md:rounded-none md:object-left-bottom"
+        // WHOLE AND CENTRED, by arithmetic. The balloons sit between 2% and 57%
+        // of this clip's own frame — it was shot for the desktop, where they
+        // belong at the far left of a wide section. So the crop has to start at
+        // the frame's left edge and be at least 57% of it wide, or the "Y" is
+        // cut. At 225px tall the clip scales to 527px across a 327px box: the
+        // window is 62% of the frame, anchored left it covers 0–62%, and the
+        // balloons' own centre (29.5%) lands within a few pixels of the box's
+        // (31%). At 280px the window was only 50% wide and cut both ends.
+        className="relative z-0 mb-16 block h-[225px] w-full rounded-2xl object-cover object-[0%_100%] md:absolute md:inset-0 md:mb-0 md:h-full md:w-full md:origin-bottom-left md:translate-x-[3%] md:scale-[0.82] md:rounded-none md:object-left-bottom"
       />
 
       {/* The copy, held to a 620px column on the right — the clip runs behind

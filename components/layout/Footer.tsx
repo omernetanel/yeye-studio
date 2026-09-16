@@ -1,10 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
-import { Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const WHATSAPP_NUMBER = "972552434775";
-const CONTACT_EMAIL = "hello@yeyelabs.com";
 
 interface FooterProps {
   /** Renders for a white-background page instead of the default dark theme. */
@@ -14,43 +9,17 @@ interface FooterProps {
 export default function Footer({ light = false }: FooterProps) {
   return (
     <footer className={cn("border-t", light ? "border-black/8" : "border-white/6")}>
-      {/* On a phone this is a stack, and the order it stacks in is not the
-          order it is written in. The DOM has the social links first because
-          under RTL that puts them in the rightmost column of the desktop grid —
-          but stacked, that opens the footer with two icons and buries the mark
-          underneath them. `order-first` on the logo fixes the stack without
-          touching the row. */}
+      {/* NO CONTACT ICONS. The footer used to carry a WhatsApp and a mail link,
+          and on the homepage the floating WhatsApp button already sits in the
+          corner of every screen — so the page ended on the same way in twice,
+          one of them a tiny icon. What is left is the mark and the line. */}
       <div className="mx-auto flex max-w-[1200px] flex-col items-center gap-5 px-6 py-10 text-center md:grid md:h-20 md:grid-cols-3 md:items-center md:gap-6 md:py-0 md:text-inherit">
-        {/* Social — first in DOM sits rightmost under dir="rtl" */}
-        <div className="flex items-center gap-5">
-          <Link
-            href={`https://wa.me/${WHATSAPP_NUMBER}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="WhatsApp"
-            className={cn(
-              "flex transition-colors hover:text-accent",
-              light ? "text-black/45" : "text-white/45 hover:text-primary-light"
-            )}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-            </svg>
-          </Link>
-          <Link
-            href={`mailto:${CONTACT_EMAIL}`}
-            aria-label="Email"
-            className={cn(
-              "flex transition-colors hover:text-accent",
-              light ? "text-black/45" : "text-white/45 hover:text-primary-light"
-            )}
-          >
-            <Mail size={20} strokeWidth={1.5} />
-          </Link>
-        </div>
+        {/* Holds the right-hand column of the desktop grid, so the mark stays
+            in the middle now that the icons are gone. Nothing on a phone. */}
+        <div aria-hidden="true" className="hidden md:block" />
 
         {/* Logo — center */}
-        <div className="order-first flex flex-col items-center gap-1 md:order-none">
+        <div className="flex flex-col items-center gap-1">
           <Image
             src="/images/logo.png"
             alt="YEYE"

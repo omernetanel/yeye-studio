@@ -13,8 +13,8 @@ import ArrowIcon from "@/components/ui/ArrowIcon";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
 import { setDocked } from "@/lib/motion/heroDock";
+import { WHATSAPP_NUMBER } from "@/lib/site";
 
-const WHATSAPP_NUMBER = "972552434775";
 const CONTACT_EMAIL = "hello@yeyelabs.com";
 
 const TAGLINE_TEXT = "בואו נבנה לכם אתר שעובד ומוכר באמת.";
@@ -275,7 +275,9 @@ export default function HeroSection() {
             // the paper copies whatever break the browser chose.
             <p
               ref={taglineRef}
-              className={`text-right font-display text-[21px] leading-[1.3] font-semibold text-balance ${
+              // font-medium, the weight of the two links under the wordmark: at
+              // semibold the line read as a second headline competing with it.
+              className={`text-right font-display text-[21px] leading-[1.3] font-medium text-balance ${
                 painted ? "text-transparent" : "text-black"
               }`}
             >
