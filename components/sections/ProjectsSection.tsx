@@ -3,7 +3,8 @@
 import { useLayoutEffect, useRef } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import Button from "@/components/ui/Button";
-import CylinderGallery, { type GalleryItem } from "@/components/ui/CylinderGallery";
+import { type GalleryItem } from "@/components/ui/CylinderGallery";
+import SkewedGallery from "@/components/ui/SkewedGallery";
 import { projects } from "@/lib/projects";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
@@ -220,7 +221,7 @@ export default function ProjectsSection() {
           {/* Full width rather than inside the old 1000px measure: the centre
               panel is meant to read as a screen. */}
           <div ref={galleryRef} className="relative w-full will-change-transform" style={{ opacity: 0 }}>
-            <CylinderGallery items={galleryItems} />
+            <SkewedGallery items={galleryItems} />
           </div>
         </div>
       </div>

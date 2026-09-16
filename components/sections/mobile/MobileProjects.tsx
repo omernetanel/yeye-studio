@@ -42,6 +42,18 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 const CARD_IN_VH = 0.82;
 const CARD_RISE_PX = 28;
 
+// THE FAN, ON A NATIVE SCROLLER. The desktop's gallery turns each panel by how
+// far it is from the middle; the same arithmetic is applied here to the cards of
+// the scroller that was already working, rather than replacing it with a drag of
+// our own. That is the whole point: a hand-rolled drag takes the gesture off the
+// browser, loses the pointer stream the moment it decides the drag was a scroll,
+// and costs an animation frame loop that runs whether or not anything moved.
+// Here the OS keeps the fling and the snapping, the links stay links, and the
+// turn is computed only on the frames the finger actually produces.
+const TURN_DEGREES = 26;
+const TURN_PERSPECTIVE_PX = 900;
+const TURN_MIN_SCALE = 0.92;
+
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
 }
@@ -57,6 +69,10 @@ function lerp(from: number, to: number, t: number) {
 
 export default function MobileProjects() {
   const cardsRef = useRef<(HTMLElement | null)[]>([]);
+  // The turned face inside each card. Separate from the card itself, which
+  // carries the arrival — two transforms on one element would overwrite each
+  // other, and these run on different clocks.
+  const panelsRef = useRef<(HTMLDivElement | null)[]>([]);
   const seenRef = useRef<boolean[]>([]);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -76,6 +92,26 @@ export default function MobileProjects() {
     // here — the magnitude is the distance travelled either way.
     const t = travel <= 0 ? 1 : Math.min(1, Math.abs(track.scrollLeft) / travel);
     bar.style.transform = `scaleX(${Math.max(0.08, t).toFixed(3)})`;
+
+    // And the fan. Each card turns by where it sits against the middle of the
+    // track — one card away is a full turn, the one in the middle is flat — so
+    // the row reads as the desktop's gallery without taking the gesture off the
+    // browser. Every read happens before any write.
+    const middle = track.getBoundingClientRect().left + track.clientWidth / 2;
+    const centres = panelsRef.current.map((panel) => {
+      if (!panel) return null;
+      const box = panel.getBoundingClientRect();
+      return { offset: (box.left + box.width / 2 - middle) / (box.width || 1) };
+    });
+    centres.forEach((reading, index) => {
+      const panel = panelsRef.current[index];
+      if (!panel || !reading) return;
+      const offset = Math.max(-1.6, Math.min(1.6, reading.offset));
+      const near = Math.max(0, 1 - Math.abs(offset));
+      panel.style.transform =
+        `rotateY(${(-offset * TURN_DEGREES).toFixed(2)}deg)` +
+        ` scale(${lerp(TURN_MIN_SCALE, 1, near).toFixed(3)})`;
+    });
   };
 
   const update = () => {
@@ -112,8 +148,13 @@ export default function MobileProjects() {
     }
     update();
     onTrackScroll();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    const onResize = () => {
+      update();
+      // The turn is measured in card widths, and those change with the viewport.
+      onTrackScroll();
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, [prefersReducedMotion]);
 
   useMotionValueEvent(scrollY, "change", () => {
@@ -160,29 +201,43 @@ export default function MobileProjects() {
               href={href}
               target={project.external ? "_blank" : undefined}
               rel={project.external ? "noopener noreferrer" : undefined}
-              className="relative block w-[86vw] shrink-0 snap-center overflow-hidden rounded-2xl transition-[opacity,transform] duration-700 ease-out will-change-transform"
-              style={{ opacity: 0, transform: `translateY(${CARD_RISE_PX}px)` }}
+              className="block w-[86vw] shrink-0 snap-center transition-[opacity,transform] duration-700 ease-out will-change-transform"
+              // Its own projection, like the desktop gallery's panels: with one
+              // shared 3D scene the cards would sort by depth and overlap, and
+              // here they must stay in the scroller's own order.
+              style={{
+                opacity: 0,
+                transform: `translateY(${CARD_RISE_PX}px)`,
+                perspective: `${TURN_PERSPECTIVE_PX}px`,
+              }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={project.image}
-                alt={project.cardTitle ?? project.title}
-                className="block aspect-[1672/941] w-full object-cover"
-                draggable={false}
-              />
+              <div
+                ref={(el) => {
+                  panelsRef.current[index] = el;
+                }}
+                className="relative overflow-hidden rounded-2xl will-change-transform"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={project.image}
+                  alt={project.cardTitle ?? project.title}
+                  className="block aspect-[1672/941] w-full object-cover"
+                  draggable={false}
+                />
 
-              {/* Printed on the picture rather than under it. A caption below
-                  the image turns each one back into a card; on it, the picture
-                  keeps the full height it was given.
-                  The wash is what makes the type legible over four very
-                  different screenshots — some of these are pale. */}
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-5 pt-16 pb-4 text-right">
-                <span className="block font-display text-m-sub font-bold text-white">
-                  {project.cardTitle ?? project.title}
-                </span>
-                <span className="mt-0.5 block font-body text-m-small text-white/60">
-                  {project.cardCategory ?? project.category}
-                </span>
+                {/* Printed on the picture rather than under it. A caption below
+                    the image turns each one back into a card; on it, the picture
+                    keeps the full height it was given.
+                    The wash is what makes the type legible over four very
+                    different screenshots — some of these are pale. */}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-5 pt-16 pb-4 text-right">
+                  <span className="block font-display text-m-sub font-bold text-white">
+                    {project.cardTitle ?? project.title}
+                  </span>
+                  <span className="mt-0.5 block font-body text-m-small text-white/60">
+                    {project.cardCategory ?? project.category}
+                  </span>
+                </div>
               </div>
             </Link>
           );
