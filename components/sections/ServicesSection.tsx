@@ -89,7 +89,8 @@ const HEADING_IN = [2.95, 3.4] as const;
 const HEADING_SETTLE = [3.6, 4.2] as const;
 // How much bigger the heading stands before it settles, and how far it rises
 // as it comes up, in its own settled pixels.
-const HEADING_BIG_SCALE = 2.4;
+const HEADING_BIG_SCALE = 1.85;
+const DRAWING_OPACITY = 0.5;
 const HEADING_RISE_PX = 26;
 const STATIONS_START = 4.3;
 const STATION_STEP = 0.6;
@@ -358,16 +359,21 @@ function ProcessDiagram({ sheetRef }: { sheetRef: RefObject<HTMLDivElement | nul
           to the edges of the page it is printed on, which reads as a background
           rather than as something drawn there. */}
       <div ref={sheetRef} className="relative mx-auto w-[79%]">
-        {/* Laid out in its SETTLED form — one line, centred at the top — and
-            each half moved from there by update(). Two lines standing big in the
-            middle of the sheet and one line at the top are different line
+        {/* Laid out in its SETTLED form — one line, in the heart of the circle
+            the four stages run around — and each half moved from there by
+            update(). 57% is the ring's own centre, y 616 of the drawing's 1080.
+            It was a line at the top of the screen, which sat too close to the
+            edge and left the middle of the sheet to a second YEYE.
+
+            Two lines standing big and one line settled are different line
             breaks, which a transform on one block cannot turn into each other;
             two halves that travel can. The offsets are layout values, so they
-            are never read off anything mid-animation. */}
+            are never read off anything mid-animation. A zero-height row, so
+            the line is centred on that point rather than hanging from it. */}
         <h3
           data-process-heading
           aria-label={PROCESS_HEADING.join(" ")}
-          className="absolute inset-x-0 top-0 z-10 flex justify-center gap-[0.28em] font-display text-[40px] leading-[1.05] font-bold text-black"
+          className="absolute inset-x-0 top-[57%] z-10 flex h-0 items-center justify-center gap-[0.28em] font-display text-[52px] leading-[1.05] font-bold text-black"
         >
           {PROCESS_HEADING.map((line) => (
             <span
@@ -402,10 +408,14 @@ function ProcessDiagram({ sheetRef }: { sheetRef: RefObject<HTMLDivElement | nul
           //   whatido-alpha.png
           src="/images/whatido-alpha.png"
           data-process-drawing
+          // THE CENTRAL YEYE IS MASKED OUT, not cut from the file: the heading
+          // takes that spot now, and a pencil wordmark behind it read as a
+          // second title. An ellipse over the sketch and its dimension lines,
+          // feathered so no edge of the cut shows in the paper texture.
+          className="block h-auto w-full [mask-image:radial-gradient(ellipse_25%_19%_at_50%_50%,transparent_72%,black_100%)]"
           alt=""
           width={1920}
           height={1080}
-          className="block h-auto w-full"
           style={{ opacity: 0 }}
           draggable={false}
         />
@@ -548,8 +558,10 @@ function ProcessStations() {
               <text
                 key={line}
                 x={station.cx}
-                y={station.titleY + 61 + index * 34}
-                className="fill-black/55 font-body text-[24px]"
+                y={station.titleY + 63 + index * 36}
+                // Darker and a size up: at /55 and 24 the copy sank into the
+                // pencil work around it.
+                className="fill-black/75 font-body text-[26px]"
               >
                 {line}
               </text>
@@ -803,8 +815,9 @@ export default function ServicesSection() {
       line.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${lerp(HEADING_BIG_SCALE, 1, settle).toFixed(4)})`;
     }
 
-    // The drawing fades in while the heading makes room for it.
-    drawing.style.opacity = String(settle);
+    // The drawing fades in while the heading makes room for it — to half, so
+    // the pencil stays a texture on the paper and the stages read over it.
+    drawing.style.opacity = String(settle * DRAWING_OPACITY);
 
     const stations = sheet.querySelectorAll<SVGGElement>("[data-process-station]");
     const arrows = sheet.querySelectorAll<SVGPathElement>("[data-process-arrow]");
