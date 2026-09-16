@@ -196,7 +196,7 @@ function ContactForm() {
             onChange={(e) => setForm({ ...form, from_name: e.target.value })}
             required
           />
-          <Input type="tel" placeholder="טלפון" className={DARK_INPUT} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <Input type="tel" placeholder="טלפון" className={`${DARK_INPUT} text-right`}value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
           <Input
             type="email"
             placeholder="דוא״ל"

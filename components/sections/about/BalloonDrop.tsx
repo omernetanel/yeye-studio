@@ -35,7 +35,7 @@ type Props = {
   lineRef?: RefObject<HTMLElement | null>;
   stateRef: RefObject<DropState>;
   /**
-   * "mobile": nine balloons instead of seventeen. Not a screen-size tweak — a
+   * "mobile": six balloons instead of seventeen. Not a screen-size tweak — a
    * phone has to solve the same collisions in three passes on a tenth of the
    * silicon, and this is the one thing in the section with a per-frame cost that
    * grows with the count. The choreography is the same shape either way: a
@@ -116,7 +116,7 @@ const CAST: readonly CastEntry[] = [
 ] as const;
 
 /**
- * The phone's cast. Two over the copy where the desktop has five, and seven at
+ * The phone's cast. Two over the copy where the desktop has five, and four at
  * the close where it has twelve — the same three cues and the same reading of
  * them, thinned.
  *
@@ -141,21 +141,18 @@ const MOBILE_CAST: readonly CastEntry[] = [
   // those two went: 800ms leaves them a clear head start without the rest
   // arriving late.
   { cue: "leaving", at: 800, x: 0.86, depth: 0, type: 1, settles: false, front: false },
-  { cue: "leaving", at: 2000, x: 0.33, depth: 0.5, type: 1, settles: false, front: false },
 
-  // AND THREE THAT STAY. Everything above falls straight through the bottom of
-  // the black; these come to rest on the floor of the section and are still
-  // there when the reader leaves it. Without them the close is one balloon on a
-  // line and a great deal of empty black under it — the pile is what gives the
-  // end of the section any weight at all.
-  { cue: "leaving", at: 3300, x: 0.16, depth: 0.5, type: 1, settles: true, front: false },
-  { cue: "leaving", at: 4500, x: 0.62, depth: 0, type: 1, settles: true, front: false },
-  { cue: "leaving", at: 5900, x: 0.4, depth: 1, type: 0, settles: true, front: true },
+  // NONE STAY on the phone. The floor here sits behind the contact picture, so
+  // a balloon resting on it was hidden — until scrolling up shook it into the
+  // air above the picture's edge. Every one falls through and is gone.
+  { cue: "leaving", at: 3300, x: 0.16, depth: 0.5, type: 1, settles: false, front: false },
+  { cue: "leaving", at: 4700, x: 0.4, depth: 1, type: 0, settles: false, front: true },
 
   // ONE on the line, and the biggest of them: depth 1 puts it in the near band
   // and type 0 is the silver. A single balloon knocked by the impact line reads
-  // as the line having done it; three read as weather.
-  { cue: "wall", at: 500, x: 0.44, depth: 1, type: 0, settles: true, front: true },
+  // as the line having done it; three read as weather. It still rests on the
+  // line, but once it slides off and reaches the bottom it is gone like the rest.
+  { cue: "wall", at: 500, x: 0.44, depth: 1, type: 0, settles: false, front: true },
 ] as const;
 
 /**

@@ -118,7 +118,7 @@ const CLOSER_STAGE_VH = 2.8;
 // and the brief here is a wider gap, not a tighter one.
 const CLOSER_LEAD_VH = 0.7;
 // How far the close is drawn up towards the last card.
-const CLOSER_PULL_SVH = 16;
+const CLOSER_PULL_SVH = 28;
 // THE BALLOONS WAIT FOR THE LINE. The first two — one blue, one silver — go
 // when the top of the impact line has come up to 30% of the screen from the
 // bottom, and the rest on the same cue, a beat behind them by their own clock
