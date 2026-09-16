@@ -92,10 +92,9 @@ const HEADING_IN = [3.3, 3.8] as const;
 // the moment it had arrived — and a slower settle.
 const HEADING_SETTLE = [4.4, 5.2] as const;
 // How much bigger the heading stands before it settles (234px against the
-// settled 52), and how far it rises as it comes up, in its own settled pixels.
+// settled 52).
 const HEADING_BIG_SCALE = 4.5;
 const DRAWING_OPACITY = 0.5;
-const HEADING_RISE_PX = 12;
 const STATIONS_START = 5.3;
 const STATION_STEP = 0.6;
 const STATION_IN = 0.35;
@@ -817,14 +816,18 @@ export default function ServicesSection() {
       const line = lines[i] as HTMLElement;
       const settledX = heading.offsetLeft + line.offsetLeft + line.offsetWidth / 2;
       const settledY = heading.offsetTop + line.offsetTop + line.offsetHeight / 2;
-      const bigLineHeight = line.offsetHeight * HEADING_BIG_SCALE;
+      // It GROWS out of the middle of the screen rather than fading in: the
+      // pair is scaled about that point as one, so each line's size and its
+      // distance from the centre grow together from nothing.
+      const grow = HEADING_BIG_SCALE * headingIn;
       // 56%: the middle of the screen, since the sheet is raised 6%.
-      const bigY = sheetH * 0.56 +(i - (lines.length - 1) / 2) * bigLineHeight;
-      const rise = lerp(HEADING_RISE_PX * HEADING_BIG_SCALE, 0, headingIn);
+      const bigY = sheetH * 0.56 + (i - (lines.length - 1) / 2) * line.offsetHeight * grow;
       const x = lerp(sheetW / 2 - settledX, 0, settle);
-      const y = lerp(bigY - settledY, 0, settle) + rise;
-      line.style.opacity = String(headingIn);
-      line.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${lerp(HEADING_BIG_SCALE, 1, settle).toFixed(4)})`;
+      const y = lerp(bigY - settledY, 0, settle);
+      // Visible from the first frames of the growth, so it reads as growing
+      // and not as fading; hidden at exactly zero so nothing sits there before.
+      line.style.opacity = String(clamp01(headingIn * 6));
+      line.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${lerp(grow, 1, settle).toFixed(4)})`;
     }
 
     // The drawing fades in while the heading makes room for it — to half, so
