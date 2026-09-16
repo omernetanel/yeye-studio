@@ -3,6 +3,7 @@ import "./globals.css";
 import { googleSans, assistant } from "@/lib/fonts";
 import { SITE_NAME, SITE_TITLE, SITE_DESCRIPTION, SITE_BACKGROUND } from "@/lib/site";
 import { SmoothScrollProvider } from "@/lib/motion/lenis";
+import WhatsAppButton from "@/components/layout/WhatsAppButton";
 
 // TODO: replace with the real production domain before launch (also used in app/sitemap.ts and app/robots.ts).
 const BASE_URL = "https://yeyelabs.com";
@@ -84,6 +85,9 @@ export default function RootLayout({
           colour for its bars. See the comment on that rule. */}
       <body className="font-body">
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
+        {/* Once, for every page: the footer no longer carries a way to WhatsApp,
+            so the sub-pages need this as much as the homepage does. */}
+        <WhatsAppButton />
       </body>
     </html>
   );

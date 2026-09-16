@@ -1,6 +1,5 @@
 import Navbar from "@/components/layout/Navbar";
 import NavMenu from "@/components/layout/NavMenu";
-import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
 import MobileServices from "@/components/sections/mobile/MobileServices";
@@ -22,7 +21,6 @@ export default function MobileHome() {
     <>
       <Navbar />
       <NavMenu />
-      <WhatsAppButton />
       <HeroSection />
       {/* No StatementSection here. It exists to carry the closing line on the
           versions whose paper sequence cannot, and this one ends on that line
