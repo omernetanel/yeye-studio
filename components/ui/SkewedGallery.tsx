@@ -427,7 +427,7 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
         the arrows came out mirrored twice. Forced to LTR, the first button is
         the left one everywhere, so "left arrow moves the work left" is true by
         construction rather than by luck. The labels stay Hebrew. */}
-    <div dir="ltr" className="mt-8 flex items-center justify-center gap-5">
+    <div dir="ltr" className="mt-12 flex items-center justify-center gap-5">
       {/* THE FAN MOVES TOWARDS THE ARROW THAT WAS PRESSED. A positive nudge
           carries the panels left, so the left-hand button takes it. */}
       <button

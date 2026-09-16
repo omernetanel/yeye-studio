@@ -47,10 +47,14 @@ const TARGETS: Target[] = [
 const CTA: Target = { label: "בואו נדבר", id: "cta", at: 0 };
 const ALL_TARGETS = [...TARGETS, CTA];
 
+const HOVER_CLOSE_MS = 220;
+
 export default function NavMenu() {
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const hoveringRef = useRef(false);
+  const closeTimerRef = useRef<number | null>(null);
   const pathname = usePathname();
   const lenis = useLenis();
   const isMobile = useIsMobile();
@@ -114,6 +118,13 @@ export default function NavMenu() {
       if (frame !== null) cancelAnimationFrame(frame);
     };
   }, [pathname]);
+
+  useEffect(
+    () => () => {
+      if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -202,10 +213,27 @@ export default function NavMenu() {
         layout
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
         className="pointer-events-auto relative"
+        // Opens on hover with a mouse, and still on a click or a tap. The close
+        // waits a moment, so crossing the gap between the button and the panel
+        // does not shut it on the way.
+        onPointerEnter={(event) => {
+          if (event.pointerType !== "mouse") return;
+          hoveringRef.current = true;
+          if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+          closeTimerRef.current = null;
+          setOpen(true);
+        }}
+        onPointerLeave={(event) => {
+          if (event.pointerType !== "mouse") return;
+          hoveringRef.current = false;
+          closeTimerRef.current = window.setTimeout(() => setOpen(false), HOVER_CLOSE_MS);
+        }}
       >
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        // Under a hovering mouse the menu is already open, and a click that
+        // toggled would close it under the pointer that opened it.
+        onClick={() => setOpen((value) => (hoveringRef.current ? true : !value))}
         aria-expanded={open}
         aria-label="תפריט"
         className={`flex items-center gap-2 transition-colors duration-200 ${dark ? "text-white" : "text-black"}`}

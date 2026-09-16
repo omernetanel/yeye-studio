@@ -227,7 +227,7 @@ export default function MobileProjects() {
           there is more. */}
       {/* 4px and near-black: at a hairline in pale grey it was easy to miss,
           and it is the only sign there is more to swipe to. */}
-      <div className="mx-[7vw] mt-7 h-1 overflow-hidden rounded-full bg-black/10">
+      <div className="mx-[7vw] mt-10 h-1 overflow-hidden rounded-full bg-black/10">
         <div
           ref={progressRef}
           className="h-1 origin-left rounded-full bg-black/80 transition-transform duration-150 ease-out"
