@@ -86,13 +86,15 @@ const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 // then it shrinks to one line at the top while the drawing fades in under it,
 // then the stations one by one, each arrow drawing itself towards the next.
 const HEADING_IN = [2.95, 3.4] as const;
-const HEADING_SETTLE = [3.6, 4.2] as const;
-// How much bigger the heading stands before it settles, and how far it rises
-// as it comes up, in its own settled pixels.
-const HEADING_BIG_SCALE = 1.85;
+// A real pause standing big before it settles — at 0.2s it read as shrinking
+// the moment it had arrived — and a slower settle.
+const HEADING_SETTLE = [4.1, 4.9] as const;
+// How much bigger the heading stands before it settles (286px against the
+// settled 52), and how far it rises as it comes up, in its own settled pixels.
+const HEADING_BIG_SCALE = 5.5;
 const DRAWING_OPACITY = 0.5;
-const HEADING_RISE_PX = 26;
-const STATIONS_START = 4.3;
+const HEADING_RISE_PX = 12;
+const STATIONS_START = 5.0;
 const STATION_STEP = 0.6;
 const STATION_IN = 0.35;
 // Each arrow draws in the gap after its station, towards the next one. The
@@ -201,18 +203,18 @@ const HEADING_ZONE_PADDING_BOTTOM_PX = 8;
 //
 // Since lengthened to carry the process one stage at a time: the moving
 // stretches keep exactly the scroll they had (1617vh at a 900px screen), and
-// the hold grew to 2.4 clip-seconds' worth of that same rate — 210vh — with the
-// section height grown by the same amount. The share is 210 / 1828.
+// the hold grew to 3.2 clip-seconds' worth of that same rate — 280vh — with the
+// section height grown by the same amount. The share is 280 / 1898.
 const TIME_HOLDS: { at: number; share: number }[] = [
-  { at: 3.7, share: 0.1149 }, // the process, paper flat
+  { at: 3.7, share: 0.1476 }, // the process, paper flat
 ];
 const TOTAL_HOLD_SHARE = TIME_HOLDS.reduce((sum, h) => sum + h.share, 0);
 
 // The sheet clock: clip seconds as if the clip never froze. Every hold is paid
 // for at the moving rate, so this is simply progress over that rate — it runs
 // on through a freeze while the clip time stands still. Past the hold it is
-// ahead of the clip by the hold's length — 2.4s, so the block's exit at 4.7s
-// clip time is 7.1s here, and the last arrow has to be drawn before that.
+// ahead of the clip by the hold's length — 3.2s, so the block's exit at 4.7s
+// clip time is 7.9s here, and the last arrow (7.4s) has to be drawn before that.
 function sheetSeconds(progress: number) {
   return (progress * CLIP_SECONDS) / (1 - TOTAL_HOLD_SHARE);
 }
@@ -358,7 +360,11 @@ function ProcessDiagram({ sheetRef }: { sheetRef: RefObject<HTMLDivElement | nul
       {/* Held a little inside the sheet's width. At full bleed the drawing runs
           to the edges of the page it is printed on, which reads as a background
           rather than as something drawn there. */}
-      <div ref={sheetRef} className="relative mx-auto w-[79%]">
+      {/* Raised by 6% of its own height: the ring's centre is at 57% of the
+          drawing, so a sheet centred on the screen left the circle and the
+          heading in it sitting low. A transform, so no offset read in
+          update() changes. */}
+      <div ref={sheetRef} className="relative mx-auto w-[79%] -translate-y-[6%]">
         {/* Laid out in its SETTLED form — one line, in the heart of the circle
             the four stages run around — and each half moved from there by
             update(). 57% is the ring's own centre, y 616 of the drawing's 1080.
@@ -379,7 +385,10 @@ function ProcessDiagram({ sheetRef }: { sheetRef: RefObject<HTMLDivElement | nul
             <span
               key={line}
               aria-hidden="true"
-              className="block whitespace-nowrap will-change-transform"
+              // No will-change: it would rasterise the line once at its small
+              // size and stretch that bitmap to 5.5x — blurry type at the one
+              // moment the heading is the whole screen.
+              className="block whitespace-nowrap"
               style={{ opacity: 0 }}
             >
               {line}
@@ -807,7 +816,8 @@ export default function ServicesSection() {
       const settledX = heading.offsetLeft + line.offsetLeft + line.offsetWidth / 2;
       const settledY = heading.offsetTop + line.offsetTop + line.offsetHeight / 2;
       const bigLineHeight = line.offsetHeight * HEADING_BIG_SCALE;
-      const bigY = sheetH / 2 + (i - (lines.length - 1) / 2) * bigLineHeight;
+      // 56%: the middle of the screen, since the sheet is raised 6%.
+      const bigY = sheetH * 0.56 +(i - (lines.length - 1) / 2) * bigLineHeight;
       const rise = lerp(HEADING_RISE_PX * HEADING_BIG_SCALE, 0, headingIn);
       const x = lerp(sheetW / 2 - settledX, 0, settle);
       const y = lerp(bigY - settledY, 0, settle) + rise;
@@ -962,8 +972,8 @@ export default function ServicesSection() {
     // scroll they had and run the whole thing at 2.27x speed.
     // 1663vh+547px of clip scrub, plus STATEMENT_TAIL_VH + STATEMENT_PARK_VH
     // for the statement's own tail after the clip has finished.
-    // Then 104vh more for the longer hold on the open sheet — see TIME_HOLDS.
-    <section ref={wrapperRef} id="services" className="relative h-[calc(1852vh+547px)] bg-white">
+    // Then 174vh more for the longer hold on the open sheet — see TIME_HOLDS.
+    <section ref={wrapperRef} id="services" className="relative h-[calc(1922vh+547px)] bg-white">
       {/* SPACER_PX of perfectly ordinary scrolling before the panel below
           goes sticky — see its own comment up top. */}
       <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />
