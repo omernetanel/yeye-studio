@@ -50,9 +50,14 @@ const CARD_RISE_PX = 28;
 // and costs an animation frame loop that runs whether or not anything moved.
 // Here the OS keeps the fling and the snapping, the links stay links, and the
 // turn is computed only on the frames the finger actually produces.
-const TURN_DEGREES = 26;
+const TURN_DEGREES = 34;
 const TURN_PERSPECTIVE_PX = 900;
-const TURN_MIN_SCALE = 0.92;
+const TURN_MIN_SCALE = 0.9;
+// How far from the middle the turn keeps growing, in card widths. Past this a
+// card is simply at its steepest — and it must not be steep, because a card
+// turned far enough projects narrow AND shifts sideways, which is what pushed
+// the neighbour off the screen entirely the first time.
+const TURN_REACH = 1.1;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -106,7 +111,7 @@ export default function MobileProjects() {
     centres.forEach((reading, index) => {
       const panel = panelsRef.current[index];
       if (!panel || !reading) return;
-      const offset = Math.max(-1.6, Math.min(1.6, reading.offset));
+      const offset = Math.max(-TURN_REACH, Math.min(TURN_REACH, reading.offset));
       const near = Math.max(0, 1 - Math.abs(offset));
       panel.style.transform =
         `rotateY(${(-offset * TURN_DEGREES).toFixed(2)}deg)` +
@@ -182,13 +187,18 @@ export default function MobileProjects() {
           — which is what ruled out the desktop's arc on a phone: a hand-rolled
           drag loses the pointer stream the moment the browser decides the
           gesture was a scroll.
-          px-[7vw] on the track with 86vw cards centres the current card and
-          leaves the next one peeking at the edge. The peek is the whole
-          affordance: no arrows, no dots, no "swipe" label. */}
+          60vw cards inside px-[20vw] and NO gap between them centre the current
+          card and leave a card peeking at BOTH edges. The gap went because the
+          turn spends it: a card at 35° projects about 39px narrower and shifted,
+          so a peek budgeted in layout comes out a third of that on screen. That width is what makes the fan visible: at
+          86vw the middle card filled the screen and the only card on it was the
+          flat one, so standing still there was nothing to see — the turn showed
+          only while a finger was moving. The peek is also the whole affordance:
+          no arrows, no dots, no "swipe" label. */}
       <div
         ref={trackRef}
         onScroll={onTrackScroll}
-        className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-[7vw]"
+        className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto scroll-smooth px-[20vw]"
       >
         {projects.map((project, index) => {
           const href = project.external ? project.url : `/projects/${project.slug}`;
@@ -201,7 +211,7 @@ export default function MobileProjects() {
               href={href}
               target={project.external ? "_blank" : undefined}
               rel={project.external ? "noopener noreferrer" : undefined}
-              className="block w-[86vw] shrink-0 snap-center transition-[opacity,transform] duration-700 ease-out will-change-transform"
+              className="block w-[60vw] shrink-0 snap-center transition-[opacity,transform] duration-700 ease-out will-change-transform"
               // Its own projection, like the desktop gallery's panels: with one
               // shared 3D scene the cards would sort by depth and overlap, and
               // here they must stay in the scroller's own order.
