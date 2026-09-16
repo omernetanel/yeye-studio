@@ -4,7 +4,7 @@ import DashboardsContent from "./DashboardsContent";
 
 export const metadata: Metadata = {
   title: pageTitle("מערכות ניהול"),
-  description: "דשבורד וכלי ניהול פנימיים שמסדרים את העסק במקום אחד, בממשק פשוט, בלי גיליונות אקסל.",
+  description: "דשבורד וכלי ניהול פנימיים שמרכזים את העסק במקום אחד, בממשק פשוט ובלי גיליונות אקסל.",
 };
 
 export default function DashboardsPage() {

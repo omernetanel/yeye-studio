@@ -17,8 +17,8 @@ export default function ServiceFinalCTA({ title }: ServiceFinalCTAProps) {
         transition={{ duration: 0.6 }}
       >
         <h2 className="mb-4 font-display text-[clamp(28px,4vw,42px)] font-extrabold text-black">{title}</h2>
-        <p className="mb-8 font-body text-lg text-black/50">ייעוץ ראשוני ללא עלות. אשמח לשמוע על הפרויקט שלך.</p>
-        <Button href="/#cta">בוא נתחיל</Button>
+        <p className="mb-8 font-body text-lg text-black/50">ייעוץ ראשוני ללא עלות. אשמח לשמוע על הפרויקט שלכם.</p>
+        <Button href="/#cta">בואו נתחיל</Button>
       </motion.div>
     </section>
   );

@@ -133,7 +133,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
           className="flex items-center gap-1.5 font-display text-sm text-black/40 transition-colors hover:text-accent"
         >
           <ExternalLink size={14} />
-          פתח את האתר בלשונית חדשה
+          לפתוח את האתר בלשונית חדשה
         </Link>
       )}
     </div>

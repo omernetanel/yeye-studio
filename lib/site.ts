@@ -2,7 +2,7 @@
 // page's metadata and had already drifted: the homepage said "YEYE Digital"
 // while every sub-page tab said "YEYE LABS".
 export const SITE_NAME = "YEYE Digital";
-export const SITE_TITLE = `${SITE_NAME} - סטודיו דיגיטלי`;
+export const SITE_TITLE = `${SITE_NAME} | סטודיו דיגיטלי`;
 export const SITE_DESCRIPTION = "אני בונה אתרים ומערכות שמייצרות לקוחות לעסקים.";
 
 /**

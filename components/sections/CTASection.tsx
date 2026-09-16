@@ -166,7 +166,7 @@ export default function CTASection() {
             className="mx-auto max-w-[620px] md:ms-0 md:me-auto md:max-w-[560px]"
           >
             {status === "success" ? (
-              <p className="font-body text-m-body text-black/60">קיבלתי, תודה! אחזור אליך בהקדם.</p>
+              <p className="font-body text-m-body text-black/60">קיבלתי, תודה! אחזור אליכם בהקדם.</p>
             ) : (
               <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 text-right sm:grid-cols-2 sm:gap-3">
                 <Input

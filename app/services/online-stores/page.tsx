@@ -4,7 +4,7 @@ import OnlineStoresContent from "./OnlineStoresContent";
 
 export const metadata: Metadata = {
   title: pageTitle("חנויות אונליין"),
-  description: "חנות אונליין שמוכרת, גם כשאתה ישן. חנות מעוצבת, מהירה ומאובטחת שמביאה מכירות.",
+  description: "חנות אונליין שמוכרת גם כשאתם ישנים: מעוצבת, מהירה ומאובטחת.",
 };
 
 export default function OnlineStoresPage() {

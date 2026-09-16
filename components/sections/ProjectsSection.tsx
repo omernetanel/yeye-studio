@@ -224,7 +224,7 @@ export default function ProjectsSection() {
           instead, on the only thing that needs a measure. */}
       <div className="relative z-10 mt-16 flex justify-center px-6 md:mt-20">
         <Button href="/projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none">
-          צפה בכל העבודות
+          לכל העבודות
         </Button>
       </div>
     </section>

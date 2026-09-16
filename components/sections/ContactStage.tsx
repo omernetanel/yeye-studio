@@ -185,7 +185,7 @@ function ContactForm() {
       </p>
 
       {status === "success" ? (
-        <p className="mt-8 font-body text-m-body text-white/70">קיבלתי, תודה! אחזור אליך בהקדם.</p>
+        <p className="mt-8 font-body text-m-body text-white/70">קיבלתי, תודה! אחזור אליכם בהקדם.</p>
       ) : (
         <form onSubmit={handleSubmit} className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Input

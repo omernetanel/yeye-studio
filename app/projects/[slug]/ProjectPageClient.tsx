@@ -176,7 +176,7 @@ export default function ProjectPageClient({ project }: Props) {
                 {story.ctaText}
               </p>
               <Button href="/#cta" className="!border-white !bg-none !bg-white !text-black !shadow-none">
-                בוא נדבר
+                בואו נדבר
               </Button>
             </BorderGlowCard>
           </motion.div>

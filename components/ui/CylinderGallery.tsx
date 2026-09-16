@@ -339,7 +339,7 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
           // and that native drag swallows the click that should have followed.
           draggable={false}
           className="absolute block rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
-          aria-label={`${item.title} — ${item.category}`}
+          aria-label={`${item.title}, ${item.category}`}
         />
       ))}
     </div>
