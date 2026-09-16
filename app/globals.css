@@ -659,6 +659,23 @@ body {
   }
 }
 
+/* FoldText — each letter a panel hinged at its top edge, folding down into
+   place. Derived from React Bits' FoldText (MIT); the geometry is theirs, the
+   clock is ours: components/ui/FoldText.tsx drives it from scroll.
+   Unfolded by default, so anything that never runs the script — reduced
+   motion — simply shows the text. */
+.fold-segment {
+  display: inline-block;
+  perspective: 700px;
+  transform-style: preserve-3d;
+}
+
+.fold-piece {
+  display: inline-block;
+  transform-origin: 50% 0%;
+  backface-visibility: hidden;
+}
+
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;

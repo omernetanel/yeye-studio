@@ -7,6 +7,9 @@ import { type GalleryItem } from "@/components/ui/CylinderGallery";
 import SkewedGallery from "@/components/ui/SkewedGallery";
 import { projects } from "@/lib/projects";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
+import { stackHeading } from "@/lib/motion/stack-heading";
+import FoldText, { setFold } from "@/components/ui/FoldText";
+import { PROJECTS_HEADING } from "@/lib/content";
 
 // Four real projects today, and nothing here is written for four: the arc takes
 // its count from this array and wraps by it, and the project pages are built
@@ -43,34 +46,25 @@ const PIN_VH = 0.9;
 // had left entirely, which is a beat too late to read as a handover.
 const LEAD_VH = 0.5;
 
-// Within that pin. The rise and the settle overlap deliberately — it shrinks
-// while it is still coming up, which is one movement, where back-to-back phases
-// would be two.
-const RISE = [0, 0.42] as const;
-const SETTLE = [0.1, 0.55] as const;
-// Then it stands, alone and finished, for a beat. That beat is the gap between
-// SETTLE ending and GALLERY starting, and it is the only reason to pin at all.
-const GALLERY = [0.54, 0.94] as const;
+// Within that pin. The heading folds in as a big stack — one word a line, both
+// lines the same length — riding up with the panel, and settles into its one
+// line straight after.
+const FOLD = [0, 0.42] as const;
+const SETTLE = [0.42, 0.62] as const;
+// Then the work. The gap between SETTLE ending and GALLERY starting is the beat
+// the heading stands alone in, and it is the only reason to pin at all.
+const GALLERY = [0.64, 0.94] as const;
 // And the links stay shut until it is actually up. The gallery's hit targets
 // cover most of the panel, so leaving them live from the top of the section
 // means a reader can click a project that is not on screen yet.
 const GALLERY_LIVE_FROM = 0.9;
 
-// It comes up out of focus, at a little over twice its final size. THE GROWTH
-// IS A SCALE, NOT A FONT SIZE: a font size changes the heading's layout box,
-// which would shove the work below it up and down for the whole of the settle.
-// Scale is composited and moves nothing.
-//
-// HOW FAR BELOW IT STARTS IS NOT A CONSTANT, and that was the last thing wrong
-// here. A fixed fraction of the viewport is only ever right at one screen size:
-// too large and the heading spends the lead-in below the bottom edge, where the
-// scroll we bought for it is spent on movement nobody sees; too small — 0.18,
-// which is what it was — and it simply lights up near its final place instead
-// of travelling to it. The offset is derived per frame from where the slot
-// actually is, so the heading's visual top begins exactly on the bottom edge of
-// the screen whatever the viewport.
-const HEADING_BLUR_PX = 52;
-const HEADING_FROM_SCALE = 2;
+// The stack's line length, as a share of the screen's width, and the most of
+// the screen's height it may take. THE SIZE IS A SCALE, NOT A FONT SIZE: a font
+// size changes the heading's layout box, which would shove the work below it up
+// and down for the whole of the settle. Scale is composited and moves nothing.
+const STACK_WIDTH = 0.5;
+const STACK_MAX_HEIGHT = 0.7;
 
 const GALLERY_RISE_PX = 110;
 
@@ -140,29 +134,21 @@ export default function ProjectsSection() {
     const lead = screen * LEAD_VH;
     const progress = clamp01((lead - box.top) / (travel + lead));
 
-    // Where the heading starts, solved rather than guessed. The slot sits a
-    // fixed distance down the panel; at the moment the progress opens the panel
-    // is not yet pinned and its top is `lead` from the top of the screen. Add
-    // the half-height that scaling past 1 pushes upward, and the offset that
-    // puts the heading's visual top on the bottom edge falls straight out.
-    const slotOffset = slotBox.top - panelTop;
-    const overhang = (slotBox.height * (HEADING_FROM_SCALE - 1)) / 2;
-    const startY = Math.max(0, screen - lead - slotOffset + overhang);
-
-    const rise = span(progress, RISE);
-    const settle = span(progress, SETTLE);
+    // The stack stands in the middle of the PANEL, not of the screen: before
+    // the pin catches the panel is still coming up, and the stack comes up
+    // with it while it folds. Centred on the screen it would sit on the
+    // panel's top edge at the start, where the panel's clip cuts it.
+    heading.style.opacity = "1";
+    stackHeading(
+      heading,
+      slot.offsetWidth / 2,
+      panelTop + screen / 2 - slotBox.top,
+      window.innerWidth * STACK_WIDTH,
+      screen * STACK_MAX_HEIGHT,
+      span(progress, SETTLE),
+    );
+    setFold(heading, span(progress, FOLD));
     const galleryIn = span(progress, GALLERY);
-
-    heading.style.opacity = String(rise);
-    heading.style.transform =
-      `translateY(${lerp(startY, 0, rise).toFixed(1)}px) ` +
-      `scale(${lerp(HEADING_FROM_SCALE, 1, settle).toFixed(3)})`;
-    // The focus comes in ahead of the movement, so it is legible while it is
-    // still arriving rather than sharpening in place at the end. Dropped
-    // entirely once it is spent — a live blur filter on a large text node is
-    // repainted every tick, and there is no reason to pay for blur(0).
-    const blur = lerp(HEADING_BLUR_PX, 0, clamp01(rise * 1.4));
-    heading.style.filter = blur > 0.15 ? `blur(${blur.toFixed(2)}px)` : "";
 
     gallery.style.opacity = String(galleryIn);
     gallery.style.transform = `translateY(${lerp(GALLERY_RISE_PX, 0, galleryIn).toFixed(1)}px)`;
@@ -208,13 +194,19 @@ export default function ProjectsSection() {
               : "sticky top-0 flex h-[100svh] flex-col items-center justify-center gap-10 overflow-clip md:gap-14"
           }
         >
-          <div ref={slotRef} className="w-full">
+          {/* mt: the settled line sat too close to the top of the screen. On
+              the slot, not the heading, so the slot's box stays the heading's. */}
+          <div ref={slotRef} className="mt-12 w-full">
             <h2
               ref={headingRef}
-              className="origin-center text-center font-display text-[clamp(40px,5.2vw,78px)] leading-[1.05] font-extrabold tracking-tight whitespace-nowrap text-black will-change-transform"
+              className="relative flex justify-center gap-[0.25em] font-display text-[clamp(40px,5.2vw,78px)] leading-[1.05] font-extrabold tracking-tight whitespace-nowrap text-black"
               style={{ opacity: 0 }}
             >
-              פרויקטים נבחרים
+              {PROJECTS_HEADING.map((word) => (
+                <span key={word} className="block origin-center">
+                  <FoldText text={word} />
+                </span>
+              ))}
             </h2>
           </div>
 

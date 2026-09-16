@@ -7,6 +7,7 @@ import { SERVICES_HEADING, SERVICES_LEAD, services } from "@/lib/content";
 // The words and the artwork, shared with the phone's own arrangement of the
 // same four stages. Only the layout below is the desktop's own.
 import { PROCESS_HEADING, STAGE_LINES, STAGE_TITLES } from "./process/stages";
+import FoldText, { setFold } from "@/components/ui/FoldText";
 // The row itself is shared with the phone, which prints the same four at a
 // smaller size — see there.
 import ServiceRow from "./services/ServiceRow";
@@ -87,7 +88,8 @@ const ABOUT_FADE_OUT_END_SECONDS = 6.1 - 0.5;
 // then the stations one by one, each arrow drawing itself towards the next.
 // Not before the paper is essentially flat: at 2.95 it came up over a sheet
 // that was visibly still opening.
-const HEADING_IN = [3.3, 3.8] as const;
+// It folds in a letter at a time (FoldText), at its full size.
+const HEADING_IN = [3.3, 4.0] as const;
 // A real pause standing big before it settles — at 0.2s it read as shrinking
 // the moment it had arrived — and a slower settle.
 const HEADING_SETTLE = [4.4, 5.2] as const;
@@ -392,7 +394,7 @@ function ProcessDiagram({ sheetRef }: { sheetRef: RefObject<HTMLDivElement | nul
               className="block whitespace-nowrap"
               style={{ opacity: 0 }}
             >
-              {line}
+              <FoldText text={line} />
             </span>
           ))}
         </h3>
@@ -804,7 +806,8 @@ export default function ServicesSection() {
     const drawing = sheet.querySelector<HTMLElement>("[data-process-drawing]");
     if (!heading || !drawing) return;
 
-    const headingIn = smoothstep(mapRange(seconds, HEADING_IN[0], HEADING_IN[1], 0, 1));
+    // Linear: the fold carries its own ease, letter by letter.
+    setFold(heading, mapRange(seconds, HEADING_IN[0], HEADING_IN[1], 0, 1));
     const settle = smoothstep(mapRange(seconds, HEADING_SETTLE[0], HEADING_SETTLE[1], 0, 1));
 
     // The two halves of the heading, each from its place in the big two-line
@@ -816,18 +819,13 @@ export default function ServicesSection() {
       const line = lines[i] as HTMLElement;
       const settledX = heading.offsetLeft + line.offsetLeft + line.offsetWidth / 2;
       const settledY = heading.offsetTop + line.offsetTop + line.offsetHeight / 2;
-      // It GROWS out of the middle of the screen rather than fading in: the
-      // pair is scaled about that point as one, so each line's size and its
-      // distance from the centre grow together from nothing.
-      const grow = HEADING_BIG_SCALE * headingIn;
+      // Already at full size where it stands: the entrance is the fold alone.
       // 56%: the middle of the screen, since the sheet is raised 6%.
-      const bigY = sheetH * 0.56 + (i - (lines.length - 1) / 2) * line.offsetHeight * grow;
+      const bigY = sheetH * 0.56 + (i - (lines.length - 1) / 2) * line.offsetHeight * HEADING_BIG_SCALE;
       const x = lerp(sheetW / 2 - settledX, 0, settle);
       const y = lerp(bigY - settledY, 0, settle);
-      // Visible from the first frames of the growth, so it reads as growing
-      // and not as fading; hidden at exactly zero so nothing sits there before.
-      line.style.opacity = String(clamp01(headingIn * 6));
-      line.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${lerp(grow, 1, settle).toFixed(4)})`;
+      line.style.opacity = "1";
+      line.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${lerp(HEADING_BIG_SCALE, 1, settle).toFixed(4)})`;
     }
 
     // The drawing fades in while the heading makes room for it — to half, so

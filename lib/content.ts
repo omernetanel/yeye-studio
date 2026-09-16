@@ -19,6 +19,10 @@
 export const SERVICES_HEADING = ["אני בונה פתרונות דיגיטליים", "לעסקים שרוצים תוצאות."];
 export const SERVICES_LEAD = "ובתכל’ס, זה מה שאני עושה:";
 
+// Kept as words rather than a sentence: standing big, the heading is one word a
+// line. Desktop and phone both.
+export const PROJECTS_HEADING = ["פרויקטים", "נבחרים"];
+
 export const services = [
   {
     title: "חנויות אונליין",

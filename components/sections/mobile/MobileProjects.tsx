@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { projects } from "@/lib/projects";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
+import { stackHeading } from "@/lib/motion/stack-heading";
+import { PROJECTS_HEADING } from "@/lib/content";
+import FoldText, { setFold } from "@/components/ui/FoldText";
 
 /**
  * The work, on a phone.
@@ -42,6 +45,15 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 const CARD_IN_VH = 0.82;
 const CARD_RISE_PX = 28;
 
+// Where the heading's top is on the screen, as a share of its height: it folds
+// in from near the bottom edge to past the lower third, and settles by 35%.
+const HEADING_FOLD = [0.95, 0.6] as const;
+const HEADING_SETTLE = [0.55, 0.35] as const;
+// The big stack's line length against the screen's width, and the most of the
+// screen's height it may take.
+const STACK_WIDTH = 0.8;
+const STACK_MAX_HEIGHT = 0.4;
+
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
 }
@@ -49,10 +61,6 @@ function clamp01(value: number) {
 function smoothstep(t: number) {
   const c = clamp01(t);
   return c * c * (3 - 2 * c);
-}
-
-function lerp(from: number, to: number, t: number) {
-  return from + (to - from) * t;
 }
 
 export default function MobileProjects() {
@@ -81,16 +89,31 @@ export default function MobileProjects() {
   const update = () => {
     const screen = window.innerHeight;
 
+    // The heading folds in as a big stack — one word a line, both the same
+    // length — and settles into its line, both off where its top is on the
+    // screen. Only its words move, so its own box is an honest reading.
     const heading = headingRef.current;
+    let settled = true;
     if (heading) {
-      const top = heading.getBoundingClientRect().top;
-      const t = smoothstep(clamp01((screen - top) / (screen * 0.5)));
-      heading.style.opacity = String(t);
-      heading.style.transform = `translateY(${lerp(34, 0, t).toFixed(1)}px)`;
+      const at = heading.getBoundingClientRect().top / screen;
+      const settle = smoothstep((HEADING_SETTLE[0] - at) / (HEADING_SETTLE[0] - HEADING_SETTLE[1]));
+      settled = settle >= 1;
+      heading.style.opacity = "1";
+      stackHeading(
+        heading,
+        heading.offsetWidth / 2,
+        heading.offsetHeight / 2,
+        window.innerWidth * STACK_WIDTH,
+        screen * STACK_MAX_HEIGHT,
+        settle,
+      );
+      setFold(heading, (HEADING_FOLD[0] - at) / (HEADING_FOLD[0] - HEADING_FOLD[1]));
     }
 
     cardsRef.current.forEach((card, index) => {
-      if (!card || seenRef.current[index]) return;
+      // Held until the heading has settled: standing big, it reaches down over
+      // where the first card sits.
+      if (!card || seenRef.current[index] || !settled) return;
       if (card.getBoundingClientRect().top < screen * CARD_IN_VH) {
         seenRef.current[index] = true;
         card.style.opacity = "1";
@@ -127,13 +150,20 @@ export default function MobileProjects() {
     // old pair left. That pairing was matched to a close that opened with a
     // 250px block of balloons; the clip is the ground of that section now, so
     // the number it was matched to is gone.
-    <section id="projects" className="relative bg-white pt-24 pb-4">
+    // pt-32, up from 24: the settled line sat too close to the section above.
+    <section id="projects" className="relative bg-white pt-32 pb-4">
       <h2
         ref={headingRef}
-        className="mb-10 px-6 text-center font-display text-m-display font-extrabold tracking-tight text-black will-change-transform"
+        // flex-wrap: at this size the two words do not fit one line on a
+        // phone, and settled they wrap as the plain heading always did.
+        className="relative mb-10 flex flex-wrap justify-center gap-x-[0.25em] px-6 font-display text-m-display font-extrabold tracking-tight whitespace-nowrap text-black"
         style={{ opacity: 0 }}
       >
-        פרויקטים נבחרים
+        {PROJECTS_HEADING.map((word) => (
+          <span key={word} className="block origin-center">
+            <FoldText text={word} />
+          </span>
+        ))}
       </h2>
 
       {/* A NATIVE horizontal scroller, not a drag-driven one. The browser owns
