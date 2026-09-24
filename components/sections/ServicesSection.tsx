@@ -6,7 +6,7 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { SERVICES_HEADING, SERVICES_LEAD, services } from "@/lib/content";
 // The words and the artwork, shared with the phone's own arrangement of the
 // same four stages. Only the layout below is the desktop's own.
-import { PROCESS_HEADING, STAGE_LINES, STAGE_TITLES } from "./process/stages";
+import { ICONS, ICON_MOTION, IconExtras, PROCESS_HEADING, STAGE_LINES, STAGE_TITLES } from "./process/stages";
 import FoldText, { setFold } from "@/components/ui/FoldText";
 // The row itself is shared with the phone, which prints the same four at a
 // smaller size — see there.
@@ -448,7 +448,7 @@ function ProcessStages() {
     // The band between the settled heading and the foot of the sheet. Every
     // stage is absolutely placed inside it, so they share one slot and a swap
     // moves nothing around them.
-    <div className="absolute inset-x-0 top-[26%] bottom-[14%]">
+    <div className="absolute inset-x-0 top-[20%] bottom-[18%]">
       {STAGE_TITLES.map((title, index) => (
         <div
           key={title}
@@ -456,8 +456,27 @@ function ProcessStages() {
           className="absolute inset-0 flex flex-col items-center justify-center text-center"
           style={{ opacity: 0 }}
         >
-          {/* The numeral is the picture: faint, enormous, and BEHIND the name
-              rather than beside it, so the two read as one mark. */}
+          {/* The drawing of the stage, over its numeral: the same artwork the
+              phone prints, at the size the sheet can afford. It is drawn around
+              its own origin, so the viewBox is simply a box around zero. */}
+          <svg
+            viewBox="-64 -64 128 128"
+            aria-hidden="true"
+            className={`mb-2 h-[112px] w-[112px] text-black/45 ${ICON_MOTION[String(index + 1).padStart(2, "0")]}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            {ICONS[String(index + 1).padStart(2, "0")].map((part) => (
+              <path key={part.d} d={part.d} className={part.cls} />
+            ))}
+            <IconExtras number={String(index + 1).padStart(2, "0")} />
+          </svg>
+
+          {/* The numeral is the ground the name sits on: faint, enormous, and
+              BEHIND it rather than beside it, so the two read as one mark. */}
           <span
             aria-hidden="true"
             className="font-display text-[clamp(120px,15vw,230px)] leading-[0.8] font-extrabold text-black/10"
@@ -470,15 +489,16 @@ function ProcessStages() {
           <h4 className="-mt-[0.34em] font-display text-[clamp(38px,4.6vw,68px)] leading-[1.05] font-bold text-black [text-shadow:0_0_24px_#fff,0_0_10px_#fff]">
             {title}
           </h4>
-          <p className="mt-6 max-w-[760px] font-body text-[clamp(17px,1.5vw,25px)] leading-[1.7] text-black/70 [text-shadow:0_0_20px_#fff,0_0_8px_#fff]">
+          <p className="mt-7 max-w-[620px] font-body text-[clamp(17px,1.5vw,24px)] leading-[1.75] text-balance text-black/70 [text-shadow:0_0_20px_#fff,0_0_8px_#fff]">
             {STAGE_LINES[index].join(" ")}
           </p>
         </div>
       ))}
 
-      {/* Four of four, at the foot — the same indicator the work's gallery
-          carries, so "where am I in this" is one idea across the page. */}
-      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 flex justify-center gap-2">
+      {/* Four of four, at the FOOT OF THE SHEET rather than under the stage —
+          against the words it read as part of them. Same indicator the work's
+          gallery carries, so "where am I in this" is one idea across the page. */}
+      <div aria-hidden="true" className="absolute inset-x-0 -bottom-[14%] flex justify-center gap-2">
         {STAGE_TITLES.map((title) => (
           <span
             key={title}
