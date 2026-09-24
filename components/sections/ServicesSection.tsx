@@ -98,24 +98,13 @@ const HEADING_SETTLE = [5.4, 6.2] as const;
 // settled 52).
 const HEADING_BIG_SCALE = 4.5;
 const DRAWING_OPACITY = 0.5;
-const STATIONS_START = 6.3;
-const STATION_STEP = 0.6;
-const STATION_IN = 0.35;
-// Each arrow draws in the gap after its station, towards the next one. The
-// fourth closes the circle back to the first.
-const ARROW_DELAY = 0.4;
-const ARROW_DRAW = 0.2;
-const STATION_RISE_PX = 18;
-// THE BREAK-OUT. A long, slow draw — it is the one line on the sheet that is
-// going somewhere — and then the fourth stage lands at the end of it, bigger
-// than the three, while the ring dims and stands back behind it.
-const BREAKOUT_IN = [8.1, 8.9] as const;
-const LAUNCH_IN = [8.85, 9.4] as const;
-const RING_BACK = [8.6, 9.2] as const;
-const RING_DIM_TO = 0.38;
-const RING_BACK_SCALE = 0.965;
-const LAUNCH_SCALE = 1.14;
-const LAUNCH_RISE_PX = 46;
+// A stage holds the sheet for STAGE_SPAN, and STAGE_SWAP of that is the
+// handover at its start. 0.95s is about eighty per cent of a screen of scroll
+// each — long enough to read a name and a line without the page feeling stuck.
+const STAGES_START = 6.4;
+const STAGE_SPAN = 0.95;
+const STAGE_SWAP = 0.3;
+const STAGE_RISE_PX = 34;
 const CONTENT_SHRINK_SCALE = 0.6;
 const VIDEO_REST_SCALE = 1.10;
 const VIDEO_REST_SHIFT_X_PX = 45;
@@ -217,18 +206,18 @@ const HEADING_ZONE_PADDING_BOTTOM_PX = 8;
 //
 // Since lengthened to carry the process one stage at a time: the moving
 // stretches keep exactly the scroll they had (1617vh at a 900px screen), and
-// the hold grew to 5.2 clip-seconds' worth of that same rate — 455vh — with the
-// section height grown by the same amount. The share is 455 / 2073.
+// the hold grew to 5.6 clip-seconds' worth of that same rate — 491vh — with the
+// section height grown by the same amount. The share is 491 / 2108.
 const TIME_HOLDS: { at: number; share: number }[] = [
-  { at: 3.7, share: 0.2197 }, // the process, paper flat
+  { at: 3.7, share: 0.2327 }, // the process, paper flat
 ];
 const TOTAL_HOLD_SHARE = TIME_HOLDS.reduce((sum, h) => sum + h.share, 0);
 
 // The sheet clock: clip seconds as if the clip never froze. Every hold is paid
 // for at the moving rate, so this is simply progress over that rate — it runs
 // on through a freeze while the clip time stands still. Past the hold it is
-// ahead of the clip by the hold's length — 5.2s, so the block's exit at 4.7s
-// clip time is 9.9s here, and the fourth stage has landed (9.4s) before that.
+// ahead of the clip by the hold's length — 5.6s, so the block's exit at 4.7s
+// clip time is 10.3s here, and the fourth stage is up (9.55s) before that.
 function sheetSeconds(progress: number) {
   return (progress * CLIP_SECONDS) / (1 - TOTAL_HOLD_SHARE);
 }
@@ -252,14 +241,6 @@ function progressToTime(progress: number, duration: number) {
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
-}
-
-/** The head goes on only once the line has actually reached it. */
-function setArrowHead(path: SVGPathElement, drawn: number) {
-  const head = drawn >= 0.98;
-  if (head === path.hasAttribute("marker-end")) return;
-  if (head) path.setAttribute("marker-end", "url(#process-arrowhead)");
-  else path.removeAttribute("marker-end");
 }
 
 // Where object-contain actually puts the picture inside a box of elW x elH.
@@ -382,16 +363,10 @@ function ProcessDiagram({ sheetRef }: { sheetRef: RefObject<HTMLDivElement | nul
       {/* Held a little inside the sheet's width. At full bleed the drawing runs
           to the edges of the page it is printed on, which reads as a background
           rather than as something drawn there. */}
-      {/* Raised by 6% of its own height: the ring's centre is at 57% of the
-          drawing, so a sheet centred on the screen left the circle and the
-          heading in it sitting low. A transform, so no offset read in
-          update() changes. */}
       <div ref={sheetRef} className="relative mx-auto w-[79%] -translate-y-[6%]">
-        {/* Laid out in its SETTLED form — one line, in the heart of the circle
-            the four stages run around — and each half moved from there by
-            update(). 57% is the ring's own centre, y 616 of the drawing's 1080.
-            It was a line at the top of the screen, which sat too close to the
-            edge and left the middle of the sheet to a second YEYE.
+        {/* Laid out in its SETTLED form — one line, near the top of the sheet,
+            with the stage below holding the middle — and each half moved from
+            there by update().
 
             Two lines standing big and one line settled are different line
             breaks, which a transform on one block cannot turn into each other;
@@ -401,7 +376,7 @@ function ProcessDiagram({ sheetRef }: { sheetRef: RefObject<HTMLDivElement | nul
         <h3
           data-process-heading
           aria-label={PROCESS_HEADING.join(" ")}
-          className="absolute inset-x-0 top-[57%] z-10 flex h-0 items-center justify-center gap-[0.28em] font-display text-[52px] leading-[1.05] font-bold text-black"
+          className="absolute inset-x-0 top-[10%] z-10 flex h-0 items-center justify-center gap-[0.28em] font-display text-[52px] leading-[1.05] font-bold text-black"
         >
           {PROCESS_HEADING.map((line) => (
             <span
@@ -451,208 +426,68 @@ function ProcessDiagram({ sheetRef }: { sheetRef: RefObject<HTMLDivElement | nul
           draggable={false}
         />
 
-        <ProcessStations />
+        <ProcessStages />
       </div>
     </div>
   );
 }
 
-// The four stations, in the plate's own pixel space, each a self-contained
-// block centred on its point: the numeral, the heading under it, the copy under
-// that. The plate carries no icons any more, so a station is type and nothing
-// else — and type stacked on its own centre is the one arrangement that does
-// not look like it is missing the picture that used to sit beside it.
+// THE STAGES, ONE AT A TIME, and there is no diagram any more.
 //
-// `titleY` is the baseline of the heading; everything else is measured off it.
-// The words are NOT here — the title and the two lines under it come from
-// STAGE_TITLES and STAGE_LINES, in the order these are written, because the
-// phone prints the same stages and a second copy of them had already drifted.
-// The lines there are split by hand for this drawing, because SVG text does not
-// wrap. That is the price of placing every glyph exactly where it belongs.
-// THREE OF THEM ARE A RING, AND THE FOURTH IS NOT, and that is the whole
-// drawing. A closed circle says the work comes back round to "understanding the
-// business" once the site is live, and it does not: it is launched, and from
-// then on it is improved. So understanding, design and build sit on a ring you
-// genuinely go round while the work is on, and going live BREAKS OUT of it —
-// its own arrow leaves the ring, and it stands outside it, larger than the
-// three, while they dim behind it.
-const RING = { cx: 960, cy: 600, rx: 560, ry: 235 };
-const STATIONS = [
-  { number: "01", cx: 960, titleY: 365 },
-  { number: "02", cx: 1520, titleY: 600 },
-  { number: "03", cx: 960, titleY: 835 },
-] as const;
-
-// Outside the ring, up and to the left, and set larger — see LAUNCH_SCALE.
-const LAUNCH = { number: "04", cx: 330, titleY: 470 } as const;
-
-// The two arrows inside the ring, as arcs of the ellipse the three stations sit
-// on. Each runs from 32 degrees past one station to 32 short of the next.
-// Clockwise, which is why both sweep flags are 1.
-const ARROWS = [
-  "M 1256.7 400.7 A 560 235 0 0 1 1434.9 475.5",
-  "M 1434.9 724.5 A 560 235 0 0 1 1256.7 799.3",
-];
-
-// AND THE ONE THAT LEAVES. It starts beside the third station, swings out past
-// the ring's own edge and climbs to the fourth — a line that escapes rather
-// than one more arc of the same circle. Drawn heavier than the two above, for
-// the same reason.
-const BREAKOUT = "M 700 852 C 420 836, 286 706, 330 552";
-
-function ProcessStations() {
+// It was four blocks of type scattered around a ring with thin arrows between
+// them: a template, and it read like one — nothing for the eye to rest on, and
+// a closed circle that said the work goes back to "understanding the business"
+// once a site is live, which it does not.
+//
+// So the sheet holds ONE stage at a time: a numeral the size of the page, the
+// stage's name over it, a line under that, and a rail at the foot counting
+// four. Scrolling swaps them. The pencil drawing stays exactly where it was,
+// as texture on the paper rather than something to read.
+function ProcessStages() {
   return (
-    <svg
-      viewBox="0 0 1920 1080"
-      className="absolute inset-0 h-full w-full"
-      role="img"
-      aria-label={`ארבעת שלבי העבודה: ${STAGE_TITLES.join(", ")}`}
-    >
-      <defs>
-        {/* orient="auto" turns the head to follow the path, so one marker
-            serves all four arrows whichever way they curve. */}
-        <marker
-          id="process-arrowhead"
-          viewBox="0 0 10 10"
-          refX="9"
-          refY="5"
-          markerWidth="6"
-          markerHeight="6"
-          orient="auto"
+    // The band between the settled heading and the foot of the sheet. Every
+    // stage is absolutely placed inside it, so they share one slot and a swap
+    // moves nothing around them.
+    <div className="absolute inset-x-0 top-[26%] bottom-[14%]">
+      {STAGE_TITLES.map((title, index) => (
+        <div
+          key={title}
+          data-process-stage
+          className="absolute inset-0 flex flex-col items-center justify-center text-center"
+          style={{ opacity: 0 }}
         >
-          <path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="currentColor" strokeWidth="1.6" />
-        </marker>
-
-        {/* THE HALO, as a filter rather than a stroke.
-            A thick white stroke under the fill reads as exactly that — a hard
-            outline traced around every letter, with its own edge. This takes
-            the type's alpha, spreads it a little, blurs it, and floods the
-            result white: a soft field that fades out with no edge of its own,
-            which is what lifts the words off a pencil drawing without
-            announcing itself.
-            dilate before blur is what gives it body. Blur alone puts the glow's
-            half-strength right at the glyph's own edge, so the letters end up
-            sitting in a grey fringe instead of a clean white one. */}
-        <filter id="process-halo" x="-25%" y="-25%" width="150%" height="150%">
-          <feMorphology in="SourceAlpha" operator="dilate" radius="3.5" result="spread" />
-          <feGaussianBlur in="spread" stdDeviation="7" result="soft" />
-          {/* NO feFlood. A flood fills the filter's whole region and then
-              relies on a composite to cut it back to the blur — and when that
-              clip does not take, what is left is a pale rectangle across the
-              entire drawing, which is exactly what happened. This recolours the
-              blurred alpha in place instead: the channel transfer forces RGB to
-              white while leaving alpha alone, so the halo can only ever exist
-              where the type does. The A ramp is what makes it translucent. */}
-          <feComponentTransfer in="soft" result="halo">
-            <feFuncR type="linear" slope="0" intercept="1" />
-            <feFuncG type="linear" slope="0" intercept="1" />
-            <feFuncB type="linear" slope="0" intercept="1" />
-            {/* slope above 1 on purpose: alpha clamps at 1, so the inner part
-                of the blur saturates to solid white and only the outer edge
-                keeps its falloff. That is what a halo needs against a drawing —
-                opaque where it is clearing the line work, soft where it meets
-                the paper. At 0.9 the whole thing was translucent and the pencil
-                read straight through the type. */}
-            <feFuncA type="linear" slope="2.1" intercept="0" />
-          </feComponentTransfer>
-          <feMerge>
-            <feMergeNode in="halo" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-
-      {/* THE RING — the two arrows and the three stations on it, in one group,
-          because they dim and stand back together once the fourth breaks out. */}
-      <g data-process-ring style={{ transformOrigin: `${RING.cx}px ${RING.cy}px` }}>
-        <g className="text-black/45" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-          {/* pathLength 1 so the draw is a dash offset from 1 to 0 whatever the
-              arc's real length. The head is attached by update() only once the
-              line has reached it — a marker sits at the path's end regardless of
-              the dash, and would arrive before the line did. */}
-          {ARROWS.map((d) => (
-            <path key={d} d={d} data-process-arrow pathLength={1} strokeDasharray="1" strokeDashoffset="1" />
-          ))}
-        </g>
-
-        {/* Each station stacks on its own centre: numeral, heading, copy.
-            direction rtl and a middle anchor because the copy is Hebrew and every
-            station is centred on itself, not set in a column. */}
-        {/* The halo is on the whole block rather than on each piece: applied per
-            element, every glyph would glow onto its neighbour and the words would
-            sit in a bank of white. One filter over the group means the halo is
-            computed from the block's silhouette. */}
-        <g direction="rtl" textAnchor="middle" filter="url(#process-halo)">
-          {STATIONS.map((station, index) => (
-            <g key={station.number} data-process-station style={{ opacity: 0 }}>
-              <StationBlock station={station} index={index} />
-            </g>
-          ))}
-        </g>
-      </g>
-
-      {/* THE LINE THAT LEAVES. Heavier and darker than the ring's own arrows,
-          because this is the one movement in the drawing that goes somewhere
-          rather than round. */}
-      <path
-        d={BREAKOUT}
-        data-process-breakout
-        className="text-black/70"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="4.5"
-        strokeLinecap="round"
-        pathLength={1}
-        strokeDasharray="1"
-        strokeDashoffset="1"
-      />
-
-      <g
-        data-process-launch
-        direction="rtl"
-        textAnchor="middle"
-        filter="url(#process-halo)"
-        style={{ opacity: 0, transformOrigin: `${LAUNCH.cx}px ${LAUNCH.titleY}px` }}
-      >
-        <StationBlock station={LAUNCH} index={3} />
-      </g>
-    </svg>
-  );
-}
-
-// One station: numeral, heading, copy, stacked on its own centre. No icons any
-// more — arriving one at a time, the numeral is enough to lead the eye, and
-// four animated drawings over a pencil plate were most of what read as clutter.
-// Positions are attributes on these children, so the CSS transform written to
-// the group above never discards them.
-function StationBlock({
-  station,
-  index,
-}: {
-  station: { number: string; cx: number; titleY: number };
-  index: number;
-}) {
-  return (
-    <>
-      <text x={station.cx} y={station.titleY - 92} className="fill-black/25 font-display text-[76px] font-bold">
-        {station.number}
-      </text>
-      <text x={station.cx} y={station.titleY} className="fill-black font-display text-[44px] font-bold">
-        {STAGE_TITLES[index]}
-      </text>
-      {STAGE_LINES[index].map((line, lineIndex) => (
-        <text
-          key={line}
-          x={station.cx}
-          y={station.titleY + 63 + lineIndex * 36}
-          // Darker and a size up: at /55 and 24 the copy sank into the pencil
-          // work around it.
-          className="fill-black/75 font-body text-[26px]"
-        >
-          {line}
-        </text>
+          {/* The numeral is the picture: faint, enormous, and BEHIND the name
+              rather than beside it, so the two read as one mark. */}
+          <span
+            aria-hidden="true"
+            className="font-display text-[clamp(120px,15vw,230px)] leading-[0.8] font-extrabold text-black/10"
+          >
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          {/* Pulled up into the numeral's own space. The white glow is what
+              lifts the type off the pencil work behind it — the same job the
+              SVG halo did for the diagram this replaces. */}
+          <h4 className="-mt-[0.34em] font-display text-[clamp(38px,4.6vw,68px)] leading-[1.05] font-bold text-black [text-shadow:0_0_24px_#fff,0_0_10px_#fff]">
+            {title}
+          </h4>
+          <p className="mt-6 max-w-[760px] font-body text-[clamp(17px,1.5vw,25px)] leading-[1.7] text-black/70 [text-shadow:0_0_20px_#fff,0_0_8px_#fff]">
+            {STAGE_LINES[index].join(" ")}
+          </p>
+        </div>
       ))}
-    </>
+
+      {/* Four of four, at the foot — the same indicator the work's gallery
+          carries, so "where am I in this" is one idea across the page. */}
+      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 flex justify-center gap-2">
+        {STAGE_TITLES.map((title) => (
+          <span
+            key={title}
+            data-process-dot
+            className="h-1 w-7 rounded-full bg-black/15 transition-[background-color,width] duration-300"
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -903,45 +738,28 @@ export default function ServicesSection() {
     // the pencil stays a texture on the paper and the stages read over it.
     drawing.style.opacity = String(settle * DRAWING_OPACITY);
 
-    const stations = sheet.querySelectorAll<SVGGElement>("[data-process-station]");
-    const arrows = sheet.querySelectorAll<SVGPathElement>("[data-process-arrow]");
-    stations.forEach((station, i) => {
-      const start = STATIONS_START + i * STATION_STEP;
-      const t = smoothstep(mapRange(seconds, start, start + STATION_IN, 0, 1));
-      station.style.opacity = String(t);
-      station.style.transform = `translateY(${lerp(STATION_RISE_PX, 0, t).toFixed(2)}px)`;
-
-      const arrow = arrows[i];
-      if (!arrow) return;
-      const drawn = clamp01(mapRange(seconds, start + ARROW_DELAY, start + ARROW_DELAY + ARROW_DRAW, 0, 1));
-      arrow.style.strokeDashoffset = String(1 - drawn);
-      setArrowHead(arrow, drawn);
+    // ONE STAGE AT A TIME, in one slot. The one leaving rises and goes before
+    // the one arriving comes up under it — they never cross, which is the whole
+    // reason the swap is readable at this size. The last one does not leave at
+    // all: the block itself shrinks into the paper on its own cue.
+    const stages = sheet.querySelectorAll<HTMLElement>("[data-process-stage]");
+    const last = stages.length - 1;
+    let current = -1;
+    stages.forEach((stage, i) => {
+      const start = STAGES_START + i * STAGE_SPAN;
+      const arrive = smoothstep(mapRange(seconds, start, start + STAGE_SWAP, 0, 1));
+      const leave = i === last ? 0 : smoothstep(mapRange(seconds, start + STAGE_SPAN - STAGE_SWAP, start + STAGE_SPAN, 0, 1));
+      const shown = arrive * (1 - leave);
+      stage.style.opacity = String(shown);
+      stage.style.transform = `translateY(${(lerp(STAGE_RISE_PX, 0, arrive) + lerp(0, -STAGE_RISE_PX, leave)).toFixed(2)}px)`;
+      if (shown > 0.5) current = i;
     });
 
-    // AND THEN IT LEAVES THE RING. The line draws out of the third station, the
-    // ring dims and stands back a little, and the fourth stage lands at the end
-    // of the line, larger than the three it came from.
-    const breakout = sheet.querySelector<SVGPathElement>("[data-process-breakout]");
-    if (breakout) {
-      const drawn = clamp01(mapRange(seconds, BREAKOUT_IN[0], BREAKOUT_IN[1], 0, 1));
-      breakout.style.strokeDashoffset = String(1 - drawn);
-      setArrowHead(breakout, drawn);
-    }
-
-    const ring = sheet.querySelector<SVGGElement>("[data-process-ring]");
-    if (ring) {
-      const back = smoothstep(mapRange(seconds, RING_BACK[0], RING_BACK[1], 0, 1));
-      ring.style.opacity = String(lerp(1, RING_DIM_TO, back));
-      ring.style.transform = `scale(${lerp(1, RING_BACK_SCALE, back).toFixed(4)})`;
-    }
-
-    const launch = sheet.querySelector<SVGGElement>("[data-process-launch]");
-    if (launch) {
-      const t = smoothstep(mapRange(seconds, LAUNCH_IN[0], LAUNCH_IN[1], 0, 1));
-      launch.style.opacity = String(t);
-      launch.style.transform =
-        `translateY(${lerp(LAUNCH_RISE_PX, 0, t).toFixed(2)}px) scale(${lerp(0.88, LAUNCH_SCALE, t).toFixed(4)})`;
-    }
+    sheet.querySelectorAll<HTMLElement>("[data-process-dot]").forEach((dot, i) => {
+      const on = i === current;
+      dot.style.width = on ? "44px" : "28px";
+      dot.style.backgroundColor = on ? "rgb(0 0 0)" : "rgb(0 0 0 / 0.15)";
+    });
   };
 
   const measurePinRange = () => {
@@ -1067,8 +885,8 @@ export default function ServicesSection() {
     // scroll they had and run the whole thing at 2.27x speed.
     // 1663vh+547px of clip scrub, plus STATEMENT_TAIL_VH + STATEMENT_PARK_VH
     // for the statement's own tail after the clip has finished.
-    // Then 349vh more for the longer hold on the open sheet — see TIME_HOLDS.
-    <section ref={wrapperRef} id="services" className="relative h-[calc(2097vh+547px)] bg-white">
+    // Then 384vh more for the longer hold on the open sheet — see TIME_HOLDS.
+    <section ref={wrapperRef} id="services" className="relative h-[calc(2132vh+547px)] bg-white">
       {/* SPACER_PX of perfectly ordinary scrolling before the panel below
           goes sticky — see its own comment up top. */}
       <div ref={spacerRef} aria-hidden="true" style={{ height: `${SPACER_PX}px` }} />
