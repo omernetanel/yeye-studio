@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { useLenis } from "@/lib/motion/lenis";
 import { useDocked } from "@/lib/motion/heroDock";
 import { useIsMobile } from "@/lib/use-mobile";
+import StaggeredMenu from "@/components/ui/StaggeredMenu";
 
 /**
  * THE HARD PART OF THIS MENU IS NOT THE MENU — it is where each link lands.
@@ -132,7 +133,12 @@ export default function NavMenu() {
       if (event.key === "Escape") setOpen(false);
     };
     const onDown = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      // The panel is a sibling of the button rather than a child of it, so
+      // "outside" has to mean outside both of them.
+      if (rootRef.current?.contains(target)) return;
+      if (document.getElementById("staggered-menu-panel")?.contains(target)) return;
+      setOpen(false);
     };
     window.addEventListener("keydown", onKey);
     window.addEventListener("pointerdown", onDown);
@@ -141,6 +147,24 @@ export default function NavMenu() {
       window.removeEventListener("pointerdown", onDown);
     };
   }, [open]);
+
+  // WITH A MOUSE THE MENU OPENS ON HOVER, on the button or on the panel; a tap
+  // has no hover, so on a phone it is the click below that opens it. The close
+  // waits a moment, because the pointer leaves the button before it reaches the
+  // panel and the gap between them is not "outside".
+  const hoverOpen = (event: React.PointerEvent) => {
+    if (event.pointerType !== "mouse") return;
+    hoveringRef.current = true;
+    if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = null;
+    setOpen(true);
+  };
+
+  const hoverClose = (event: React.PointerEvent) => {
+    if (event.pointerType !== "mouse") return;
+    hoveringRef.current = false;
+    closeTimerRef.current = window.setTimeout(() => setOpen(false), HOVER_CLOSE_MS);
+  };
 
   const go = (target: Target, immediate = false) => {
     setOpen(false);
@@ -216,18 +240,8 @@ export default function NavMenu() {
         // Opens on hover with a mouse, and still on a click or a tap. The close
         // waits a moment, so crossing the gap between the button and the panel
         // does not shut it on the way.
-        onPointerEnter={(event) => {
-          if (event.pointerType !== "mouse") return;
-          hoveringRef.current = true;
-          if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
-          closeTimerRef.current = null;
-          setOpen(true);
-        }}
-        onPointerLeave={(event) => {
-          if (event.pointerType !== "mouse") return;
-          hoveringRef.current = false;
-          closeTimerRef.current = window.setTimeout(() => setOpen(false), HOVER_CLOSE_MS);
-        }}
+        onPointerEnter={hoverOpen}
+        onPointerLeave={hoverClose}
       >
       <button
         type="button"
@@ -248,38 +262,28 @@ export default function NavMenu() {
         </span>
       </button>
 
-      {open && (
-        // Always white on black text, on every section. The chrome inverts
-        // because it sits directly on the page; a panel is its own surface and
-        // inverting it too would make it flicker section to section.
-        // Hangs off whichever edge the menu is currently standing on, so it
-        // never opens off the side of the screen.
-        <div
-          className={`absolute top-[calc(100%+12px)] min-w-[176px] rounded-2xl bg-white py-2 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.45)] ${atRight ? "right-0" : "left-0"}`}
-        >
-          {TARGETS.map((target) => (
-            <button
-              key={target.id}
-              type="button"
-              onClick={() => go(target)}
-              className="block w-full px-5 py-2 text-right font-body text-[15px] text-black/70 transition-colors hover:text-black"
-            >
-              {target.label}
-            </button>
-          ))}
-
-          <div className="mt-2 px-3 pb-1">
-            <button
-              type="button"
-              onClick={() => go(CTA)}
-              className="block w-full rounded-full bg-black px-5 py-2.5 text-center font-body text-[15px] font-medium text-white"
-            >
-              {CTA.label}
-            </button>
-          </div>
-        </div>
-      )}
       </motion.div>
+
+      {/* The panel itself — React Bits' StaggeredMenu, driven by this button.
+          It hangs off whichever edge the button is standing on, so it always
+          opens from under the hand that pressed it. */}
+      <StaggeredMenu
+        open={open}
+        position={atRight ? "right" : "left"}
+        items={TARGETS.map((target) => ({ label: target.label, onSelect: () => go(target) }))}
+        onPointerEnter={hoverOpen}
+        onPointerLeave={hoverClose}
+        footer={
+          <button
+            type="button"
+            tabIndex={open ? 0 : -1}
+            onClick={() => go(CTA)}
+            className="rounded-full bg-black px-7 py-3 font-display text-[16px] font-medium text-white transition-transform duration-200 hover:scale-[1.04]"
+          >
+            {CTA.label}
+          </button>
+        }
+      />
     </div>
   );
 }
