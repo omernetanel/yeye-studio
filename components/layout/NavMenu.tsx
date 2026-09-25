@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import { useLenis } from "@/lib/motion/lenis";
 import { useDocked } from "@/lib/motion/heroDock";
 import { useIsMobile } from "@/lib/use-mobile";
-import StaggeredMenu from "@/components/ui/StaggeredMenu";
 
 /**
  * THE HARD PART OF THIS MENU IS NOT THE MENU — it is where each link lands.
@@ -137,7 +136,7 @@ export default function NavMenu() {
       // The panel is a sibling of the button rather than a child of it, so
       // "outside" has to mean outside both of them.
       if (rootRef.current?.contains(target)) return;
-      if (document.getElementById("staggered-menu-panel")?.contains(target)) return;
+      if (document.querySelector("[data-nav-panel]")?.contains(target)) return;
       setOpen(false);
     };
     window.addEventListener("keydown", onKey);
@@ -311,26 +310,44 @@ export default function NavMenu() {
 
       </div>
 
-      {/* The panel is a SIBLING of the rail, not a child of it: the rail is a
-          blend layer on desktop, and a white sheet blended against the page
-          would invert with it. It is its own surface and inverts nothing. */}
-      <StaggeredMenu
-        open={open}
-        position={atRight ? "right" : "left"}
-        items={TARGETS.map((target) => ({ label: target.label, onSelect: () => go(target) }))}
-        onPointerEnter={hoverOpen}
-        onPointerLeave={hoverClose}
-        footer={
-          <button
-            type="button"
-            tabIndex={open ? 0 : -1}
-            onClick={() => go(CTA)}
-            className="rounded-full bg-black px-7 py-3 font-display text-[16px] font-medium text-white transition-transform duration-200 hover:scale-[1.04]"
-          >
-            {CTA.label}
-          </button>
-        }
-      />
+      {/* THE PANEL IS A SIBLING OF THE RAIL, not a child of it, and on desktop
+          that is not a preference: the rail is a blend layer, and a white sheet
+          inside it would invert along with it. It is its own surface, so it
+          hangs off the same corner by its own fixed position instead.
+          Always white with black text, on every section — the chrome inverts
+          because it sits directly on the page; a panel that inverted too would
+          flicker section to section. */}
+      {open && (
+        <div
+          data-nav-panel
+          onPointerEnter={hoverOpen}
+          onPointerLeave={hoverClose}
+          className={`fixed top-[82px] z-50 min-w-[176px] rounded-2xl bg-white py-2 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.45)] md:top-[62px] ${
+            atRight ? "right-6" : "left-6"
+          }`}
+        >
+          {TARGETS.map((target) => (
+            <button
+              key={target.id}
+              type="button"
+              onClick={() => go(target)}
+              className="block w-full px-5 py-2 text-right font-body text-[15px] text-black/70 transition-colors hover:text-black"
+            >
+              {target.label}
+            </button>
+          ))}
+
+          <div className="mt-2 px-3 pb-1">
+            <button
+              type="button"
+              onClick={() => go(CTA)}
+              className="block w-full rounded-full bg-black px-5 py-2.5 text-center font-body text-[15px] font-medium text-white"
+            >
+              {CTA.label}
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
