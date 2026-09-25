@@ -682,6 +682,10 @@ body {
    case, and every edge that was left/right is a logical property so the panel
    and its numerals sit on the correct side of a right-to-left page.
    components/ui/StaggeredMenu.tsx drives all of it with GSAP. */
+/* THE ROOT NEVER TAKES THE POINTER, only the panel does. With the root live it
+   covered the whole screen, so the mouse was inside it wherever it went and the
+   panel's own pointerleave never fired — the menu could only be dismissed by
+   clicking, which is exactly what it felt like. */
 .sm-root {
   position: fixed;
   inset: 0;
@@ -689,7 +693,7 @@ body {
   pointer-events: none;
 }
 
-.sm-root[data-open] {
+.sm-root[data-open] .staggered-menu-panel {
   pointer-events: auto;
 }
 

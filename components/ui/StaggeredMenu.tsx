@@ -205,13 +205,7 @@ export default function StaggeredMenu({
   }, [open, playOpen, playClose]);
 
   return (
-    <div
-      className="sm-root"
-      data-position={position}
-      data-open={open || undefined}
-      onPointerEnter={onPointerEnter}
-      onPointerLeave={onPointerLeave}
-    >
+    <div className="sm-root" data-position={position} data-open={open || undefined}>
       <div ref={preLayersRef} className="sm-prelayers" aria-hidden="true">
         {/* Two of them, a shade apart: one rectangle arriving is a drawer,
             three edges in sequence is the panel being dealt onto the page. */}
@@ -225,6 +219,10 @@ export default function StaggeredMenu({
         className="staggered-menu-panel"
         aria-hidden={!open}
         aria-label="ניווט"
+        // On the panel, not on the root: the root spans the screen, and a
+        // pointerleave that can never fire is a menu that will not close.
+        onPointerEnter={onPointerEnter}
+        onPointerLeave={onPointerLeave}
       >
         <div className="sm-panel-inner">
           <ul className="sm-panel-list" role="list" data-numbering>
