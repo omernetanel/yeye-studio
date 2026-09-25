@@ -216,6 +216,35 @@ export default function NavMenu() {
   // The targets only exist on the home page.
   if (pathname !== "/") return null;
 
+  // Desktop inverts itself against the page; the phone keeps the two-colour
+  // switch, because there the button is inside a box that moves.
+  const blend = !isMobile;
+
+  const trigger = (
+    <button
+      type="button"
+      // Under a hovering mouse the menu is already open, and a click that
+      // toggled would close it under the pointer that opened it.
+      onClick={() => setOpen((value) => (hoveringRef.current ? true : !value))}
+      aria-expanded={open}
+      aria-label="תפריט"
+      // White, and nothing else: the rail above does the inverting. A second
+      // blend here would only mix with the rail's own empty box.
+      className={`flex items-center gap-2 ${
+        blend ? "text-white" : `transition-colors duration-200 ${dark ? "text-white" : "text-black"}`
+      }`}
+    >
+      <span className="font-body text-[15px] font-medium tracking-tight">תפריט</span>
+      {/* Four squares. Drawn with a grid rather than four positioned boxes so
+          the gap is one number and it stays square at any size. */}
+      <span className="grid grid-cols-2 gap-[3px]" aria-hidden="true">
+        {[0, 1, 2, 3].map((square) => (
+          <span key={square} className="block h-[6px] w-[6px] bg-current" />
+        ))}
+      </span>
+    </button>
+  );
+
   return (
     // The rail spans both margins; the menu is placed inside it and crosses
     // from one end to the other. `justify-end` is the LEFT under RTL — that
@@ -224,49 +253,67 @@ export default function NavMenu() {
     // A layout animation rather than an animated `left`: framer measures where
     // the block ended up and tweens it there, so the same code works whatever
     // the button's width or the viewport's, and nothing has to be computed.
+    <>
     <div
       // 42px on a phone, 22 above it. The phone's opening screen puts its line
       // right beside this row, and nearer the top the pair sat pressed against
       // the edge of the glass. Must match the logo's own offset in Navbar — they
       // are one row.
-      className="pointer-events-none fixed inset-x-6 top-[42px] z-50 flex md:top-[22px]"
+      //
+      // THE BLEND GOES HERE, ON THE FIXED RAIL, and not on the button inside
+      // it. This element is fixed with a z-index, so it is a stacking context
+      // of its own: a blend declared on anything INSIDE it mixes only with the
+      // rail's own contents, which is nothing. Declared on the rail, it mixes
+      // with the context the rail sits in — the page wrapper that also holds
+      // the hero's canvas and every dark section. That is the difference
+      // between this working and the earlier attempt that "did nothing".
+      className={`pointer-events-none fixed inset-x-6 top-[42px] z-50 flex md:top-[22px] ${
+        blend ? "mix-blend-difference" : ""
+      }`}
       style={{ justifyContent: atRight ? "flex-start" : "flex-end" }}
     >
-      <motion.div
-        ref={rootRef}
-        layout
-        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        className="pointer-events-auto relative"
-        // Opens on hover with a mouse, and still on a click or a tap. The close
-        // waits a moment, so crossing the gap between the button and the panel
-        // does not shut it on the way.
-        onPointerEnter={hoverOpen}
-        onPointerLeave={hoverClose}
-      >
-      <button
-        type="button"
-        // Under a hovering mouse the menu is already open, and a click that
-        // toggled would close it under the pointer that opened it.
-        onClick={() => setOpen((value) => (hoveringRef.current ? true : !value))}
-        aria-expanded={open}
-        aria-label="תפריט"
-        className={`flex items-center gap-2 transition-colors duration-200 ${dark ? "text-white" : "text-black"}`}
-      >
-        <span className="font-body text-[15px] font-medium tracking-tight">תפריט</span>
-        {/* Four squares. Drawn with a grid rather than four positioned boxes so
-            the gap is one number and it stays square at any size. */}
-        <span className="grid grid-cols-2 gap-[3px]" aria-hidden="true">
-          {[0, 1, 2, 3].map((square) => (
-            <span key={square} className="block h-[6px] w-[6px] bg-current" />
-          ))}
-        </span>
-      </button>
+      {/* ON DESKTOP THE BUTTON IS NOT WRAPPED IN AN ANIMATED BOX, AND THAT IS
+          WHAT MAKES THE BLEND WORK. `mix-blend-mode: difference` mixes with
+          whatever is painted in the nearest stacking context, and a transform —
+          which is what the layout animation puts on the wrapper — opens a new
+          one. Wrapped, the button was blending against an empty box and looked
+          like it was doing nothing at all, which is how this ended up being
+          written off as "blending does not work over a canvas". It does: white
+          type in difference comes out black on the white page, white inside the
+          ink, and white over the black sections, pixel for pixel and with no
+          state to track.
+          The phone keeps the wrapper, because there the button really does
+          cross the header from one side to the other as the mark docks. */}
+      {blend ? (
+        <div
+          ref={rootRef}
+          className="pointer-events-auto relative"
+          onPointerEnter={hoverOpen}
+          onPointerLeave={hoverClose}
+        >
+          {trigger}
+        </div>
+      ) : (
+        <motion.div
+          ref={rootRef}
+          layout
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          className="pointer-events-auto relative"
+          // Opens on hover with a mouse, and still on a click or a tap. The
+          // close waits a moment, so crossing the gap between the button and
+          // the panel does not shut it on the way.
+          onPointerEnter={hoverOpen}
+          onPointerLeave={hoverClose}
+        >
+          {trigger}
+        </motion.div>
+      )}
 
-      </motion.div>
+      </div>
 
-      {/* The panel itself — React Bits' StaggeredMenu, driven by this button.
-          It hangs off whichever edge the button is standing on, so it always
-          opens from under the hand that pressed it. */}
+      {/* The panel is a SIBLING of the rail, not a child of it: the rail is a
+          blend layer on desktop, and a white sheet blended against the page
+          would invert with it. It is its own surface and inverts nothing. */}
       <StaggeredMenu
         open={open}
         position={atRight ? "right" : "left"}
@@ -284,6 +331,6 @@ export default function NavMenu() {
           </button>
         }
       />
-    </div>
+    </>
   );
 }
