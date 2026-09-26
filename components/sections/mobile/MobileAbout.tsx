@@ -365,8 +365,15 @@ export default function MobileAbout() {
           it. overflow-clip because the picture is wider than the screen on the
           way in, and horizontal overflow in RTL moves the whole document's
           drawing origin rather than just adding a bar. */}
-      <div ref={introStageRef} style={{ height: `${INTRO_VH * 100}svh` }}>
-        <div className="sticky top-0 h-[100svh] overflow-clip">
+      {/* The travel this stage spends its animation over — and nothing at all
+          when there is no animation, or it is screens of black to scroll past.
+          See the desktop section, which had the same problem. */}
+      <div ref={introStageRef} style={prefersReducedMotion ? undefined : { height: `${INTRO_VH * 100}svh` }}>
+        <div
+          className={
+            prefersReducedMotion ? "relative overflow-clip pt-24 pb-16" : "sticky top-0 h-[100svh] overflow-clip"
+          }
+        >
           {/* Laid out at its settled place and size, which is also what
               reduced motion shows. The desktop's markup: em-sized lines, so
               the pair keeps its proportions at every size on the way up. */}
@@ -507,14 +514,24 @@ export default function MobileAbout() {
         // plain flow, the line sat a screen and a half below the last card. The
         // line's arrival and the balloons are both keyed to the line's own place
         // on screen, so moving the stage moves them with it.
-        style={{ height: `${CLOSER_STAGE_VH * 100}svh`, marginTop: `-${CLOSER_PULL_SVH}svh` }}
+        style={
+          prefersReducedMotion
+            ? undefined
+            : { height: `${CLOSER_STAGE_VH * 100}svh`, marginTop: `-${CLOSER_PULL_SVH}svh` }
+        }
       >
         {/* Centred in the panel. It was held near the top for one round to
             close the gap from the last card — but that gap is the lead-in's job
             (the line starts arriving while the cards are still on screen), and
             a closing line pinned against the top of the screen reads as a
             heading rather than as the end of something. */}
-        <div className="sticky top-0 z-10 flex h-[100svh] items-center px-6">
+        <div
+          className={
+            prefersReducedMotion
+              ? "relative z-10 flex items-center px-6 pt-8 pb-24"
+              : "sticky top-0 z-10 flex h-[100svh] items-center px-6"
+          }
+        >
           <div className="w-full text-right">
             <p
               ref={closerLineRef}

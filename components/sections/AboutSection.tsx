@@ -479,13 +479,24 @@ export default function AboutSection() {
 
   return (
     <section id="about" ref={sectionRef} data-nav-dark="true" className="relative bg-black">
-      <div ref={stageRef} style={{ height: `${STAGE_VH * 100}svh` }}>
+      {/* NINE SCREENS OF TRAVEL, OR NONE. The height here is the scroll the
+          pinned panel spends its animation over; with the animation off it is
+          nine screens of black with nothing happening in them, and the section
+          reads as a page that keeps stalling. Reduced motion gets the panel's
+          own height and nothing more. */}
+      <div ref={stageRef} style={prefersReducedMotion ? undefined : { height: `${STAGE_VH * 100}svh` }}>
         {/* z-10 is load-bearing. `position: sticky` creates a stacking context
             of its own, so the copy's z-10 INSIDE this panel is sealed in here
             and never competes with the balloon layers outside it — both of them
             would paint over the whole panel. The level has to be declared on
             the panel itself, between the two layers: 5 < 10 < 25. */}
-        <div className="sticky top-0 z-10 h-[100svh] overflow-clip">
+        <div
+          className={
+            prefersReducedMotion
+              ? "relative z-10 py-24"
+              : "sticky top-0 z-10 h-[100svh] overflow-clip"
+          }
+        >
           {/* THE PORTRAIT, floating. Enters tall and out on the left while the
               name is still shrinking towards the right, then travels down onto
               the slot the column reserves for it.
@@ -664,9 +675,18 @@ export default function AboutSection() {
       )}
 
       {/* THE CLOSE. The page stops here. */}
-      <div ref={closerStageRef} style={{ height: `${CLOSER_STAGE_VH * 100}svh` }}>
+      <div
+        ref={closerStageRef}
+        style={prefersReducedMotion ? undefined : { height: `${CLOSER_STAGE_VH * 100}svh` }}
+      >
         {/* Same level as the first stage's panel, for the same reason. */}
-        <div className="sticky top-0 z-10 flex h-[100svh] items-center">
+        <div
+          className={
+            prefersReducedMotion
+              ? "relative z-10 flex items-center pb-28"
+              : "sticky top-0 z-10 flex h-[100svh] items-center"
+          }
+        >
           <div className="mx-auto w-full max-w-[1240px] px-6 text-right md:px-10">
             <p
               ref={closerLineRef}

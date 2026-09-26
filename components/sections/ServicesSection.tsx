@@ -890,9 +890,54 @@ export default function ServicesSection() {
 
   if (skipDesktopMotion) {
     return (
+      // EVERYTHING THE SCROLL WOULD HAVE SHOWN, laid out in order. This branch
+      // used to render the services list alone, which meant a reader who asked
+      // for less motion lost the whole process — the heading, the four stages
+      // and the closing line simply did not exist for them. Less motion is not
+      // less content; the phone's own reduced branch has always done this and
+      // the desktop one was the odd one out.
       <section id="services" className="relative bg-white px-6 py-16 md:py-20">
         <div className="relative z-10 mx-auto max-w-[1200px]">
           <ServicesListBlock />
+
+          <h3 className="mt-24 text-center font-display text-[clamp(32px,4vw,52px)] leading-[1.05] font-bold text-black">
+            {PROCESS_HEADING.join(" ")}
+          </h3>
+
+          <ol className="mt-14 grid grid-cols-1 gap-12 sm:grid-cols-2">
+            {STAGE_TITLES.map((title, index) => (
+              <li key={title} className="flex flex-col items-center text-center">
+                <svg
+                  viewBox="-64 -64 128 128"
+                  aria-hidden="true"
+                  className="h-[96px] w-[96px] text-black/45"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {ICONS[String(index + 1).padStart(2, "0")].map((part) => (
+                    <path key={part.d} d={part.d} className={part.cls} />
+                  ))}
+                  <IconExtras number={String(index + 1).padStart(2, "0")} />
+                </svg>
+                <span className="mt-3 font-display text-[13px] font-bold tracking-[0.18em] text-black/35">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <h4 className="mt-2 font-display text-[26px] leading-[1.15] font-bold text-black">{title}</h4>
+                <p className="mt-3 max-w-[420px] font-body text-[17px] leading-[1.7] text-black/70">
+                  {STAGE_LINES[index].join(" ")}
+                </p>
+              </li>
+            ))}
+          </ol>
+
+          <p className="mt-24 text-center font-display text-[clamp(28px,3.4vw,44px)] leading-[1.15] font-normal text-black">
+            עיצוב מושך תשומת לב.
+            <br />
+            חשיבה יוצרת תוצאה.
+          </p>
         </div>
       </section>
     );
