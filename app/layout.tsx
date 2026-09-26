@@ -4,6 +4,8 @@ import { googleSans, assistant } from "@/lib/fonts";
 import { SITE_NAME, SITE_TITLE, SITE_DESCRIPTION, SITE_BACKGROUND } from "@/lib/site";
 import { SmoothScrollProvider } from "@/lib/motion/lenis";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
+import AccessibilityMenu from "@/components/layout/AccessibilityMenu";
+import { A11Y_STORAGE_KEY } from "@/lib/a11y/storage-key";
 
 // TODO: replace with the real production domain before launch (also used in app/sitemap.ts and app/robots.ts).
 const BASE_URL = "https://yeyelabs.com";
@@ -92,10 +94,21 @@ export default function RootLayout({
         >
           דילוג לתוכן הראשי
         </a>
+        {/* THE READER'S SWITCHES, SET BEFORE THE FIRST PAINT. Read from the
+            browser's own storage and written onto <html> here, so a visitor who
+            asked for more contrast last time does not watch the page arrive in
+            its default form and change under them. Kept to one statement, with
+            its own try/catch, because storage throws in a private window. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var p=JSON.parse(localStorage.getItem('${A11Y_STORAGE_KEY}')||'{}');var r=document.documentElement;if(p.contrast)r.setAttribute('data-a11y-contrast','');if(p.motion)r.setAttribute('data-a11y-motion','');if(p.links)r.setAttribute('data-a11y-links','');}catch(e){}`,
+          }}
+        />
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
         {/* Once, for every page: the footer no longer carries a way to WhatsApp,
             so the sub-pages need this as much as the homepage does. */}
         <WhatsAppButton />
+        <AccessibilityMenu />
       </body>
     </html>
   );

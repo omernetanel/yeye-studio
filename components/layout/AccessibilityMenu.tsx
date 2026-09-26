@@ -1,0 +1,125 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { Accessibility } from "lucide-react";
+import { resetA11yPrefs, setA11yPref, useA11yPrefs, type A11yPrefs } from "@/lib/a11y/preferences";
+
+/**
+ * The reader's own controls, in the corner they already look to.
+ *
+ * It sits directly above the WhatsApp mark, in the same size and the same
+ * corner, because those two are the only floating things on the page and they
+ * read as a pair rather than as clutter. What it offers is deliberately short:
+ * three switches that actually change something here, and the statement that
+ * says what the site can and cannot claim.
+ *
+ * WHAT IT IS NOT: a widget that overlays the site with its own styling, or a
+ * substitute for building the page properly. The switches lean on CSS the site
+ * already has and on the same reduced-motion path the operating system's own
+ * setting uses.
+ */
+
+const SWITCHES: { key: keyof A11yPrefs; label: string; hint: string }[] = [
+  { key: "contrast", label: "ניגודיות גבוהה", hint: "מכהה את הטקסטים הקטנים" },
+  { key: "motion", label: "הפחתת תנועה", hint: "עוצר אנימציות ותנועה בגלילה" },
+  { key: "links", label: "הדגשת קישורים", hint: "קו תחתון לכל קישור" },
+];
+
+export default function AccessibilityMenu() {
+  const [open, setOpen] = useState(false);
+  const prefs = useA11yPrefs();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      rootRef.current?.querySelector("button")?.focus();
+    };
+    const onDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onDown);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onDown);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (open) panelRef.current?.querySelector("button")?.focus();
+  }, [open]);
+
+  return (
+    // Above the WhatsApp mark, which stands 64px tall on a phone and 72 above
+    // it, with the same gap from the edge. z-40 for the same reason it has:
+    // over the page, under the menu's own panel.
+    <div ref={rootRef} className="fixed bottom-[96px] left-5 z-40 md:bottom-[112px] md:left-7">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        aria-controls="a11y-panel"
+        aria-label="הגדרות נגישות"
+        className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-black/10 bg-white text-black shadow-[0_6px_20px_rgba(0,0,0,0.16)] transition-transform duration-200 ease-out hover:scale-[1.06] active:scale-100 md:h-[58px] md:w-[58px]"
+      >
+        <Accessibility size={26} strokeWidth={1.6} aria-hidden="true" />
+      </button>
+
+      {open && (
+        <div
+          id="a11y-panel"
+          ref={panelRef}
+          role="dialog"
+          aria-label="הגדרות נגישות"
+          className="absolute bottom-[calc(100%+12px)] left-0 w-[260px] rounded-2xl bg-white p-4 text-right shadow-[0_20px_60px_-20px_rgba(0,0,0,0.45)] ring-1 ring-black/10"
+        >
+          <p className="mb-3 font-display text-[15px] font-bold text-black">הגדרות נגישות</p>
+
+          <div className="flex flex-col gap-1">
+            {SWITCHES.map((item) => {
+              const on = prefs[item.key];
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  role="switch"
+                  aria-checked={on}
+                  onClick={() => setA11yPref(item.key, !on)}
+                  className="flex w-full items-start justify-between gap-3 rounded-xl px-2 py-2 text-right transition-colors hover:bg-black/[0.04]"
+                >
+                  <span className="mt-[3px] flex h-[18px] w-[32px] shrink-0 items-center rounded-full bg-black/15 px-[2px] transition-colors data-[on=true]:bg-black" data-on={on}>
+                    <span
+                      className="block h-[14px] w-[14px] rounded-full bg-white transition-transform duration-200"
+                      style={{ transform: on ? "translateX(-14px)" : "translateX(0)" }}
+                    />
+                  </span>
+                  <span className="flex-1">
+                    <span className="block font-body text-[14px] text-black">{item.label}</span>
+                    <span className="block font-body text-[12px] text-black/55">{item.hint}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* The link to the statement itself belongs here and lands as soon as
+              that page exists — a control that promises a page and delivers a
+              404 is worse than one that waits a day. */}
+          <div className="mt-3 border-t border-black/10 pt-3">
+            <button
+              type="button"
+              onClick={resetA11yPrefs}
+              className="rounded-full px-3 py-1.5 font-body text-[13px] text-black/60 transition-colors hover:text-black"
+            >
+              איפוס ההגדרות
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

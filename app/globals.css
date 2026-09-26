@@ -676,6 +676,62 @@ body {
   backface-visibility: hidden;
 }
 
+/* THE READER'S OWN SWITCHES — see lib/a11y/preferences.ts and the panel in
+   components/layout/AccessibilityMenu.tsx. Nothing here applies to anyone who
+   has not asked for it: the attributes only exist on <html> once a switch is
+   flipped.
+
+   Contrast is written against the exact utilities the site uses for its quiet
+   type rather than as a blanket rule, because a blanket rule would also darken
+   the greys that ARE the design — the pencil drawing, the numerals behind the
+   stages, the dimmed neighbours in the gallery. The small captions are what is
+   hard to read; those are what change.
+   #595959 on white and #d6d6d6 on black both clear the contrast ratio for body
+   text with room to spare. */
+[data-a11y-contrast] .text-black\/30,
+[data-a11y-contrast] .text-black\/35,
+[data-a11y-contrast] .text-black\/40,
+[data-a11y-contrast] .text-black\/45,
+[data-a11y-contrast] .text-black\/50,
+[data-a11y-contrast] .text-black\/55,
+[data-a11y-contrast] .text-black\/60 {
+  color: #595959;
+}
+
+[data-a11y-contrast] .text-black\/70,
+[data-a11y-contrast] .text-black\/75,
+[data-a11y-contrast] .text-black\/80 {
+  color: #333333;
+}
+
+[data-a11y-contrast] .text-white\/35,
+[data-a11y-contrast] .text-white\/45,
+[data-a11y-contrast] .text-white\/55,
+[data-a11y-contrast] .text-white\/60,
+[data-a11y-contrast] .text-white\/70,
+[data-a11y-contrast] .text-white\/75 {
+  color: #d6d6d6;
+}
+
+/* Links say they are links. Not the buttons, which already look like buttons,
+   and not the ones inside the gallery, whose whole surface is the target. */
+[data-a11y-links] main a:not([class*="rounded-full"]):not([class*="btn"]) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The panel's own motion switch reaches every section through
+   usePrefersReducedMotion; this covers the CSS animations that never asked
+   React anything — the turning border light, the drifting icons. */
+[data-a11y-motion] *,
+[data-a11y-motion] *::before,
+[data-a11y-motion] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
 /* ONE FOCUS RING, EVERYWHERE. Keyboard users were finding their way around a
    site that mostly did not say where they were: a few controls in the gallery
    drew their own outline and nothing else did. :focus-visible, so a mouse click
