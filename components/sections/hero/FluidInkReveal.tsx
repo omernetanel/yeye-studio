@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import { setChromePaintedByHero } from "@/lib/motion/chromeBackdrop";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { cn } from "@/lib/utils";
 
@@ -357,11 +358,27 @@ uniform float maskLo;
 uniform float maskHi;
 uniform vec4 invertRects[${MAX_INVERT_RECTS}];
 uniform int invertCount;
+// THE PAGE'S FLOATING CHROME, ON ITS OWN LAYER. The menu button is fixed to the
+// screen while the paper scrolls with the section, so it cannot be painted into
+// the paper the way the hero's own type is. It is drawn into this small texture
+// instead and composited here, at a rectangle handed over every frame — which
+// makes it part of the paper as far as everything below is concerned, and so it
+// inverts under the ink pixel for pixel like everything else.
+uniform sampler2D uChrome;
+uniform vec4 uChromeRect;
 out vec4 fragColor;
 void main () {
   float d = texture(uDye, vUv).r;
   float mask = smoothstep(maskLo, maskHi, d);
   vec3 paper = texture(uPaper, vUv).rgb;
+
+  if (uChromeRect.z > uChromeRect.x &&
+      vUv.x >= uChromeRect.x && vUv.x <= uChromeRect.z &&
+      vUv.y >= uChromeRect.y && vUv.y <= uChromeRect.w) {
+    vec2 cuv = (vUv - uChromeRect.xy) / (uChromeRect.zw - uChromeRect.xy);
+    vec4 chrome = texture(uChrome, cuv);
+    paper = mix(paper, chrome.rgb, chrome.a);
+  }
 
   float inInvert = 0.0;
   for (int i = 0; i < ${MAX_INVERT_RECTS}; i++) {
@@ -487,6 +504,10 @@ function measureTextLines(el: HTMLElement): TextLine[] {
   }
   return lines.map(({ words, ...line }) => ({ ...line, text: words.join(" ") }));
 }
+
+// The colour the floating chrome is painted in on its own layer. Black, like
+// everything else on the paper — the ink is what turns it white.
+const CHROME_COLOR = "#000000";
 
 interface FluidInkRevealProps {
   logoSrc: string;
@@ -748,6 +769,16 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
+    // The floating chrome's own little layer — see uChrome in DISPLAY_SHADER.
+    const chromeCanvas = document.createElement("canvas");
+    const chromeCtx = chromeCanvas.getContext("2d")!;
+    const chromeTexture = gl.createTexture()!;
+    gl.bindTexture(gl.TEXTURE_2D, chromeTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
     // The GPU's texture ceiling, read once — see where the paper is sized.
     const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number;
 
@@ -991,10 +1022,118 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, paperCanvas);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
+      // On the same beat as the paper: the chrome's own copy is measured from
+      // the DOM too, so a font arriving or a resize has to reach it as well.
+      paintChrome();
+
       positionVideo();
     };
 
     redrawRef.current = redrawPaper;
+
+    // THE FLOATING CHROME, DRAWN ONTO ITS OWN LAYER.
+    //
+    // The menu button in the corner has to behave like everything else the ink
+    // washes over: black on the paper, white inside the ink, and inverting
+    // PIXEL BY PIXEL rather than flipping colour once the ink is mostly over it.
+    // Only the shader can do that, so the button's own artwork is copied here
+    // and composited in it (see uChrome) — the real element stays where it is,
+    // clickable, with its type made transparent while this is painting it.
+    //
+    // It cannot go on the paper itself: the paper belongs to the section and
+    // scrolls with it, and this button is fixed to the screen. On its own layer
+    // it only costs a rectangle, handed over fresh every frame.
+    let chromeRect: DOMRect | null = null;
+    let chromePainted = false;
+    const chromeUv = new Float32Array(4);
+
+    const paintChrome = () => {
+      const el = document.querySelector<HTMLElement>("[data-chrome-paint]");
+      if (!el) {
+        chromePainted = false;
+        setChromePaintedByHero(false);
+        return;
+      }
+
+      const box = el.getBoundingClientRect();
+      if (box.width === 0 || box.height === 0) return;
+      chromeRect = box;
+
+      const dpr = Math.min(window.devicePixelRatio || 1, PAPER_MAX_DPR);
+      const w = Math.max(1, Math.round(box.width * dpr));
+      const h = Math.max(1, Math.round(box.height * dpr));
+      if (chromeCanvas.width !== w || chromeCanvas.height !== h) {
+        chromeCanvas.width = w;
+        chromeCanvas.height = h;
+      }
+      chromeCtx.clearRect(0, 0, w, h);
+
+      // Type first, in the element's own font, then the four squares from their
+      // own boxes — everything measured off the DOM so the copy lands exactly
+      // where the real button is.
+      const label = el.querySelector<HTMLElement>("[data-chrome-label]");
+      if (label) {
+        const style = getComputedStyle(label);
+        chromeCtx.font = `${style.fontStyle} ${style.fontWeight} ${parseFloat(style.fontSize) * dpr}px ${style.fontFamily}`;
+        chromeCtx.fillStyle = CHROME_COLOR;
+        chromeCtx.direction = "rtl";
+        chromeCtx.textAlign = "right";
+        chromeCtx.textBaseline = "alphabetic";
+        for (const line of measureTextLines(label)) {
+          const ascent = chromeCtx.measureText(line.text).fontBoundingBoxAscent;
+          chromeCtx.fillText(
+            line.text,
+            (line.right - box.left) * dpr,
+            (line.top - box.top) * dpr + (ascent || (line.bottom - line.top) * dpr * 0.8),
+          );
+        }
+      }
+      chromeCtx.fillStyle = CHROME_COLOR;
+      for (const square of el.querySelectorAll<HTMLElement>("[data-chrome-square]")) {
+        const s = square.getBoundingClientRect();
+        chromeCtx.fillRect((s.left - box.left) * dpr, (s.top - box.top) * dpr, s.width * dpr, s.height * dpr);
+      }
+
+      gl.bindTexture(gl.TEXTURE_2D, chromeTexture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, chromeCanvas);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      chromePainted = true;
+      setChromePaintedByHero(true);
+    };
+
+    // Where that layer sits on this frame, in the canvas's own UV. Read fresh
+    // every frame because the button is fixed and the canvas is not: scrolling
+    // moves one past the other, and a rect is the entire cost of following it.
+    const placeChrome = () => {
+      if (!chromePainted || !chromeRect) {
+        chromeUv.fill(0);
+        return;
+      }
+      const canvasBox = canvas.getBoundingClientRect();
+      if (canvasBox.width === 0 || canvasBox.height === 0) {
+        chromeUv.fill(0);
+        return;
+      }
+      const box = document.querySelector<HTMLElement>("[data-chrome-paint]")?.getBoundingClientRect();
+      if (!box) {
+        chromeUv.fill(0);
+        return;
+      }
+      // Wholly off the canvas: nothing to composite, and the button goes back
+      // to being an ordinary element over whatever section it is on.
+      if (box.bottom < canvasBox.top || box.top > canvasBox.bottom) {
+        chromeUv.fill(0);
+        setChromePaintedByHero(false);
+        return;
+      }
+      setChromePaintedByHero(true);
+      // UV, with y measured from the bottom like the paper's own.
+      chromeUv[0] = (box.left - canvasBox.left) / canvasBox.width;
+      chromeUv[1] = (canvasBox.bottom - box.bottom) / canvasBox.height;
+      chromeUv[2] = (box.right - canvasBox.left) / canvasBox.width;
+      chromeUv[3] = (canvasBox.bottom - box.top) / canvasBox.height;
+    };
 
     // Video registration: matched on WIDTH (see the note in HeroSection's
     // history) — the rendered 3D letters are chunkier than the flat
@@ -1344,8 +1483,26 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       // An array uniform is addressed through its first element's name — that
       // is the name the program reports for it, and the location it returns
       // takes the whole array.
+      // The chrome's layer and where it is this frame. Its rectangle also goes
+      // in as an invert region, so the ink flips it instead of erasing it —
+      // the same contract every painted thing on the paper has.
+      placeChrome();
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D, chromeTexture);
+      gl.uniform1i(displayProgram.uniforms.uChrome, 2);
+      gl.uniform4fv(displayProgram.uniforms.uChromeRect, chromeUv);
+
+      let rectCount = invertCount;
+      if (chromeUv[2] > chromeUv[0] && rectCount < MAX_INVERT_RECTS) {
+        const o = rectCount * 4;
+        invertRects[o] = chromeUv[0];
+        invertRects[o + 1] = chromeUv[1];
+        invertRects[o + 2] = chromeUv[2];
+        invertRects[o + 3] = chromeUv[3];
+        rectCount += 1;
+      }
       gl.uniform4fv(displayProgram.uniforms["invertRects[0]"], invertRects);
-      gl.uniform1i(displayProgram.uniforms.invertCount, invertCount);
+      gl.uniform1i(displayProgram.uniforms.invertCount, rectCount);
       drawQuad();
 
       rafId = requestAnimationFrame(step);
@@ -1355,6 +1512,9 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     return () => {
       disposed = true;
       redrawRef.current = null;
+      // The hero is not painting the chrome any more, so the button takes its
+      // own colour back rather than staying transparent over a dead canvas.
+      setChromePaintedByHero(false);
       if (rafId !== null) cancelAnimationFrame(rafId);
       ro.disconnect();
       window.removeEventListener("orientationchange", resize);

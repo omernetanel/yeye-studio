@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { useLenis } from "@/lib/motion/lenis";
 import { useDocked } from "@/lib/motion/heroDock";
 import { useIsMobile } from "@/lib/use-mobile";
+import { useChromePaintedByHero } from "@/lib/motion/chromeBackdrop";
 
 /**
  * THE HARD PART OF THIS MENU IS NOT THE MENU — it is where each link lands.
@@ -73,6 +74,16 @@ export default function NavMenu() {
   // and the right side carries the section labels, so a menu that wandered
   // would only ever be in the way.
   const atRight = !isMobile || docked;
+
+  // WHILE THE HERO IS ON SCREEN IT PAINTS THIS BUTTON ITSELF, on a layer inside
+  // its own shader, so that the ink inverts it pixel for pixel exactly as it
+  // does the wordmark and the hero's CTAs. The real element stays here and
+  // stays clickable; only its ink goes transparent, or the two would show at
+  // once. See lib/motion/chromeBackdrop for what was tried before this.
+  //
+  // Everywhere else the old contract holds: a section declares itself dark and
+  // the button turns white over it.
+  const heroPaints = useChromePaintedByHero();
 
   // Same contract the logo across the page uses: a section declares itself dark
   // behind the chrome with data-nav-dark, and anything floating over it asks
@@ -215,9 +226,6 @@ export default function NavMenu() {
   // The targets only exist on the home page.
   if (pathname !== "/") return null;
 
-  // Desktop inverts itself against the page; the phone keeps the two-colour
-  // switch, because there the button is inside a box that moves.
-  const blend = !isMobile;
 
   const trigger = (
     <button
@@ -227,18 +235,21 @@ export default function NavMenu() {
       onClick={() => setOpen((value) => (hoveringRef.current ? true : !value))}
       aria-expanded={open}
       aria-label="תפריט"
-      // White, and nothing else: the rail above does the inverting. A second
-      // blend here would only mix with the rail's own empty box.
-      className={`flex items-center gap-2 ${
-        blend ? "text-white" : `transition-colors duration-200 ${dark ? "text-white" : "text-black"}`
+      // What the hero measures, copies and repaints on its own layer.
+      data-chrome-paint
+      className={`flex items-center gap-2 transition-colors duration-200 ${
+        heroPaints ? "text-transparent" : dark ? "text-white" : "text-black"
       }`}
     >
-      <span className="font-body text-[15px] font-medium tracking-tight">תפריט</span>
+      <span data-chrome-label className="font-body text-[15px] font-medium tracking-tight">
+        תפריט
+      </span>
       {/* Four squares. Drawn with a grid rather than four positioned boxes so
-          the gap is one number and it stays square at any size. */}
+          the gap is one number and it stays square at any size. bg-current, so
+          they go transparent with the label when the hero takes over. */}
       <span className="grid grid-cols-2 gap-[3px]" aria-hidden="true">
         {[0, 1, 2, 3].map((square) => (
-          <span key={square} className="block h-[6px] w-[6px] bg-current" />
+          <span key={square} data-chrome-square className="block h-[6px] w-[6px] bg-current" />
         ))}
       </span>
     </button>
@@ -266,9 +277,7 @@ export default function NavMenu() {
       // with the context the rail sits in — the page wrapper that also holds
       // the hero's canvas and every dark section. That is the difference
       // between this working and the earlier attempt that "did nothing".
-      className={`pointer-events-none fixed inset-x-6 top-[42px] z-50 flex md:top-[22px] ${
-        blend ? "mix-blend-difference" : ""
-      }`}
+      className="pointer-events-none fixed inset-x-6 top-[42px] z-50 flex md:top-[22px]"
       style={{ justifyContent: atRight ? "flex-start" : "flex-end" }}
     >
       {/* ON DESKTOP THE BUTTON IS NOT WRAPPED IN AN ANIMATED BOX, AND THAT IS
@@ -283,30 +292,19 @@ export default function NavMenu() {
           state to track.
           The phone keeps the wrapper, because there the button really does
           cross the header from one side to the other as the mark docks. */}
-      {blend ? (
-        <div
-          ref={rootRef}
-          className="pointer-events-auto relative"
-          onPointerEnter={hoverOpen}
-          onPointerLeave={hoverClose}
-        >
-          {trigger}
-        </div>
-      ) : (
-        <motion.div
-          ref={rootRef}
-          layout
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-          className="pointer-events-auto relative"
-          // Opens on hover with a mouse, and still on a click or a tap. The
-          // close waits a moment, so crossing the gap between the button and
-          // the panel does not shut it on the way.
-          onPointerEnter={hoverOpen}
-          onPointerLeave={hoverClose}
-        >
-          {trigger}
-        </motion.div>
-      )}
+      <motion.div
+        ref={rootRef}
+        layout
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        className="pointer-events-auto relative"
+        // Opens on hover with a mouse, and still on a click or a tap. The close
+        // waits a moment, so crossing the gap between the button and the panel
+        // does not shut it on the way.
+        onPointerEnter={hoverOpen}
+        onPointerLeave={hoverClose}
+      >
+        {trigger}
+      </motion.div>
 
       </div>
 
