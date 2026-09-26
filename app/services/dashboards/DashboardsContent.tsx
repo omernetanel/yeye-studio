@@ -53,7 +53,7 @@ const whatYouGetRows = [
 
 export default function DashboardsContent() {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-white">
+    <main id="main" className="relative min-h-screen overflow-hidden bg-white">
       <ServiceAmbientBackground />
       <Navbar />
       <SubPageNav />

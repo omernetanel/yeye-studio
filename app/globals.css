@@ -676,6 +676,23 @@ body {
   backface-visibility: hidden;
 }
 
+/* ONE FOCUS RING, EVERYWHERE. Keyboard users were finding their way around a
+   site that mostly did not say where they were: a few controls in the gallery
+   drew their own outline and nothing else did. :focus-visible, so a mouse click
+   never draws it — it appears for the keyboard and for nothing else.
+   Two rings, dark over a light page and light over a dark one, because this
+   site is black on white in one place and white on black in the next. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;

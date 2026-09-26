@@ -84,6 +84,14 @@ export default function RootLayout({
           is decided — and that surface is what a phone reads when it picks a
           colour for its bars. See the comment on that rule. */}
       <body className="font-body">
+        {/* The way past the chrome for anyone arriving on the keyboard. Hidden
+            until it is focused, which is the first tab stop on every page. */}
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:right-4 focus:z-[100] focus:rounded-full focus:bg-black focus:px-5 focus:py-3 focus:font-body focus:text-[15px] focus:text-white"
+        >
+          דילוג לתוכן הראשי
+        </a>
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
         {/* Once, for every page: the footer no longer carries a way to WhatsApp,
             so the sub-pages need this as much as the homepage does. */}

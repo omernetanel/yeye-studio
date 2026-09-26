@@ -21,7 +21,7 @@ export default async function Home() {
   const serverIsMobile = isMobileUserAgent((await headers()).get("user-agent"));
 
   return (
-    <main className="relative min-h-screen bg-white">
+    <main id="main" className="relative min-h-screen bg-white">
       {/* Ambient background — fixed, scrolls cinematically underneath every section.
           Shared at the page level (rather than repeated per-section) so it reads as
           one continuous backdrop instead of restarting at every section boundary;

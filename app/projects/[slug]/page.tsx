@@ -37,7 +37,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   if (!project || project.external) notFound();
 
   return (
-    <main className="relative min-h-screen bg-white">
+    <main id="main" className="relative min-h-screen bg-white">
       <AmbientBackground />
       <div className="relative z-10">
         <Navbar />

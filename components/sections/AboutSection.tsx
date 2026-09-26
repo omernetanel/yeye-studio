@@ -415,7 +415,40 @@ export default function AboutSection() {
   };
 
   useLayoutEffect(() => {
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion) {
+      // EVERYTHING SIMPLY HERE. Every element in this section starts at
+      // opacity 0 and is brought in by update(), which does not run in this
+      // mode — so without this the whole section was a blank black screen for
+      // anyone who asked for less motion. The phone's version already does
+      // this; the desktop one was the standing bug.
+      //
+      // The floating greeting and portrait are dropped rather than placed:
+      // they exist to travel onto slots the column already reserves, and with
+      // no travel the slots alone are the finished layout.
+      const settle = (el: HTMLElement | null) => {
+        if (!el) return;
+        el.style.opacity = "1";
+        el.style.transform = "none";
+      };
+      if (greetRef.current) greetRef.current.style.display = "none";
+      if (portraitRef.current) portraitRef.current.style.display = "none";
+      for (const el of [portraitSlotRef.current, contentRef.current, claimRef.current, closerLineRef.current]) {
+        settle(el);
+      }
+      // The reserved slots are invisible copies that hold space for the
+      // travelling pair; with the pair gone they are what is seen.
+      portraitSlotRef.current?.classList.remove("invisible");
+      for (const line of greetLinesRef.current) {
+        const holder = line?.closest(".invisible");
+        holder?.classList.remove("invisible");
+        settle(line);
+      }
+      for (const fact of factsRef.current) settle(fact);
+      // The rule under the closing line draws itself; with no drawing it is
+      // simply there.
+      if (closerSwashRef.current) closerSwashRef.current.style.clipPath = "inset(0 0 0 0)";
+      return;
+    }
     measure();
     update();
 

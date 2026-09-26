@@ -451,11 +451,19 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
             }}
             aria-label={item.title}
             aria-current={index === facing}
-            // 4px thick and longer: at two pixels the indicator was easy to miss.
-            className={`h-1 rounded-full transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black ${
-              index === facing ? "w-12 bg-black" : "w-7 bg-black/25 hover:bg-black/45"
-            }`}
-          />
+            // THE MARK IS 4px, THE TARGET IS 24. The dash is drawn by the inner
+            // span; the button around it is padded to something a finger can
+            // actually hit, which is what a pointer target has to be — and it
+            // costs nothing visually, since the padding is transparent.
+            className="group flex h-6 items-center px-1"
+          >
+            <span
+              aria-hidden="true"
+              className={`block h-1 rounded-full transition-all duration-300 ${
+                index === facing ? "w-12 bg-black" : "w-7 bg-black/25 group-hover:bg-black/45"
+              }`}
+            />
+          </button>
         ))}
       </div>
 

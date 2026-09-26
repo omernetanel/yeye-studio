@@ -54,6 +54,7 @@ export default function NavMenu() {
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const hoveringRef = useRef(false);
   const closeTimerRef = useRef<number | null>(null);
   const pathname = usePathname();
@@ -137,10 +138,24 @@ export default function NavMenu() {
     [],
   );
 
+  // OPENED FROM THE KEYBOARD, THE FIRST ITEM TAKES THE FOCUS, and Escape hands
+  // it back to the button. Without this the panel opened somewhere behind the
+  // reader: the next Tab went to whatever followed the button in the document,
+  // not into the menu that had just appeared.
+  //
+  // Only when the pointer is not the one doing the opening — a mouse hovering
+  // the corner should not steal focus from what someone is reading.
+  useEffect(() => {
+    if (!open || hoveringRef.current) return;
+    panelRef.current?.querySelector("button")?.focus();
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      rootRef.current?.querySelector("button")?.focus();
     };
     const onDown = (event: PointerEvent) => {
       const target = event.target as Node;
@@ -234,6 +249,7 @@ export default function NavMenu() {
       // toggled would close it under the pointer that opened it.
       onClick={() => setOpen((value) => (hoveringRef.current ? true : !value))}
       aria-expanded={open}
+      aria-controls="nav-menu-panel"
       aria-label="תפריט"
       // What the hero measures, copies and repaints on its own layer.
       data-chrome-paint
@@ -317,7 +333,11 @@ export default function NavMenu() {
           flicker section to section. */}
       {open && (
         <div
+          id="nav-menu-panel"
           data-nav-panel
+          ref={panelRef}
+          role="menu"
+          aria-label="ניווט באתר"
           onPointerEnter={hoverOpen}
           onPointerLeave={hoverClose}
           className={`fixed top-[82px] z-50 min-w-[176px] rounded-2xl bg-white py-2 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.45)] md:top-[62px] ${

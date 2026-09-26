@@ -1,6 +1,7 @@
 "use client";
 
 import Lenis from "lenis";
+import { MotionConfig } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { gsap, ScrollTrigger } from "@/lib/motion/gsap";
@@ -64,5 +65,16 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     }
   }, [pathname, lenis]);
 
-  return <LenisContext.Provider value={lenis}>{children}</LenisContext.Provider>;
+  return (
+    // reducedMotion="user" is the one line that makes every framer-motion
+    // animation on the site answer the reader's own setting. The sections that
+    // drive themselves from scrollY already check the preference by hand; this
+    // covers everything else — the fades and rises on the sub-pages, the
+    // closing section, the menu — without touching a single one of them.
+    // Transforms and opacity are skipped for those readers; colour and layout
+    // still change, so nothing goes missing.
+    <MotionConfig reducedMotion="user">
+      <LenisContext.Provider value={lenis}>{children}</LenisContext.Provider>
+    </MotionConfig>
+  );
 }
