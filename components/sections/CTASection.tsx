@@ -15,7 +15,8 @@ const particles = [...Array(16)].map((_, i) => ({
 }));
 
 export default function CTASection() {
-  const [form, setForm] = useState({ from_name: "", phone: "", reply_to: "" });
+  // `website` is the honeypot — see the field itself in the form below.
+  const [form, setForm] = useState({ from_name: "", phone: "", reply_to: "", website: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   // idle → shining → done. The glint borrows the line's colour for the length
   // of the sweep and hands it straight back: the gradient is how this line is
@@ -24,6 +25,8 @@ export default function CTASection() {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    // See ContactStage: the disabled button does not cover a keyboard submit.
+    if (status === "sending") return;
     if (!form.from_name || !form.reply_to) return;
 
     setStatus("sending");
@@ -34,6 +37,7 @@ export default function CTASection() {
         body: JSON.stringify({
           from_name: form.from_name,
           reply_to: form.reply_to,
+          website: form.website,
           project_type: "לא צוין",
           business_description: form.phone
             ? `פנייה מסוף העמוד הראשי. טלפון ליצירת קשר: ${form.phone}`
@@ -166,29 +170,54 @@ export default function CTASection() {
             className="mx-auto max-w-[620px] md:ms-0 md:me-auto md:max-w-[560px]"
           >
             {status === "success" ? (
-              <p className="font-body text-m-body text-black/60">קיבלתי, תודה! אחזור אליכם בהקדם.</p>
+              <p role="status" className="font-body text-m-body text-black/60">
+                קיבלתי, תודה! אחזור אליכם בהקדם.
+              </p>
             ) : (
               <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 text-right sm:grid-cols-2 sm:gap-3">
                 <Input
+                  label="שם מלא"
+                  id="cta-name"
                   type="text"
                   placeholder="שם מלא"
+                  autoComplete="name"
                   value={form.from_name}
                   onChange={(e) => setForm({ ...form, from_name: e.target.value })}
                   required
                 />
                 <Input
+                  label="טלפון"
+                  id="cta-phone"
                   type="tel"
                   placeholder="טלפון"
+                  autoComplete="tel"
+                  inputMode="tel"
                   className="text-right"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 />
                 <Input
+                  label="דוא״ל"
+                  id="cta-email"
                   type="email"
                   placeholder="דוא״ל"
+                  autoComplete="email"
+                  inputMode="email"
                   value={form.reply_to}
                   onChange={(e) => setForm({ ...form, reply_to: e.target.value })}
                   required
+                />
+
+                {/* The trap — see the same field in ContactStage. */}
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  value={form.website}
+                  onChange={(e) => setForm({ ...form, website: e.target.value })}
+                  className="pointer-events-none absolute -left-[9999px] h-px w-px opacity-0"
                 />
                 <Button
                   type="submit"
@@ -199,8 +228,8 @@ export default function CTASection() {
                   {status === "sending" ? "שולח..." : "בואו נתחיל ביחד"}
                 </Button>
                 {status === "error" && (
-                  <p className="font-body text-m-small text-black/50 sm:col-span-2">
-                    משהו השתבש בשליחה. אפשר גם ישירות למייל.
+                  <p role="alert" className="font-body text-m-small text-black/60 sm:col-span-2">
+                    משהו השתבש בשליחה. אפשר לנסות שוב, או לכתוב לי בוואטסאפ.
                   </p>
                 )}
               </form>

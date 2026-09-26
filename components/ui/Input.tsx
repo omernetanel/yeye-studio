@@ -1,7 +1,34 @@
 import { type InputHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
-export default function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
+/**
+ * A field, with its label attached.
+ *
+ * The label is carried here rather than left to each form because a field
+ * identified only by its placeholder has no name at all for a screen reader,
+ * and the placeholder disappears the moment someone starts typing. It is
+ * hidden visually — the forms are designed without visible labels and that
+ * does not change — but it is in the accessibility tree, and clicking it
+ * focuses the field.
+ */
+export default function Input({
+  label,
+  className,
+  id,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+  const fieldId = id ?? `field-${label.replace(/\s+/g, "-")}`;
+  return (
+    <span className="contents">
+      <label htmlFor={fieldId} className="sr-only">
+        {label}
+      </label>
+      <InputControl id={fieldId} className={className} {...props} />
+    </span>
+  );
+}
+
+function InputControl({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       className={cn(

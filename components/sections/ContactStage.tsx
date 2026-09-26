@@ -145,11 +145,16 @@ const DARK_INPUT =
   "border-white/25 bg-white/10 text-white placeholder:text-white/55 backdrop-blur-sm focus:border-white";
 
 function ContactForm() {
-  const [form, setForm] = useState({ from_name: "", phone: "", reply_to: "" });
+  // `website` is the honeypot — see the field itself below.
+  const [form, setForm] = useState({ from_name: "", phone: "", reply_to: "", website: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    // A second press while the first is in flight would send the same enquiry
+    // twice; the button is disabled, but a keyboard submit does not go through
+    // the button at all.
+    if (status === "sending") return;
     if (!form.from_name || !form.reply_to) return;
 
     setStatus("sending");
@@ -160,6 +165,7 @@ function ContactForm() {
         body: JSON.stringify({
           from_name: form.from_name,
           reply_to: form.reply_to,
+          website: form.website,
           project_type: "לא צוין",
           business_description: form.phone
             ? `פנייה מהירה מהעמוד הראשי. טלפון ליצירת קשר: ${form.phone}`
@@ -184,26 +190,63 @@ function ContactForm() {
         תשאירו כמה פרטים ואחזור אליכם תוך יום עסקים אחד. בלי מכירות, בלי התחייבות.
       </p>
 
+      {/* Announced, not just swapped: the form is replaced by this line, and a
+          screen reader would otherwise be told nothing at all about a send that
+          worked. Same for the failure below. */}
       {status === "success" ? (
-        <p className="mt-8 font-body text-m-body text-white/70">קיבלתי, תודה! אחזור אליכם בהקדם.</p>
+        <p role="status" className="mt-8 font-body text-m-body text-white/70">
+          קיבלתי, תודה! אחזור אליכם בהקדם.
+        </p>
       ) : (
         <form onSubmit={handleSubmit} className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Input
+            label="שם מלא"
+            id="contact-stage-name"
             type="text"
             placeholder="שם מלא"
+            autoComplete="name"
             className={DARK_INPUT}
             value={form.from_name}
             onChange={(e) => setForm({ ...form, from_name: e.target.value })}
             required
           />
-          <Input type="tel" placeholder="טלפון" className={`${DARK_INPUT} text-right`}value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
           <Input
+            label="טלפון"
+            id="contact-stage-phone"
+            type="tel"
+            placeholder="טלפון"
+            autoComplete="tel"
+            inputMode="tel"
+            className={`${DARK_INPUT} text-right`}
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          />
+          <Input
+            label="דוא״ל"
+            id="contact-stage-email"
             type="email"
             placeholder="דוא״ל"
+            autoComplete="email"
+            inputMode="email"
             className={DARK_INPUT}
             value={form.reply_to}
             onChange={(e) => setForm({ ...form, reply_to: e.target.value })}
             required
+          />
+
+          {/* THE TRAP. Off-screen rather than display:none — a bot that skips
+              hidden fields is not the one this catches; one that fills every
+              input on the page is, and the server drops anything that arrives
+              with this set. Never focused and never read aloud. */}
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            value={form.website}
+            onChange={(e) => setForm({ ...form, website: e.target.value })}
+            className="pointer-events-none absolute -left-[9999px] h-px w-px opacity-0"
           />
           <Button
             type="submit"
@@ -217,6 +260,15 @@ function ContactForm() {
           >
             {status === "sending" ? "שולח..." : "בואו נדבר"}
           </Button>
+
+          {/* A send that failed said nothing at all here until now: the form
+              simply sat there. role="alert" so it is read the moment it
+              appears, and a way out that does not depend on the form. */}
+          {status === "error" && (
+            <p role="alert" className="font-body text-m-small text-white/75 sm:col-span-2">
+              משהו השתבש בשליחה. אפשר לנסות שוב, או לכתוב לי בוואטסאפ.
+            </p>
+          )}
         </form>
       )}
     </div>
