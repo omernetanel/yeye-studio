@@ -188,7 +188,7 @@ function ContactForm() {
         לא חייבים לדעת בדיוק מה רוצים כדי להתחיל.
       </h3>
       <p className="mt-4 font-body text-m-body text-white/70">
-        תשאירו כמה פרטים ואחזור אליכם תוך יום עסקים אחד. בלי מכירות, בלי התחייבות.
+        תשאירו כמה פרטים ובדרך כלל אחזור אליכם בתוך יום עסקים אחד. בלי מכירות, בלי התחייבות.
       </p>
 
       {/* Announced, not just swapped: the form is replaced by this line, and a

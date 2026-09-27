@@ -5,80 +5,135 @@ import { CONTACT_EMAIL, SITE_NAME, pageTitle } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: pageTitle("תנאי שימוש"),
-  description: "תנאי השימוש באתר YEYE Digital: קניין רוחני, העבודות המוצגות, אחריות וקישורים חיצוניים.",
+  description: "תנאי השימוש באתר YEYE Digital: מה האתר מציג, זכויות בתוכן, העבודות המוצגות ואחריות.",
   alternates: { canonical: "/terms" },
 };
 
 /**
- * Only rights that exist.
+ * TERMS FOR A PORTFOLIO SITE, and nothing wider than that.
  *
- * The site's own design and code are the studio's, and that is stated plainly.
- * The client work shown here belongs to the clients and appears with their
- * permission — that permission was confirmed for everything currently on the
- * site, and the sentence is written so it stays true as work is added.
+ * THE ONE THING NOT TO UNDO: this page does not decide who owns a client
+ * project. An earlier draft said the work "belongs to the clients", which is a
+ * split of rights made in a public document rather than in an agreement, and it
+ * could be used against the studio. The wording now says only that a project may
+ * contain rights of several parties and that the split is set by law and by the
+ * specific agreement. Nothing here transfers a right in either direction.
  *
- * No warranty, no guarantee of results, no claim about anything the studio does
- * not control. A lawyer should read this before launch.
+ * ALSO DELIBERATE:
+ * - No blanket exclusion of liability. Reasonable effort, no promise of
+ *   continuous availability, and any limitation applies only as far as the law
+ *   allows.
+ * - Quoting with credit is fair use under the law, not a licence to copy. The
+ *   sentence saying so is there because the previous draft read as permission.
+ * - The claims paragraph promises examination, not removal, and no timeframe.
+ * - "Data and examples" exists because the service pages carry figures. It is
+ *   not a substitute for those figures having a basis; that audit is separate.
+ * - No payment, cancellation, account, arbitration, indemnity or cookie terms.
+ *   Nothing on this site does any of those things.
+ *
+ * Everything between the studio and a client - scope, approvals, revisions,
+ * source files, copyright, third party components, portfolio rights, the
+ * support month - belongs in the client agreement, not here.
+ *
+ * A lawyer should read this before launch.
  */
 export default function TermsPage() {
   return (
     <LegalPage title="תנאי שימוש" updated="27 בספטמבר 2026">
       <p>
-        הגלישה באתר של {SITE_NAME} ושימוש בו מהווים הסכמה לתנאים שלהלן. הם כתובים בלשון פשוטה, והם
-        חלים על כל חלקי האתר.
+        האתר מופעל על ידי עומר, עוסק עצמאי הפועל תחת המותג {SITE_NAME}. התנאים שלהלן חלים על השימוש
+        באתר ועל התוכן שבו.
       </p>
 
       <h2>מה האתר הזה</h2>
       <p>
-        האתר מציג את העבודה של הסטודיו ואת השירותים שהוא מציע, ומאפשר ליצור קשר. התוכן שבו הוא מידע
-        כללי, ואינו הצעה מחייבת, אינו התחייבות לתוצאה ואינו ייעוץ מקצועי לעסק מסוים.
+        האתר מציג עבודות ופרויקטים, את השירותים שאני מציע ומידע עליי ועל {SITE_NAME}, ומאפשר ליצור
+        קשר. אין באתר רכישה, תשלום, חשבון משתמש או הזמנה.
+      </p>
+      <p>
+        התוכן באתר הוא מידע כללי. הצגת שירות אינה הצעה מחייבת ואינה התחייבות לקבל עבודה, ופנייה דרך
+        האתר אינה יוצרת התקשרות. היקף העבודה, התוצרים, לוחות הזמנים, הזכויות, המחיר ושאר התנאים
+        נקבעים בהתקשרות הספציפית מול הלקוח, ותוכן האתר אינו מחליף אותה.
       </p>
 
-      <h2>קניין רוחני</h2>
+      <h2>זכויות בתוכן ובעיצוב</h2>
       <p>
-        העיצוב של האתר, הקוד שלו, הטקסטים, האיורים, האנימציות והשם {SITE_NAME} הם רכושו של הסטודיו.
-        אין להעתיק, לשכפל, להפיץ או ליצור עבודה נגזרת מהם, כולם או חלקם, בלי אישור מראש ובכתב.
+        זכויות היוצרים בעיצוב האתר, בטקסטים, באיורים, באנימציות ובקוד המקורי שנוצרו עבור {SITE_NAME}{" "}
+        שמורות בהתאם לדין, בכפוף לזכויות של לקוחות וצדדים שלישיים. השם {SITE_NAME} והלוגו משמשים
+        כמיתוג של הפעילות, וכל זכות הקיימת בהם בהתאם לדין שמורה.
       </p>
       <p>
-        אפשר, כמובן, לקשר לאתר, לצטט ממנו בציון המקור, ולשתף אותו.
+        חלק מהתכנים והרכיבים באתר עשויים להיות כפופים לזכויות או לרישיונות של צדדים שלישיים. אין
+        בתנאים אלה כדי לגרוע מזכויותיהם או מתנאי הרישיון החלים עליהם.
       </p>
 
-      <h2>העבודות והלקוחות שמוצגים</h2>
+      <h2>מה מותר לעשות באתר</h2>
       <p>
-        הפרויקטים, צילומי המסך, שמות הלקוחות והסימנים המסחריים שמוצגים באתר שייכים ללקוחות שלהם והם
-        מוצגים באישורם, לצורך הצגת עבודה בלבד. אין בהצגתם משום העברת זכות כלשהי בהם, ואין לעשות בהם
-        שימוש שאינו צפייה באתר.
+        אפשר לגלוש באתר, לקשר אליו, לשתף אותו ולעשות בו שימוש הוגן בהתאם לדין, לרבות ציטוט סביר תוך
+        ציון המקור.
       </p>
       <p>
-        אם אתם בעלי זכויות בתוכן שמוצג כאן וברצונכם שהוא יוסר,{" "}
-        <a href={`mailto:${CONTACT_EMAIL}`}>כתבו לי</a> ואטפל בזה במהירות.
+        אין להעתיק, לשכפל, להפיץ, לפרסם או ליצור יצירה נגזרת מתוכן האתר או מחלקים ממנו, לרבות עיצוב,
+        טקסטים, תמונות, וידאו, אנימציות, איורים, קבצים או קוד, אלא באישור מראש ובכתב. ציון מקור אינו
+        מהווה אישור כזה.
+      </p>
+
+      <h2>העבודות המוצגות</h2>
+      <p>
+        העבודות המוצגות באתר עשויות לכלול חומרים וזכויות השייכים לי, ללקוחות ולצדדים שלישיים, לרבות
+        לוגואים, סימנים מסחריים, תמונות ותוכן של הלקוח. כל הזכויות שמורות לבעליהן.
+      </p>
+      <p>
+        עבודות של לקוחות מוצגות כאן באישורם ולשם הצגת עבודה בלבד. הצגת עבודה באתר אינה מעניקה למבקר
+        זכות כלשהי בה או בחומרים הכלולים בה, ואינה קובעת או משנה את חלוקת הזכויות ביני לבין הלקוח,
+        שנקבעת בהתאם לדין ולהסכם מולו.
+      </p>
+
+      <h2>טענות לגבי תוכן שמוצג באתר</h2>
+      <p>
+        אם יש לכם טענה לזכויות בתוכן שמופיע באתר, אפשר לפנות אליי בדוא״ל{" "}
+        <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> ולפרט במה מדובר. הפנייה תיבחן בהתאם
+        לנסיבות ולדין.
+      </p>
+
+      <h2>נתונים ודוגמאות</h2>
+      <p>
+        נתונים ודוגמאות המופיעים באתר נועדו להציג מידע כללי ולהמחיש מגמות ועקרונות בתחום. נתונים
+        כלליים אינם מהווים התחייבות לתוצאה בפרויקט מסוים, ותוצאות עשויות להשתנות בהתאם לנסיבות.
       </p>
 
       <h2>פנייה דרך האתר</h2>
       <p>
-        טופס יצירת הקשר מיועד לפניות אמיתיות בנושא עבודה. אין להשתמש בו לשליחת תוכן פוגעני, פרסומי
-        או אוטומטי. פנייה אינה יוצרת התקשרות, וכל עבודה מתחילה בהסכם נפרד.
+        טופס יצירת הקשר מיועד לפניות בנושא השירותים והעבודה. אין להשתמש בו לשליחת דואר זבל, לשליחה
+        אוטומטית, לתוכן בלתי חוקי, או לניסיון לשבש את פעולת האתר או לפגוע בו.
+      </p>
+      <p>
+        פרטים שנמסרים בטופס מטופלים כמתואר ב<Link href="/privacy">מדיניות הפרטיות</Link>.
       </p>
 
-      <h2>אחריות</h2>
+      <h2>תוכן חיצוני ותצוגות חיות</h2>
       <p>
-        האתר מוגש כמות שהוא. אני משתדל שהמידע בו יהיה מדויק ומעודכן ושהאתר יהיה זמין, אבל איני מתחייב
-        לכך, ואיני אחראי לנזק שייגרם משימוש בו או מהסתמכות על המידע שבו.
+        באתר יש קישורים לאתרים חיצוניים, ובעמודי העבודות אפשר לטעון תצוגה חיה של אתר לקוח בתוך
+        העמוד, בלחיצה מפורשת שלכם. אין לי שליטה על התוכן של אותם אתרים, על זמינותם, על שינויים
+        שנעשים בהם או על השירותים שהם מספקים, ואיני אחראי להם. השימוש בהם כפוף לתנאים ולמדיניות
+        שלהם.
       </p>
 
-      <h2>קישורים לאתרים אחרים</h2>
+      <h2>זמינות האתר ועדכון תכניו</h2>
       <p>
-        באתר יש קישורים לאתרים חיצוניים, ובכללם אתרים של לקוחות. אין לי שליטה עליהם ואיני אחראי
-        לתוכנם, לזמינותם או למדיניות הפרטיות שלהם.
+        אני משתדל שהמידע באתר יהיה תקין ועדכני, אך ייתכנו בו טעויות או אי דיוקים. העבודות, השירותים,
+        התכנים והמבנה של האתר עשויים להשתנות מעת לעת, ואין התחייבות שהאתר יהיה זמין ברציפות או
+        שתוכן מסוים יישאר בו.
       </p>
+      <p>ככל שיש בתנאים אלה הגבלה של אחריות, היא תחול רק במידה המותרת לפי הדין.</p>
 
       <h2>שינוי התנאים</h2>
       <p>
-        התנאים האלה עשויים להתעדכן. הנוסח שמופיע בעמוד הזה, עם התאריך שלמעלה, הוא הנוסח התקף.
+        התנאים עשויים להתעדכן. הנוסח שמופיע בעמוד הזה, עם תאריך העדכון שבראשו, הוא הנוסח התקף.
       </p>
 
-      <h2>דין וסמכות שיפוט</h2>
-      <p>על תנאים אלה יחולו דיני מדינת ישראל, וסמכות השיפוט הבלעדית נתונה לבתי המשפט בישראל.</p>
+      <h2>דין</h2>
+      <p>על תנאים אלה ועל השימוש באתר יחולו דיני מדינת ישראל.</p>
 
       <p>
         ראו גם: <Link href="/privacy">מדיניות פרטיות</Link> ו

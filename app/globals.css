@@ -505,7 +505,8 @@ body {
 
 /* THE GLOW ON THE PHONE'S CLAIM CARDS.
  *
- * Taken from React Bits' BorderGlow (MIT) and cut down to the half that draws:
+ * Taken from React Bits' BorderGlow (MIT + Commons Clause; the notice the
+ * licence requires is in THIRD_PARTY_NOTICES.md) and cut down to the half that draws:
  * a cone of light masked around the border, plus the same cone as an outer
  * bloom. What was dropped is everything that aimed it — the original reads a
  * mouse pointer near the card's edges, and the cards this is for are only ever
@@ -660,7 +661,8 @@ body {
 }
 
 /* FoldText — each letter a panel hinged at its top edge, folding down into
-   place. Derived from React Bits' FoldText (MIT); the geometry is theirs, the
+   place. Derived from React Bits' FoldText (MIT + Commons Clause; see
+   THIRD_PARTY_NOTICES.md); the geometry is theirs, the
    clock is ours: components/ui/FoldText.tsx drives it from scroll.
    Unfolded by default, so anything that never runs the script — reduced
    motion — simply shows the text. */
