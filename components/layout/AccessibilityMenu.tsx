@@ -65,9 +65,13 @@ export default function AccessibilityMenu() {
         aria-expanded={open}
         aria-controls="a11y-panel"
         aria-label="הגדרות נגישות"
-        className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-black/10 bg-white text-black shadow-[0_6px_20px_rgba(0,0,0,0.16)] transition-transform duration-200 ease-out hover:scale-[1.06] active:scale-100 md:h-[58px] md:w-[58px]"
+        // THE SAME CIRCLE AS THE WHATSAPP MARK, to the pixel: 64 on a phone, 72
+        // on a desktop. It was 52/58, and since both are anchored to the same
+        // left edge, the narrower one sat six pixels further right - two
+        // floating buttons in one column that did not line up.
+        className="flex h-[64px] w-[64px] items-center justify-center rounded-full border border-black/10 bg-white text-black shadow-[0_6px_20px_rgba(0,0,0,0.16)] transition-transform duration-200 ease-out hover:scale-[1.06] active:scale-100 md:h-[72px] md:w-[72px]"
       >
-        <Accessibility size={26} strokeWidth={1.6} aria-hidden="true" />
+        <Accessibility size={32} strokeWidth={1.6} aria-hidden="true" />
       </button>
 
       {open && (
