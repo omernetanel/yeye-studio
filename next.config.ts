@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
 
+// The dev server compiles with eval; the served build does not. See the policy
+// below, which is the only place this is used.
+const isDev = process.env.NODE_ENV !== "production";
+
 const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
@@ -48,22 +52,26 @@ const nextConfig: NextConfig = {
           },
           // Clickjacking, for browsers that predate frame-ancestors.
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
-          // CSP IN REPORT-ONLY, ON PURPOSE. This page is a WebGL simulation, a
-          // canvas, inline styles from Tailwind and a live iframe of client
-          // sites; a policy written blind would break one of them the day it
-          // shipped. Violations are reported to the console while the whole
-          // site is walked through, and only then is this turned into an
-          // enforced Content-Security-Policy.
+          // ENFORCED, after the whole site was walked under the same policy in
+          // report-only and reported nothing: the home page end to end with the
+          // ink simulation and the paper sequence, and a project page with a
+          // client's site loaded live in its frame. This page is a WebGL
+          // simulation, a canvas, inline styles from Tailwind and that live
+          // iframe, so the policy was measured against all four before it was
+          // worn rather than written from a template.
           {
-            key: "Content-Security-Policy-Report-Only",
+            key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
               "base-uri 'self'",
               "object-src 'none'",
               "frame-ancestors 'self'",
-              // Next injects its own inline bootstrap, and the dev server
-              // needs eval; both are why this is reported before it is worn.
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              // 'unsafe-inline' stays: Next injects its own bootstrap script,
+              // and the layout carries the one that applies the reader's
+              // accessibility settings before the first paint. 'unsafe-eval' is
+              // the dev server's requirement alone and is dropped from the
+              // build that is actually served.
+              `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob:",
               "media-src 'self' blob:",
