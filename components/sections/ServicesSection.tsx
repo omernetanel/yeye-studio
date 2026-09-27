@@ -523,13 +523,16 @@ function ProcessStages() {
         aria-hidden="true"
         data-process-dots
         style={{ opacity: 0 }}
-        className="absolute inset-x-0 -bottom-[14%] flex justify-center gap-2"
+        className="absolute inset-x-0 -bottom-[14%] flex justify-center gap-2.5"
       >
         {STAGE_TITLES.map((title) => (
           <span
             key={title}
             data-process-dot
-            className="h-1 w-7 rounded-full bg-black/15 transition-[background-color,width] duration-300"
+            // A 10px circle, the same as the phone's and the work's gallery:
+            // the 4px dashes this was read as a hairline under the stage
+            // rather than as where the reader is in the four.
+            className="h-2.5 w-2.5 rounded-full bg-black/15 transition-colors duration-300"
           />
         ))}
       </div>
@@ -809,9 +812,7 @@ export default function ServicesSection() {
     }
 
     sheet.querySelectorAll<HTMLElement>("[data-process-dot]").forEach((dot, i) => {
-      const on = i === current;
-      dot.style.width = on ? "44px" : "28px";
-      dot.style.backgroundColor = on ? "rgb(0 0 0)" : "rgb(0 0 0 / 0.15)";
+      dot.style.backgroundColor = i === current ? "rgb(0 0 0)" : "rgb(0 0 0 / 0.15)";
     });
   };
 

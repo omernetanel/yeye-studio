@@ -68,22 +68,24 @@ export default function MobileProjects() {
   const seenRef = useRef<boolean[]>([]);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const progressRef = useRef<HTMLDivElement>(null);
+  const dotRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const prefersReducedMotion = usePrefersReducedMotion();
   const { scrollY } = useScroll();
 
-  // The line under the strip. Read straight off the scroller rather than from a
-  // card index, so it moves continuously with the finger instead of jumping a
-  // quarter at a time as each card snaps.
+  // The circles under the strip. The current one is whichever card the
+  // scroller is nearest, read off the scroller itself, so it changes as the
+  // card passes the middle rather than waiting for the snap to finish.
   const onTrackScroll = () => {
     const track = trackRef.current;
-    const bar = progressRef.current;
-    if (!track || !bar) return;
+    if (!track) return;
     const travel = track.scrollWidth - track.clientWidth;
     // RTL scrollers count leftwards from zero, so scrollLeft runs negative
     // here — the magnitude is the distance travelled either way.
-    const t = travel <= 0 ? 1 : Math.min(1, Math.abs(track.scrollLeft) / travel);
-    bar.style.transform = `scaleX(${Math.max(0.08, t).toFixed(3)})`;
+    const t = travel <= 0 ? 0 : Math.min(1, Math.abs(track.scrollLeft) / travel);
+    const current = Math.round(t * (projects.length - 1));
+    dotRefs.current.forEach((dot, index) => {
+      if (dot) dot.style.backgroundColor = index === current ? "rgb(0 0 0)" : "rgb(0 0 0 / 0.2)";
+    });
   };
 
   const update = () => {
@@ -174,8 +176,8 @@ export default function MobileProjects() {
           drag loses the pointer stream the moment the browser decides the
           gesture was a scroll.
           px-[7vw] on the track with 86vw cards centres the current card and
-          leaves the next one peeking at the edge. The peek is the whole
-          affordance: no arrows, no dots, no "swipe" label. */}
+          leaves the next one peeking at the edge. The peek is the affordance,
+          with the circles below as the count: no arrows, no "swipe" label. */}
       <div
         ref={trackRef}
         onScroll={onTrackScroll}
@@ -221,18 +223,21 @@ export default function MobileProjects() {
         })}
       </div>
 
-      {/* How far through the work you are, as one line rather than a row of
-          dots. Dots count the projects, which is a number nobody needs; a line
-          answers the only question the reader actually has, which is whether
-          there is more. */}
-      {/* 4px and near-black: at a hairline in pale grey it was easy to miss,
-          and it is the only sign there is more to swipe to. */}
-      <div className="mx-[7vw] mt-4 h-1 overflow-hidden rounded-full bg-black/10">
-        <div
-          ref={progressRef}
-          className="h-1 origin-left rounded-full bg-black/80 transition-transform duration-150 ease-out"
-          style={{ transform: "scaleX(0)" }}
-        />
+      {/* Where you are in the work: a 10px circle per piece, the current one
+          black. The same indicator as the stages on the paper above and the
+          desk's gallery, so it reads as one thing across the site. It was a
+          line for a while, and a line said there was more without saying how
+          much; the circles do both, and they are what the reader asked for. */}
+      <div aria-hidden="true" className="mt-5 flex items-center justify-center gap-2.5">
+        {projects.map((project, index) => (
+          <span
+            key={project.slug}
+            ref={(el) => {
+              dotRefs.current[index] = el;
+            }}
+            className="block h-2.5 w-2.5 rounded-full bg-black/20 transition-colors duration-200"
+          />
+        ))}
       </div>
 
       {/* No "see all the work" button. It went to /projects, which lists the

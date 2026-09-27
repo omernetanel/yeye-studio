@@ -459,8 +459,10 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
           >
             <span
               aria-hidden="true"
-              className={`block h-1 rounded-full transition-all duration-300 ${
-                index === facing ? "w-12 bg-black" : "w-7 bg-black/25 group-hover:bg-black/45"
+              // 10px circles, the same indicator as the process above it and
+              // the phone's: the current one is black, the rest grey.
+              className={`block h-2.5 w-2.5 rounded-full transition-colors duration-300 ${
+                index === facing ? "bg-black" : "bg-black/25 group-hover:bg-black/45"
               }`}
             />
           </button>
