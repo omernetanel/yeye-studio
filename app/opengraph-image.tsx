@@ -19,7 +19,7 @@ import { SITE_NAME } from "@/lib/site";
  * artwork, so it needs no font at all. The title and description beside the
  * card come from the page's own metadata and carry the words.
  */
-export const alt = `${SITE_NAME} — סטודיו דיגיטלי`;
+export const alt = `${SITE_NAME} - סטודיו דיגיטלי`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
