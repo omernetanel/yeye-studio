@@ -6,7 +6,9 @@ import ServiceRow from "@/components/sections/services/ServiceRow";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { SERVICES_HEADING, SERVICES_LEAD, services } from "@/lib/content";
 import { ScrollFrames, type FrameSequence } from "@/lib/scrub/scroll-frames";
-import { SteppedPlayhead, travelScreensFor } from "@/lib/scrub/stepped-playhead";
+import { SteppedPlayhead, travelScreensFor, type StoryOptions } from "@/lib/scrub/stepped-playhead";
+import { isMomentum, stopMomentumAt, trackTouch } from "@/lib/scrub/momentum";
+import { useLenis } from "@/lib/motion/lenis";
 import {
   ICONS,
   ICON_MOTION,
@@ -177,11 +179,21 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-/** The progress at which the clip reaches a cue, from the beats themselves. */
-function progressAtCue(time: number) {
-  const point = TIMELINE.find((entry) => entry.time === time);
-  if (!point) throw new Error(`No beat ends at ${time}s`);
-  return point.progress;
+/**
+ * The progress at which the clip reaches a moment in time: the inverse of
+ * progressToTime, over the beats in which time actually moves. The hold, where
+ * it stands still, has no single answer and is never asked for - a stage is
+ * found by progressAtStage instead.
+ */
+function progressAtTime(time: number) {
+  for (let i = 1; i < TIMELINE.length; i++) {
+    const from = TIMELINE[i - 1];
+    const to = TIMELINE[i];
+    if (to.time > from.time && time >= from.time && time <= to.time) {
+      return from.progress + ((time - from.time) / (to.time - from.time)) * (to.progress - from.progress);
+    }
+  }
+  throw new Error(`No beat runs through ${time}s`);
 }
 
 /**
@@ -194,46 +206,64 @@ function progressAtStage(index: number) {
 }
 
 /**
- * WHERE THE SCROLL STOPS DRIVING THE CLIP AND STARTS PICKING MOMENTS.
+ * THE STORY, AS REST STATES AND THE WAYS BETWEEN THEM - see
+ * lib/scrub/stepped-playhead.ts for the mechanism and why a phone needs it.
  *
- * Up to the paper opening it is the scroll it always was: the services list is
- * something to read, and a reader reads at their own pace. From the opening on,
- * everything is something to watch, and on a phone watching is what a thumb is
- * worst at - so from there the scroll picks one of these moments and a clock
- * plays the way to it. See lib/scrub/stepped-playhead.ts for why.
+ * Three moments are there to be watched, and each plays in full on its own
+ * clock once the scroll crosses its line: the paper opening onto "איך אני
+ * עובד?", the paper crumpling into a ball, and the ball turning into a plane as
+ * the closing line rises. Everything else is the reader's own pace:
  *
- * The same beats and cues as before; nothing about the clip, the frames or the
- * framing changed. Only who is holding the playhead.
+ * - The ball with the services on it is scrubbed by the finger, as it always
+ *   was. The list is something to read, and every frame there is a good frame.
+ *   It ends just before the list starts to fade, so the fade belongs to the
+ *   opening and a reader can never be left looking at a half-faded list.
+ * - The stages are read one at a time. The scroll picks which, and the swap
+ *   between two is a short clock of its own, so a reader stopping anywhere is
+ *   looking at a whole stage and never at the empty sheet between two. Each
+ *   has more than a screen of scroll to itself: at less, a gentle scroll ran
+ *   them past before they could be read.
+ * - The plane flying off is scrubbed again. It is the last thing before the
+ *   page moves on, and every frame of it is a plane and a line on white.
  *
- * THE PACE IS IN SECONDS, AND THE FOOTAGE SETS IT. The opening plays close to
- * the speed it was filmed; the stages take a short beat each; the crumple and
- * the flight, which run seven seconds of footage, are pressed into three - on a
- * phone, a reader waiting seven seconds for a plane is a reader gone. These are
- * the numbers to tune against a real hand.
+ * The rest states were chosen from the footage, not from the beats: frame 250
+ * is the last one on which the ball is whole and still, before it starts to
+ * turn, so the crumple ends on a ball that has landed and the next moment
+ * starts turning at once instead of after a pause.
+ *
+ * The pace of each moment is in seconds and is the number to tune against a
+ * real hand. Where the footage is long, the moment is shorter than the footage:
+ * a reader waiting seven seconds for a plane is a reader gone.
  */
-const STEPPED = {
-  // Exactly the scroll the ball had before: the share of the old travel its
-  // beat took. Nothing up to the opening should feel any different.
-  freeScreens: (BEATS[1].screens / SCROLL_SCREENS) * (SCROLL_SCREENS - 1),
-  anchors: [
-    progressAtCue(CUE_SERVICES_OUT), // the list has gone, the paper is about to open
-    ...STAGE_TITLES.map((_, index) => progressAtStage(index)), // each stage alone on the sheet
-    progressAtCue(CUE_STATEMENT_IN), // folded, crumpled and flown
-    1, // the closing line, and the sheet at rest
-  ],
-  durations: [
-    2.0, // the opening, the heading rising into place, the first stage arriving
-    0.9, // stage to stage
-    0.9,
-    0.9,
-    3.2, // the stages go back into the paper, it crumples, it flies
-    2.2, // the closing line rises as the sheet lands
-  ],
-  stepScreens: 0.9,
-  tailScreens: 1,
-} as const;
+const FREE_END_TIME = CUE_SERVICES_OUT - FADE_SECONDS;
+const BALL_REST_TIME = 250 / CLIP_FPS;
+const PLANE_REST_TIME = CUE_STATEMENT_IN + FADE_SECONDS;
 
-const TRAVEL_SCREENS = travelScreensFor(STEPPED);
+const STORY = {
+  anchors: [
+    0,
+    progressAtTime(FREE_END_TIME), // the ball, the list still whole
+    progressAtTime(CUE_ABOUT_IN + FADE_SECONDS), // open, "איך אני עובד?" alone in the middle
+    ...STAGE_TITLES.map((_, index) => progressAtStage(index)), // each stage alone on the sheet
+    progressAtTime(BALL_REST_TIME), // crumpled, the ball landed
+    progressAtTime(PLANE_REST_TIME), // a plane, the closing line up behind it
+    1, // the plane gone, the line on white
+  ],
+  transitions: [
+    // The ball's scroll as it was - the same rate, ending where the fade begins.
+    { kind: "scrub", screens: (BEATS[1].screens / SCROLL_SCREENS) * (SCROLL_SCREENS - 1) * (FREE_END_TIME / CUE_SERVICES_OUT) },
+    { kind: "play", screens: 0.8, seconds: 1.8 }, // the list goes, the paper opens, the heading comes up
+    { kind: "play", screens: 1.1, seconds: 0.7 }, // the heading rises to its place and the first stage comes in
+    { kind: "play", screens: 1.1, seconds: 0.5 }, // stage to stage
+    { kind: "play", screens: 1.1, seconds: 0.5 },
+    { kind: "play", screens: 1.1, seconds: 0.5 },
+    { kind: "play", screens: 0.8, seconds: 2.8 }, // the stages go back in and the paper crumples to a ball
+    { kind: "play", screens: 0.8, seconds: 2.2 }, // the ball turns into a plane and the line rises
+    { kind: "scrub", screens: 1 }, // the plane flies off
+  ],
+} as const satisfies Pick<StoryOptions, "anchors" | "transitions">;
+
+const TRAVEL_SCREENS = travelScreensFor(STORY);
 
 /**
  * The services section, rebuilt for the phone around a 9:16 cut of the clip.
@@ -266,9 +296,17 @@ export default function MobileServices() {
   const statementLayerRef = useRef<HTMLDivElement>(null);
 
   const playheadRef = useRef<SteppedPlayhead | null>(null);
+  const lenis = useLenis();
+  // Read by onScroll, which the playhead's closure outlives, so it is kept in a
+  // ref rather than read from the render it was created in.
+  const lenisRef = useRef(lenis);
+  useLayoutEffect(() => {
+    lenisRef.current = lenis;
+  }, [lenis]);
 
-  // Scroll in, playhead out. The scroll only reports where the reader is; what
-  // is shown is whatever the playhead hands to render below.
+  // Scroll in, playhead out. The scroll only reports where the reader is and
+  // how the page is moving; what is shown is whatever the playhead hands to
+  // render below.
   const onScroll = () => {
     const wrapper = wrapperRef.current;
     const panel = panelRef.current;
@@ -278,8 +316,21 @@ export default function MobileServices() {
     // the panel is sized in svh — the height with the browser chrome showing,
     // which does not move — while innerHeight grows and shrinks as the address
     // bar hides on scroll. Measuring the moving one would shift every line the
-    // steps are picked by, mid-scroll.
-    playhead.setScroll(-wrapper.getBoundingClientRect().top / panel.offsetHeight);
+    // moments are picked by, mid-scroll.
+    //
+    // A glide counts as momentum only when it is not the site moving itself:
+    // the menu's travel to a section is a smooth scroll Lenis is running.
+    const momentum = isMomentum() && lenisRef.current?.isScrolling !== "smooth";
+    playhead.setScroll(-wrapper.getBoundingClientRect().top / panel.offsetHeight, momentum);
+  };
+
+  // Where the playhead asks a throw to stop, in screens from where the panel
+  // pins, turned into a place on the page.
+  const brake = (screens: number) => {
+    const wrapper = wrapperRef.current;
+    const panel = panelRef.current;
+    if (!wrapper || !panel) return;
+    stopMomentumAt(wrapper.getBoundingClientRect().top + window.scrollY + screens * panel.offsetHeight);
   };
 
   const render = (progress: number) => {
@@ -380,7 +431,8 @@ export default function MobileServices() {
     // The playhead outlives this render, so it keeps this render's `render` -
     // which is safe only because render reads nothing but refs and module
     // constants. Anything added to it that reads props or state would go stale.
-    const playhead = new SteppedPlayhead({ ...STEPPED, render });
+    trackTouch();
+    const playhead = new SteppedPlayhead({ ...STORY, render, brake });
     playheadRef.current = playhead;
     onScroll();
 
@@ -487,11 +539,14 @@ export default function MobileServices() {
             </div>
           </div>
           {/* Where the reader is in the four. Decoration for sighted readers —
-              each stage carries its own numeral for everyone else. */}
+              each stage carries its own numeral for everyone else.
+              10px circles: at 6 they were a texture on the paper rather than a
+              count anyone read. The same size as the work's gallery below and
+              the desk's version of both, so it is one indicator across the site. */}
           <div
             ref={dotsRef}
             aria-hidden="true"
-            className="absolute inset-x-0 bottom-[8%] flex items-center justify-center gap-2 opacity-0"
+            className="absolute inset-x-0 bottom-[8%] flex items-center justify-center gap-2.5 opacity-0"
           >
             {STAGE_TITLES.map((title, index) => (
               <span
@@ -499,7 +554,7 @@ export default function MobileServices() {
                 ref={(element) => {
                   dotRefs.current[index] = element;
                 }}
-                className="block h-1.5 w-1.5 rounded-full bg-black opacity-20"
+                className="block h-2.5 w-2.5 rounded-full bg-black opacity-20"
               />
             ))}
           </div>
