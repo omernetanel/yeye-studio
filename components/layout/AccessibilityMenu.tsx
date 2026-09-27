@@ -15,21 +15,17 @@ import { resetA11yPrefs, setA11yPref, useA11yPrefs, type A11yPrefs } from "@/lib
  * disc, this one is a light disc with a dark figure. Two dark discs stacked in
  * the same corner read as one object.
  *
- * And it flips the same way the mark below it does, through the same class on
- * the same cue: over a section that declares itself dark, both invert. The
- * filter sits on the artwork rather than on the button, because the button
- * carries the shadow and inverting that turns it into a halo.
+ * IT DOES NOT SWITCH COLOUR. The WhatsApp mark inverts over a dark section
+ * because it is a dark disc and would otherwise vanish into one; a light disc
+ * has no such problem, and inverting it would take the white away exactly where
+ * it is doing the work. So it stays as it is over every section.
  *
  * It fills its box edge to edge, so the disc IS the button: no ring, no border,
  * nothing that would make it a different size from the mark below it.
  */
-function WheelchairMark({ dark }: { dark: boolean }) {
+function WheelchairMark() {
   return (
-    <svg
-      viewBox="0 0 64 64"
-      className={`h-full w-full transition-[filter] duration-200 ${dark ? "invert" : ""}`}
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">
       <circle cx="32" cy="32" r="32" fill="#fff" />
       {/* CENTRED BY ARITHMETIC, NOT BY EYE. The figure's own extents, strokes
           included, run 13.1 to 51.3 across and 9.5 to 54.3 down, so its middle
@@ -89,46 +85,9 @@ const SWITCHES: { key: keyof A11yPrefs; label: string; hint: string }[] = [
 
 export default function AccessibilityMenu() {
   const [open, setOpen] = useState(false);
-  const [dark, setDark] = useState(false);
   const prefs = useA11yPrefs();
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-
-  // The same check the WhatsApp mark makes, against the same contract: a
-  // section declares itself dark with data-nav-dark, and anything floating over
-  // it asks whether one of those is under its own centre. Read on a frame, so a
-  // scroll never does this work more than once per paint.
-  useEffect(() => {
-    let frame: number | null = null;
-    const check = () => {
-      frame = null;
-      const root = rootRef.current;
-      if (!root) return;
-      const box = root.getBoundingClientRect();
-      const x = box.left + box.width / 2;
-      const y = box.top + box.height / 2;
-      let over = false;
-      for (const el of document.querySelectorAll<HTMLElement>('[data-nav-dark="true"]')) {
-        const r = el.getBoundingClientRect();
-        if (r.left <= x && r.right >= x && r.top <= y && r.bottom >= y) {
-          over = true;
-          break;
-        }
-      }
-      setDark(over);
-    };
-    const schedule = () => {
-      if (frame === null) frame = requestAnimationFrame(check);
-    };
-    check();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    return () => {
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      if (frame !== null) cancelAnimationFrame(frame);
-    };
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -171,7 +130,7 @@ export default function AccessibilityMenu() {
         // make the drawn circle smaller than the box it is measured by.
         className="block h-[64px] w-[64px] rounded-full shadow-[0_6px_20px_rgba(0,0,0,0.16)] transition-transform duration-200 ease-out hover:scale-[1.06] active:scale-100 md:h-[72px] md:w-[72px]"
       >
-        <WheelchairMark dark={dark} />
+        <WheelchairMark />
       </button>
 
       {open && (
