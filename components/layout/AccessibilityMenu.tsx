@@ -100,11 +100,13 @@ export default function AccessibilityMenu() {
                   </span>
                   <span className="flex-1">
                     <span className="block font-body text-[14px] text-black">{item.label}</span>
-                    {/* One step darker than it was. At 12px the hint was the
-                        hardest line in the panel to read, and this is the panel
-                        someone opens because reading is hard. Still short of the
-                        label above it, so the pair still reads as two levels. */}
-                    <span className="block font-body text-[12px] text-black/80">{item.hint}</span>
+                    {/* Halfway between where this started (/70) and where it
+                        briefly went (/80). At 12px the hint was the hardest line
+                        in the panel to read, and this is the panel someone opens
+                        because reading is hard - but /80 made the whole panel
+                        feel heavy and pulled the hint level with its label.
+                        Still clearly short of the black above it. */}
+                    <span className="block font-body text-[12px] text-black/75">{item.hint}</span>
                   </span>
                 </button>
               );
