@@ -5,6 +5,18 @@ import { createContext, useContext, useSyncExternalStore } from "react";
 const MOBILE_BREAKPOINT_PX = 768;
 const QUERY = `(max-width: ${MOBILE_BREAKPOINT_PX - 1}px)`;
 
+/**
+ * The same question, asked of the window directly rather than through React.
+ *
+ * For code that runs outside a render and needs the answer for the frame it is
+ * on - see lib/nav/hash-targets.ts, where a hook's value could still be the
+ * server's guess on the first pass and would place the page at the wrong offset
+ * before correcting itself.
+ */
+export function isMobileViewport() {
+  return window.matchMedia(QUERY).matches;
+}
+
 function subscribe(callback: () => void) {
   const mediaQueryList = window.matchMedia(QUERY);
   mediaQueryList.addEventListener("change", callback);

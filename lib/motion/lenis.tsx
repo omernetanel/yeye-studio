@@ -7,10 +7,15 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { gsap, ScrollTrigger } from "@/lib/motion/gsap";
 import { noteArrival, noteForwardNavigation, noteHistoryNavigation } from "@/lib/nav/in-site-history";
 import { destinationForHash } from "@/lib/nav/hash-targets";
-import { useIsMobile } from "@/lib/use-mobile";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
 const LenisContext = createContext<Lenis | null>(null);
+
+// How long an arrival keeps re-asserting where it placed the page. Long enough
+// to outlast the layout settling and Next's own hash scroll, short enough that
+// it is over before a reader who lands and immediately reaches for the wheel
+// would notice - and their first touch ends it anyway.
+const HOLD_ARRIVAL_MS = 500;
 
 /** The active Lenis instance, or null when smooth scroll is disabled (prefers-reduced-motion). */
 export function useLenis() {
@@ -89,15 +94,6 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
   // an instance rebuild as a move put it four steps deep on a plain reload.
   const lastPathRef = useRef<string | null>(null);
 
-  // Held in a ref rather than in the effect's deps: which layout is on screen
-  // decides where a hash lands, but a window crossing the breakpoint is not a
-  // reason to pick the reader up and move them.
-  const isMobile = useIsMobile();
-  const isMobileRef = useRef(isMobile);
-  useEffect(() => {
-    isMobileRef.current = isMobile;
-  }, [isMobile]);
-
   useEffect(() => {
     const arriving = lastPathRef.current === null;
     const moved = !arriving && lastPathRef.current !== pathname;
@@ -112,38 +108,60 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
 
     if (moved) noteForwardNavigation(pathname);
 
-    // The offset of a section on this page is not final on the frame the route
-    // settles: fonts land, the paper's frames arrive, and the page grows above
-    // whatever was aimed at. So the placement is measured again twice - on the
-    // next frame and once more a quarter of a second later - and gives up the
-    // moment the reader has moved themselves, which is the only thing that
-    // outranks their own address bar.
+    // THE OFFSET OF A SECTION IS NOT FINAL ON THE FRAME THE ROUTE SETTLES:
+    // fonts land, the paper's frame sequence arrives, and the page grows above
+    // whatever was aimed at. An earlier version re-measured at two guessed
+    // moments - the next frame, and a quarter of a second later - which is an
+    // answer to "when is it probably done" rather than to the actual question.
+    // The question is whether the page is still changing height, and a
+    // ResizeObserver answers exactly that: place again on every change, and
+    // fall silent on its own once the height holds.
+    const place = () => {
+      const top = destinationForHash(window.location.hash) ?? 0;
+      if (lenis) lenis.scrollTo(top, { immediate: true });
+      else window.scrollTo(0, top);
+      return top;
+    };
+
+    const aimed = place();
+    // Nothing to hold on to: the top of the page does not move when the page
+    // grows underneath it.
+    if (aimed === 0 && !window.location.hash) return;
+
+    // AN ARRIVAL HOLDS ITS PLACE FOR A MOMENT, because two other things write
+    // the scroll position on the same beat and both of them are wrong here:
+    // the page keeps growing above the target as fonts and the paper's frames
+    // land, and Next scrolls to the hash element's own top after this runs,
+    // which for a pinned section is the frame that means nothing. Re-asserting
+    // every frame for half a second wins both without knowing about either.
+    //
+    // AND THE READER OUTRANKS ALL OF IT. Their own hand is an intention, not a
+    // distance: an earlier version compared scrollY against the placement and
+    // let go past two pixels, which Lenis's own settling could trip by itself
+    // while nobody had touched anything.
+    const until = performance.now() + HOLD_ARRIVAL_MS;
     let frame: number | null = null;
-    let timer: number | null = null;
 
-    const place = (attempt: number) => {
-      const top = destinationForHash(window.location.hash, isMobileRef.current);
-
-      if (lenis) lenis.scrollTo(top ?? 0, { immediate: true });
-      else window.scrollTo(0, top ?? 0);
-
-      if (top === null || attempt >= 2) return;
-
-      const again = () => {
-        if (Math.abs(window.scrollY - top) > 2) return;
-        place(attempt + 1);
-      };
-
-      if (attempt === 0) frame = requestAnimationFrame(() => requestAnimationFrame(again));
-      else timer = window.setTimeout(again, 250);
-    };
-
-    place(0);
-
-    return () => {
+    const stop = () => {
       if (frame !== null) cancelAnimationFrame(frame);
-      if (timer !== null) clearTimeout(timer);
+      frame = null;
+      window.removeEventListener("wheel", stop);
+      window.removeEventListener("touchstart", stop);
+      window.removeEventListener("keydown", stop);
     };
+
+    const hold = () => {
+      if (performance.now() > until) return stop();
+      place();
+      frame = requestAnimationFrame(hold);
+    };
+
+    window.addEventListener("wheel", stop, { passive: true });
+    window.addEventListener("touchstart", stop, { passive: true });
+    window.addEventListener("keydown", stop);
+    frame = requestAnimationFrame(hold);
+
+    return stop;
   }, [pathname, lenis]);
 
   return (

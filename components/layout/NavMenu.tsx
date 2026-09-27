@@ -161,7 +161,7 @@ export default function NavMenu() {
 
   const go = (target: HashTarget) => {
     setOpen(false);
-    const to = destinationOf(target, isMobile);
+    const to = destinationOf(target);
     if (to === null) return;
     // Through Lenis, never around it: a native smooth scroll would run its own
     // easing alongside Lenis's and the two would fight the whole way down.
@@ -193,10 +193,11 @@ export default function NavMenu() {
     return () => {
       document.removeEventListener("click", onClick, true);
     };
-    // go reads lenis and isMobile, which are the deps; it is recreated each
-    // render and listing it would re-arm this on every one.
+    // go reads lenis, which is the dep; it is recreated each render and listing
+    // it would re-arm this on every one. The layout is no longer among them:
+    // destinationOf asks the window itself at the moment of the click.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, lenis, isMobile]);
+  }, [pathname, lenis]);
 
   // The targets only exist on the home page.
   if (pathname !== "/") return null;

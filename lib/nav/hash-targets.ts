@@ -19,6 +19,8 @@
  * about the other.
  */
 
+import { isMobileViewport } from "@/lib/use-mobile";
+
 // `at` per layout where the phone's section is built differently from the
 // desktop's and the same fraction lands somewhere else in it.
 export type HashTarget = { label: string; id: string; at: number | { desktop: number; mobile: number } };
@@ -59,12 +61,12 @@ export function targetForHash(hash: string) {
  * page, and null when there is nothing to aim at — no hash, or a section that
  * belongs to a page this is not.
  */
-export function destinationForHash(hash: string, isMobile: boolean): number | null {
+export function destinationForHash(hash: string): number | null {
   const id = hash.startsWith("#") ? hash.slice(1) : hash;
   if (!id) return null;
 
   const target = targetForHash(id);
-  if (target) return destinationOf(target, isMobile);
+  if (target) return destinationOf(target);
 
   const element = document.getElementById(decodeURIComponent(id));
   return element ? Math.round(element.getBoundingClientRect().top + window.scrollY) : null;
@@ -73,13 +75,20 @@ export function destinationForHash(hash: string, isMobile: boolean): number | nu
 /**
  * Where that target sits on the page right now, or null if its section is not
  * on this one. Reads the DOM, so it is only ever called from the browser.
+ *
+ * WHICH LAYOUT IS ON SCREEN IS ASKED OF THE WINDOW, not of a hook. The answer
+ * has to be right for the frame this is placing on, and useIsMobile still holds
+ * the server's guess until hydration finishes - which put the first placement
+ * of /#about on a phone at the desktop fraction and then moved it, so the
+ * reader saw a jump instead of an arrival.
  */
-export function destinationOf(target: HashTarget, isMobile: boolean): number | null {
+export function destinationOf(target: HashTarget): number | null {
   const section = document.getElementById(target.id);
   if (!section) return null;
   const top = section.getBoundingClientRect().top + window.scrollY;
   // Zero for a section that is not pinned, so this one line serves both.
   const run = Math.max(0, section.offsetHeight - window.innerHeight);
-  const at = typeof target.at === "number" ? target.at : isMobile ? target.at.mobile : target.at.desktop;
+  const at =
+    typeof target.at === "number" ? target.at : isMobileViewport() ? target.at.mobile : target.at.desktop;
   return Math.round(top + run * at);
 }
