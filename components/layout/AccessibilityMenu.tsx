@@ -9,8 +9,12 @@ import { resetA11yPrefs, setA11yPref, useA11yPrefs, type A11yPrefs } from "@/lib
  *
  * lucide's Accessibility is the "active" mark - an abstract figure with its
  * limbs thrown out - and at 32 pixels it read as a shape rather than as the one
- * sign everyone already knows. This is the familiar seated figure on a blue
- * disc, which is what a visitor is looking for in that corner.
+ * sign everyone already knows. This is the familiar seated figure.
+ *
+ * THE REVERSE OF THE WHATSAPP MARK BELOW IT, on purpose: that one is a dark
+ * disc, this one is a light disc with a dark figure. Two dark discs stacked in
+ * the same corner read as one object, and a light disc is the half that stays
+ * legible over the black sections as well, so it needs no colour switching.
  *
  * It fills its box edge to edge, so the disc IS the button: no ring, no border,
  * nothing that would make it a different size from the mark below it.
@@ -18,27 +22,38 @@ import { resetA11yPrefs, setA11yPref, useA11yPrefs, type A11yPrefs } from "@/lib
 function WheelchairMark() {
   return (
     <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">
-      <circle cx="32" cy="32" r="32" fill="#1D3FA8" />
-      {/* The head, then the back, seat and leg as one stroke, then the wheel
-          behind them - the order the eye reads it in. */}
-      <circle cx="38.6" cy="15.8" r="5.4" fill="#fff" />
-      <path
-        d="M35.6 24.2 L31.8 37.2 L43.4 37.2 L48.6 49.6"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="4.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {/* An open ring: the gap at the top right is where the body crosses it,
-          which is what keeps the two apart at this size. */}
-      <path
-        d="M41.2 27.6 A13.6 13.6 0 1 1 27.4 25.4"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="3.2"
-        strokeLinecap="round"
-      />
+      <circle cx="32" cy="32" r="32" fill="#fff" />
+      {/* CENTRED BY ARITHMETIC, NOT BY EYE. The figure's own extents, strokes
+          included, run 13.1 to 51.3 across and 9.5 to 54.3 down, so its middle
+          is (32.2, 31.9) and not the middle of the box. This group moves that
+          point onto the disc's centre and shrinks the whole thing to 0.82, which
+          is what keeps the head and the foot off the curve of the disc - at full
+          size the glyph was 45 tall inside a circle whose inscribed square is
+          about 45, and it crowded all four corners. */}
+      <g transform="translate(32 32) scale(0.82) translate(-32.2 -31.9)">
+        <g fill="none" stroke="#000" strokeLinecap="round" strokeLinejoin="round">
+          {/* THE WHEEL, as a ring with one opening. Drawn as a dashed circle
+              rather than as an arc: the dash is a length along the rim and the
+              rotation is where it starts, so the opening can be placed by angle
+              instead of by solving for two endpoints. Circumference here is
+              2 x pi x 14.6 = 91.7; a 19.7 gap is about 77 degrees, and starting
+              the dash at 22 degrees puts that gap from -55 to 22 - the top
+              right, which is exactly where the body crosses the rim. */}
+          <circle
+            cx="29.6"
+            cy="37.8"
+            r="14.6"
+            strokeWidth="3.8"
+            strokeDasharray="72 19.7"
+            transform="rotate(22 29.6 37.8)"
+          />
+          {/* Back, seat, leg and foot in one stroke, in the order the eye reads
+              them: down from the shoulder, across the seat, down the shin, and a
+              short foot pointing forward. */}
+          <path d="M34.4 21.8 L30.2 34.4 L41.6 34.4 L45.8 46.4 L48.5 46.4" strokeWidth="5.6" />
+        </g>
+        <circle cx="36.8" cy="14.6" r="5.1" fill="#000" />
+      </g>
     </svg>
   );
 }
