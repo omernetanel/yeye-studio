@@ -3,7 +3,7 @@
 import Lenis from "lenis";
 import { MotionConfig } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { gsap, ScrollTrigger } from "@/lib/motion/gsap";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
@@ -51,6 +51,20 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     };
   }, [prefersReducedMotion]);
 
+  // BACK AND FORWARD ARE NOT NEW PAGES. A route change normally has to be sent
+  // to the top — see the effect below — but a history navigation is the reader
+  // returning to a place they were, and the whole point of it is the position
+  // they left. This flag marks those so the reset below stands down for one
+  // route change; the browser and Next restore the position themselves.
+  const poppedRef = useRef(false);
+  useEffect(() => {
+    const onPop = () => {
+      poppedRef.current = true;
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
   // A client-side route change unmounts/mounts new page content at whatever
   // scroll position the previous page was left at — the browser's own
   // scroll-restoration doesn't help here since Lenis owns the actual scroll
@@ -58,6 +72,10 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
   // frame. Resetting through Lenis itself (not a raw window.scrollTo) is
   // what actually sticks.
   useEffect(() => {
+    if (poppedRef.current) {
+      poppedRef.current = false;
+      return;
+    }
     if (lenis) {
       lenis.scrollTo(0, { immediate: true });
     } else {
