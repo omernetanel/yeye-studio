@@ -1,0 +1,46 @@
+/*
+ * FlexCarousel - derived from React Bits' FlexCarousel (MIT + Commons Clause;
+ * the notice the licence requires is in THIRD_PARTY_NOTICES.md). The row is
+ * drawn in WebGL; this is only the container around it.
+ */
+
+.flex-carousel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: grab;
+  /* The page keeps the vertical axis: a thumb moving up or down scrolls the
+     page and never the row. Only a sideways drag belongs to the carousel. */
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-x: contain;
+  outline: none;
+}
+
+/* Over a card, a click goes into that piece of work. */
+.flex-carousel[data-hover="open"] {
+  cursor: pointer;
+}
+
+.flex-carousel[data-dragging] {
+  cursor: grabbing;
+}
+
+.flex-carousel:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.45);
+}
+
+.flex-carousel__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -8,13 +8,18 @@ read in full, and so the requirement travels with the repository.
 
 ## React Bits
 
-Two style blocks in `app/globals.css` are derived from React Bits:
+Two style blocks in `app/globals.css` and one component are derived from React
+Bits:
 
 - `.border-glow` and its sweep, from **BorderGlow** — the masked cone of light
   around a card's border. The pointer tracking was dropped and replaced by a CSS
   rotation.
 - `.fold-segment` / `.fold-piece`, from **FoldText** — the per-letter hinge
   geometry. It is driven from scroll by `components/ui/FoldText.tsx`.
+- `components/ui/FlexCarousel.tsx` and `FlexCarousel.css`, from
+  **FlexCarousel** — ported to TypeScript; sample images, click-to-zoom,
+  autoplay and built-in captions removed, and the lens sized from the centred
+  card.
 
 Source: https://github.com/DavidHDev/react-bits
 

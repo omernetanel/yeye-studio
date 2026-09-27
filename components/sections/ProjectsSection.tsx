@@ -3,24 +3,11 @@
 import { useLayoutEffect, useRef } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import Button from "@/components/ui/Button";
-import { type GalleryItem } from "@/components/ui/CylinderGallery";
-import SkewedGallery from "@/components/ui/SkewedGallery";
-import { projects } from "@/lib/projects";
+import ProjectsCarousel from "@/components/ui/ProjectsCarousel";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { stackHeading } from "@/lib/motion/stack-heading";
 import FoldText, { setFold } from "@/components/ui/FoldText";
 import { PROJECTS_HEADING } from "@/lib/content";
-
-// Four real projects today, and nothing here is written for four: the arc takes
-// its count from this array and wraps by it, and the project pages are built
-// from the same file. Adding work is adding an entry to lib/projects.
-const galleryItems: GalleryItem[] = projects.map((project) => ({
-  image: project.image,
-  title: project.cardTitle ?? project.title,
-  category: project.cardCategory ?? project.category,
-  href: project.external ? project.url : `/projects/${project.slug}`,
-  external: project.external,
-}));
 
 // A SHORT PIN, and that is the whole point of it: it separates how long the
 // arrival takes from how far the heading travels.
@@ -46,8 +33,8 @@ const PIN_VH = 0.9;
 // had left entirely, which is a beat too late to read as a handover.
 const LEAD_VH = 0.5;
 
-// Within that pin. The heading folds in as a big stack — one word a line, both
-// lines the same length — riding up with the panel, and settles into its one
+// Within that pin. The heading folds in as a big stack — one word a line, all
+// at one size — riding up with the panel, and settles into its one
 // line straight after.
 const FOLD = [0, 0.42] as const;
 const SETTLE = [0.42, 0.62] as const;
@@ -146,6 +133,9 @@ export default function ProjectsSection() {
       window.innerWidth * STACK_WIDTH,
       screen * STACK_MAX_HEIGHT,
       span(progress, SETTLE),
+      // Three words, one type size: stretched to one length, "חלק" came out
+      // twice the size of the word under it.
+      1,
     );
     setFold(heading, span(progress, FOLD));
     const galleryIn = span(progress, GALLERY);
@@ -216,7 +206,31 @@ export default function ProjectsSection() {
           {/* Full width rather than inside the old 1000px measure: the centre
               panel is meant to read as a screen. */}
           <div ref={galleryRef} className="relative w-full will-change-transform" style={{ opacity: 0 }}>
-            <SkewedGallery items={galleryItems} />
+            {/* The phone's proportions at the desk's size: one big piece in the
+                middle and only the curl of its neighbours at the edges. Shown
+                whole, the neighbours were two heavy black waves competing with
+                it. The neighbours are a wave, out of focus and colour-split,
+                and the wave is capped so it stays inside the box: with no cap
+                the curl ran past the canvas and was cut in a straight line.
+                The card is 76% of the box to leave the wave that room, and the
+                neighbours are at 45% so the piece in the middle leads, thinning
+                further towards the screen's edges. Fading
+                the edges to white was tried twice and looked like fog - no.
+                The wheel turns the row over the middle half only; either side
+                of it the page scrolls on. */}
+            <ProjectsCarousel
+              // 60svh, less on a short laptop: heading, gaps and caption take
+              // about 330px, and the pinned panel is exactly one screen tall.
+              stageClassName="!h-[min(60svh,calc(100svh-330px))]"
+              cardHeight={0.76}
+              bend={0.42}
+              dispersion={0.7}
+              wheelZone={0.5}
+              contain
+              blur={2.5}
+              sideOpacity={0.45}
+              edgeDim={0.6}
+            />
           </div>
         </div>
       </div>
