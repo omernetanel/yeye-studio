@@ -7,6 +7,7 @@ import Button from "@/components/ui/Button";
 import FluidInkReveal, {
   type CtaTarget,
   type FluidInkRevealHandle,
+  type IconTarget,
   type TextTarget,
 } from "@/components/sections/hero/FluidInkReveal";
 import ArrowIcon from "@/components/ui/ArrowIcon";
@@ -49,6 +50,9 @@ export default function HeroSection() {
   const isMobile = useIsMobile();
   const sectionRef = useRef<HTMLElement>(null);
   const taglineRef = useRef<HTMLParagraphElement>(null);
+  const studioLineRef = useRef<HTMLSpanElement>(null);
+  const footWhatsAppRef = useRef<HTMLAnchorElement>(null);
+  const footMailRef = useRef<HTMLAnchorElement>(null);
   // logoAreaRef is the flex-1/min-h-0 space left over once the tagline and
   // the CTA row have taken what they need; logoSlotRef is the actual
   // (cropped-view) logo box, explicitly sized in JS below to fit inside
@@ -102,6 +106,28 @@ export default function HeroSection() {
     borderColor: "#000000",
   };
   const taglineTarget: TextTarget = { ref: taglineRef, color: "#000000" };
+  // The foot row: the studio line and the two marks beside it. They were the
+  // only things on this screen the paper did not carry, so the ink simply
+  // covered them - which is what "they vanish when the cursor is on them"
+  // was. Painted here, they invert with everything else.
+  const studioTarget: TextTarget = { ref: studioLineRef, color: "rgba(0,0,0,0.6)" };
+  const footIcons: IconTarget[] = [
+    {
+      ref: footWhatsAppRef,
+      path: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z",
+      viewBox: 24,
+      strokeWidth: 1.5,
+      color: "rgba(0,0,0,0.65)",
+    },
+    {
+      // lucide's Mail, the same two shapes it draws.
+      ref: footMailRef,
+      path: "M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z M22 7l-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7",
+      viewBox: 24,
+      strokeWidth: 1.5,
+      color: "rgba(0,0,0,0.65)",
+    },
+  ];
   // Whether the ink is running and therefore painting the type. Without it
   // (reduced motion) there is no canvas, and the DOM shows everything itself.
   const painted = !prefersReducedMotion;
@@ -430,9 +456,10 @@ export default function HeroSection() {
             ref={inkRef}
             logoSrc="/images/logo.png"
             videoSrc="/videos/herobg.mp4"
-            textTargets={SHOW_TAGLINE ? [taglineTarget] : []}
+            textTargets={SHOW_TAGLINE ? [taglineTarget, studioTarget] : [studioTarget]}
             logoSlotRef={logoSlotRef}
             ctas={[worksCta, contactCta]}
+            icons={footIcons}
             className="relative h-full w-full select-none"
           />
         </div>
@@ -559,13 +586,23 @@ export default function HeroSection() {
         }
       >
         <div className="relative mx-auto flex w-full max-w-[1400px] items-end justify-between px-6">
-          <span className="font-display text-[13px] text-black/60">סטודיו דיגיטלי עצמאי</span>
+          <span
+            ref={studioLineRef}
+            className={`font-display text-[13px] ${painted ? "text-transparent" : "text-black/60"}`}
+          >
+            סטודיו דיגיטלי עצמאי
+          </span>
 
+          {/* THE ROW IS FULL WIDTH AND THE BUTTONS ARE IN THE MIDDLE OF IT, so
+              this wrapper lies across the studio line and the marks either side
+              of it. With pointer-events on the wrapper it swallowed both of
+              them: hovering the mail icon hit this, and so did clicking it. The
+              buttons carry it themselves instead. */}
           <div
             className={
               prefersReducedMotion
                 ? "absolute inset-x-0 bottom-0 flex animate-fade-in justify-center"
-                : "absolute inset-x-0 bottom-0 flex animate-fade-in justify-center pointer-events-auto"
+                : "absolute inset-x-0 bottom-0 flex animate-fade-in justify-center pointer-events-none"
             }
             style={{ animationDelay: "0.4s" }}
           >
@@ -585,7 +622,7 @@ export default function HeroSection() {
                  would either not show or cost a full repaint every mouse move.
                  The arrow's slide is the one exception, and it only needs a
                  repaint on enter and leave. */
-              <div className="flex items-center gap-3">
+              <div className="pointer-events-auto flex items-center gap-3">
                 <Link
                   ref={ctaWorksRef}
                   href="/#projects"
@@ -607,18 +644,27 @@ export default function HeroSection() {
           </div>
 
           <div className={prefersReducedMotion ? "flex items-end gap-4" : "pointer-events-auto flex items-end gap-4"}>
+            {/* Transparent while the ink runs, for the same reason the wordmark
+                and the buttons are: the paper carries the copy that is seen,
+                and these stay the real, clickable links underneath it. */}
             <Link
+              ref={footWhatsAppRef}
               href={`https://wa.me/${WHATSAPP_NUMBER}`}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="WhatsApp"
-              className="text-black/65 transition-colors hover:text-black"
+              className={painted ? "text-transparent" : "text-black/65 transition-colors hover:text-black"}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
               </svg>
             </Link>
-            <Link href={`mailto:${CONTACT_EMAIL}`} aria-label="Email" className="text-black/65 transition-colors hover:text-black">
+            <Link
+              ref={footMailRef}
+              href={`mailto:${CONTACT_EMAIL}`}
+              aria-label="Email"
+              className={painted ? "text-transparent" : "text-black/65 transition-colors hover:text-black"}
+            >
               <Mail size={18} strokeWidth={1.5} />
             </Link>
           </div>

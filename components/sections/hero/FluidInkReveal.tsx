@@ -524,6 +524,10 @@ interface FluidInkRevealProps {
    * same way it does the wordmark. Their DOM elements stay real and
    * clickable but transparent; these are measured, never styled. */
   ctas?: CtaTarget[];
+  /** Line icons painted onto the paper for the same reason everything else on
+   * this screen is: an element the paper does not carry is simply covered by
+   * the ink, with no invert region to bring it back. */
+  icons?: IconTarget[];
   className?: string;
 }
 
@@ -534,6 +538,19 @@ export interface CtaTarget {
   fill: string;
   textColor: string;
   borderColor?: string;
+}
+
+export interface IconTarget {
+  /** The element the icon is drawn into — its own box, measured, never styled. */
+  ref: React.RefObject<HTMLElement | null>;
+  /** SVG path data, in the icon's own viewBox. Path2D parses it as the browser
+   * does, so the drawn copy is the same artwork rather than a redrawing of it. */
+  path: string;
+  /** The side of that viewBox, which is square for every icon here. */
+  viewBox: number;
+  /** Stroke width in viewBox units, scaled with everything else. */
+  strokeWidth: number;
+  color: string;
 }
 
 export interface TextTarget {
@@ -548,7 +565,7 @@ export interface TextTarget {
 }
 
 const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(function FluidInkReveal(
-  { logoSrc, videoSrc, textTargets, logoSlotRef, ctas, className },
+  { logoSrc, videoSrc, textTargets, logoSlotRef, ctas, icons, className },
   ref
 ) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -563,6 +580,8 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
   ctasRef.current = ctas;
   const textTargetsRef = useRef<TextTarget[] | undefined>(textTargets);
   textTargetsRef.current = textTargets;
+  const iconsRef = useRef<IconTarget[] | undefined>(icons);
+  iconsRef.current = icons;
   const prefersReducedMotion = usePrefersReducedMotion();
 
   useImperativeHandle(ref, () => ({
@@ -904,6 +923,28 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
           paintArrow(arrowEl, target.color);
           addInvertRect(arrowEl.getBoundingClientRect());
         }
+      }
+
+      // Line icons, drawn from their own path data into their own boxes. Path2D
+      // reads the same string the SVG does, so this is the artwork rather than
+      // an approximation of it, and the transform is the viewBox mapped onto
+      // the element the browser already laid out.
+      for (const icon of iconsRef.current ?? []) {
+        const el = icon.ref.current;
+        if (!el) continue;
+        const iRect = el.getBoundingClientRect();
+        if (iRect.width <= 0 || iRect.height <= 0) continue;
+        const unit = (iRect.width * dpr) / icon.viewBox;
+        paperCtx.save();
+        paperCtx.translate((iRect.left - rect.left) * dpr, (iRect.top - rect.top) * dpr);
+        paperCtx.scale(unit, unit);
+        paperCtx.strokeStyle = icon.color;
+        paperCtx.lineWidth = icon.strokeWidth;
+        paperCtx.lineCap = "round";
+        paperCtx.lineJoin = "round";
+        paperCtx.stroke(new Path2D(icon.path));
+        paperCtx.restore();
+        addInvertRect(iRect);
       }
 
       // Logo — measured from the invisible logoSlot spacer (its exact

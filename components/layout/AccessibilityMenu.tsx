@@ -116,7 +116,7 @@ export default function AccessibilityMenu() {
     // is the mark's own height plus twelve: 20 + 58 + 12 on a phone, 28 + 64 +
     // 12 on a desktop. z-40 for the same reason it has: over the page, under
     // the menu's own panel.
-    <div ref={rootRef} className="fixed bottom-[90px] left-5 z-40 md:bottom-[104px] md:left-7">
+    <div ref={rootRef} className="group fixed bottom-[90px] left-5 z-40 md:bottom-[104px] md:left-7">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -133,6 +133,22 @@ export default function AccessibilityMenu() {
       >
         <WheelchairMark />
       </button>
+
+      {/* The same label the WhatsApp mark carries, on the same side and with
+          the same arming: a floating circle with an icon in it says nothing
+          about what pressing it does, and this is the one control on the page
+          where guessing wrong costs the most. It stays black on white in every
+          section, because so does the mark above it.
+          Hidden while the panel is open - the panel says what the button was
+          going to. */}
+      {!open && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 left-full ml-3 -translate-x-1 -translate-y-1/2 rounded-full bg-black px-4 py-2 font-display text-[13px] leading-none font-medium whitespace-nowrap text-white opacity-0 shadow-[0_6px_20px_rgba(0,0,0,0.16)] transition-[opacity,transform] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100"
+        >
+          התאמות נגישות
+        </span>
+      )}
 
       {open && (
         <div
