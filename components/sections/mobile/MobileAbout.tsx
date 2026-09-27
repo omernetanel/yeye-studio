@@ -7,6 +7,7 @@ import HeadingSwash from "@/components/ui/HeadingSwash";
 import BalloonDrop, { type DropState } from "@/components/sections/about/BalloonDrop";
 import BorderGlowCard from "@/components/ui/BorderGlowCard";
 import { ABOUT_FACTS_HEADING, aboutFacts } from "@/lib/content";
+import { SteppedPlayhead, travelScreensFor } from "@/lib/scrub/stepped-playhead";
 
 /**
  * "מי אני" on a phone.
@@ -46,7 +47,6 @@ import { ABOUT_FACTS_HEADING, aboutFacts } from "@/lib/content";
 // then it shrinks and lifts into its place at the top as the face climbs in
 // under it. The lines keep the desktop's 0.4em / 1.34em, so the salutation is
 // the same third of the name it is there.
-const INTRO_VH = 3;
 // AND IT OPENS BEFORE THE PIN CATCHES. A sticky panel's progress is zero until
 // its top reaches the top of the screen — which is a whole screen of scrolling
 // during which the black has arrived and is holding nothing. Opening the
@@ -55,6 +55,31 @@ const INTRO_VH = 3;
 const INTRO_LEAD_VH = 0.5;
 const GREET_LINE_1 = [0, 0.22] as const;
 const GREET_LINE_2 = [0.24, 0.46] as const;
+
+/**
+ * THE OPENING IS THREE MOMENTS, and on a phone the scroll picks which one rather
+ * than scrubbing through them - see lib/scrub/stepped-playhead.ts. A thumb's
+ * throw used to run the salutation, the name and the face past in one blur and
+ * leave them wherever the momentum died; now the throw picks a moment and each
+ * one plays in full at its own pace.
+ */
+const INTRO_STEPPED = {
+  freeScreens: 0,
+  anchors: [
+    0, // the black, nothing on it yet
+    GREET_LINE_1[1], // "נעים מאוד"
+    GREET_LINE_2[1], // "אני עומר", the pair standing large in the middle
+    1, // settled at the top, the face up under it
+  ],
+  durations: [1.0, 1.0, 1.5],
+  stepScreens: 0.75,
+  tailScreens: 0.6,
+} as const;
+
+// The pin is sized from the moments rather than the other way round: the
+// playhead's travel, less the half screen the lead opens early, plus the one
+// the panel stands in.
+const INTRO_VH = travelScreensFor(INTRO_STEPPED) - INTRO_LEAD_VH + 1;
 const GREET_SETTLE = [0.52, 0.78] as const;
 const GREET_FROM_VH = 0.5;
 // The desktop's 52px of blur on a 124px line, kept as that ratio.
@@ -130,6 +155,19 @@ const CLOSER_PULL_SVH = 28;
 const DROP_LINE_AT = 0.7;
 const CLOSER_DRAW = [0.42, 0.82] as const;
 
+// The rule under the impact line draws on a clock too, once the scroll reaches
+// where it used to begin. Up to there the close is exactly the scroll it was -
+// the free stretch carries it pixel for pixel - and the pin keeps its length,
+// because what it holds for is the balloons, which fall on their own clock.
+const CLOSER_TRAVEL_SCREENS = CLOSER_STAGE_VH - 1 + CLOSER_LEAD_VH;
+const CLOSER_STEPPED = {
+  freeScreens: CLOSER_DRAW[0] * CLOSER_TRAVEL_SCREENS,
+  anchors: CLOSER_DRAW,
+  durations: [0.9],
+  stepScreens: 1,
+  tailScreens: (1 - CLOSER_DRAW[0]) * CLOSER_TRAVEL_SCREENS,
+} as const;
+
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
 }
@@ -172,58 +210,84 @@ export default function MobileAbout() {
 
   const dropStateRef = useRef<DropState>({ armed: false, wallLive: false, leaving: false });
 
+  const introPlayheadRef = useRef<SteppedPlayhead | null>(null);
+  const closerPlayheadRef = useRef<SteppedPlayhead | null>(null);
+  // Where each playhead last put its part, read by the renders below. Kept in
+  // refs because the opening is also redrawn on scroll, for the part of it that
+  // follows the page rather than the clock.
+  const introProgressRef = useRef(0);
+  const closerProgressRef = useRef(0);
+
+  // THE OPENING, at whatever moment the playhead has it on. Called by the
+  // playhead as it travels, and on every scroll as well: the portrait's shrink
+  // follows the page rather than the clock, so it has to be redrawn when the
+  // page moves even while the playhead is standing still.
+  const renderIntro = () => {
+    const screen = window.innerHeight;
+    const portrait = portraitRef.current;
+    if (!portrait) return;
+    const progress = introProgressRef.current;
+
+    // THE GREETING. It is laid out at its settled place and size; the transform
+    // carries it from the middle of the panel up to there, and the size runs
+    // from large to settled over the same beat.
+    const greet = greetRef.current;
+    const panelHeight = (greet?.offsetParent as HTMLElement | null)?.offsetHeight ?? screen;
+    const settle = span(progress, GREET_SETTLE);
+    const aloneSize = (GREET_SIZE_ALONE_VW * window.innerWidth) / 100;
+    const size = lerp(aloneSize, GREET_SIZE_SETTLED_PX, settle);
+    if (greet) {
+      const height = (greetHeightRef.current * size) / GREET_SIZE_SETTLED_PX;
+      const fromMiddle = panelHeight / 2 - height / 2 - panelHeight * GREET_TOP;
+      greet.style.fontSize = `${size.toFixed(2)}px`;
+      greet.style.transform = `translateY(${lerp(fromMiddle, 0, settle).toFixed(1)}px)`;
+    }
+    [GREET_LINE_1, GREET_LINE_2].forEach((range, index) => {
+      const line = greetLinesRef.current[index];
+      if (!line) return;
+      const rise = span(progress, range);
+      line.style.opacity = String(rise);
+      const blur = lerp(aloneSize * GREET_BLUR_EM, 0, clamp01(rise * 1.4));
+      line.style.filter = blur > 0.15 ? `blur(${blur.toFixed(1)}px)` : "";
+      line.style.transform = `translateY(${lerp(screen * GREET_FROM_VH, 0, rise).toFixed(1)}px)`;
+    });
+
+    const rise = span(progress, PORTRAIT_RISE);
+    const lift = lerp(screen * PORTRAIT_FROM_VH, 0, rise);
+    // The shrink is a function of where the portrait's box IS, which is the
+    // pinned panel's position once it has let go, plus the box's place in it
+    // and the rise. Worked out from layout rather than read off the element,
+    // whose rect would include the very scale this is computing.
+    const panel = portrait.offsetParent as HTMLElement | null;
+    const held = (panel?.getBoundingClientRect().top ?? 0) + portrait.offsetTop + lift;
+    const shrink = smoothstep(
+      clamp01((screen * PORTRAIT_SHRINK_FROM_VH - held) / (screen * PORTRAIT_SHRINK_RUN_VH)),
+    );
+    portrait.style.opacity = String(rise);
+    portrait.style.transform =
+      `translateY(${lift.toFixed(1)}px) scale(${lerp(1, PORTRAIT_SETTLED, shrink).toFixed(3)})`;
+  };
+
+  // THE RULE under the impact line, at whatever point its playhead has it.
+  const renderCloser = () => {
+    const swash = closerSwashRef.current;
+    if (!swash) return;
+    const draw = span(closerProgressRef.current, CLOSER_DRAW);
+    swash.style.clipPath = `inset(0 ${((1 - draw) * 100).toFixed(1)}% 0 0)`;
+  };
+
+  // Everything that follows the page: the scroll handed to both playheads, and
+  // the parts that key off where their own boxes are on the screen.
   const update = () => {
     const screen = window.innerHeight;
 
     const intro = introStageRef.current;
-    const portrait = portraitRef.current;
-    if (intro && portrait) {
-      const box = intro.getBoundingClientRect();
-      const travel = box.height - screen;
-      if (travel > 0) {
-        const lead = screen * INTRO_LEAD_VH;
-        const progress = clamp01((lead - box.top) / (travel + lead));
-
-        // THE GREETING. It is laid out at its settled place and size; the
-        // transform carries it from the middle of the panel up to there, and
-        // the size runs from large to settled over the same beat.
-        const greet = greetRef.current;
-        const panelHeight = (greet?.offsetParent as HTMLElement | null)?.offsetHeight ?? screen;
-        const settle = span(progress, GREET_SETTLE);
-        const aloneSize = (GREET_SIZE_ALONE_VW * window.innerWidth) / 100;
-        const size = lerp(aloneSize, GREET_SIZE_SETTLED_PX, settle);
-        if (greet) {
-          const height = (greetHeightRef.current * size) / GREET_SIZE_SETTLED_PX;
-          const fromMiddle = panelHeight / 2 - height / 2 - panelHeight * GREET_TOP;
-          greet.style.fontSize = `${size.toFixed(2)}px`;
-          greet.style.transform = `translateY(${lerp(fromMiddle, 0, settle).toFixed(1)}px)`;
-        }
-        [GREET_LINE_1, GREET_LINE_2].forEach((range, index) => {
-          const line = greetLinesRef.current[index];
-          if (!line) return;
-          const rise = span(progress, range);
-          line.style.opacity = String(rise);
-          const blur = lerp(aloneSize * GREET_BLUR_EM, 0, clamp01(rise * 1.4));
-          line.style.filter = blur > 0.15 ? `blur(${blur.toFixed(1)}px)` : "";
-          line.style.transform = `translateY(${lerp(screen * GREET_FROM_VH, 0, rise).toFixed(1)}px)`;
-        });
-
-        const rise = span(progress, PORTRAIT_RISE);
-        const lift = lerp(screen * PORTRAIT_FROM_VH, 0, rise);
-        // The shrink is a function of where the portrait's box IS, which is the
-        // pinned panel's position once it has let go, plus the box's place in it
-        // and the rise. Worked out from layout rather than read off the element,
-        // whose rect would include the very scale this is computing.
-        const panel = portrait.offsetParent as HTMLElement | null;
-        const held = (panel?.getBoundingClientRect().top ?? 0) + portrait.offsetTop + lift;
-        const shrink = smoothstep(
-          clamp01((screen * PORTRAIT_SHRINK_FROM_VH - held) / (screen * PORTRAIT_SHRINK_RUN_VH)),
-        );
-        portrait.style.opacity = String(rise);
-        portrait.style.transform =
-          `translateY(${lift.toFixed(1)}px) scale(${lerp(1, PORTRAIT_SETTLED, shrink).toFixed(3)})`;
-      }
+    if (intro && introPlayheadRef.current) {
+      // In screens from the moment the opening starts - half a screen before
+      // the pin catches, see INTRO_LEAD_VH.
+      introPlayheadRef.current.setScroll(INTRO_LEAD_VH - intro.getBoundingClientRect().top / screen);
     }
+    renderIntro();
 
     // The copy, against its own box, once the pin has let go of it.
     const copy = copyRef.current;
@@ -260,13 +324,10 @@ export default function MobileAbout() {
 
     const stage = closerStageRef.current;
     const line = closerLineRef.current;
-    const swash = closerSwashRef.current;
-    if (!stage || !line || !swash) return;
+    if (!stage || !line) return;
 
     const box = stage.getBoundingClientRect();
-    const travel = box.height - screen;
-    if (travel <= 0) return;
-    const closerLead = screen * CLOSER_LEAD_VH;
+    if (box.height <= screen) return;
 
     // Where the line's top sits on screen, from layout rather than its rect,
     // which would include the rise written below. The line is laid out in the
@@ -281,7 +342,6 @@ export default function MobileAbout() {
     // section came back into view — two balloons over the greeting.
     dropStateRef.current.armed = lineTop < screen * DROP_LINE_AT;
     dropStateRef.current.leaving = lineTop < screen * DROP_LINE_AT;
-    const progress = clamp01((closerLead - box.top) / (travel + closerLead));
 
     // Its own entrance, off its own place on the screen rather than off the
     // stage's clock — see LINE_IN_FROM.
@@ -301,8 +361,8 @@ export default function MobileAbout() {
     // it knocks went ahead of the two that are meant to fall first.
     dropStateRef.current.wallLive = arrive >= 1 && lineTop < screen * DROP_LINE_AT;
 
-    const draw = span(progress, CLOSER_DRAW);
-    swash.style.clipPath = `inset(0 ${((1 - draw) * 100).toFixed(1)}% 0 0)`;
+    // In screens from where the close's own lead begins, see CLOSER_LEAD_VH.
+    closerPlayheadRef.current?.setScroll(CLOSER_LEAD_VH - box.top / screen);
   };
 
   useLayoutEffect(() => {
@@ -342,6 +402,26 @@ export default function MobileAbout() {
       measure();
       update();
     };
+
+    // Both playheads outlive this render and keep its renders - safe only
+    // because renderIntro and renderCloser read nothing but refs.
+    const introPlayhead = new SteppedPlayhead({
+      ...INTRO_STEPPED,
+      render: (progress) => {
+        introProgressRef.current = progress;
+        renderIntro();
+      },
+    });
+    const closerPlayhead = new SteppedPlayhead({
+      ...CLOSER_STEPPED,
+      render: (progress) => {
+        closerProgressRef.current = progress;
+        renderCloser();
+      },
+    });
+    introPlayheadRef.current = introPlayhead;
+    closerPlayheadRef.current = closerPlayhead;
+
     refresh();
     let cancelled = false;
     document.fonts.ready.then(() => {
@@ -351,7 +431,14 @@ export default function MobileAbout() {
     return () => {
       cancelled = true;
       window.removeEventListener("resize", refresh);
+      introPlayhead.dispose();
+      closerPlayhead.dispose();
+      introPlayheadRef.current = null;
+      closerPlayheadRef.current = null;
     };
+    // update and the renders read only refs, and are recreated on every render;
+    // listing them would tear down both playheads and rebuild them each time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefersReducedMotion]);
 
   useMotionValueEvent(scrollY, "change", () => {
