@@ -6,6 +6,7 @@ import { CONTACT_EMAIL, SITE_NAME, pageTitle } from "@/lib/site";
 export const metadata: Metadata = {
   title: pageTitle("תנאי שימוש"),
   description: "תנאי השימוש באתר YEYE Digital: קניין רוחני, העבודות המוצגות, אחריות וקישורים חיצוניים.",
+  alternates: { canonical: "/terms" },
 };
 
 /**

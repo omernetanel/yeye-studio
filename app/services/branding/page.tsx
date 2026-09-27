@@ -5,6 +5,7 @@ import BrandingContent from "./BrandingContent";
 export const metadata: Metadata = {
   title: pageTitle("מיתוג עסקי"),
   description: "זהות חזותית מלאה שמבדלת אתכם מהמתחרים: לוגו, מדריך מותג ועיצוב אחיד בכל מקום.",
+  alternates: { canonical: "/services/branding" },
 };
 
 export default function BrandingPage() {

@@ -49,6 +49,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: SITE_TITLE,
   description: SITE_DESCRIPTION,
+  // The address each page would rather be indexed at. Declared here as the
+  // homepage and overridden by every page below it, so a visit that arrives
+  // with a tracking parameter on the end, or over www, still points a search
+  // engine at one address instead of at as many addresses as there are links.
+  alternates: { canonical: "/" },
   openGraph: {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
@@ -58,7 +63,9 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: {
-    card: "summary",
+    // The card is the 1200×630 wordmark in app/opengraph-image.tsx, which Next
+    // attaches on its own; "summary" would crop it into a small square.
+    card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
   },

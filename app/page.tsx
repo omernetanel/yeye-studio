@@ -12,6 +12,7 @@ import ContactStage from "@/components/sections/ContactStage";
 import AboutSection from "@/components/sections/AboutSection";
 import ProjectsSection from "@/components/sections/ProjectsSection";
 import CTASection from "@/components/sections/CTASection";
+import StructuredData from "@/components/seo/StructuredData";
 
 /**
  * Reading the user agent opts this page out of static generation, which is the
@@ -22,6 +23,7 @@ export default async function Home() {
 
   return (
     <main id="main" className="relative min-h-screen bg-white">
+      <StructuredData />
       {/* Ambient background — fixed, scrolls cinematically underneath every section.
           Shared at the page level (rather than repeated per-section) so it reads as
           one continuous backdrop instead of restarting at every section boundary;

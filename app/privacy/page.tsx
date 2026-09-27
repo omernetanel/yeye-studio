@@ -6,6 +6,7 @@ import { CONTACT_EMAIL, SITE_NAME, WHATSAPP_NUMBER, pageTitle } from "@/lib/site
 export const metadata: Metadata = {
   title: pageTitle("מדיניות פרטיות"),
   description: "איזה מידע נאסף באתר YEYE Digital, לאן הוא מגיע, כמה זמן הוא נשמר ואיך מבקשים למחוק אותו.",
+  alternates: { canonical: "/privacy" },
 };
 
 /**

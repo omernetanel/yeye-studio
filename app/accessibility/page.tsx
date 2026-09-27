@@ -6,6 +6,7 @@ import { CONTACT_EMAIL, SITE_NAME, WHATSAPP_NUMBER, pageTitle } from "@/lib/site
 export const metadata: Metadata = {
   title: pageTitle("הצהרת נגישות"),
   description: "מה נעשה כדי שהאתר של YEYE Digital יהיה נגיש, מה עדיין לא מושלם, ואיך לפנות בנושא.",
+  alternates: { canonical: "/accessibility" },
 };
 
 /**

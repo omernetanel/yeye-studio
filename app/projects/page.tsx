@@ -9,6 +9,7 @@ import ProjectCard from "@/components/ui/ProjectCard";
 export const metadata: Metadata = {
   title: pageTitle("פרויקטים"),
   description: "עבודה מלאה שבניתי כדי להראות איך אני חושב ובונה.",
+  alternates: { canonical: "/projects" },
 };
 
 export default function ProjectsPage() {
