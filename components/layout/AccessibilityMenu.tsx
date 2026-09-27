@@ -112,10 +112,11 @@ export default function AccessibilityMenu() {
   }, [open]);
 
   return (
-    // Above the WhatsApp mark, which stands 64px tall on a phone and 72 above
-    // it, with the same gap from the edge. z-40 for the same reason it has:
-    // over the page, under the menu's own panel.
-    <div ref={rootRef} className="fixed bottom-[96px] left-5 z-40 md:bottom-[112px] md:left-7">
+    // Above the WhatsApp mark, with the same gap from the edge, and the offset
+    // is the mark's own height plus twelve: 20 + 58 + 12 on a phone, 28 + 64 +
+    // 12 on a desktop. z-40 for the same reason it has: over the page, under
+    // the menu's own panel.
+    <div ref={rootRef} className="fixed bottom-[90px] left-5 z-40 md:bottom-[104px] md:left-7">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -128,7 +129,7 @@ export default function AccessibilityMenu() {
         // floating buttons in one column that did not line up.
         // The disc is the artwork itself, so there is no border or padding to
         // make the drawn circle smaller than the box it is measured by.
-        className="block h-[64px] w-[64px] rounded-full shadow-[0_6px_20px_rgba(0,0,0,0.16)] transition-transform duration-200 ease-out hover:scale-[1.06] active:scale-100 md:h-[72px] md:w-[72px]"
+        className="block h-[58px] w-[58px] rounded-full shadow-[0_6px_20px_rgba(0,0,0,0.16)] transition-transform duration-200 ease-out hover:scale-[1.06] active:scale-100 md:h-[64px] md:w-[64px]"
       >
         <WheelchairMark />
       </button>
