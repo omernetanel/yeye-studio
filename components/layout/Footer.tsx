@@ -1,5 +1,12 @@
 import Image from "next/image";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
+
+const LEGAL_LINKS = [
+  { label: "פרטיות", href: "/privacy" },
+  { label: "נגישות", href: "/accessibility" },
+  { label: "תנאי שימוש", href: "/terms" },
+];
 
 interface FooterProps {
   /** Renders for a white-background page instead of the default dark theme. */
@@ -39,9 +46,33 @@ export default function Footer({ light = false }: FooterProps) {
           </span>
         </div>
 
-        {/* Copyright */}
-        <div className={cn("font-display text-m-small", light ? "text-black/60" : "text-white/60")}>
-          © 2026 YEYE Digital. כל הזכויות שמורות.
+        {/* Copyright, and the three pages that have to be reachable from every
+            page of the site. One quiet line rather than a column of links: the
+            footer's job here is still the mark. */}
+        <div
+          className={cn(
+            "flex flex-col items-center gap-2 font-display text-m-small md:items-start",
+            light ? "text-black/60" : "text-white/60"
+          )}
+        >
+          <div className="flex items-center gap-3">
+            {LEGAL_LINKS.map((link, index) => (
+              <span key={link.href} className="flex items-center gap-3">
+                <Link
+                  href={link.href}
+                  className={cn("transition-colors", light ? "hover:text-black" : "hover:text-white")}
+                >
+                  {link.label}
+                </Link>
+                {index < LEGAL_LINKS.length - 1 && (
+                  <span aria-hidden="true" className={light ? "text-black/25" : "text-white/25"}>
+                    ·
+                  </span>
+                )}
+              </span>
+            ))}
+          </div>
+          <span>© 2026 YEYE Digital. כל הזכויות שמורות.</span>
         </div>
       </div>
     </footer>

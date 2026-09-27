@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Accessibility } from "lucide-react";
 import { resetA11yPrefs, setA11yPref, useA11yPrefs, type A11yPrefs } from "@/lib/a11y/preferences";
 
@@ -106,17 +107,20 @@ export default function AccessibilityMenu() {
             })}
           </div>
 
-          {/* The link to the statement itself belongs here and lands as soon as
-              that page exists — a control that promises a page and delivers a
-              404 is worse than one that waits a day. */}
-          <div className="mt-3 border-t border-black/10 pt-3">
+          <div className="mt-3 flex items-center justify-between border-t border-black/10 pt-3">
             <button
               type="button"
               onClick={resetA11yPrefs}
               className="rounded-full px-3 py-1.5 font-body text-[13px] text-black/60 transition-colors hover:text-black"
             >
-              איפוס ההגדרות
+              איפוס
             </button>
+            <Link
+              href="/accessibility"
+              className="rounded-full px-3 py-1.5 font-body text-[13px] text-black underline underline-offset-4"
+            >
+              הצהרת נגישות
+            </Link>
           </div>
         </div>
       )}

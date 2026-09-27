@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -269,6 +270,14 @@ function ContactForm() {
               משהו השתבש בשליחה. אפשר לנסות שוב, או לכתוב לי בוואטסאפ.
             </p>
           )}
+
+          {/* The same line as the closing form — see there. */}
+          <p className="font-body text-[13px] leading-[1.7] text-white/70 sm:col-span-2">
+            הפרטים משמשים רק כדי לחזור אליכם, ולא מועברים לאף אחד.{" "}
+            <Link href="/privacy" className="underline underline-offset-4 hover:text-white">
+              מדיניות פרטיות
+            </Link>
+          </p>
         </form>
       )}
     </div>

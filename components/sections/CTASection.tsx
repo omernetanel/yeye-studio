@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -238,6 +239,15 @@ export default function CTASection() {
                     משהו השתבש בשליחה. אפשר לנסות שוב, או לכתוב לי בוואטסאפ.
                   </p>
                 )}
+
+                {/* What happens to what they just typed, in one line, where
+                    they are typing it. */}
+                <p className="font-body text-[13px] leading-[1.7] text-black/60 sm:col-span-2">
+                  הפרטים משמשים רק כדי לחזור אליכם, ולא מועברים לאף אחד.{" "}
+                  <Link href="/privacy" className="underline underline-offset-4 hover:text-black">
+                    מדיניות פרטיות
+                  </Link>
+                </p>
               </form>
             )}
           </motion.div>
