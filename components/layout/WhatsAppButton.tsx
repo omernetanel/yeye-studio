@@ -103,7 +103,15 @@ export default function WhatsAppButton() {
           // is nothing at all. Inverting turns the disc white and the glyph dark
           // — the same mark reading the other way round, rather than a second
           // asset to keep in step with the first.
-          className={`h-full w-full object-contain transition-[filter] duration-200 ${
+          // THE DISC FILLS THE BUTTON, and the scale is what makes it do so.
+          // The file is 2659x2838 with the black disc occupying a 2500x2500
+          // square centred inside it, so object-contain fits it by the taller
+          // side and the disc came out at 2500/2838 = 88% of the box: a 56px
+          // mark inside a 64px button, and visibly smaller than the
+          // accessibility disc beside it, which is its box. 1/0.8809 = 1.1352
+          // puts the disc exactly on the box edge. The padding is centred in
+          // the file to within a pixel, so a plain scale needs no offset.
+          className={`h-full w-full scale-[1.1352] object-contain transition-[filter] duration-200 ${
             dark ? "invert" : ""
           }`}
           draggable={false}

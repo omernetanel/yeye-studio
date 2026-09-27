@@ -2,8 +2,46 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Accessibility } from "lucide-react";
 import { resetA11yPrefs, setA11yPref, useA11yPrefs, type A11yPrefs } from "@/lib/a11y/preferences";
+
+/**
+ * THE WHEELCHAIR SYMBOL, drawn rather than imported.
+ *
+ * lucide's Accessibility is the "active" mark - an abstract figure with its
+ * limbs thrown out - and at 32 pixels it read as a shape rather than as the one
+ * sign everyone already knows. This is the familiar seated figure on a blue
+ * disc, which is what a visitor is looking for in that corner.
+ *
+ * It fills its box edge to edge, so the disc IS the button: no ring, no border,
+ * nothing that would make it a different size from the mark below it.
+ */
+function WheelchairMark() {
+  return (
+    <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">
+      <circle cx="32" cy="32" r="32" fill="#1D3FA8" />
+      {/* The head, then the back, seat and leg as one stroke, then the wheel
+          behind them - the order the eye reads it in. */}
+      <circle cx="38.6" cy="15.8" r="5.4" fill="#fff" />
+      <path
+        d="M35.6 24.2 L31.8 37.2 L43.4 37.2 L48.6 49.6"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="4.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* An open ring: the gap at the top right is where the body crosses it,
+          which is what keeps the two apart at this size. */}
+      <path
+        d="M41.2 27.6 A13.6 13.6 0 1 1 27.4 25.4"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
 
 /**
  * The reader's own controls, in the corner they already look to.
@@ -69,9 +107,11 @@ export default function AccessibilityMenu() {
         // on a desktop. It was 52/58, and since both are anchored to the same
         // left edge, the narrower one sat six pixels further right - two
         // floating buttons in one column that did not line up.
-        className="flex h-[64px] w-[64px] items-center justify-center rounded-full border border-black/10 bg-white text-black shadow-[0_6px_20px_rgba(0,0,0,0.16)] transition-transform duration-200 ease-out hover:scale-[1.06] active:scale-100 md:h-[72px] md:w-[72px]"
+        // The disc is the artwork itself, so there is no border or padding to
+        // make the drawn circle smaller than the box it is measured by.
+        className="block h-[64px] w-[64px] rounded-full shadow-[0_6px_20px_rgba(0,0,0,0.16)] transition-transform duration-200 ease-out hover:scale-[1.06] active:scale-100 md:h-[72px] md:w-[72px]"
       >
-        <Accessibility size={32} strokeWidth={1.6} aria-hidden="true" />
+        <WheelchairMark />
       </button>
 
       {open && (
