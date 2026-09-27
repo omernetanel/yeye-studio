@@ -178,12 +178,13 @@ void main() {
   float reachX = rel.x / (uResolution.x * 0.5);
   float side = smoothstep(0.02, 0.3, abs(reachX)) * (uCurl == 0.0 ? sign(reachX) : uCurl);
   float lift = ramp * side * uFlow * uStrength;
-  // A soft ceiling on the wave: it keeps its shape but never lifts a card
-  // further than the room between the row and the box's edge, so nothing is
-  // ever cut off by the canvas.
-  if (uMaxLift > 0.0) lift = uMaxLift * tanh(lift / uMaxLift);
   vec2 swirl = along * along.y * side * slope * uFlow * uStrength * 0.35;
   vec2 drift = vec2(0.0, -lift) - swirl;
+  // A soft ceiling on the whole vertical move - the lift and the swirl
+  // together: the wave keeps its shape but never carries a card further than
+  // the room between the row and the box's edge, so nothing is cut off by the
+  // canvas. Capping the lift alone left the swirl to push it ~100px past.
+  if (uMaxLift > 0.0) drift.y = uMaxLift * tanh(drift.y / uMaxLift);
   vec2 shifted = uv + drift / uResolution;
 
   vec2 texels = uResolution * uDpr;
@@ -955,7 +956,9 @@ export default function FlexCarousel({
         lensUniforms.uDispersion.value = s.dispersion * 0.12 * (1 + Math.abs(deform) * liquidAmount * 1.2);
         lensUniforms.uStrength.value = effects.strength;
         lensUniforms.uSceneAlpha.value = effects.sceneAlpha;
-        lensUniforms.uMaxLift.value = s.contain ? Math.max(1, (height - cardH * shrink) / 2 - 6) : 0;
+        // Less a margin for the colour split, which smears a card's edge a few
+        // pixels further than the card itself.
+        lensUniforms.uMaxLift.value = s.contain ? Math.max(1, (height - cardH * shrink) / 2 - 18) : 0;
         lensUniforms.uBlur.value = s.blur;
         lensUniforms.uEdgeDim.value = s.edgeDim;
         lensUniforms.uFlatHalf.value = Math.max(0, spanW - inner);
