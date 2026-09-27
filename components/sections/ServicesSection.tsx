@@ -298,12 +298,29 @@ const ServicesHeading = forwardRef<HTMLDivElement>(function ServicesHeading(_pro
   );
 });
 
-function ServicesRowsBlock() {
+/**
+ * `plain` is the version with no composition around it.
+ *
+ * The offsets below — pushed down 94px, left 15, scaled to 0.95 — place this
+ * block against the paper ball in the pinned panel. Standing on its own, with
+ * no ball and no panel, they are just a list that sits low and off-centre.
+ */
+function ServicesRowsBlock({ plain = false }: { plain?: boolean }) {
   return (
     <div
-      className="isolate mx-auto flex w-full max-w-[900px] -translate-x-[15px] translate-y-[94px] justify-end"
+      className={
+        plain
+          ? "isolate mx-auto flex w-full max-w-[900px] justify-center"
+          : "isolate mx-auto flex w-full max-w-[900px] -translate-x-[15px] translate-y-[94px] justify-end"
+      }
     >
-      <div className="flex w-full max-w-[480px] origin-center scale-[0.95] flex-col">
+      <div
+        className={
+          plain
+            ? "flex w-full max-w-[560px] flex-col"
+            : "flex w-full max-w-[480px] origin-center scale-[0.95] flex-col"
+        }
+      >
         {services.map((service, i) => (
           <ServiceRow key={service.title} service={service} index={i} />
         ))}
@@ -321,8 +338,8 @@ function ServicesListBlock() {
       <div className="flex w-full flex-col items-center text-center">
         <ServicesHeading />
       </div>
-      <div className="mt-6">
-        <ServicesRowsBlock />
+      <div className="mt-10">
+        <ServicesRowsBlock plain />
       </div>
     </div>
   );
@@ -933,11 +950,9 @@ export default function ServicesSection() {
             ))}
           </ol>
 
-          <p className="mt-24 text-center font-display text-[clamp(28px,3.4vw,44px)] leading-[1.15] font-normal text-black">
-            עיצוב מושך תשומת לב.
-            <br />
-            חשיבה יוצרת תוצאה.
-          </p>
+          {/* No closing statement here. StatementSection renders it on exactly
+              this condition — see its own note — and a copy here showed the
+              sentence twice, once small and once huge. */}
         </div>
       </section>
     );

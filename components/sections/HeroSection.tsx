@@ -488,8 +488,11 @@ export default function HeroSection() {
             logo rather than to empty space. */}
         <div
           className={
+            // Centred when there is no ink. The column starts at the top so the
+            // wordmark sits where the simulation wants it; with the canvas gone
+            // that leaves the mark high and a screen of white under it.
             prefersReducedMotion
-              ? "flex min-h-0 flex-1 flex-col items-center justify-start px-3"
+              ? "flex min-h-0 flex-1 flex-col items-center justify-center px-3"
               : "relative z-10 flex min-h-0 flex-1 flex-col items-center justify-start px-3 pointer-events-none"
           }
         >
@@ -633,7 +636,7 @@ export default function HeroSection() {
           one thing on this screen that looks like a mistake rather than an
           effect. This is white space on a white page — the only thing it
           changes is how much room the ink has to end in. */}
-      <div aria-hidden="true" className="h-[170px] w-full shrink-0" />
+      {!prefersReducedMotion && <div aria-hidden="true" className="h-[170px] w-full shrink-0" />}
     </section>
   );
 }
