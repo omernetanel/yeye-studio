@@ -5,6 +5,7 @@ import { MotionConfig } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { gsap, ScrollTrigger } from "@/lib/motion/gsap";
+import { noteForwardNavigation, noteHistoryNavigation } from "@/lib/nav/in-site-history";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
 const LenisContext = createContext<Lenis | null>(null);
@@ -71,11 +72,24 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
   // animation loop and would just re-assert its old position on the next
   // frame. Resetting through Lenis itself (not a raw window.scrollTo) is
   // what actually sticks.
+  // WHICH PATH WE WERE ON LAST, because this effect also runs when the Lenis
+  // instance itself appears or is rebuilt, and those are not route changes. The
+  // depth the back control reads is counted here - this is the one place in the
+  // app that sees every route change and knows which kind it was - and counting
+  // an instance rebuild as a move put it four steps deep on a plain reload.
+  const lastPathRef = useRef<string | null>(null);
+
   useEffect(() => {
+    const moved = lastPathRef.current !== null && lastPathRef.current !== pathname;
+    lastPathRef.current = pathname;
+
     if (poppedRef.current) {
       poppedRef.current = false;
+      if (moved) noteHistoryNavigation();
       return;
     }
+
+    if (moved) noteForwardNavigation();
     if (lenis) {
       lenis.scrollTo(0, { immediate: true });
     } else {

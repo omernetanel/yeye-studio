@@ -4,6 +4,7 @@ import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { hasInSiteHistory } from "@/lib/nav/in-site-history";
 
 // About lives inside the homepage's services section rather than on a page of
 // its own, so it and "שירותים" deliberately resolve to the same anchor. Split
@@ -32,19 +33,21 @@ export default function SubPageNav() {
   // GOING BACK MEANS GOING BACK, not going to a fixed address. This was a hard
   // link to /#services, so a reader who arrived from the work grid, from the
   // menu, or from another project was sent to the services section of the home
-  // page instead of to the place they left - and to the top of it.
+  // page instead of to the place they left - and to the top of it. At no point
+  // does it go to the services section on its own any more.
   //
-  // It only behaves that way when there is somewhere to go back TO. Someone who
-  // opened this page in a fresh tab from a search result has no in-site history
-  // (history.length === 1), and for them the control stays the link it was.
+  // It only behaves that way when there is somewhere of OURS to go back to.
+  // Someone who landed here from a search result has none, and sending them
+  // back would send them out of the site; they get the home page instead.
   // Read through useSyncExternalStore, the same way the site reads the
   // reader's motion and accessibility preferences: the server snapshot is
   // false, so the markup that arrives is the plain link, and the client
-  // snapshot answers from the real history once it is hydrated. The subscribe
-  // is empty because history.length announces nothing - it is read once.
+  // snapshot answers once it is hydrated. The subscribe is empty because the
+  // depth announces nothing - it is read when this renders, which is on
+  // arriving at the page the control sits on.
   const canGoBack = useSyncExternalStore(
     () => () => {},
-    () => window.history.length > 1,
+    hasInSiteHistory,
     () => false,
   );
 
@@ -83,7 +86,7 @@ export default function SubPageNav() {
               <ArrowLeft size={16} strokeWidth={2} className="transition-transform duration-200 group-hover:-translate-x-1" />
             </button>
           ) : (
-            <Link href="/#services" className={BACK_CLASS}>
+            <Link href="/" className={BACK_CLASS}>
               <span>חזור</span>
               <ArrowLeft size={16} strokeWidth={2} className="transition-transform duration-200 group-hover:-translate-x-1" />
             </Link>
