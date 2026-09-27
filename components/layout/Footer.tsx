@@ -20,13 +20,44 @@ export default function Footer({ light = false }: FooterProps) {
           and on the homepage the floating WhatsApp button already sits in the
           corner of every screen — so the page ended on the same way in twice,
           one of them a tiny icon. What is left is the mark and the line. */}
+      {/* THREE PARTS, ONE PER COLUMN: the pages at the start, the mark in the
+          middle, the line at the end. Both text blocks used to share the end
+          column with an empty spacer opposite them, which left the row weighted
+          to one side and the mark not actually centred between anything.
+          On a phone it stacks, and the mark goes first - there it leads rather
+          than separates. */}
       <div className="mx-auto flex max-w-[1200px] flex-col items-center gap-5 px-6 py-10 text-center md:grid md:h-20 md:grid-cols-3 md:items-center md:gap-6 md:py-0 md:text-inherit">
-        {/* Holds the right-hand column of the desktop grid, so the mark stays
-            in the middle now that the icons are gone. Nothing on a phone. */}
-        <div aria-hidden="true" className="hidden md:block" />
+        {/* The three pages that have to be reachable from every page of the
+            site. One quiet line rather than a column of links: the footer's job
+            here is still the mark. */}
+        <div
+          className={cn(
+            // 12px against the m-small 13 the rest of the site's fine print
+            // uses: this row is a legal necessity at the very foot of the page,
+            // and it should read as the quietest thing on it.
+            "flex items-center gap-3 font-display text-[12px] md:justify-self-start",
+            light ? "text-black/60" : "text-white/60"
+          )}
+        >
+          {LEGAL_LINKS.map((link, index) => (
+            <span key={link.href} className="flex items-center gap-3">
+              <Link
+                href={link.href}
+                className={cn("transition-colors", light ? "hover:text-black" : "hover:text-white")}
+              >
+                {link.label}
+              </Link>
+              {index < LEGAL_LINKS.length - 1 && (
+                <span aria-hidden="true" className={light ? "text-black/25" : "text-white/25"}>
+                  ·
+                </span>
+              )}
+            </span>
+          ))}
+        </div>
 
         {/* Logo — center */}
-        <div className="flex flex-col items-center gap-1">
+        <div className="order-first flex flex-col items-center gap-1 md:order-none">
           <Image
             src="/images/logo.png"
             alt="YEYE"
@@ -35,45 +66,32 @@ export default function Footer({ light = false }: FooterProps) {
             className={cn("h-8 w-auto brightness-0", light ? "opacity-40" : "invert-[0.35]")}
           />
           {/* Sits under the footer mark only — the hero wordmark and the
-              floating navbar mark are deliberately left as they are. */}
+              floating navbar mark are deliberately left as they are.
+              THE MARK'S OWN VALUE, not a darker grey beside it: the wordmark
+              above is black at 40% on a light page and the same amount of white
+              on a dark one, and a 60% line under it read as a caption attached
+              to the logo rather than as part of it.
+              The indent is the letter-spacing coming back: 0.42em is added
+              after every letter including the last, so the word sits that much
+              left of centre until the same amount is put back in front of it. */}
           <span
             className={cn(
-              "font-display text-[10px] font-medium tracking-[0.42em] uppercase",
-              light ? "text-black/60" : "text-white/60"
+              "indent-[0.42em] font-display text-[11px] font-medium tracking-[0.42em] uppercase",
+              light ? "text-black/40" : "text-white/35"
             )}
           >
             Digital
           </span>
         </div>
 
-        {/* Copyright, and the three pages that have to be reachable from every
-            page of the site. One quiet line rather than a column of links: the
-            footer's job here is still the mark. */}
-        <div
+        <span
           className={cn(
-            "flex flex-col items-center gap-2 font-display text-m-small md:items-start",
+            "font-display text-[12px] md:justify-self-end",
             light ? "text-black/60" : "text-white/60"
           )}
         >
-          <div className="flex items-center gap-3">
-            {LEGAL_LINKS.map((link, index) => (
-              <span key={link.href} className="flex items-center gap-3">
-                <Link
-                  href={link.href}
-                  className={cn("transition-colors", light ? "hover:text-black" : "hover:text-white")}
-                >
-                  {link.label}
-                </Link>
-                {index < LEGAL_LINKS.length - 1 && (
-                  <span aria-hidden="true" className={light ? "text-black/25" : "text-white/25"}>
-                    ·
-                  </span>
-                )}
-              </span>
-            ))}
-          </div>
-          <span>© 2026 YEYE Digital. כל הזכויות שמורות.</span>
-        </div>
+          © 2026 YEYE Digital. כל הזכויות שמורות.
+        </span>
       </div>
     </footer>
   );
