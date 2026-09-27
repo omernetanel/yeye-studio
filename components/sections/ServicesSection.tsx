@@ -515,7 +515,16 @@ function ProcessStages() {
       {/* Four of four, at the FOOT OF THE SHEET rather than under the stage —
           against the words it read as part of them. Same indicator the work's
           gallery carries, so "where am I in this" is one idea across the page. */}
-      <div aria-hidden="true" className="absolute inset-x-0 -bottom-[14%] flex justify-center gap-2">
+      {/* HIDDEN UNTIL THE FIRST STAGE ARRIVES. It used to have no clock at all:
+          the stages each start at opacity 0 and are raised by animateProcess,
+          but this row was simply painted, so four dashes sat on the crumpled
+          sheet for the whole run-up - counting stages that had not appeared. */}
+      <div
+        aria-hidden="true"
+        data-process-dots
+        style={{ opacity: 0 }}
+        className="absolute inset-x-0 -bottom-[14%] flex justify-center gap-2"
+      >
         {STAGE_TITLES.map((title) => (
           <span
             key={title}
@@ -791,6 +800,13 @@ export default function ServicesSection() {
       stage.style.transform = `translateY(${(lerp(STAGE_RISE_PX, 0, arrive) + lerp(0, -STAGE_RISE_PX, leave)).toFixed(2)}px)`;
       if (shown > 0.5) current = i;
     });
+
+    // The row arrives on the first stage's own cue, so the count never appears
+    // before the thing it counts.
+    const dots = sheet.querySelector<HTMLElement>("[data-process-dots]");
+    if (dots) {
+      dots.style.opacity = String(smoothstep(mapRange(seconds, STAGES_START, STAGES_START + STAGE_SWAP, 0, 1)));
+    }
 
     sheet.querySelectorAll<HTMLElement>("[data-process-dot]").forEach((dot, i) => {
       const on = i === current;
