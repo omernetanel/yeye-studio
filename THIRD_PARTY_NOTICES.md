@@ -53,11 +53,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-Note: `components/ui/SkewedGallery.tsx` is not derived from React Bits. It was
-written here against the public demo of their Skewed Carousel; their source was
-not read or copied, and the behaviour differs (the panels here are links, and
-the rotation is shallower because the cards are landscape).
-
 ---
 
 ## Fonts
