@@ -6,6 +6,7 @@ import ServiceRow from "@/components/sections/services/ServiceRow";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { SERVICES_HEADING, SERVICES_LEAD, services } from "@/lib/content";
 import { ScrollFrames, type FrameSequence } from "@/lib/scrub/scroll-frames";
+import { SteppedPlayhead, travelScreensFor } from "@/lib/scrub/stepped-playhead";
 import {
   ICONS,
   ICON_MOTION,
@@ -138,7 +139,11 @@ function fadeOut(time: number, until: number) {
 // swap is short, so the moment between them is a flicker of scroll rather than
 // a blank sheet.
 const STAGE_COUNT = STAGE_TITLES.length;
-const STAGES_END = 0.76;
+// 1: the last stage arrives at the very end of the hold. It used to arrive at
+// 0.76 of it and stand still for the rest, so the reader saw it for a moment
+// before the fold; with the scroll picking steps, that moment IS the step, and
+// a frozen quarter inside the transition would read as the page catching.
+const STAGES_END = 1;
 /** How much of the gap between two stages the swap takes. The rest is still. */
 const SWAP_SPAN = 0.24;
 const SWAP_RISE_PX = 28;
@@ -172,6 +177,64 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
+/** The progress at which the clip reaches a cue, from the beats themselves. */
+function progressAtCue(time: number) {
+  const point = TIMELINE.find((entry) => entry.time === time);
+  if (!point) throw new Error(`No beat ends at ${time}s`);
+  return point.progress;
+}
+
+/**
+ * The progress at which stage `index` stands alone on the sheet, fully shown:
+ * the inverse of the position arithmetic in the render below.
+ */
+function progressAtStage(index: number) {
+  const onSheet = (STAGES_END * (index - FIRST_ARRIVAL)) / (STAGE_COUNT - 1 - FIRST_ARRIVAL);
+  return STAGES_FROM + onSheet * (STAGES_TO - STAGES_FROM);
+}
+
+/**
+ * WHERE THE SCROLL STOPS DRIVING THE CLIP AND STARTS PICKING MOMENTS.
+ *
+ * Up to the paper opening it is the scroll it always was: the services list is
+ * something to read, and a reader reads at their own pace. From the opening on,
+ * everything is something to watch, and on a phone watching is what a thumb is
+ * worst at - so from there the scroll picks one of these moments and a clock
+ * plays the way to it. See lib/scrub/stepped-playhead.ts for why.
+ *
+ * The same beats and cues as before; nothing about the clip, the frames or the
+ * framing changed. Only who is holding the playhead.
+ *
+ * THE PACE IS IN SECONDS, AND THE FOOTAGE SETS IT. The opening plays close to
+ * the speed it was filmed; the stages take a short beat each; the crumple and
+ * the flight, which run seven seconds of footage, are pressed into three - on a
+ * phone, a reader waiting seven seconds for a plane is a reader gone. These are
+ * the numbers to tune against a real hand.
+ */
+const STEPPED = {
+  // Exactly the scroll the ball had before: the share of the old travel its
+  // beat took. Nothing up to the opening should feel any different.
+  freeScreens: (BEATS[1].screens / SCROLL_SCREENS) * (SCROLL_SCREENS - 1),
+  anchors: [
+    progressAtCue(CUE_SERVICES_OUT), // the list has gone, the paper is about to open
+    ...STAGE_TITLES.map((_, index) => progressAtStage(index)), // each stage alone on the sheet
+    progressAtCue(CUE_STATEMENT_IN), // folded, crumpled and flown
+    1, // the closing line, and the sheet at rest
+  ],
+  durations: [
+    2.0, // the opening, the heading rising into place, the first stage arriving
+    0.9, // stage to stage
+    0.9,
+    0.9,
+    3.2, // the stages go back into the paper, it crumples, it flies
+    2.2, // the closing line rises as the sheet lands
+  ],
+  stepScreens: 0.9,
+  tailScreens: 1,
+} as const;
+
+const TRAVEL_SCREENS = travelScreensFor(STEPPED);
+
 /**
  * The services section, rebuilt for the phone around a 9:16 cut of the clip.
  *
@@ -202,8 +265,24 @@ export default function MobileServices() {
   const dotRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const statementLayerRef = useRef<HTMLDivElement>(null);
 
-  const update = () => {
+  const playheadRef = useRef<SteppedPlayhead | null>(null);
+
+  // Scroll in, playhead out. The scroll only reports where the reader is; what
+  // is shown is whatever the playhead hands to render below.
+  const onScroll = () => {
     const wrapper = wrapperRef.current;
+    const panel = panelRef.current;
+    const playhead = playheadRef.current;
+    if (!wrapper || !panel || !playhead) return;
+    // The panel's own height, not window.innerHeight. Both are one screen, but
+    // the panel is sized in svh — the height with the browser chrome showing,
+    // which does not move — while innerHeight grows and shrinks as the address
+    // bar hides on scroll. Measuring the moving one would shift every line the
+    // steps are picked by, mid-scroll.
+    playhead.setScroll(-wrapper.getBoundingClientRect().top / panel.offsetHeight);
+  };
+
+  const render = (progress: number) => {
     const panel = panelRef.current;
     const frames = framesRef.current;
     const servicesLayer = servicesLayerRef.current;
@@ -212,21 +291,13 @@ export default function MobileServices() {
     const heading = headingRef.current;
     const dots = dotsRef.current;
     const statementLayer = statementLayerRef.current;
-    if (!wrapper || !panel || !frames || !servicesLayer || !aboutLayer || !stageBlock || !heading || !dots || !statementLayer) {
+    if (!panel || !frames || !servicesLayer || !aboutLayer || !stageBlock || !heading || !dots || !statementLayer) {
       return;
     }
 
     // Every measurement first, before any style below is written: a read after a
-    // write forces a layout on every scroll event.
+    // write forces a layout on every frame.
     //
-    // The panel's own height, not window.innerHeight. Both are one screen, but
-    // the panel is sized in svh — the height with the browser chrome showing,
-    // which does not move — while innerHeight grows and shrinks as the address
-    // bar hides on scroll. Measuring the moving one would shift the whole
-    // mapping mid-scrub, which reads as the clip jumping under the finger.
-    const wrapperBox = wrapper.getBoundingClientRect();
-    const travel = wrapperBox.height - panel.offsetHeight;
-    if (travel <= 0) return;
     // How far the heading's place sits above the middle of the screen. Layout
     // offsets, which ignore the transforms written below — the heading's own
     // rise and the layer's shrink — so this target never moves under its own
@@ -235,11 +306,10 @@ export default function MobileServices() {
     const headingOffset =
       panel.offsetHeight / 2 - (stageBlock.offsetTop + heading.offsetTop + heading.offsetHeight / 2);
 
-    const progress = clamp01(-wrapperBox.top / travel);
     const time = progressToTime(progress);
 
-    // The frame the scroll position lands on. ScrollFrames returns at once when
-    // that is the frame already showing, so this is free on most scroll events.
+    // The frame the playhead is on. ScrollFrames returns at once when that is
+    // the frame already showing, so this is free on most calls.
     frames.show(time * CLIP_FPS);
 
     // ON THE BALL. Everything is already on the paper; the scroll runs the clip
@@ -307,12 +377,18 @@ export default function MobileServices() {
     // still running and frees every decoded frame it holds.
     const frames = new ScrollFrames(canvas, PAPER);
     framesRef.current = frames;
-    update();
+    // The playhead outlives this render, so it keeps this render's `render` -
+    // which is safe only because render reads nothing but refs and module
+    // constants. Anything added to it that reads props or state would go stale.
+    const playhead = new SteppedPlayhead({ ...STEPPED, render });
+    playheadRef.current = playhead;
+    onScroll();
 
-    const handleResize = () => update();
-    window.addEventListener("resize", handleResize);
+    window.addEventListener("resize", onScroll);
     return () => {
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", onScroll);
+      playhead.dispose();
+      playheadRef.current = null;
       frames.dispose();
       framesRef.current = null;
     };
@@ -320,7 +396,7 @@ export default function MobileServices() {
 
   useMotionValueEvent(scrollY, "change", () => {
     if (prefersReducedMotion) return;
-    update();
+    onScroll();
   });
 
   if (prefersReducedMotion) {
@@ -346,7 +422,8 @@ export default function MobileServices() {
       ref={wrapperRef}
       id="services"
       className="relative bg-white"
-      style={{ height: `calc(${SCROLL_SCREENS} * 100svh)` }}
+      // The travel plus the one screen the panel itself stands in.
+      style={{ height: `calc(${TRAVEL_SCREENS + 1} * 100svh)` }}
     >
       {/* overflow-clip, never overflow-hidden: hidden turns this into a scroll
           container, which would stop the panel below from sticking at all. */}
