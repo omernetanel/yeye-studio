@@ -37,6 +37,23 @@ export const SITE_BACKGROUND_DARK = "#000000";
  */
 export const WHATSAPP_NUMBER = "972552759445";
 
+/**
+ * The address the site publishes, in one place.
+ *
+ * It was `hello@yeyelabs.com`, hard-coded in the hero — an address on a domain
+ * the studio no longer uses, on a mailbox that does not exist. Anyone who
+ * pressed the mail icon wrote to nowhere. It moves to `info@yeye.co.il` the
+ * day that mailbox is live; until then it is an address that is actually read.
+ */
+export const CONTACT_EMAIL = "omeryeku2@gmail.com";
+
+/**
+ * Where the site lives. Used for canonical URLs, the sitemap and robots, so
+ * all three can never disagree — which they did, all pointing at the old
+ * domain with a TODO beside each one.
+ */
+export const SITE_URL = "https://yeye.co.il";
+
 /** Title for any page that is not the homepage. */
 export function pageTitle(label: string) {
   return `${label} | ${SITE_NAME}`;

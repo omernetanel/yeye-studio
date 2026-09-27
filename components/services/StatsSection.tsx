@@ -41,10 +41,10 @@ export default function StatsSection({ title, stats }: StatsSectionProps) {
                 <div className="mb-2 bg-[image:var(--gradient-brand)] bg-clip-text font-display text-5xl leading-none font-extrabold text-transparent">
                   {item.stat}
                 </div>
-                <div className="font-display text-xs leading-[1.4] text-black/40">{item.statLabel}</div>
+                <div className="font-display text-xs leading-[1.4] text-black/60">{item.statLabel}</div>
               </div>
               <div className="hidden h-20 w-px shrink-0 bg-gradient-to-b from-transparent via-primary-light/40 to-transparent sm:block" />
-              <p className="flex-1 font-body text-[17px] leading-[1.85] text-black/55">{item.text}</p>
+              <p className="flex-1 font-body text-[17px] leading-[1.85] text-black/70">{item.text}</p>
             </motion.div>
           ))}
         </div>

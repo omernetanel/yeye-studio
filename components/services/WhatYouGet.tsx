@@ -27,7 +27,7 @@ export default function WhatYouGet({ title, subtitle, rows }: WhatYouGetProps) {
           className="mb-14 text-center"
         >
           <h2 className="mb-3 font-display text-3xl font-bold text-black">{title}</h2>
-          <p className="font-body text-base text-black/50">{subtitle}</p>
+          <p className="font-body text-base text-black/70">{subtitle}</p>
         </motion.div>
 
         <div className="flex flex-col gap-5">
@@ -49,7 +49,7 @@ export default function WhatYouGet({ title, subtitle, rows }: WhatYouGetProps) {
                     </span>
                     <div className="flex-1">
                       <h3 className="mb-2.5 font-display text-xl font-bold text-white">{item.title}</h3>
-                      <p className="font-body text-[15px] leading-[1.85] text-white/55">{item.description}</p>
+                      <p className="font-body text-[15px] leading-[1.85] text-white/75">{item.description}</p>
                     </div>
                   </div>
                 </BorderGlowCard>

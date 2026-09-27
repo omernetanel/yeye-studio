@@ -99,7 +99,7 @@ export default function AccessibilityMenu() {
                   </span>
                   <span className="flex-1">
                     <span className="block font-body text-[14px] text-black">{item.label}</span>
-                    <span className="block font-body text-[12px] text-black/55">{item.hint}</span>
+                    <span className="block font-body text-[12px] text-black/70">{item.hint}</span>
                   </span>
                 </button>
               );

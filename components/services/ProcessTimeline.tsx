@@ -21,9 +21,9 @@ function StepCard({ step }: { step: Step }) {
     // The benefit cards from the home page — see TypesGrid.
     <BorderGlowCard className="p-5">
       <div className="flex flex-col gap-2.5">
-        <span className="font-display text-[11px] tracking-[0.08em] text-white/45">{step.number}</span>
+        <span className="font-display text-[11px] tracking-[0.08em] text-white/65">{step.number}</span>
         <h3 className="font-display text-[15px] font-bold text-white">{step.title}</h3>
-        <p className="font-body text-[13px] leading-[1.7] text-white/55">{step.description}</p>
+        <p className="font-body text-[13px] leading-[1.7] text-white/75">{step.description}</p>
       </div>
     </BorderGlowCard>
   );

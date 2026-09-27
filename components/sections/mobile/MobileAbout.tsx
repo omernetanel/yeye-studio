@@ -486,7 +486,7 @@ export default function MobileAbout() {
                 <h4 className="font-display text-m-sub font-bold text-balance text-white">
                   {fact.title}
                 </h4>
-                <p className="mt-3 font-body text-m-small text-balance text-white/55">
+                <p className="mt-3 font-body text-m-small text-balance text-white/75">
                   {fact.description}
                 </p>
               </BorderGlowCard>

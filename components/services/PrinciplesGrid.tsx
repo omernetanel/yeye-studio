@@ -26,7 +26,7 @@ function PrincipleCardContent({ item }: { item: Principle }) {
           <Icon size={24} strokeWidth={1.5} className="text-white" />
         </div>
         <h3 className="font-display text-[15px] font-bold text-white">{item.title}</h3>
-        <p className="font-body text-[13px] leading-[1.65] text-white/55">{item.description}</p>
+        <p className="font-body text-[13px] leading-[1.65] text-white/75">{item.description}</p>
       </div>
     </BorderGlowCard>
   );

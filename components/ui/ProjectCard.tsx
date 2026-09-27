@@ -25,7 +25,7 @@ export default function ProjectCard({ title, category, imageSrc, href, external 
           <Image src={imageSrc} alt={title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-contain" />
         </div>
         <div className="flex items-center justify-between px-2 pb-1.5">
-          <span className="font-display text-[13px] text-white/55">{category}</span>
+          <span className="font-display text-[13px] text-white/75">{category}</span>
           <span className="font-display text-[17px] font-bold text-white">{title}</span>
         </div>
       </BorderGlowCard>

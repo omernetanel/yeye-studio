@@ -86,7 +86,9 @@ export default function ServiceRow({ service, index, compact = false, className 
           </h3>
           <p
             className={cn(
-              "mt-1 whitespace-pre-line font-body text-[13px] text-black/55 transition-colors duration-200",
+              // 70, not 55: at thirteen pixels the lighter grey sat just under
+              // the contrast a body line needs against white.
+              "mt-1 whitespace-pre-line font-body text-[13px] text-black/70 transition-colors duration-200",
               compact ? "leading-[1.5]" : "leading-[1.6]",
               ROW_HOVER_TEXT_CLASS
             )}

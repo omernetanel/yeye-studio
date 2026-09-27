@@ -142,7 +142,7 @@ function smoothstep(t: number) {
 // is invisible sitting on the footage. Overridden here rather than in the
 // shared component so nothing else on the site shifts.
 const DARK_INPUT =
-  "border-white/25 bg-white/10 text-white placeholder:text-white/55 backdrop-blur-sm focus:border-white";
+  "border-white/25 bg-white/10 text-white placeholder:text-white/70 backdrop-blur-sm focus:border-white";
 
 function ContactForm() {
   // `website` is the honeypot — see the field itself below.

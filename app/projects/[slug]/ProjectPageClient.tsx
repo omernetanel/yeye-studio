@@ -53,7 +53,7 @@ export default function ProjectPageClient({ project }: Props) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
-          className="mt-1 max-w-[560px] font-body text-[16px] leading-[1.85] whitespace-pre-line text-black/55"
+          className="mt-1 max-w-[560px] font-body text-[16px] leading-[1.85] whitespace-pre-line text-black/70"
         >
           {project.description}
         </motion.p>
@@ -68,7 +68,7 @@ export default function ProjectPageClient({ project }: Props) {
             {project.tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full border border-black/10 bg-black/[0.03] px-3 py-1 font-mono text-[11px] text-black/50"
+                className="rounded-full border border-black/10 bg-black/[0.03] px-3 py-1 font-mono text-[11px] text-black/70"
               >
                 {tag}
               </span>
@@ -97,7 +97,7 @@ export default function ProjectPageClient({ project }: Props) {
             className="mx-auto max-w-[720px] text-center"
           >
             <h2 className="mb-5 font-display text-2xl font-bold text-black md:text-3xl">{story.storyTitle}</h2>
-            <p className="font-body text-[17px] leading-[1.9] text-black/55">{story.problem}</p>
+            <p className="font-body text-[17px] leading-[1.9] text-black/70">{story.problem}</p>
           </motion.div>
 
           <motion.h2
@@ -127,7 +127,7 @@ export default function ProjectPageClient({ project }: Props) {
                         <Icon size={24} strokeWidth={1.5} className="text-white" />
                       </div>
                       <h3 className="font-display text-[15px] font-bold text-white">{feature.title}</h3>
-                      <p className="font-body text-[13px] leading-[1.65] text-white/55">{feature.description}</p>
+                      <p className="font-body text-[13px] leading-[1.65] text-white/75">{feature.description}</p>
                     </div>
                   </BorderGlowCard>
                 </motion.div>
@@ -149,7 +149,7 @@ export default function ProjectPageClient({ project }: Props) {
               {story.techNotes.map((note) => (
                 <li
                   key={note}
-                  className="flex gap-3 font-body text-[14px] leading-[1.8] text-black/50"
+                  className="flex gap-3 font-body text-[14px] leading-[1.8] text-black/70"
                 >
                   <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-accent" />
                   <span>{note}</span>
@@ -172,7 +172,7 @@ export default function ProjectPageClient({ project }: Props) {
               <h2 className="mb-4 font-display text-[clamp(28px,4vw,44px)] leading-[1.15] font-extrabold text-white">
                 {story.ctaTitle}
               </h2>
-              <p className="mx-auto mb-8 max-w-[560px] font-body text-[16px] leading-[1.8] text-white/55">
+              <p className="mx-auto mb-8 max-w-[560px] font-body text-[16px] leading-[1.8] text-white/75">
                 {story.ctaText}
               </p>
               <Button href="/#cta" className="!border-white !bg-none !bg-white !text-black !shadow-none">

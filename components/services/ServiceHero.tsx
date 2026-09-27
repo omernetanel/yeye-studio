@@ -28,7 +28,7 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.25 }}
-          className="mb-9 font-body text-lg leading-[1.8] text-black/55"
+          className="mb-9 font-body text-lg leading-[1.8] text-black/70"
         >
           {description}
         </motion.p>

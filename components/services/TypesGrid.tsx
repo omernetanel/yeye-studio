@@ -22,7 +22,7 @@ function TypeCardContent({ item }: { item: TypeItem }) {
     <BorderGlowCard className="h-full p-7">
       <div className="flex flex-col gap-3">
         <h3 className="font-display text-lg font-bold text-white">{item.title}</h3>
-        <p className="font-body text-sm leading-[1.7] text-white/55">{item.description}</p>
+        <p className="font-body text-sm leading-[1.7] text-white/75">{item.description}</p>
         <p className="mt-1 font-display text-[12.5px] text-white/80">{item.use}</p>
       </div>
     </BorderGlowCard>

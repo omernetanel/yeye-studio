@@ -37,7 +37,7 @@ function InputControl({ className, ...props }: InputHTMLAttributes<HTMLInputElem
         // so a form built at 15px leaves the reader stranded on a page that is
         // suddenly too wide, mid-enquiry. It is also the body size in the
         // phone's scale, which is what it should have been anyway.
-        "w-full rounded-[10px] border border-black/10 bg-black/[0.02] px-4 py-[14px] font-body text-m-body text-black outline-none transition-colors placeholder:text-black/30 focus:border-accent",
+        "w-full rounded-[10px] border border-black/10 bg-black/[0.02] px-4 py-[14px] font-body text-m-body text-black outline-none transition-colors placeholder:text-black/45 focus:border-accent",
         className
       )}
       {...props}

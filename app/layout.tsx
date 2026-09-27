@@ -1,14 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { googleSans, assistant } from "@/lib/fonts";
-import { SITE_NAME, SITE_TITLE, SITE_DESCRIPTION, SITE_BACKGROUND } from "@/lib/site";
+import { SITE_NAME, SITE_TITLE, SITE_DESCRIPTION, SITE_BACKGROUND, SITE_URL } from "@/lib/site";
 import { SmoothScrollProvider } from "@/lib/motion/lenis";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import AccessibilityMenu from "@/components/layout/AccessibilityMenu";
 import { A11Y_STORAGE_KEY } from "@/lib/a11y/storage-key";
 
-// TODO: replace with the real production domain before launch (also used in app/sitemap.ts and app/robots.ts).
-const BASE_URL = "https://yeyelabs.com";
 
 /**
  * The phone's own chrome, tinted from the page.
@@ -48,7 +46,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL(BASE_URL),
+  metadataBase: new URL(SITE_URL),
   title: SITE_TITLE,
   description: SITE_DESCRIPTION,
   openGraph: {

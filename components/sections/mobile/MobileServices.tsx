@@ -450,7 +450,7 @@ function ServicesIntro() {
       <h2 className="text-center font-display text-m-statement font-bold text-balance text-black">
         {SERVICES_HEADING.join(" ")}
       </h2>
-      <p className="mt-3 text-center font-body text-m-body text-black/55">{SERVICES_LEAD}</p>
+      <p className="mt-3 text-center font-body text-m-body text-black/70">{SERVICES_LEAD}</p>
       <div className="mt-7 [@media(max-height:700px)]:mt-4">
         {services.map((service, index) => (
           <ServiceRow key={service.title} service={service} index={index} compact />

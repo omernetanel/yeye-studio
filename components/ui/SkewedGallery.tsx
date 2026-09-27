@@ -386,7 +386,7 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
               style={{ opacity: 0 }}
             >
               {item.title}
-              <span className="ms-2 font-medium text-black/40">{item.category}</span>
+              <span className="ms-2 font-medium text-black/60">{item.category}</span>
             </span>
           </div>
         ))}
@@ -434,7 +434,7 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
         type="button"
         onClick={() => nudgeRef.current?.(1)}
         aria-label="העבודה הבאה"
-        className="flex h-9 w-9 items-center justify-center rounded-full text-[18px] leading-none text-black/45 transition-colors hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+        className="flex h-9 w-9 items-center justify-center rounded-full text-[18px] leading-none text-black/60 transition-colors hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
       >
         ‹
       </button>
@@ -471,7 +471,7 @@ export default function SkewedGallery({ items }: { items: GalleryItem[] }) {
         type="button"
         onClick={() => nudgeRef.current?.(-1)}
         aria-label="העבודה הקודמת"
-        className="flex h-9 w-9 items-center justify-center rounded-full text-[18px] leading-none text-black/45 transition-colors hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+        className="flex h-9 w-9 items-center justify-center rounded-full text-[18px] leading-none text-black/60 transition-colors hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
       >
         ›
       </button>

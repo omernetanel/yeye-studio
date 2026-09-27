@@ -32,7 +32,7 @@ export default function Footer({ light = false }: FooterProps) {
           <span
             className={cn(
               "font-display text-[10px] font-medium tracking-[0.42em] uppercase",
-              light ? "text-black/35" : "text-white/35"
+              light ? "text-black/60" : "text-white/60"
             )}
           >
             Digital
@@ -40,7 +40,7 @@ export default function Footer({ light = false }: FooterProps) {
         </div>
 
         {/* Copyright */}
-        <div className={cn("font-display text-m-small", light ? "text-black/35" : "text-white/35")}>
+        <div className={cn("font-display text-m-small", light ? "text-black/60" : "text-white/60")}>
           © 2026 YEYE Digital. כל הזכויות שמורות.
         </div>
       </div>

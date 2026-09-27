@@ -13,9 +13,8 @@ import ArrowIcon from "@/components/ui/ArrowIcon";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
 import { setDocked } from "@/lib/motion/heroDock";
-import { WHATSAPP_NUMBER } from "@/lib/site";
+import { CONTACT_EMAIL, WHATSAPP_NUMBER } from "@/lib/site";
 
-const CONTACT_EMAIL = "hello@yeyelabs.com";
 
 const TAGLINE_TEXT = "בואו נבנה לכם אתר שעובד ומוכר באמת.";
 
@@ -317,7 +316,7 @@ export default function HeroSection() {
                 <ArrowIcon />
               )}
             </Link>
-            <span ref={footStudioRef} className={painted ? "text-transparent" : "text-black/45"}>
+            <span ref={footStudioRef} className={painted ? "text-transparent" : "text-black/60"}>
               סטודיו דיגיטלי עצמאי
             </span>
           </div>
@@ -560,7 +559,7 @@ export default function HeroSection() {
         }
       >
         <div className="relative mx-auto flex w-full max-w-[1400px] items-end justify-between px-6">
-          <span className="font-display text-[13px] text-black/50">סטודיו דיגיטלי עצמאי</span>
+          <span className="font-display text-[13px] text-black/60">סטודיו דיגיטלי עצמאי</span>
 
           <div
             className={
@@ -613,13 +612,13 @@ export default function HeroSection() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="WhatsApp"
-              className="text-black/50 transition-colors hover:text-black"
+              className="text-black/65 transition-colors hover:text-black"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
               </svg>
             </Link>
-            <Link href={`mailto:${CONTACT_EMAIL}`} aria-label="Email" className="text-black/50 transition-colors hover:text-black">
+            <Link href={`mailto:${CONTACT_EMAIL}`} aria-label="Email" className="text-black/65 transition-colors hover:text-black">
               <Mail size={18} strokeWidth={1.5} />
             </Link>
           </div>

@@ -158,7 +158,7 @@ export default function CTASection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="mb-12 font-body text-m-body text-black/45 md:mb-10 md:text-lg"
+            className="mb-12 font-body text-m-body text-black/70 md:mb-10 md:text-lg"
           >
             ייעוץ ראשוני ללא עלות. אשמח לשמוע על הפרויקט שלכם.
           </motion.p>

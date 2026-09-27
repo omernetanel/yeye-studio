@@ -44,7 +44,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
             aria-pressed={view === "desktop"}
             className={cn(
               "flex items-center gap-2 rounded-full px-4 py-2 font-display text-sm transition-colors",
-              view === "desktop" ? "bg-accent text-white" : "text-black/50 hover:text-black/80"
+              view === "desktop" ? "bg-accent text-white" : "text-black/70 hover:text-black"
             )}
           >
             <Monitor size={16} /> מחשב
@@ -55,7 +55,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
             aria-pressed={view === "mobile"}
             className={cn(
               "flex items-center gap-2 rounded-full px-4 py-2 font-display text-sm transition-colors",
-              view === "mobile" ? "bg-accent text-white" : "text-black/50 hover:text-black/80"
+              view === "mobile" ? "bg-accent text-white" : "text-black/70 hover:text-black"
             )}
           >
             <Smartphone size={16} /> מובייל
@@ -130,7 +130,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 font-display text-sm text-black/40 transition-colors hover:text-accent"
+          className="flex items-center gap-1.5 font-display text-sm text-black/70 transition-colors hover:text-accent"
         >
           <ExternalLink size={14} />
           לפתוח את האתר בלשונית חדשה

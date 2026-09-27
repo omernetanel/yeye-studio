@@ -316,7 +316,7 @@ export default function CylinderGallery({ items }: { items: GalleryItem[] }) {
             />
             <span className="mt-4 block text-right font-display text-[15px] font-bold text-black md:text-[17px]">
               {item.title}
-              <span className="ms-2 font-medium text-black/40">{item.category}</span>
+              <span className="ms-2 font-medium text-black/60">{item.category}</span>
             </span>
           </div>
         ))}

@@ -293,7 +293,7 @@ const ServicesHeading = forwardRef<HTMLDivElement>(function ServicesHeading(_pro
         <br />
         {SERVICES_HEADING[1]}
       </h2>
-      <p className="mt-2 font-body text-[15px] leading-[1.8] text-black/55">{SERVICES_LEAD}</p>
+      <p className="mt-2 font-body text-[15px] leading-[1.8] text-black/70">{SERVICES_LEAD}</p>
     </div>
   );
 });

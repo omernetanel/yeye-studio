@@ -25,7 +25,7 @@ export default function WhatIsIt({ title, text }: WhatIsItProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="font-body text-[17px] leading-[1.9] text-black/50"
+          className="font-body text-[17px] leading-[1.9] text-black/70"
         >
           {text}
         </motion.p>

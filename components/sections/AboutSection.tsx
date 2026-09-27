@@ -650,13 +650,13 @@ export default function AboutSection() {
                     style={{ opacity: 0 }}
                   >
                     <div className="border-t border-white/20 pt-4 text-right">
-                      <span className="font-display text-[12px] leading-none font-bold tracking-[0.18em] text-white/35">
+                      <span className="font-display text-[12px] leading-none font-bold tracking-[0.18em] text-white/60">
                         {String(index + 1).padStart(2, "0")}
                       </span>
                       <h3 className="mt-3 font-display text-[19px] leading-[1.15] font-bold text-balance text-white md:text-[23px]">
                         {fact.title}
                       </h3>
-                      <p className="mt-2 font-body text-[14px] leading-[1.65] text-balance text-white/45 md:text-[15px]">
+                      <p className="mt-2 font-body text-[14px] leading-[1.65] text-balance text-white/70 md:text-[15px]">
                         {fact.description}
                       </p>
                     </div>
