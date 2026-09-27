@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
 const particles = [...Array(16)].map((_, i) => ({
   size: i % 3 === 0 ? 3 : 2,
@@ -15,6 +16,7 @@ const particles = [...Array(16)].map((_, i) => ({
 }));
 
 export default function CTASection() {
+  const prefersReducedMotion = usePrefersReducedMotion();
   // `website` is the honeypot — see the field itself in the form below.
   const [form, setForm] = useState({ from_name: "", phone: "", reply_to: "", website: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
@@ -90,11 +92,15 @@ export default function CTASection() {
           muted + playsInline is what lets it autoplay at all: a clip with sound
           will not start on its own on any phone, and without playsInline iOS
           takes it fullscreen the moment it plays. */}
+      {/* A clip that loops on its own is motion, and a reader who asked for
+          less of it gets the first frame instead of a loop: the poster is the
+          balloons standing still, which is what the section needs from it
+          anyway. */}
       <video
         src="/videos/cta_end.mp4"
-        autoPlay
+        autoPlay={!prefersReducedMotion}
         muted
-        loop
+        loop={!prefersReducedMotion}
         playsInline
         preload="metadata"
         aria-hidden="true"

@@ -917,11 +917,13 @@ export default function ServicesSection() {
         <div className="relative z-10 mx-auto max-w-[1200px]">
           <ServicesListBlock />
 
-          <h3 className="mt-24 text-center font-display text-[clamp(32px,4vw,52px)] leading-[1.05] font-bold text-black">
+          <h3 className="mt-28 text-center font-display text-[clamp(32px,4vw,52px)] leading-[1.05] font-bold text-black">
             {PROCESS_HEADING.join(" ")}
           </h3>
 
-          <ol className="mt-14 grid grid-cols-1 gap-12 sm:grid-cols-2">
+          {/* Four stages, two by two, with the same air between them as the
+              cards elsewhere on the site: 40 across, 64 down. */}
+          <ol className="mt-14 grid grid-cols-1 gap-x-10 gap-y-16 sm:grid-cols-2">
             {STAGE_TITLES.map((title, index) => (
               <li key={title} className="flex flex-col items-center text-center">
                 <svg

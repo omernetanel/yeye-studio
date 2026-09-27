@@ -190,7 +190,10 @@ export default function ProjectsSection() {
           ref={panelRef}
           className={
             prefersReducedMotion
-              ? "flex flex-col items-center justify-center gap-10 py-24"
+              // Same rhythm as every other block on the page: 96 above and
+              // below, not the 96+80 the pinned version's own padding came to
+              // once the panel stopped being a screen tall.
+              ? "flex flex-col items-center justify-center gap-10 pt-24 pb-16"
               : "sticky top-0 flex h-[100svh] flex-col items-center justify-center gap-10 overflow-clip md:gap-14"
           }
         >
