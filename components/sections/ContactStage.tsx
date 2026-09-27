@@ -271,12 +271,20 @@ function ContactForm() {
             </p>
           )}
 
-          {/* The same line as the closing form — see there. */}
+          {/* The same line as the closing form — see there.
+              The "ב" before the link sits against the tag with no line break
+              between them: a newline in JSX becomes a space, and the prefix
+              would come out detached from the word it belongs to. */}
           <p className="font-body text-[13px] leading-[1.7] text-white/70 sm:col-span-2">
-            הפרטים משמשים רק כדי לחזור אליכם, ולא מועברים לאף אחד.{" "}
-            <Link href="/privacy" className="underline underline-offset-4 hover:text-white">
-              מדיניות פרטיות
+            מסירת הפרטים היא מרצון. הם ישמשו למענה לפנייה ויעובדו גם אצל ספקי השירות המסייעים
+            בהפעלת האתר ובמסירת הפנייה. ללא שם וכתובת דוא״ל לא אוכל לחזור אליכם. מידע נוסף על עיבוד
+            המידע וזכויותיכם מופיע ב<Link
+              href="/privacy"
+              className="underline underline-offset-4 hover:text-white"
+            >
+              מדיניות הפרטיות
             </Link>
+            .
           </p>
         </form>
       )}

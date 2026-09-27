@@ -243,10 +243,15 @@ export default function CTASection() {
                 {/* What happens to what they just typed, in one line, where
                     they are typing it. */}
                 <p className="font-body text-[13px] leading-[1.7] text-black/60 sm:col-span-2">
-                  הפרטים משמשים רק כדי לחזור אליכם, ולא מועברים לאף אחד.{" "}
-                  <Link href="/privacy" className="underline underline-offset-4 hover:text-black">
-                    מדיניות פרטיות
+                  מסירת הפרטים היא מרצון. הם ישמשו למענה לפנייה ויעובדו גם אצל ספקי השירות המסייעים
+                  בהפעלת האתר ובמסירת הפנייה. ללא שם וכתובת דוא״ל לא אוכל לחזור אליכם. מידע נוסף על
+                  עיבוד המידע וזכויותיכם מופיע ב<Link
+                    href="/privacy"
+                    className="underline underline-offset-4 hover:text-black"
+                  >
+                    מדיניות הפרטיות
                   </Link>
+                  .
                 </p>
               </form>
             )}
