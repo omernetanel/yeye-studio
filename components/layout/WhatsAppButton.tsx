@@ -92,7 +92,7 @@ export default function WhatsAppButton() {
         // a circular mask with the artwork scaled up inside it to hide the
         // corners. None of that is needed against a file that is actually
         // transparent.
-        className="block h-[58px] w-[58px] transition-transform duration-200 ease-out group-hover:scale-[1.06] active:scale-100 md:h-[64px] md:w-[64px]"
+        className="block h-[50px] w-[50px] transition-transform duration-200 ease-out group-hover:scale-[1.06] active:scale-100 md:h-[64px] md:w-[64px]"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

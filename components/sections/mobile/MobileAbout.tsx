@@ -96,9 +96,13 @@ const PORTRAIT_SETTLED = 0.88;
 const LINE_IN_FROM = 0.92;
 const LINE_IN_TO = 0.62;
 
-// Where a claim card opens, and how far it rises into place.
+// Where a claim card opens. Each is a sheet folded back from its top edge and
+// unfolds toward the reader; CLAIM_FOLDED is where it starts. Two coming up at
+// once still open one after another, CLAIM_STAGGER_MS apart.
 const CLAIM_IN_VH = 0.85;
-const CLAIM_RISE_PX = 24;
+const CLAIM_FOLDED = "perspective(700px) rotateX(-88deg)";
+const CLAIM_OPEN = "perspective(700px) rotateX(0deg)";
+const CLAIM_STAGGER_MS = 280;
 
 // How far into the screen a scrolling element must come before it is fully in.
 const RISE_VH = 0.42;
@@ -164,6 +168,7 @@ export default function MobileAbout() {
   // themselves away on the way back up reads as the page undoing itself.
   const claimsRef = useRef<(HTMLDivElement | null)[]>([]);
   const claimsSeenRef = useRef<boolean[]>([]);
+  const lastClaimAtRef = useRef(Number.NEGATIVE_INFINITY);
   const closerStageRef = useRef<HTMLDivElement>(null);
   const closerLineRef = useRef<HTMLParagraphElement>(null);
   const closerSwashRef = useRef<HTMLDivElement>(null);
@@ -248,13 +253,18 @@ export default function MobileAbout() {
       cards.style.transform = `translateY(${lerp(RISE_PX, 0, t).toFixed(1)}px)`;
     }
 
-    // And each claim opens on its own as it comes up, once.
+    // And each claim unfolds on its own as it comes up, once - never two at the
+    // same moment: one that comes up right behind another waits its turn.
     claimsRef.current.forEach((claim, index) => {
       if (!claim || claimsSeenRef.current[index]) return;
       if (claim.getBoundingClientRect().top < screen * CLAIM_IN_VH) {
         claimsSeenRef.current[index] = true;
+        const now = performance.now();
+        const at = Math.max(now, lastClaimAtRef.current + CLAIM_STAGGER_MS);
+        lastClaimAtRef.current = at;
+        claim.style.transitionDelay = `${Math.round(at - now)}ms`;
         claim.style.opacity = "1";
-        claim.style.transform = "translateY(0)";
+        claim.style.transform = CLAIM_OPEN;
       }
     });
 
@@ -477,11 +487,13 @@ export default function MobileAbout() {
             {aboutFacts.map((fact, index) => (
               <BorderGlowCard
                 key={fact.title}
-                className="px-5 py-7 text-center [transition:opacity_600ms_ease-out,transform_600ms_ease-out]"
+                // Hinged at its top edge; opacity comes in over the first part
+                // of the turn so the card is never a bright edge-on sliver.
+                className="origin-top px-5 py-7 text-center [transition:opacity_450ms_ease-out,transform_900ms_cubic-bezier(0.22,1,0.36,1)]"
                 innerRef={(el) => {
                   claimsRef.current[index] = el;
                 }}
-                style={{ opacity: 0, transform: `translateY(${CLAIM_RISE_PX}px)` }}
+                style={{ opacity: 0, transform: CLAIM_FOLDED }}
               >
                 <h4 className="font-display text-m-sub font-bold text-balance text-white">
                   {fact.title}

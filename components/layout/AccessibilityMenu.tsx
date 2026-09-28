@@ -113,23 +113,23 @@ export default function AccessibilityMenu() {
 
   return (
     // Above the WhatsApp mark, with the same gap from the edge, and the offset
-    // is the mark's own height plus twelve: 20 + 58 + 12 on a phone, 28 + 64 +
+    // is the mark's own height plus ten: 20 + 50 + 10 on a phone, 28 + 64 +
     // 12 on a desktop. z-40 for the same reason it has: over the page, under
     // the menu's own panel.
-    <div ref={rootRef} className="group fixed bottom-[90px] left-5 z-40 md:bottom-[104px] md:left-7">
+    <div ref={rootRef} className="group fixed bottom-[80px] left-5 z-40 md:bottom-[104px] md:left-7">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-controls="a11y-panel"
         aria-label="הגדרות נגישות"
-        // THE SAME CIRCLE AS THE WHATSAPP MARK, to the pixel: 64 on a phone, 72
+        // THE SAME CIRCLE AS THE WHATSAPP MARK, to the pixel: 50 on a phone, 64
         // on a desktop. It was 52/58, and since both are anchored to the same
         // left edge, the narrower one sat six pixels further right - two
         // floating buttons in one column that did not line up.
         // The disc is the artwork itself, so there is no border or padding to
         // make the drawn circle smaller than the box it is measured by.
-        className="block h-[58px] w-[58px] rounded-full shadow-[0_6px_20px_rgba(0,0,0,0.16)] transition-transform duration-200 ease-out hover:scale-[1.06] active:scale-100 md:h-[64px] md:w-[64px]"
+        className="block h-[50px] w-[50px] rounded-full shadow-[0_6px_20px_rgba(0,0,0,0.16)] transition-transform duration-200 ease-out hover:scale-[1.06] active:scale-100 md:h-[64px] md:w-[64px]"
       >
         <WheelchairMark />
       </button>
