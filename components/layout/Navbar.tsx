@@ -54,7 +54,6 @@ export default function Navbar() {
   const tintRef = useRef<HTMLDivElement>(null);
   const bottomTintRef = useRef<HTMLDivElement>(null);
   const chromeBottomDarkRef = useRef(false);
-  const stripsHiddenRef = useRef(false);
 
   const checkTheme = () => {
     const img = imgRef.current;
@@ -89,20 +88,6 @@ export default function Navbar() {
       topDark = from <= 0 && to > 0;
       bottomDark = topDark && to > window.innerHeight;
     }
-    // Out of the page entirely while the hero is on the screen. There is no
-    // dark stretch there to colour, and a fixed strip at the edge changes how
-    // Safari 26 carries fixed elements while the bars collapse: the menu, which
-    // the hero paints onto its ink every frame, started to jump and shimmer
-    // once the strips existed. Without them the hero is exactly as it was.
-    const hero = document.getElementById("hero");
-    const heroOnScreen = !!hero && hero.getBoundingClientRect().bottom > 0;
-    if (heroOnScreen !== stripsHiddenRef.current) {
-      stripsHiddenRef.current = heroOnScreen;
-      for (const strip of [tintRef.current, bottomTintRef.current]) {
-        if (strip) strip.style.display = heroOnScreen ? "none" : "";
-      }
-    }
-
     if (bottomDark !== chromeBottomDarkRef.current) {
       chromeBottomDarkRef.current = bottomDark;
       if (bottomTintRef.current) {

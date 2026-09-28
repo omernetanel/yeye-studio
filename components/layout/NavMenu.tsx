@@ -214,7 +214,10 @@ export default function NavMenu() {
       aria-label="תפריט"
       // What the hero measures, copies and repaints on its own layer.
       data-chrome-paint
-      className={`flex items-center gap-2 transition-colors duration-200 ${
+      // No colour transition until the hero is behind the reader: there the
+      // button and the hero's copy of it hand over every time a scroll starts
+      // and stops, and a 200ms fade between them left the menu half gone.
+      className={`flex items-center gap-2 ${docked ? "transition-colors duration-200" : ""} ${
         heroPaints ? "text-transparent" : dark ? "text-white" : "text-black"
       }`}
     >

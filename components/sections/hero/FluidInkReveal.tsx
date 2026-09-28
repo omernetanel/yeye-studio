@@ -1087,6 +1087,15 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     let chromeRect: DOMRect | null = null;
     let chromePainted = false;
     const chromeUv = new Float32Array(4);
+    // WHILE THE PAGE SCROLLS THE COPY STEPS ASIDE. The browser moves the canvas
+    // the moment the page scrolls; this layer is only re-placed on the next
+    // frame, so for a frame at a time the copy rode along with the canvas and
+    // then snapped back - the button shivered in place for as long as the page
+    // moved. The real button is fixed and does not move at all, so it is shown
+    // instead until the canvas has held still for CHROME_SETTLE_MS.
+    const CHROME_SETTLE_MS = 120;
+    let chromeCanvasTop: number | null = null;
+    let chromeMovedAt = 0;
 
     const paintChrome = () => {
       const el = document.querySelector<HTMLElement>("[data-chrome-paint]");
@@ -1164,6 +1173,14 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       // Wholly off the canvas: nothing to composite, and the button goes back
       // to being an ordinary element over whatever section it is on.
       if (box.bottom < canvasBox.top || box.top > canvasBox.bottom) {
+        chromeUv.fill(0);
+        setChromePaintedByHero(false);
+        return;
+      }
+      const now = performance.now();
+      if (chromeCanvasTop === null || Math.abs(canvasBox.top - chromeCanvasTop) > 0.5) chromeMovedAt = now;
+      chromeCanvasTop = canvasBox.top;
+      if (now - chromeMovedAt < CHROME_SETTLE_MS) {
         chromeUv.fill(0);
         setChromePaintedByHero(false);
         return;
