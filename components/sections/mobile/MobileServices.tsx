@@ -11,6 +11,7 @@ import { isMomentum, stopMomentumAt, trackTouch } from "@/lib/scrub/momentum";
 import { useLenis } from "@/lib/motion/lenis";
 import { stackHeading } from "@/lib/motion/stack-heading";
 import FoldText, { setFold } from "@/components/ui/FoldText";
+import StageRail, { setStageRail } from "@/components/ui/StageRail";
 import {
   ICONS,
   ICON_MOTION,
@@ -313,7 +314,6 @@ export default function MobileServices() {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const stageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dotsRef = useRef<HTMLDivElement>(null);
-  const dotRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const statementLayerRef = useRef<HTMLDivElement>(null);
 
   const playheadRef = useRef<SteppedPlayhead | null>(null);
@@ -439,10 +439,8 @@ export default function MobileServices() {
         stage.style.opacity = String(visibility);
         stage.style.transform = `translateY(${((1 - arriving) - leaving) * SWAP_RISE_PX}px)`;
       }
-      // Round dots only: the current one darkens, it never stretches into a bar.
-      const dot = dotRefs.current[index];
-      if (dot) dot.style.opacity = String(lerp(0.2, 1, visibility));
     }
+    setStageRail(dots, position / (STAGE_COUNT - 1), Math.round(position));
 
     const statementOpacity = fadeIn(time, CUE_STATEMENT_IN);
     statementLayer.style.opacity = String(statementOpacity);
@@ -521,6 +519,14 @@ export default function MobileServices() {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative aspect-[9/16] w-[min(100%,calc(100svh*9/16))]">
             <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />
+            {/* The frame's own bottom edge cuts the paper in a straight line
+                where the clip ends. A short fade to the page's white there
+                lets the sheet run out instead of being cut off. Over the
+                picture only - the words above it are later layers. */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-[14%] bg-gradient-to-t from-white to-transparent"
+            />
           </div>
         </div>
 
@@ -585,25 +591,11 @@ export default function MobileServices() {
               ))}
             </div>
           </div>
-          {/* Where the reader is in the four. Decoration for sighted readers —
-              each stage carries its own numeral for everyone else.
-              10px circles: at 6 they were a texture on the paper rather than a
-              count anyone read. The same size as the work's gallery below and
-              the desk's version of both, so it is one indicator across the site. */}
-          <div
-            ref={dotsRef}
-            aria-hidden="true"
-            className="absolute inset-x-0 bottom-[8%] flex items-center justify-center gap-2.5 opacity-0"
-          >
-            {STAGE_TITLES.map((title, index) => (
-              <span
-                key={title}
-                ref={(element) => {
-                  dotRefs.current[index] = element;
-                }}
-                className="block h-2.5 w-2.5 rounded-full bg-black opacity-20"
-              />
-            ))}
+          {/* Where the reader is in the four, as a column down the right edge -
+              the desk's indicator, see StageRail for why not a row. Decoration
+              for sighted readers; each stage carries its own numeral. */}
+          <div ref={dotsRef} className="absolute top-1/2 right-[7px] -translate-y-1/2 opacity-0">
+            <StageRail count={STAGE_TITLES.length} />
           </div>
         </div>
 

@@ -8,6 +8,7 @@ import { SERVICES_HEADING, SERVICES_LEAD, services } from "@/lib/content";
 // same four stages. Only the layout below is the desktop's own.
 import { ICONS, ICON_MOTION, IconExtras, PROCESS_HEADING, STAGE_LINES, STAGE_TITLES } from "./process/stages";
 import FoldText, { setFold } from "@/components/ui/FoldText";
+import StageRail, { setStageRail } from "@/components/ui/StageRail";
 // The row itself is shared with the phone, which prints the same four at a
 // smaller size — see there.
 import ServiceRow from "./services/ServiceRow";
@@ -512,29 +513,11 @@ function ProcessStages() {
         </div>
       ))}
 
-      {/* Four of four, at the FOOT OF THE SHEET rather than under the stage —
-          against the words it read as part of them. Same indicator the work's
-          gallery carries, so "where am I in this" is one idea across the page. */}
-      {/* HIDDEN UNTIL THE FIRST STAGE ARRIVES. It used to have no clock at all:
-          the stages each start at opacity 0 and are raised by animateProcess,
-          but this row was simply painted, so four dashes sat on the crumpled
-          sheet for the whole run-up - counting stages that had not appeared. */}
-      <div
-        aria-hidden="true"
-        data-process-dots
-        style={{ opacity: 0 }}
-        className="absolute inset-x-0 -bottom-[14%] flex justify-center gap-2.5"
-      >
-        {STAGE_TITLES.map((title) => (
-          <span
-            key={title}
-            data-process-dot
-            // A 10px circle, the same as the phone's and the work's gallery:
-            // the 4px dashes this was read as a hairline under the stage
-            // rather than as where the reader is in the four.
-            className="h-2.5 w-2.5 rounded-full bg-black/15 transition-colors duration-300"
-          />
-        ))}
+      {/* Four of four, as a column down the right side of the sheet - see
+          StageRail for why not a row. HIDDEN UNTIL THE FIRST STAGE ARRIVES, so
+          it never counts stages that have not appeared. */}
+      <div data-process-dots style={{ opacity: 0 }} className="absolute top-1/2 right-[3%] -translate-y-1/2">
+        <StageRail count={STAGE_TITLES.length} />
       </div>
     </div>
   );
@@ -809,11 +792,9 @@ export default function ServicesSection() {
     const dots = sheet.querySelector<HTMLElement>("[data-process-dots]");
     if (dots) {
       dots.style.opacity = String(smoothstep(mapRange(seconds, STAGES_START, STAGES_START + STAGE_SWAP, 0, 1)));
+      // The line fills from the first stage's arrival to the last's.
+      setStageRail(dots, mapRange(seconds, STAGES_START, STAGES_START + last * STAGE_SPAN, 0, 1), current);
     }
-
-    sheet.querySelectorAll<HTMLElement>("[data-process-dot]").forEach((dot, i) => {
-      dot.style.backgroundColor = i === current ? "rgb(0 0 0)" : "rgb(0 0 0 / 0.15)";
-    });
   };
 
   const measurePinRange = () => {
