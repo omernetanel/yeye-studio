@@ -36,6 +36,7 @@ export default function ProjectsCarousel({
   blur,
   sideOpacity,
   edgeDim,
+  overdraw,
 }: {
   stageClassName: string;
   cardHeight?: number;
@@ -46,6 +47,7 @@ export default function ProjectsCarousel({
   blur?: number;
   sideOpacity?: number;
   edgeDim?: number;
+  overdraw?: number;
 }) {
   const router = useRouter();
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -69,6 +71,7 @@ export default function ProjectsCarousel({
         blur={blur}
         sideOpacity={sideOpacity}
         edgeDim={edgeDim}
+        overdraw={overdraw}
         gap={16}
         radius={16}
         // An upright, nearly square pane taller than the row, sized from the
@@ -87,7 +90,8 @@ export default function ProjectsCarousel({
         className={stageClassName}
       />
 
-      <div className="mt-6 flex flex-col items-center px-6 text-center">
+      {/* relative: painted over a canvas that reaches down behind it. */}
+      <div className="relative mt-6 flex flex-col items-center px-6 text-center">
         <Link
           href={current.href}
           target={current.external ? "_blank" : undefined}

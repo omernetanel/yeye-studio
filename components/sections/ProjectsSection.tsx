@@ -189,7 +189,8 @@ export default function ProjectsSection() {
         >
           {/* mt: the settled line sat too close to the top of the screen. On
               the slot, not the heading, so the slot's box stays the heading's. */}
-          <div ref={slotRef} className="mt-12 w-full">
+          {/* z-10: the carousel's canvas reaches up behind the heading. */}
+          <div ref={slotRef} className="relative z-10 mt-12 w-full">
             <h2
               ref={headingRef}
               className="relative flex justify-center gap-[0.25em] font-display text-[clamp(40px,5.2vw,78px)] leading-[1.05] font-extrabold tracking-tight whitespace-nowrap text-black"
@@ -210,8 +211,11 @@ export default function ProjectsSection() {
                 middle and only the curl of its neighbours at the edges. Shown
                 whole, the neighbours were two heavy black waves competing with
                 it. The neighbours are a wave, out of focus and colour-split,
-                and the wave is capped so it stays inside the box: with no cap
-                the curl ran past the canvas and was cut in a straight line.
+                its lift capped to the box. The swirl on top still carries it
+                past, so the canvas reaches 45% past the box above and below
+                (overdraw), behind the heading and the caption, without moving
+                either - before, the curl was cut there in a straight line.
+                Capping the swirl too was tried: it flattened the wave.
                 The card is 76% of the box to leave the wave that room, and the
                 neighbours are at 45% so the piece in the middle leads, thinning
                 further towards the screen's edges. Fading
@@ -230,6 +234,7 @@ export default function ProjectsSection() {
               blur={2.5}
               sideOpacity={0.45}
               edgeDim={0.6}
+              overdraw={0.45}
             />
           </div>
         </div>

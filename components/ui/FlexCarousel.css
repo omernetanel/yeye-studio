@@ -20,6 +20,22 @@
   outline: none;
 }
 
+/* The canvas can be taller than the box (`overdraw`): its top and height are
+   set from JS, and it takes no pointer events - the box handles them, so the
+   part reaching past it never covers a link. */
+.flex-carousel > canvas {
+  position: absolute;
+  left: 0;
+  display: block;
+  width: 100%;
+  pointer-events: none;
+}
+
+/* Reaching past the box: the wave shows whole, behind the page around it. */
+.flex-carousel--overdraw {
+  overflow: visible;
+}
+
 /* Over a card, a click goes into that piece of work. */
 .flex-carousel[data-hover="open"] {
   cursor: pointer;

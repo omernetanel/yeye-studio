@@ -178,13 +178,12 @@ void main() {
   float reachX = rel.x / (uResolution.x * 0.5);
   float side = smoothstep(0.02, 0.3, abs(reachX)) * (uCurl == 0.0 ? sign(reachX) : uCurl);
   float lift = ramp * side * uFlow * uStrength;
+  // A soft ceiling on the wave's lift, measured from the row's box. The swirl
+  // on top of it still carries a card past the box, which is what overdraw
+  // gives the canvas room for.
+  if (uMaxLift > 0.0) lift = uMaxLift * tanh(lift / uMaxLift);
   vec2 swirl = along * along.y * side * slope * uFlow * uStrength * 0.35;
   vec2 drift = vec2(0.0, -lift) - swirl;
-  // A soft ceiling on the whole vertical move - the lift and the swirl
-  // together: the wave keeps its shape but never carries a card further than
-  // the room between the row and the box's edge, so nothing is cut off by the
-  // canvas. Capping the lift alone left the swirl to push it ~100px past.
-  if (uMaxLift > 0.0) drift.y = uMaxLift * tanh(drift.y / uMaxLift);
   vec2 shifted = uv + drift / uResolution;
 
   vec2 texels = uResolution * uDpr;
@@ -236,6 +235,7 @@ interface Settings extends Lens {
   blur: number;
   sideOpacity: number;
   edgeDim: number;
+  overdraw: number;
   reducedMotion: boolean;
 }
 
@@ -308,6 +308,12 @@ export interface FlexCarouselProps extends Partial<Lens> {
   sideOpacity?: number;
   /** How much thinner the row gets at the screen's edges (0 = none). */
   edgeDim?: number;
+  /**
+   * How far the canvas reaches past the box, above and below, as a share of the
+   * box's height. The layout is the box's; the wave is drawn whole behind the
+   * page around it. Read once, at mount.
+   */
+  overdraw?: number;
   reducedMotion?: boolean;
   /** Called whenever a different card reaches the centre. */
   onChange?: (index: number) => void;
@@ -343,6 +349,7 @@ export default function FlexCarousel({
   blur = 0,
   sideOpacity = 1,
   edgeDim = 0,
+  overdraw = 0,
   reducedMotion = false,
   onChange,
   onSelect,
@@ -385,6 +392,7 @@ export default function FlexCarousel({
       blur,
       sideOpacity,
       edgeDim,
+      overdraw,
       reducedMotion,
     };
     engineRef.current?.wake();
@@ -412,9 +420,6 @@ export default function FlexCarousel({
     }
     gl.clearColor(0, 0, 0, 0);
     const canvas = gl.canvas;
-    canvas.style.display = "block";
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
     canvas.setAttribute("aria-hidden", "true");
     container.prepend(canvas);
 
@@ -484,7 +489,11 @@ export default function FlexCarousel({
 
     let slots: Slot[] = [];
     let width = 1;
+    // The canvas's height, and the row's own box inside it. They differ by
+    // `overdraw`: the canvas reaches past the box so a wave is never cut.
     let height = 1;
+    let boxH = 1;
+    let pad = 0;
     let pos = 0;
     let vel = 0;
     let goal = 0;
@@ -594,7 +603,7 @@ export default function FlexCarousel({
     };
 
     const metrics = (s: Settings): Metrics => {
-      const cardH = Math.max(24, s.cardHeight * height);
+      const cardH = Math.max(24, s.cardHeight * boxH);
       const fixed = FIT_ASPECT[s.fit];
       const widths = slots.map((slot) => (fixed || slot.aspect) * cardH);
       const centers: number[] = [];
@@ -728,7 +737,11 @@ export default function FlexCarousel({
 
     const resize = () => {
       width = Math.max(1, container.clientWidth);
-      height = Math.max(1, container.clientHeight);
+      boxH = Math.max(1, container.clientHeight);
+      pad = Math.round(boxH * (settingsRef.current?.overdraw ?? 0));
+      height = boxH + pad * 2;
+      canvas.style.top = `${-pad}px`;
+      canvas.style.height = `${height}px`;
       renderer.dpr = Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(PIXEL_BUDGET / (width * height)));
       renderer.setSize(width, height);
       target.setSize(Math.max(2, Math.round(width * renderer.dpr)), Math.max(2, Math.round(height * renderer.dpr)));
@@ -956,9 +969,7 @@ export default function FlexCarousel({
         lensUniforms.uDispersion.value = s.dispersion * 0.12 * (1 + Math.abs(deform) * liquidAmount * 1.2);
         lensUniforms.uStrength.value = effects.strength;
         lensUniforms.uSceneAlpha.value = effects.sceneAlpha;
-        // Less a margin for the colour split, which smears a card's edge a few
-        // pixels further than the card itself.
-        lensUniforms.uMaxLift.value = s.contain ? Math.max(1, (height - cardH * shrink) / 2 - 18) : 0;
+        lensUniforms.uMaxLift.value = s.contain ? Math.max(1, (boxH - cardH * shrink) / 2 - 6) : 0;
         lensUniforms.uBlur.value = s.blur;
         lensUniforms.uEdgeDim.value = s.edgeDim;
         lensUniforms.uFlatHalf.value = Math.max(0, spanW - inner);
@@ -990,7 +1001,7 @@ export default function FlexCarousel({
 
     const localPoint = (e: PointerEvent): [number, number] => {
       const rect = container.getBoundingClientRect();
-      return [e.clientX - rect.left, e.clientY - rect.top];
+      return [e.clientX - rect.left, e.clientY - rect.top + pad];
     };
 
     const onPointerDown = (e: PointerEvent) => {
@@ -1220,7 +1231,7 @@ export default function FlexCarousel({
   return (
     <div
       ref={containerRef}
-      className={`flex-carousel ${className}`.trim()}
+      className={`flex-carousel ${overdraw > 0 ? "flex-carousel--overdraw" : ""} ${className}`.trim()}
       style={style}
       role="region"
       aria-roledescription="קרוסלה"
