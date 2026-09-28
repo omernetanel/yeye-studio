@@ -185,9 +185,10 @@ export default function Navbar() {
     {/* iOS 26 Safari ignores theme-color and tints the status bar and the
         bottom toolbar from a position:fixed element at each edge - one within
         4px of the top or 3px of the bottom, at least 80% of the width and at
-        least 3px tall. These two are those elements. Each is 12px tall and
-        pushed 9px past its edge, so 3px of it is on the page, and that sliver
-        is the colour of what is behind it anyway.
+        least 3px tall. These two are those elements: 12px each, flush with
+        their edge and wholly on the page, under the clock and under the
+        address bar, in the colour of what is behind them anyway. Pushed 9px
+        past the edge, as a first try had them, Safari never counted them.
         The strip that stood here before was env(safe-area-inset-top) tall,
         which is 0 in the browser, and Safari never sampled it: the bars stayed
         white over every black section. Phone only - the desk's chrome was
@@ -195,13 +196,13 @@ export default function Navbar() {
     <div
       ref={tintRef}
       aria-hidden="true"
-      className="pointer-events-none fixed inset-x-0 -top-[9px] z-[60] h-[12px] md:hidden"
+      className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[12px] md:hidden"
       style={{ backgroundColor: SITE_BACKGROUND }}
     />
     <div
       ref={bottomTintRef}
       aria-hidden="true"
-      className="pointer-events-none fixed inset-x-0 -bottom-[9px] z-[60] h-[12px] md:hidden"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] h-[12px] md:hidden"
       style={{ backgroundColor: SITE_BACKGROUND }}
     />
     <motion.div
