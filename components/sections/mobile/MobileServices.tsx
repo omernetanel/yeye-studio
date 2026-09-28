@@ -566,9 +566,12 @@ export default function MobileServices() {
                 middle of the opened sheet, then settles into its line as it
                 rises to its place. Only the words move, so the heading's own
                 box stays an honest reading for the offsets in render. */}
+            {/* The projects heading's type exactly - size, weight, tracking and
+                no halo. At the smaller bold size with the white halo, scaled up
+                into the stack the halo grew with it into a glow. */}
             <h2
               ref={headingRef}
-              className="paper-halo relative flex flex-wrap justify-center gap-x-[0.25em] text-center font-display text-m-title font-bold whitespace-nowrap text-black"
+              className="relative flex flex-wrap justify-center gap-x-[0.25em] text-center font-display text-m-display font-extrabold tracking-tight whitespace-nowrap text-black"
             >
               {PROCESS_HEADING.map((words) => (
                 <span key={words} className="block origin-center">
