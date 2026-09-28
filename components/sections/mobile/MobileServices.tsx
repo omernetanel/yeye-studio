@@ -9,6 +9,8 @@ import { ScrollFrames, type FrameSequence } from "@/lib/scrub/scroll-frames";
 import { SteppedPlayhead, travelScreensFor, type StoryOptions } from "@/lib/scrub/stepped-playhead";
 import { isMomentum, stopMomentumAt, trackTouch } from "@/lib/scrub/momentum";
 import { useLenis } from "@/lib/motion/lenis";
+import { stackHeading } from "@/lib/motion/stack-heading";
+import FoldText, { setFold } from "@/components/ui/FoldText";
 import {
   ICONS,
   ICON_MOTION,
@@ -146,9 +148,14 @@ const STAGE_COUNT = STAGE_TITLES.length;
 // before the fold; with the scroll picking steps, that moment IS the step, and
 // a frozen quarter inside the transition would read as the page catching.
 const STAGES_END = 1;
-/** How much of the gap between two stages the swap takes. The rest is still. */
-const SWAP_SPAN = 0.24;
-const SWAP_RISE_PX = 28;
+/**
+ * How much of the gap between two stages the swap takes. Nearly all of it: the
+ * gap is a played transition now, so this is a share of its clock, and at 0.24
+ * the whole swap took an eighth of a second and read as a jump.
+ */
+const SWAP_SPAN = 0.9;
+/** A short, soft lift: at 28px on a slower swap the drift was the event. */
+const SWAP_RISE_PX = 16;
 /**
  * Where the position starts: a full swap before the first stage, so the first
  * stage arrives the same way every later one does — after the heading has
@@ -161,6 +168,16 @@ const FIRST_ARRIVAL = -0.5 - SWAP_SPAN / 2;
  * place above the stages. Only then does the first stage come in.
  */
 const HEADING_RISE_SECONDS = 0.5;
+/**
+ * The heading's entrance, the same as the projects heading's: its letters fold
+ * in over this stretch of the clip (ending on the rest state where it stands
+ * alone in the middle), as a stack this share of the screen's width and at most
+ * this share of its height, and between one line length and one type size.
+ */
+const HEADING_FOLD = [CUE_ABOUT_IN - 0.2, CUE_ABOUT_IN + FADE_SECONDS] as const;
+const HEADING_STACK_WIDTH = 0.8;
+const HEADING_STACK_MAX_HEIGHT = 0.4;
+const HEADING_STACK_SAME_SIZE = 0.5;
 
 /** Eases both ends of a 0 → 1 move, so the heading lifts off and lands softly. */
 function smoothstep(t: number) {
@@ -254,13 +271,15 @@ const STORY = {
   // the room no longer has to.
   transitions: [
     { kind: "scrub", screens: 1 }, // the ball with the list on it
-    { kind: "play", screens: 0.6, seconds: 1.8 }, // the list goes, the paper opens, the heading comes up
-    { kind: "play", screens: 0.55, seconds: 0.7 }, // the heading rises to its place and the first stage comes in
-    { kind: "play", screens: 0.55, seconds: 0.5 }, // stage to stage
-    { kind: "play", screens: 0.55, seconds: 0.5 },
-    { kind: "play", screens: 0.55, seconds: 0.5 },
-    { kind: "play", screens: 0.6, seconds: 2.8 }, // the stages go back in and the paper crumples to a ball
-    { kind: "play", screens: 0.6, seconds: 2.2 }, // the ball turns into a plane and the line rises
+    // The clocks were slowed by about half after a real hand: at 1.8 / 0.5 /
+    // 2.8 / 2.2 seconds everything happened before it could be watched.
+    { kind: "play", screens: 0.6, seconds: 2.6 }, // the list goes, the paper opens, the heading folds in
+    { kind: "play", screens: 0.55, seconds: 1.6 }, // the heading settles into its place and the first stage comes in
+    { kind: "play", screens: 0.55, seconds: 1.2 }, // stage to stage
+    { kind: "play", screens: 0.55, seconds: 1.2 },
+    { kind: "play", screens: 0.55, seconds: 1.2 },
+    { kind: "play", screens: 0.6, seconds: 3.6 }, // the stages go back in and the paper crumples to a ball
+    { kind: "play", screens: 0.6, seconds: 3.0 }, // the ball turns into a plane and the line rises
     { kind: "scrub", screens: 0.8 }, // the plane flies off
   ],
 } as const satisfies Pick<StoryOptions, "anchors" | "transitions">;
@@ -383,8 +402,19 @@ export default function MobileServices() {
     // Where the reader is in the four, as a continuous position — 1.5 is halfway
     // between the second and the third. Read off the scroll inside the hold, not
     // off clip time, which is standing still there.
+    // The heading folds in as a big stack centred on the screen while the paper
+    // opens, and settles into its line at its place as it rises.
     const rise = smoothstep(clamp01((time - (CUE_PAPER_FLAT - HEADING_RISE_SECONDS)) / HEADING_RISE_SECONDS));
-    heading.style.transform = `translateY(${(1 - rise) * headingOffset}px)`;
+    stackHeading(
+      heading,
+      heading.offsetWidth / 2,
+      heading.offsetHeight / 2 + headingOffset,
+      panel.offsetWidth * HEADING_STACK_WIDTH,
+      panel.offsetHeight * HEADING_STACK_MAX_HEIGHT,
+      rise,
+      HEADING_STACK_SAME_SIZE,
+    );
+    setFold(heading, (time - HEADING_FOLD[0]) / (HEADING_FOLD[1] - HEADING_FOLD[0]));
 
     const onSheet = clamp01((progress - STAGES_FROM) / (STAGES_TO - STAGES_FROM));
     const position = lerp(FIRST_ARRIVAL, STAGE_COUNT - 1, clamp01(onSheet / STAGES_END));
@@ -395,9 +425,10 @@ export default function MobileServices() {
       const swapOut =
         index === STAGE_COUNT - 1 ? 0 : clamp01((position - (index + 0.5 - SWAP_SPAN / 2)) / SWAP_SPAN);
       // The outgoing stage takes the first half of the swap, the incoming one the
-      // second, so they meet at nothing and never overlap.
-      const arriving = clamp01(swapIn * 2 - 1);
-      const leaving = clamp01(swapOut * 2);
+      // second, so they meet at nothing and never overlap. Eased at both ends,
+      // so each goes and comes softly instead of at a constant rate.
+      const arriving = smoothstep(clamp01(swapIn * 2 - 1));
+      const leaving = smoothstep(clamp01(swapOut * 2));
       const visibility = Math.min(arriving, 1 - leaving);
       // The dots count stages, so they wait for the first one rather than
       // showing under the heading while it is still alone on the sheet.
@@ -525,8 +556,19 @@ export default function MobileServices() {
             ref={stageBlockRef}
             className="absolute inset-x-6 top-[8%] bottom-[14%] flex flex-col items-center justify-center"
           >
-            <h2 ref={headingRef} className="paper-halo text-center font-display text-m-title font-bold text-black">
-              {PROCESS_HEADING.join(" ")}
+            {/* The projects heading's entrance: it folds in as a big stack in the
+                middle of the opened sheet, then settles into its line as it
+                rises to its place. Only the words move, so the heading's own
+                box stays an honest reading for the offsets in render. */}
+            <h2
+              ref={headingRef}
+              className="paper-halo relative flex flex-wrap justify-center gap-x-[0.25em] text-center font-display text-m-title font-bold whitespace-nowrap text-black"
+            >
+              {PROCESS_HEADING.map((words) => (
+                <span key={words} className="block origin-center">
+                  <FoldText text={words} />
+                </span>
+              ))}
             </h2>
             {/* All four stacked in one grid cell, so each stage takes the same
                 place as the one before. */}

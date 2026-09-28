@@ -96,7 +96,9 @@ const MAX_GLIDE_READING_SCREENS = 1;
  * skips; it hurries. The last one in a queue is the exception - it plays at its
  * own pace, because it is the one the reader arrives at and actually watches.
  */
-const HURRY = 2.4;
+// 1.6, down from 2.4: at that a reader who kept swiping saw every moment at
+// more than twice its pace, and the whole story ran.
+const HURRY = 1.6;
 
 /**
  * The pace at which the playhead catches up with the finger in a scrubbed

@@ -287,9 +287,10 @@ export default function HeroSection() {
             elements simply show in their own colours.
             pointer-events-none so a touch anywhere in the empty space still
             reaches the ink canvas underneath; the controls opt back in. */}
-        {/* pt-[26px] follows the menu row at 28 — the line sits beside that
-            row, and the two move as one. */}
-        <div className="pointer-events-none relative flex h-full flex-col px-6 pt-[26px] pb-8">
+        {/* pt-[14px] follows the menu row at 16 — the line sits beside that
+            row, and the two move as one. pb-3 holds the foot row close to the
+            bottom edge. */}
+        <div className="pointer-events-none relative flex h-full flex-col px-6 pt-[14px] pb-3">
           <h1 className="sr-only">YEYE</h1>
 
           {SHOW_TAGLINE && (
@@ -356,8 +357,9 @@ export default function HeroSection() {
             The button hangs off the mark rather than off the screen, so it
             keeps its distance from the letters at any size — `top-full` is the
             wordmark's own bottom edge. */}
-        {/* pb-[12svh] lifts the pair by half of it — six percent of the screen
-            (it was ten; the mark sat too high over the empty half below).
+        {/* pb-[10svh] lifts the pair by half of it — five percent of the screen
+            (it was ten; the mark sat too high over the empty half below, and it
+            came down again when the rows at the top and bottom moved outward).
             Not centred any more, and that is the point: the button hangs under
             the wordmark here rather than sitting under the line at the top the
             way the screens this is modelled on do, so a centred mark pushed the
@@ -367,7 +369,7 @@ export default function HeroSection() {
             back without moving the button off the mark. */}
         {/* pt-[20px] moves the pair down 10px with the rest of the hero: flex
             centring splits padding evenly, so half of it lands as the shift. */}
-        <div className="pointer-events-none absolute inset-0 flex select-none items-center justify-center px-6 pt-[20px] pb-[12svh]">
+        <div className="pointer-events-none absolute inset-0 flex select-none items-center justify-center px-6 pt-[20px] pb-[10svh]">
           {/* One slot for both modes now. With reduced motion it used to be an
               overflow-hidden box holding only the image, which clipped anything
               hung below it — so that mode had no button at all. The crop lives

@@ -8,10 +8,10 @@ import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { useDocked } from "@/lib/motion/heroDock";
 import { SITE_BACKGROUND, SITE_BACKGROUND_DARK } from "@/lib/site";
 
-// The row the header samples to decide which section is behind it. 39, not the
-// mark's centre on either layout: the mark spans 22–44 on a desktop and 28–50 on
-// a phone, and 39 is inside it on both.
-const LOGO_CENTER_Y_PX = 39;
+// The row the header samples to decide which section is behind it. 30, not the
+// mark's centre on either layout: the mark spans 22–44 on a desktop and 16–38 on
+// a phone, and 30 is inside it on both.
+const LOGO_CENTER_Y_PX = 30;
 const DARK_FILTER = "brightness(0) invert(1)";
 const LIGHT_FILTER = "brightness(0)";
 
@@ -174,7 +174,7 @@ export default function Navbar() {
       // for it — the two are one movement, so they have to be one easing.
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       // Same offset as NavMenu's row, phone and desktop both — see there.
-      className="fixed left-6 top-[28px] z-50 md:top-[22px]"
+      className="fixed left-6 top-[16px] z-50 md:top-[22px]"
     >
       <Link href="/" tabIndex={docked ? 0 : -1} aria-label="YEYE">
         <Image
