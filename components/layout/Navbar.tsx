@@ -187,22 +187,28 @@ export default function Navbar() {
         4px of the top or 3px of the bottom, at least 80% of the width and at
         least 3px tall. These two are those elements: 12px each, flush with
         their edge and wholly on the page, under the clock and under the
-        address bar, in the colour of what is behind them anyway. Pushed 9px
-        past the edge, as a first try had them, Safari never counted them.
-        The strip that stood here before was env(safe-area-inset-top) tall,
-        which is 0 in the browser, and Safari never sampled it: the bars stayed
-        white over every black section. Phone only - the desk's chrome was
-        never part of this. */}
+        address bar, in the colour of what is behind them anyway.
+        HOW SAFARI FINDS THEM, which is why every earlier version failed: it
+        HIT-TESTS one point at the centre of each edge, a few pixels in, and
+        walks up to the first fixed or sticky element. A hit test passes
+        straight through pointer-events:none, so strips carrying it were never
+        found; the point landed on the pinned sections' sticky panels instead,
+        which have no background of their own, and for those Safari snapshots
+        a colour once and keeps it - white, for good. So these take pointer
+        events, deliberately, and sit above everything. What they cover is the
+        strip under the clock and under the address bar, where a tap belongs
+        to the browser anyway. Phone only - the desk's chrome was never part
+        of this. */}
     <div
       ref={tintRef}
       aria-hidden="true"
-      className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[12px] md:hidden"
+      className="fixed inset-x-0 top-0 z-[60] h-[12px] md:hidden"
       style={{ backgroundColor: SITE_BACKGROUND }}
     />
     <div
       ref={bottomTintRef}
       aria-hidden="true"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] h-[12px] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-[60] h-[12px] md:hidden"
       style={{ backgroundColor: SITE_BACKGROUND }}
     />
     <motion.div
