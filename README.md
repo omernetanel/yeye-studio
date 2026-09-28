@@ -15,8 +15,11 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Before the contact form can send real emails, set the EmailJS environment
-variables from `.env.example` in a local `.env.local` (see `app/api/contact/route.ts`).
+The contact forms send through Resend from the server. They need one
+environment variable, `RESEND_API_KEY` - in Vercel for the live site, and in a
+local `.env.local` to send from `npm run dev` (see `app/api/contact/route.ts`).
+The sender (`forms@yeye.co.il`) and the inbox (`info@yeye.co.il`) are in
+`lib/site.ts`; the domain must be verified in Resend for either to work.
 
 ## Scripts
 

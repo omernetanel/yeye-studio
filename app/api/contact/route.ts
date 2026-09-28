@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { FORMS_INBOX, FORMS_SENDER } from "@/lib/site";
 
-const EMAILJS_ENDPOINT = "https://api.emailjs.com/api/v1.0/email/send";
+// Resend's REST endpoint, called straight from the server: the key never
+// reaches the browser, and no SDK is needed for one POST.
+const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
 /**
  * THE FORM'S ONLY REAL GATE. The browser's own checks are a courtesy to the
@@ -64,9 +67,9 @@ function rateLimited(ip: string) {
  * Everything that reaches a mail header has to be one line.
  *
  * A name or an address carrying a carriage return is how a second header is
- * smuggled into a message — a Bcc, a different Reply-To — and the template
- * fields below are put into headers by the mail service, not by us. Folding
- * them to a single line removes the vector wherever they end up.
+ * smuggled into a message — a Bcc, a different Reply-To — and the name goes
+ * into the subject and the address into Reply-To, both headers. Folding them
+ * to a single line removes the vector wherever they end up.
  */
 function oneLine(value: string) {
   return value.replace(/[\r\n\t]+/g, " ").trim();
@@ -138,50 +141,45 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "too many requests" }, { status: 429 });
   }
 
-  const serviceId = process.env.EMAILJS_SERVICE_ID;
-  const templateId = process.env.EMAILJS_TEMPLATE_ID;
-  const publicKey = process.env.EMAILJS_PUBLIC_KEY;
-  const privateKey = process.env.EMAILJS_PRIVATE_KEY;
-
-  if (!serviceId || !templateId || !publicKey || !privateKey) {
-    // Names only, never values: this lands in the host's logs, and a form that
-    // fails for every visitor should say why there.
-    const missing = Object.entries({
-      EMAILJS_SERVICE_ID: serviceId,
-      EMAILJS_TEMPLATE_ID: templateId,
-      EMAILJS_PUBLIC_KEY: publicKey,
-      EMAILJS_PRIVATE_KEY: privateKey,
-    })
-      .filter(([, value]) => !value)
-      .map(([name]) => name);
-    console.error(`contact: email service not configured, missing ${missing.join(", ")}`);
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    // The name only, never a value: this lands in the host's logs, and a form
+    // that fails for every visitor should say why there.
+    console.error("contact: email service not configured, missing RESEND_API_KEY");
     return NextResponse.json({ error: "email service not configured" }, { status: 500 });
   }
 
-  const emailjsResponse = await fetch(EMAILJS_ENDPOINT, {
+  // Plain text, not HTML: everything in it came from a stranger, and text has
+  // nothing in it a mail client could render or run. Hebrew labels, because it
+  // is read in Hebrew.
+  const lines = [
+    `שם: ${payload.from_name}`,
+    `דוא״ל: ${payload.reply_to}`,
+    `סוג הפרויקט: ${payload.project_type}`,
+    ...(payload.timeline ? [`לוח זמנים: ${payload.timeline}`] : []),
+    "",
+    payload.business_description,
+  ];
+
+  const response = await fetch(RESEND_ENDPOINT, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      service_id: serviceId,
-      template_id: templateId,
-      user_id: publicKey,
-      accessToken: privateKey,
-      template_params: {
-        from_name: payload.from_name,
-        project_type: payload.project_type,
-        business_description: payload.business_description,
-        timeline: payload.timeline,
-        reply_to: payload.reply_to,
-      },
+      from: FORMS_SENDER,
+      to: [FORMS_INBOX],
+      // "Reply" in the inbox answers the person who wrote, not the form.
+      reply_to: payload.reply_to,
+      subject: `פנייה חדשה מהאתר: ${payload.from_name}`,
+      text: lines.join("\n"),
     }),
   });
 
-  if (!emailjsResponse.ok) {
-    // EmailJS answers a refusal in plain text ("API calls are disabled for
-    // non-browser applications", a bad template id...). It carries none of the
-    // keys, and it is the only way to tell one cause from another.
-    const reason = await emailjsResponse.text().catch(() => "");
-    console.error(`contact: EmailJS refused (${emailjsResponse.status}): ${reason.slice(0, 300)}`);
+  if (!response.ok) {
+    // Resend answers a refusal with a short JSON reason (an unverified domain,
+    // a bad key, a rate limit). It carries no secrets, and it is the only way
+    // to tell one cause from another in the logs.
+    const reason = await response.text().catch(() => "");
+    console.error(`contact: Resend refused (${response.status}): ${reason.slice(0, 300)}`);
     return NextResponse.json({ error: "failed to send" }, { status: 502 });
   }
 

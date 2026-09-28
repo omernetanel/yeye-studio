@@ -48,6 +48,15 @@ export const WHATSAPP_NUMBER = "972552759445";
 export const CONTACT_EMAIL = "omeryeku2@gmail.com";
 
 /**
+ * Where the site's forms are delivered, and the address they are sent from.
+ * Both on the studio's own domain: the sender is verified in Resend (so it is
+ * signed for yeye.co.il and lands in the inbox, not in spam), and the inbox is
+ * forwarded on to the studio's mail. Server-only - neither is shown on a page.
+ */
+export const FORMS_INBOX = "info@yeye.co.il";
+export const FORMS_SENDER = `${SITE_NAME} <forms@yeye.co.il>`;
+
+/**
  * Where the site lives. Used for canonical URLs, the sitemap and robots, so
  * all three can never disagree — which they did, all pointing at the old
  * domain with a TODO beside each one.
