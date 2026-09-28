@@ -99,10 +99,12 @@ const LINE_IN_TO = 0.62;
 // Where a claim card opens. Each is a sheet folded back from its top edge and
 // unfolds toward the reader; CLAIM_FOLDED is where it starts. Two coming up at
 // once still open one after another, CLAIM_STAGGER_MS apart.
-const CLAIM_IN_VH = 0.85;
+// 0.62, not 0.85: at the bottom edge a card had finished opening before the
+// eye got there, and the unfold was never seen.
+const CLAIM_IN_VH = 0.62;
 const CLAIM_FOLDED = "perspective(700px) rotateX(-88deg)";
 const CLAIM_OPEN = "perspective(700px) rotateX(0deg)";
-const CLAIM_STAGGER_MS = 280;
+const CLAIM_STAGGER_MS = 500;
 
 // How far into the screen a scrolling element must come before it is fully in.
 const RISE_VH = 0.42;
@@ -489,7 +491,7 @@ export default function MobileAbout() {
                 key={fact.title}
                 // Hinged at its top edge; opacity comes in over the first part
                 // of the turn so the card is never a bright edge-on sliver.
-                className="origin-top px-5 py-7 text-center [transition:opacity_450ms_ease-out,transform_900ms_cubic-bezier(0.22,1,0.36,1)]"
+                className="origin-top px-5 py-7 text-center [transition:opacity_700ms_ease-out,transform_1500ms_cubic-bezier(0.22,1,0.36,1)]"
                 innerRef={(el) => {
                   claimsRef.current[index] = el;
                 }}
