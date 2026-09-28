@@ -512,7 +512,10 @@ export default function MobileServices() {
         {/* Anchored to the screen rather than to the picture: by the time this
             is up the frame is a flat sheet, so there is no composition left to
             sit beside. */}
-        <div ref={aboutLayerRef} className="absolute inset-0 opacity-0">
+        {/* pointer-events-none: this layer covers the whole panel, invisible
+            until the paper opens, and it sat over the four service rows and
+            swallowed every tap on them. Nothing in it is a link. */}
+        <div ref={aboutLayerRef} className="pointer-events-none absolute inset-0 opacity-0">
           {/* The heading and the stages as one block, centred between the menu
               row and the dots. Pinned to the top on its own, the heading hung
               far above the stage and read as detached from it. The grid cell is
@@ -565,7 +568,7 @@ export default function MobileServices() {
         {/* 22%, not 11%. The clip is 9:16 inside a screen that is taller than
             that, so the bottom eighth of this panel is the letterbox — the line
             was sitting half on the footage and half on white. */}
-        <div ref={statementLayerRef} className="absolute inset-x-0 bottom-[22%] px-6 opacity-0">
+        <div ref={statementLayerRef} className="pointer-events-none absolute inset-x-0 bottom-[22%] px-6 opacity-0">
           <Statement />
         </div>
       </div>

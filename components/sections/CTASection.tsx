@@ -57,15 +57,11 @@ export default function CTASection() {
   return (
     <section
       id="cta"
-      // On a phone the balloons open the close, between the work and the form,
-      // and the spacing around them is the whole point: 48 above from the work
-      // section, 40 below to the heading. They were tried as a band across the
-      // bottom of the section and it put them after the ask rather than before
-      // it. The old numbers — 96 above and 96 below — are what made this read as
-      // three things with fields of white between them.
-      // EQUAL AIR EITHER SIDE OF THE BALLOONS: 48 up here against the work
-      // section's own 16, which comes to the 64 the clip leaves under itself.
-      className="relative overflow-hidden bg-white px-6 pt-12 pb-20 text-center md:ps-[106px] md:pe-10 md:py-28 md:text-right"
+      // On a phone the balloons are the ground of the close: pinned to the
+      // bottom of the section, behind the privacy line and the button. As a
+      // block above the heading they stood in the way of the ask, stuck between
+      // the work and the form. pt-16: the heading now opens the section.
+      className="relative overflow-hidden bg-white px-6 pt-16 pb-20 text-center md:ps-[106px] md:pe-10 md:py-28 md:text-right"
     >
       {particles.map((p, i) => (
         <motion.div
@@ -77,19 +73,18 @@ export default function CTASection() {
         />
       ))}
 
-      {/* ONE ELEMENT, TWO JOBS.
-          On a phone it opens the section: full width, above the words, with a
-          good deal of air under it. On a desktop the same element becomes the
-          section's ground — absolute, covering it, with the form sitting on
-          top. It was a block beside the form there for a round, and that turned
-          the close into two things with a field of white between them.
+      {/* ONE ELEMENT, THE GROUND ON BOTH.
+          On a phone it sits along the bottom of the section, behind the privacy
+          line and the button. On a desktop it covers the section, with the form
+          sitting on top. It was a block beside the form there for a round, and
+          that turned the close into two things with a field of white between
+          them.
           object-left-bottom because that is where the balloons are: cover crops
           whichever axis is long, and anchoring the crop anywhere else throws
           the only thing in the shot away. It never scales UP either — the file
           is 2200 wide against a viewport that is not — so cover only ever
           shrinks it.
-          Declared before the copy so the phone stacks it first; on the desktop
-          the copy's z-10 keeps it in front whatever the order.
+          The copy's z-10 keeps the words in front of it on both.
           muted + playsInline is what lets it autoplay at all: a clip with sound
           will not start on its own on any phone, and without playsInline iOS
           takes it fullscreen the moment it plays. */}
@@ -105,15 +100,15 @@ export default function CTASection() {
         playsInline
         preload="metadata"
         aria-hidden="true"
-        // WHOLE AND CENTRED, by arithmetic. The balloons sit between 2% and 57%
-        // of this clip's own frame — it was shot for the desktop, where they
-        // belong at the far left of a wide section. So the crop has to start at
-        // the frame's left edge and be at least 57% of it wide, or the "Y" is
-        // cut. At 225px tall the clip scales to 527px across a 327px box: the
-        // window is 62% of the frame, anchored left it covers 0–62%, and the
-        // balloons' own centre (29.5%) lands within a few pixels of the box's
-        // (31%). At 280px the window was only 50% wide and cut both ends.
-        className="relative z-0 mb-16 block h-[225px] w-full rounded-2xl object-cover object-[0%_100%] md:absolute md:inset-0 md:mb-0 md:h-full md:w-full md:origin-bottom-left md:translate-x-[3%] md:scale-[0.82] md:rounded-none md:object-left-bottom"
+        // ON A PHONE: THE WHOLE FRAME, WITH THE BALLOONS ON THE SCREEN'S CENTRE.
+        // The balloons sit between 2% and 57% of this clip's frame (2200×940) -
+        // it was shot for the desktop, where they belong at the far left. So the
+        // element takes the frame's own proportions, uncropped, starts at the
+        // middle of the section and is pulled back by 29.5% of its own width:
+        // the balloons' centre. 240px tall makes it 562 wide, and the balloons
+        // span ±155px around the middle, inside even a 320px screen. The
+        // section's overflow-hidden trims the empty frame either side.
+        className="absolute bottom-0 left-1/2 z-0 block aspect-[2200/940] h-[240px] w-auto max-w-none -translate-x-[29.5%] object-cover object-[0%_100%] md:inset-0 md:h-full md:w-full md:origin-bottom-left md:translate-x-[3%] md:scale-[0.82] md:object-left-bottom"
       />
 
       {/* The copy, held to a 620px column on the right — the clip runs behind

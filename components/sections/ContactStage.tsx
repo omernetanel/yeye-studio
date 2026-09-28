@@ -256,8 +256,9 @@ function ContactForm() {
             // justify-self-center: this is a grid item, so left alone it
             // stretches to the full width of its column and comes out as wide
             // as the three fields above it. It is one button, not a fourth
-            // field.
-            className="!border-white !bg-none !bg-white !text-black !shadow-none w-auto justify-center justify-self-center !px-12 !py-3"
+            // field. mt-4 on the phone: in one column the grid's 12px gap put
+            // it right against the last field, and it read as a fifth input.
+            className="!border-white !bg-none !bg-white !text-black !shadow-none mt-4 w-auto justify-center justify-self-center !px-12 !py-3 sm:mt-0"
           >
             {status === "sending" ? "שולח..." : "בואו נדבר"}
           </Button>

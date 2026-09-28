@@ -144,6 +144,17 @@ export async function POST(request: Request) {
   const privateKey = process.env.EMAILJS_PRIVATE_KEY;
 
   if (!serviceId || !templateId || !publicKey || !privateKey) {
+    // Names only, never values: this lands in the host's logs, and a form that
+    // fails for every visitor should say why there.
+    const missing = Object.entries({
+      EMAILJS_SERVICE_ID: serviceId,
+      EMAILJS_TEMPLATE_ID: templateId,
+      EMAILJS_PUBLIC_KEY: publicKey,
+      EMAILJS_PRIVATE_KEY: privateKey,
+    })
+      .filter(([, value]) => !value)
+      .map(([name]) => name);
+    console.error(`contact: email service not configured, missing ${missing.join(", ")}`);
     return NextResponse.json({ error: "email service not configured" }, { status: 500 });
   }
 
@@ -166,6 +177,11 @@ export async function POST(request: Request) {
   });
 
   if (!emailjsResponse.ok) {
+    // EmailJS answers a refusal in plain text ("API calls are disabled for
+    // non-browser applications", a bad template id...). It carries none of the
+    // keys, and it is the only way to tell one cause from another.
+    const reason = await emailjsResponse.text().catch(() => "");
+    console.error(`contact: EmailJS refused (${emailjsResponse.status}): ${reason.slice(0, 300)}`);
     return NextResponse.json({ error: "failed to send" }, { status: 502 });
   }
 
