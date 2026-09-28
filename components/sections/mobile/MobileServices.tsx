@@ -220,9 +220,7 @@ function progressAtStage(index: number) {
  *   opening and a reader can never be left looking at a half-faded list.
  * - The stages are read one at a time. The scroll picks which, and the swap
  *   between two is a short clock of its own, so a reader stopping anywhere is
- *   looking at a whole stage and never at the empty sheet between two. Each
- *   has more than a screen of scroll to itself: at less, a gentle scroll ran
- *   them past before they could be read.
+ *   looking at a whole stage and never at the empty sheet between two.
  * - The plane flying off is scrubbed again. It is the last thing before the
  *   page moves on, and every frame of it is a plane and a line on white.
  *
@@ -249,17 +247,21 @@ const STORY = {
     progressAtTime(PLANE_REST_TIME), // a plane, the closing line up behind it
     1, // the plane gone, the line on white
   ],
+  // The spacing is one ordinary swipe per moment. It was 1.1 screens a stage and
+  // two on the ball, and on a real phone that was a fight: a normal swipe fell
+  // short of the next line, and only one long throw of just the right length
+  // turned a page. The brake is what keeps a strong throw from running past, so
+  // the room no longer has to.
   transitions: [
-    // The ball's scroll as it was - the same rate, ending where the fade begins.
-    { kind: "scrub", screens: (BEATS[1].screens / SCROLL_SCREENS) * (SCROLL_SCREENS - 1) * (FREE_END_TIME / CUE_SERVICES_OUT) },
-    { kind: "play", screens: 0.8, seconds: 1.8 }, // the list goes, the paper opens, the heading comes up
-    { kind: "play", screens: 1.1, seconds: 0.7 }, // the heading rises to its place and the first stage comes in
-    { kind: "play", screens: 1.1, seconds: 0.5 }, // stage to stage
-    { kind: "play", screens: 1.1, seconds: 0.5 },
-    { kind: "play", screens: 1.1, seconds: 0.5 },
-    { kind: "play", screens: 0.8, seconds: 2.8 }, // the stages go back in and the paper crumples to a ball
-    { kind: "play", screens: 0.8, seconds: 2.2 }, // the ball turns into a plane and the line rises
-    { kind: "scrub", screens: 1 }, // the plane flies off
+    { kind: "scrub", screens: 1 }, // the ball with the list on it
+    { kind: "play", screens: 0.6, seconds: 1.8 }, // the list goes, the paper opens, the heading comes up
+    { kind: "play", screens: 0.55, seconds: 0.7 }, // the heading rises to its place and the first stage comes in
+    { kind: "play", screens: 0.55, seconds: 0.5 }, // stage to stage
+    { kind: "play", screens: 0.55, seconds: 0.5 },
+    { kind: "play", screens: 0.55, seconds: 0.5 },
+    { kind: "play", screens: 0.6, seconds: 2.8 }, // the stages go back in and the paper crumples to a ball
+    { kind: "play", screens: 0.6, seconds: 2.2 }, // the ball turns into a plane and the line rises
+    { kind: "scrub", screens: 0.8 }, // the plane flies off
   ],
 } as const satisfies Pick<StoryOptions, "anchors" | "transitions">;
 
