@@ -10,7 +10,7 @@ import { SITE_BACKGROUND, SITE_BACKGROUND_DARK } from "@/lib/site";
 import { isMobileViewport } from "@/lib/use-mobile";
 
 // The row the header samples to decide which section is behind it. 30, not the
-// mark's centre on either layout: the mark spans 22–44 on a desktop and 16–38 on
+// mark's centre on either layout: the mark spans 22–44 on a desktop and 20–42 on
 // a phone, and 30 is inside it on both.
 const LOGO_CENTER_Y_PX = 30;
 const DARK_FILTER = "brightness(0) invert(1)";
@@ -54,6 +54,7 @@ export default function Navbar() {
   const tintRef = useRef<HTMLDivElement>(null);
   const bottomTintRef = useRef<HTMLDivElement>(null);
   const chromeBottomDarkRef = useRef(false);
+  const stripsHiddenRef = useRef(false);
 
   const checkTheme = () => {
     const img = imgRef.current;
@@ -88,6 +89,20 @@ export default function Navbar() {
       topDark = from <= 0 && to > 0;
       bottomDark = topDark && to > window.innerHeight;
     }
+    // Out of the page entirely while the hero is on the screen. There is no
+    // dark stretch there to colour, and a fixed strip at the edge changes how
+    // Safari 26 carries fixed elements while the bars collapse: the menu, which
+    // the hero paints onto its ink every frame, started to jump and shimmer
+    // once the strips existed. Without them the hero is exactly as it was.
+    const hero = document.getElementById("hero");
+    const heroOnScreen = !!hero && hero.getBoundingClientRect().bottom > 0;
+    if (heroOnScreen !== stripsHiddenRef.current) {
+      stripsHiddenRef.current = heroOnScreen;
+      for (const strip of [tintRef.current, bottomTintRef.current]) {
+        if (strip) strip.style.display = heroOnScreen ? "none" : "";
+      }
+    }
+
     if (bottomDark !== chromeBottomDarkRef.current) {
       chromeBottomDarkRef.current = bottomDark;
       if (bottomTintRef.current) {
@@ -219,7 +234,7 @@ export default function Navbar() {
       // for it — the two are one movement, so they have to be one easing.
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       // Same offset as NavMenu's row, phone and desktop both — see there.
-      className="fixed left-6 top-[16px] z-50 md:top-[22px]"
+      className="fixed left-6 top-[20px] z-50 md:top-[22px]"
     >
       <Link href="/" tabIndex={docked ? 0 : -1} aria-label="YEYE">
         <Image

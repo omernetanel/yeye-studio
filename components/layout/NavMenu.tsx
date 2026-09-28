@@ -254,7 +254,7 @@ export default function NavMenu() {
       // with the context the rail sits in — the page wrapper that also holds
       // the hero's canvas and every dark section. That is the difference
       // between this working and the earlier attempt that "did nothing".
-      className="pointer-events-none fixed inset-x-6 top-[16px] z-50 flex md:top-[22px]"
+      className="pointer-events-none fixed inset-x-6 top-[20px] z-50 flex md:top-[22px]"
       style={{ justifyContent: atRight ? "flex-start" : "flex-end" }}
     >
       {/* ON DESKTOP THE BUTTON IS NOT WRAPPED IN AN ANIMATED BOX, AND THAT IS
@@ -301,7 +301,7 @@ export default function NavMenu() {
           aria-label="ניווט באתר"
           onPointerEnter={hoverOpen}
           onPointerLeave={hoverClose}
-          className={`fixed top-[56px] z-50 min-w-[176px] rounded-2xl bg-white py-2 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.45)] md:top-[62px] ${
+          className={`fixed top-[60px] z-50 min-w-[176px] rounded-2xl bg-white py-2 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.45)] md:top-[62px] ${
             atRight ? "right-6" : "left-6"
           }`}
         >

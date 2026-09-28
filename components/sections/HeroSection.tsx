@@ -287,10 +287,10 @@ export default function HeroSection() {
             elements simply show in their own colours.
             pointer-events-none so a touch anywhere in the empty space still
             reaches the ink canvas underneath; the controls opt back in. */}
-        {/* pt-[14px] follows the menu row at 16 — the line sits beside that
+        {/* pt-[18px] follows the menu row at 20 — the line sits beside that
             row, and the two move as one. pb-3 holds the foot row close to the
             bottom edge. */}
-        <div className="pointer-events-none relative flex h-full flex-col px-6 pt-[14px] pb-3">
+        <div className="pointer-events-none relative flex h-full flex-col px-6 pt-[18px] pb-3">
           <h1 className="sr-only">YEYE</h1>
 
           {SHOW_TAGLINE && (
