@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { useDocked } from "@/lib/motion/heroDock";
 import { SITE_BACKGROUND, SITE_BACKGROUND_DARK } from "@/lib/site";
+import { isMobileViewport } from "@/lib/use-mobile";
 
 // The row the header samples to decide which section is behind it. 30, not the
 // mark's centre on either layout: the mark spans 22–44 on a desktop and 16–38 on
@@ -51,6 +52,8 @@ export default function Navbar() {
   // A strip exactly as tall as the status bar, fixed to the top of the screen.
   // See the comment where it is rendered for why it exists at all.
   const tintRef = useRef<HTMLDivElement>(null);
+  const bottomTintRef = useRef<HTMLDivElement>(null);
+  const chromeBottomDarkRef = useRef(false);
 
   const checkTheme = () => {
     const img = imgRef.current;
@@ -68,6 +71,29 @@ export default function Navbar() {
       if (rect.top <= 0 && rect.bottom > 0) topDark = true;
     }
     img.style.filter = onDark ? DARK_FILTER : LIGHT_FILTER;
+
+    // ON A PHONE THE CHROME FOLLOWS ONE DARK STRETCH, not each section: from
+    // "who I am" reaching the top of the screen to the work reaching it. The
+    // contact stage ends on a white room inside that stretch, and letting the
+    // clock flip to white over it broke the full-screen feel the black is for.
+    // The bottom bar is dark only while both edges are inside the stretch, so
+    // it turns white as the work comes up from below and the top stays black
+    // until the work reaches it.
+    let bottomDark = false;
+    const about = document.getElementById("about");
+    const projects = document.getElementById("projects");
+    if (isMobileViewport() && about && projects) {
+      const from = about.getBoundingClientRect().top;
+      const to = projects.getBoundingClientRect().top;
+      topDark = from <= 0 && to > 0;
+      bottomDark = topDark && to > window.innerHeight;
+    }
+    if (bottomDark !== chromeBottomDarkRef.current) {
+      chromeBottomDarkRef.current = bottomDark;
+      if (bottomTintRef.current) {
+        bottomTintRef.current.style.backgroundColor = bottomDark ? SITE_BACKGROUND_DARK : SITE_BACKGROUND;
+      }
+    }
 
     // THE BROWSER CHROME follows the same flag, sampled at the very top edge —
     // the row the strip behind the clock sits on. Both places a phone reads it
@@ -156,15 +182,27 @@ export default function Navbar() {
 
   return (
     <>
-    {/* iOS 26 Safari ignores theme-color and tints the status bar from a fixed
-        element touching the top edge of the screen. This strip is exactly the
-        status bar's height (zero where there is no notch) and takes the same
-        colour as the tags above, so the clock sits on black over dark sections. */}
+    {/* iOS 26 Safari ignores theme-color and tints the status bar and the
+        bottom toolbar from a position:fixed element at each edge - one within
+        4px of the top or 3px of the bottom, at least 80% of the width and at
+        least 3px tall. These two are those elements. Each is 12px tall and
+        pushed 9px past its edge, so 3px of it is on the page, and that sliver
+        is the colour of what is behind it anyway.
+        The strip that stood here before was env(safe-area-inset-top) tall,
+        which is 0 in the browser, and Safari never sampled it: the bars stayed
+        white over every black section. Phone only - the desk's chrome was
+        never part of this. */}
     <div
       ref={tintRef}
       aria-hidden="true"
-      className="pointer-events-none fixed inset-x-0 top-0 z-[60]"
-      style={{ height: "env(safe-area-inset-top)", backgroundColor: SITE_BACKGROUND }}
+      className="pointer-events-none fixed inset-x-0 -top-[9px] z-[60] h-[12px] md:hidden"
+      style={{ backgroundColor: SITE_BACKGROUND }}
+    />
+    <div
+      ref={bottomTintRef}
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-x-0 -bottom-[9px] z-[60] h-[12px] md:hidden"
+      style={{ backgroundColor: SITE_BACKGROUND }}
     />
     <motion.div
       initial={false}
