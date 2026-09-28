@@ -15,12 +15,14 @@ export const metadata: Metadata = {
  * Everything here was checked against what the site actually does: the two
  * forms and the fields they send, the message the browser builds around the
  * phone number, the honeypot, the IP read for rate limiting, the one route
- * that sends the enquiry, the two services that touch it, and the single key
- * in the browser's own storage.
+ * that sends the enquiry, the services that carry it (Resend sends it,
+ * ImprovMX forwards the domain's mail to a Gmail inbox, Vercel hosts), and the
+ * two keys in the browser's own storage (accessibility choices in
+ * localStorage, the in-site trail behind "חזור" in sessionStorage).
  *
  * WHAT IS DELIBERATELY NOT HERE:
- * - No claim about how long EmailJS keeps anything. That cannot be known from
- *   this codebase, so the page says only that it processes the enquiry.
+ * - No claim about how long any of those services keeps anything. That cannot
+ *   be known from this codebase, so the page says only that they process it.
  * - No declaration that the site has no cookies, no analytics and no need for
  *   a consent mechanism. A measurement tool is planned before launch; this page
  *   describes what exists now and is updated when that lands, rather than
@@ -37,7 +39,7 @@ export const metadata: Metadata = {
  */
 export default function PrivacyPage() {
   return (
-    <LegalPage title="מדיניות פרטיות" updated="27 בספטמבר 2026">
+    <LegalPage title="מדיניות פרטיות" updated="28 בספטמבר 2026">
       <p>
         העמוד הזה מסביר איזה מידע נאסף באתר של {SITE_NAME}, מה נעשה איתו, מי מעבד אותו, כמה זמן הוא
         עשוי להישמר ואילו זכויות עומדות לכם.
@@ -85,9 +87,12 @@ export default function PrivacyPage() {
 
       <h2>מי מעבד את המידע</h2>
       <p>
-        פנייה מהטופס נשלחת מהשרת של האתר אל שירות דיוור בשם EmailJS, שמעביר אותה לתיבת הדואר שלי.
-        EmailJS מעבד את הפנייה עבורי לצורך זה, והשימוש בשירות כפוף לתנאים ולמדיניות שלו. האתר
-        מתארח בשירות Vercel, שעשוי לעבד נתוני גישה טכניים כמתואר למעלה.
+        פנייה מהטופס נשלחת מהשרת של האתר באמצעות שירות שליחת דואר בשם Resend, אל כתובת הדוא״ל של
+        העסק בדומיין של האתר. דואר שמגיע לכתובות בדומיין הזה, כולל פניות מהטופס ומיילים שנשלחים
+        אליי ישירות, מועבר באמצעות שירות העברת דואר בשם ImprovMX לתיבת הדואר שלי, המתנהלת בשירות
+        Gmail של Google. תשובות שאני שולח בדוא״ל יוצאות גם הן דרך Resend. כל אחד מהשירותים האלה
+        מעבד את המידע עבורי לצורך זה, והשימוש בהם כפוף לתנאים ולמדיניות שלהם. האתר מתארח בשירות
+        Vercel, שעשוי לעבד נתוני גישה טכניים כמתואר למעלה.
       </p>
       <p>
         מעבר לכך, פרטי הפנייה אינם נמסרים לגורמים נוספים, למעט כאשר הדבר נדרש לפי דין או לצורך הגנה
@@ -102,9 +107,14 @@ export default function PrivacyPage() {
 
       <h2>אחסון בדפדפן</h2>
       <p>
-        האתר שומר בדפדפן שלכם את בחירתכם בהגדרות הנגישות: ניגודיות, תנועה והדגשת קישורים. השמירה
-        נעשית באחסון המקומי של הדפדפן, נשארת במכשיר שלכם, ואפשר למחוק אותה בכל רגע מהגדרות הדפדפן.
+        האתר שומר בדפדפן שלכם שני דברים. הראשון הוא בחירתכם בהגדרות הנגישות: ניגודיות, תנועה והדגשת
+        קישורים. השמירה נעשית באחסון המקומי של הדפדפן, ואפשר למחוק אותה בכל רגע מהגדרות הדפדפן.
       </p>
+      <p>
+        השני הוא רשימת העמודים באתר שבהם ביקרתם בחלון הנוכחי, כדי שכפתור &quot;חזור&quot; יחזיר אתכם
+        לעמוד הקודם באתר. היא נשמרת באחסון של החלון בלבד ונמחקת כשסוגרים אותו.
+      </p>
+      <p>שני אלה נשארים במכשיר שלכם ואינם נשלחים אליי.</p>
 
       <h2>תצוגה חיה של אתרי לקוחות</h2>
       <p>

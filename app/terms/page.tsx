@@ -39,7 +39,7 @@ export const metadata: Metadata = {
  */
 export default function TermsPage() {
   return (
-    <LegalPage title="תנאי שימוש" updated="27 בספטמבר 2026">
+    <LegalPage title="תנאי שימוש" updated="28 בספטמבר 2026">
       <p>
         האתר מופעל על ידי עומר, עוסק עצמאי הפועל תחת המותג {SITE_NAME}. התנאים שלהלן חלים על השימוש
         באתר ועל התוכן שבו.

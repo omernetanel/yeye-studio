@@ -42,10 +42,12 @@ export const WHATSAPP_NUMBER = "972552759445";
  *
  * It was `hello@yeyelabs.com`, hard-coded in the hero — an address on a domain
  * the studio no longer uses, on a mailbox that does not exist. Anyone who
- * pressed the mail icon wrote to nowhere. It moves to `info@yeye.co.il` the
- * day that mailbox is live; until then it is an address that is actually read.
+ * pressed the mail icon wrote to nowhere. It is the studio's own address on
+ * its own domain; ImprovMX forwards it to the studio's Gmail inbox (the DNS
+ * records are at box.co.il). Do not ship a change to it before mail to the new
+ * address has been seen to arrive.
  */
-export const CONTACT_EMAIL = "omeryeku2@gmail.com";
+export const CONTACT_EMAIL = "info@yeye.co.il";
 
 /**
  * Where the site's forms are delivered, and the address they are sent from.
@@ -53,7 +55,7 @@ export const CONTACT_EMAIL = "omeryeku2@gmail.com";
  * signed for yeye.co.il and lands in the inbox, not in spam), and the inbox is
  * forwarded on to the studio's mail. Server-only - neither is shown on a page.
  */
-export const FORMS_INBOX = "info@yeye.co.il";
+export const FORMS_INBOX = CONTACT_EMAIL;
 export const FORMS_SENDER = `${SITE_NAME} <forms@yeye.co.il>`;
 
 /**

@@ -194,12 +194,20 @@ type-check + lint + build לפני דיווח על השלמת שלב. בדיקה
   לתצוגת מובייל שמונפש כמעבר אלגנטי למסגרת אייפון (device frame), לא רק
   שינוי רוחב ה-iframe.
 
-## EmailJS / טופס יצירת קשר
+## דוא״ל / טופס יצירת קשר
 שליחת הטופס עוברת דרך `app/api/contact/route.ts` (Route Handler בצד
-שרת) שקורא ל-REST API של EmailJS. **לא** להשתמש יותר ב-`@emailjs/browser`
-בצד הקליינט — כך שמזהי השירות/תבנית/מפתח לא חשופים בבאנדל. מפתחות
-נשמרים אך ורק ב-`.env.local` (לא ב-git; יתווסף `.env.example` עם שמות
-המשתנים בלבד).
+שרת) שקורא ל-REST API של **Resend** (הוחלף מ-EmailJS ב-2026-09-28). הטופס
+שולח מ-`forms@yeye.co.il` אל `info@yeye.co.il` (שניהם ב-`lib/site.ts`),
+ו-Reply-To הוא הפונה. **אין שליחה מהקליינט** — המפתח לא חשוף בבאנדל.
+המפתח (`RESEND_API_KEY`) נשמר אך ורק ב-Vercel וב-`.env.local` (לא ב-git).
+
+**הדואר של הדומיין:** רשומות ה-DNS אצל box.co.il. ImprovMX מקבל את הדואר
+של `info@` ו-`omer@` ומעביר ל-Gmail העסקי; Resend מאומת על `yeye.co.il`
+(DKIM ב-`resend._domainkey`, CNAME ב-`send`/`rsend`), ויש DMARC ב-`p=none`.
+**רשומת SPF אחת בלבד על הדומיין** (של ImprovMX) — שתיים שוברות את שתיהן.
+
+**כל שינוי בספקים חייב לעבור גם למדיניות הפרטיות** (`app/privacy/page.tsx`,
+"מי מעבד את המידע") — היא מציינת כל ספק בשמו.
 
 ## מבנה תיקיות
 ```

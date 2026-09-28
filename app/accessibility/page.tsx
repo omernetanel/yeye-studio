@@ -30,7 +30,7 @@ export const metadata: Metadata = {
  */
 export default function AccessibilityPage() {
   return (
-    <LegalPage title="הצהרת נגישות" updated="27 בספטמבר 2026">
+    <LegalPage title="הצהרת נגישות" updated="28 בספטמבר 2026">
       <p>
         ב־{SITE_NAME} הושקעו מאמצים בהנגשת האתר ובהתאמתו למגוון רחב של משתמשים ואמצעי גלישה.
         הנגישות הייתה חלק מתהליך הפיתוח עצמו ולא תוספת שנעשתה בסופו, ובמסגרתו יושמו באתר התאמות
