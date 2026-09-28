@@ -61,7 +61,11 @@ export default function CTASection() {
       // bottom of the section, behind the privacy line and the button. As a
       // block above the heading they stood in the way of the ask, stuck between
       // the work and the form. pt-16: the heading now opens the section.
-      className="relative overflow-hidden bg-white px-6 pt-16 pb-20 text-center md:ps-[106px] md:pe-10 md:py-28 md:text-right"
+      // pb-40: the tops of the letters stand 125px above the section's floor
+      // (their centres at 68% of the 240px clip, less their radius), and at
+      // this padding the privacy line ends 19px clear of them instead of being
+      // printed across them. Measured, at 375px.
+      className="relative overflow-hidden bg-white px-6 pt-16 pb-40 text-center md:ps-[106px] md:pe-10 md:py-28 md:text-right"
     >
       {particles.map((p, i) => (
         <motion.div
