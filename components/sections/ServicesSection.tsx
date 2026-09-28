@@ -517,7 +517,10 @@ function ProcessStages() {
           StageRail for why not a row. HIDDEN UNTIL THE FIRST STAGE ARRIVES, so
           it never counts stages that have not appeared. */}
       <div data-process-dots style={{ opacity: 0 }} className="absolute top-1/2 right-[3%] -translate-y-1/2">
-        <StageRail count={STAGE_TITLES.length} />
+        {/* Larger than the phone's and with no grey route laid out ahead:
+            on the desk the line only draws between two circles while the
+            sheet moves from one stage to the next. */}
+        <StageRail count={STAGE_TITLES.length} size="lg" track={false} />
       </div>
     </div>
   );
@@ -777,14 +780,20 @@ export default function ServicesSection() {
     const stages = sheet.querySelectorAll<HTMLElement>("[data-process-stage]");
     const last = stages.length - 1;
     let current = -1;
+    // How much of the line is drawn: each stage after the first adds its own
+    // arrival to it, so the line travels only while a swap is under way.
+    let drawn = 0;
     stages.forEach((stage, i) => {
       const start = STAGES_START + i * STAGE_SPAN;
       const arrive = smoothstep(mapRange(seconds, start, start + STAGE_SWAP, 0, 1));
+      if (i > 0) drawn += arrive;
       const leave = i === last ? 0 : smoothstep(mapRange(seconds, start + STAGE_SPAN - STAGE_SWAP, start + STAGE_SPAN, 0, 1));
       const shown = arrive * (1 - leave);
       stage.style.opacity = String(shown);
       stage.style.transform = `translateY(${(lerp(STAGE_RISE_PX, 0, arrive) + lerp(0, -STAGE_RISE_PX, leave)).toFixed(2)}px)`;
-      if (shown > 0.5) current = i;
+      // The last stage past half its arrival, not the one most visible now:
+      // mid-swap neither is more than half shown, and the circles emptied.
+      if (arrive >= 0.5) current = i;
     });
 
     // The row arrives on the first stage's own cue, so the count never appears
@@ -792,8 +801,7 @@ export default function ServicesSection() {
     const dots = sheet.querySelector<HTMLElement>("[data-process-dots]");
     if (dots) {
       dots.style.opacity = String(smoothstep(mapRange(seconds, STAGES_START, STAGES_START + STAGE_SWAP, 0, 1)));
-      // The line fills from the first stage's arrival to the last's.
-      setStageRail(dots, mapRange(seconds, STAGES_START, STAGES_START + last * STAGE_SPAN, 0, 1), current);
+      setStageRail(dots, drawn / last, current);
     }
   };
 
