@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { SITE_BACKGROUND } from "@/lib/site";
@@ -35,29 +35,16 @@ const PaperCrumple = dynamic(() => import("@/components/ui/PaperCrumple"), {
   loading: () => <Still src="/images/portrait.webp" alt="" />,
 });
 
-// A mouse can drag the crumpled sheet around; a finger only crumples it, so the
-// page under it still scrolls.
-const FINE_POINTER = "(pointer: fine)";
-function subscribe(callback: () => void) {
-  const query = window.matchMedia(FINE_POINTER);
-  query.addEventListener("change", callback);
-  return () => query.removeEventListener("change", callback);
-}
-
 /**
  * The about page's photograph, which crumples like paper while it is held and
- * opens out again when let go. A wink, like the aside about the name - so the
- * hint under it says so once, and goes the moment someone has tried it.
+ * can be played with anywhere on the screen, and opens out back in its place
+ * when let go. A wink, like the aside about the name - so the hint under it
+ * says so once, and goes the moment someone has tried it.
  *
  * With less motion it is just the photograph.
  */
 export default function CrumplePortrait({ src, alt }: { src: string; alt: string }) {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const fine = useSyncExternalStore(
-    subscribe,
-    () => window.matchMedia(FINE_POINTER).matches,
-    () => false,
-  );
   const [tried, setTried] = useState(false);
 
   if (prefersReducedMotion) {
@@ -83,7 +70,6 @@ export default function CrumplePortrait({ src, alt }: { src: string; alt: string
         height={SHEET_H}
         // The back of the sheet is the page's own white.
         paperColor={SITE_BACKGROUND}
-        draggable={fine}
         onStateChange={(state) => {
           if (state === "holding") setTried(true);
         }}

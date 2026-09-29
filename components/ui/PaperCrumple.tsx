@@ -19,9 +19,14 @@ import "./PaperCrumple.css";
  * - No reduced-motion handling of its own. The page does not mount it at all
  *   for a reader who asked for less motion - it shows the plain photograph -
  *   and that switch is the site's, not the media query alone.
- * - Undraggable means scrollable. When the sheet cannot be dragged (a phone),
- *   the hit area gives the vertical pan back to the page, so a thumb over the
- *   photograph still scrolls; a still thumb still crumples it.
+ * - THE WHOLE SCREEN IS THE TABLE. The original drew into a canvas the size of
+ *   its own box, so the wad was cut off at the photograph's edge. Here the
+ *   canvas is fixed over the whole viewport and the sheet's resting place is
+ *   measured from the box every frame, so at rest it sits exactly where the
+ *   photograph is and scrolls with it, and held it can go anywhere on screen.
+ *   Release always brings it home. The box itself only holds the space.
+ * - The vertical pan stays the page's (touch-action: pan-y). On a phone a
+ *   sideways drag moves the wad and an up-or-down one scrolls, which lets go.
  * - No long-press menu on the photograph (iOS "save image"): the hold is the
  *   gesture here. Only here - the rest of the site stays selectable.
  * - The printed-back image, the reset key, the disabled switch and the error
@@ -29,8 +34,8 @@ import "./PaperCrumple.css";
  *   screen if WebGL or the texture fails, as before.
  */
 
-type ReleaseBehavior = "stay" | "restore" | "creased";
-export type PaperCrumpleState = "flat" | "holding" | "crumpled" | "creased";
+type ReleaseBehavior = "restore" | "creased";
+export type PaperCrumpleState = "flat" | "holding" | "creased";
 
 type Spring = { value: number; target: number; velocity: number };
 
@@ -291,8 +296,6 @@ type Options = {
   creaseStrength: number;
   draggable: boolean;
   dragRotation: number;
-  dragRadius: number;
-  returnToOrigin: boolean;
   onStateChange?: (state: PaperCrumpleState) => void;
 };
 
@@ -320,8 +323,6 @@ export type PaperCrumpleProps = {
   shadowOpacity?: number;
   draggable?: boolean;
   dragRotation?: number;
-  dragRadius?: number;
-  returnToOrigin?: boolean;
   rotation?: number;
   seed?: number;
   detail?: number;
@@ -354,8 +355,6 @@ export default function PaperCrumple({
   shadowOpacity = 0.08,
   draggable = true,
   dragRotation = 10,
-  dragRadius = 180,
-  returnToOrigin = true,
   rotation = 0,
   seed = 7,
   detail = 64,
@@ -376,8 +375,6 @@ export default function PaperCrumple({
     creaseStrength,
     draggable,
     dragRotation,
-    dragRadius,
-    returnToOrigin,
     onStateChange,
   });
 
@@ -391,8 +388,6 @@ export default function PaperCrumple({
       creaseStrength,
       draggable,
       dragRotation,
-      dragRadius,
-      returnToOrigin,
       onStateChange,
     };
   });
@@ -600,6 +595,10 @@ export default function PaperCrumple({
     let viewportWidth = 1,
       viewportHeight = 1,
       scale = paperWidth;
+    // Where the box's centre is, from the centre of the screen, in the
+    // scene's units (pixels, y up). The springs below are offsets from it.
+    let homeX = 0,
+      homeY = 0;
     let pointerX = 0,
       pointerY = 0,
       lastX = 0,
@@ -724,9 +723,17 @@ export default function PaperCrumple({
       raycaster.setFromCamera(pointer, camera);
     }
 
+    function measureHome() {
+      if (!root) return;
+      const rect = root.getBoundingClientRect();
+      homeX = rect.left + rect.width / 2 - viewportWidth / 2;
+      homeY = viewportHeight / 2 - (rect.top + rect.height / 2);
+    }
+
     function render(time: number) {
       frame = 0;
       if (disposed || !ready || contextLost || !inView || document.hidden) return;
+      measureHome();
       const dt = lastTime ? Math.min(0.04, (time - lastTime) / 1000) : 1 / 60;
       lastTime = time;
       const opts = options.current;
@@ -747,12 +754,12 @@ export default function PaperCrumple({
         plane.constant = -anchor.z;
         setPointer(pointerX, pointerY);
         if (raycaster.ray.intersectPlane(plane, world)) {
-          posX.value = posX.target = world.x - anchor.x;
-          posY.value = posY.target = world.y - anchor.y;
+          posX.value = posX.target = world.x - anchor.x - homeX;
+          posY.value = posY.target = world.y - anchor.y - homeY;
           posX.velocity = posY.velocity = 0;
         }
       }
-      sheet.position.set(posX.value, posY.value, 0);
+      sheet.position.set(homeX + posX.value, homeY + posY.value, 0);
       sheet.updateMatrixWorld(true);
       const shadowBounds = geometry.boundingBox;
       if (shadowBounds) {
@@ -778,14 +785,16 @@ export default function PaperCrumple({
         frame = requestAnimationFrame(render);
     }
 
+    // The canvas is the whole screen; the sheet's size still comes from the
+    // box, less the 24px it keeps clear on every side.
     function resize() {
       if (!root) return;
       const rect = root.getBoundingClientRect();
-      viewportWidth = Math.max(1, rect.width);
-      viewportHeight = Math.max(1, rect.height);
+      viewportWidth = Math.max(1, window.innerWidth);
+      viewportHeight = Math.max(1, window.innerHeight);
       scale =
         paperWidth *
-        Math.min(1, Math.max(1, viewportWidth - 48) / paperWidth, Math.max(1, viewportHeight - 48) / paperHeight);
+        Math.min(1, Math.max(1, rect.width - 48) / paperWidth, Math.max(1, rect.height - 48) / paperHeight);
       sheet.scale.setScalar(scale);
       camera.aspect = viewportWidth / viewportHeight;
       camera.position.z = viewportHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
@@ -805,12 +814,6 @@ export default function PaperCrumple({
       floor.scale.set(viewportWidth * 4, viewportHeight * 4, 1);
       root.style.setProperty("--pc-image-width", `${scale}px`);
       root.style.setProperty("--pc-image-height", `${scale * aspect}px`);
-      if (!held) {
-        const limitX = Math.max(0, (viewportWidth - scale) / 2 - 16);
-        const limitY = Math.max(0, (viewportHeight - scale * aspect) / 2 - 16);
-        posX.value = posX.target = clamp(posX.value, -limitX, limitX);
-        posY.value = posY.target = clamp(posY.value, -limitY, limitY);
-      }
       wake();
     }
 
@@ -823,48 +826,17 @@ export default function PaperCrumple({
       const captured = pointerId;
       pointerId = null;
       if (captured !== null && hit.hasPointerCapture(captured)) hit.releasePointerCapture(captured);
-      if (opts.releaseBehavior === "stay") {
-        amount.target = amount.value;
-        amount.velocity = 0;
-      } else {
-        amount.target = 0;
-        memory.target =
-          opts.releaseBehavior === "creased"
-            ? Math.max(memory.value, peak * clamp(finite(opts.creaseStrength, 0.18), 0, 1))
-            : 0;
-      }
+      // Always home: the sheet opens out where the photograph belongs.
+      amount.target = 0;
+      memory.target =
+        opts.releaseBehavior === "creased"
+          ? Math.max(memory.value, peak * clamp(finite(opts.creaseStrength, 0.18), 0, 1))
+          : 0;
       tiltX.target = tiltY.target = 0;
-      if (opts.returnToOrigin && opts.releaseBehavior !== "stay") {
-        posX.target = posY.target = 0;
-      } else {
-        const bounds = geometry.boundingBox;
-        const spanX = opts.releaseBehavior === "stay" && bounds ? bounds.max.x - bounds.min.x : 1;
-        const spanY = opts.releaseBehavior === "stay" && bounds ? bounds.max.y - bounds.min.y : aspect;
-        const halfWidth =
-          ((Math.abs(Math.cos(baseRotation)) * spanX + Math.abs(Math.sin(baseRotation)) * spanY) * scale) / 2;
-        const halfHeight =
-          ((Math.abs(Math.sin(baseRotation)) * spanX + Math.abs(Math.cos(baseRotation)) * spanY) * scale) / 2;
-        const limitX = Math.min(
-          Math.max(0, finite(opts.dragRadius, 180)),
-          Math.max(0, viewportWidth / 2 - halfWidth - 16),
-        );
-        const limitY = Math.min(
-          Math.max(0, finite(opts.dragRadius, 180)),
-          Math.max(0, viewportHeight / 2 - halfHeight - 16),
-        );
-        const coast = !keyboard && performance.now() - lastMove < 90 ? 0.06 : 0;
-        posX.target = clamp(posX.value + speedX * coast, -limitX, limitX);
-        posY.target = clamp(posY.value - speedY * coast, -limitY, limitY);
-      }
+      posX.target = posY.target = 0;
       if (instant || keyboard) for (const s of springs) advance(s, 0, 0, true);
       keyboard = false;
-      publish(
-        opts.releaseBehavior === "stay" && amount.target > 0.001
-          ? "crumpled"
-          : memory.target > 0.001
-            ? "creased"
-            : "flat",
-      );
+      publish(memory.target > 0.001 ? "creased" : "flat");
       wake();
     }
 
@@ -888,10 +860,9 @@ export default function PaperCrumple({
     }
 
     function pointerDown(event: PointerEvent) {
-      if (!ready || !root || !hit || held || event.button !== 0 || !event.isPrimary) return;
-      const rect = root.getBoundingClientRect();
-      pointerX = lastX = event.clientX - rect.left;
-      pointerY = lastY = event.clientY - rect.top;
+      if (!ready || !hit || held || event.button !== 0 || !event.isPrimary) return;
+      pointerX = lastX = event.clientX;
+      pointerY = lastY = event.clientY;
       setPointer(pointerX, pointerY);
       sheet.updateMatrixWorld(true);
       const intersection = raycaster.intersectObjects([front, back], false)[0];
@@ -914,11 +885,10 @@ export default function PaperCrumple({
     }
 
     function pointerMove(event: PointerEvent) {
-      if (!held || !root || event.pointerId !== pointerId || !options.current.draggable) return;
-      const rect = root.getBoundingClientRect();
+      if (!held || event.pointerId !== pointerId || !options.current.draggable) return;
       const now = performance.now();
-      const x = event.clientX - rect.left,
-        y = event.clientY - rect.top;
+      const x = event.clientX,
+        y = event.clientY;
       const dt = Math.max(0.008, (now - lastMove) / 1000);
       speedX = (x - lastX) / dt;
       speedY = (y - lastY) / dt;
@@ -973,16 +943,15 @@ export default function PaperCrumple({
       ) {
         event.preventDefault();
         const step = event.shiftKey ? 30 : 12;
-        const limit = Math.max(0, finite(options.current.dragRadius, 180));
         posX.target = clamp(
           posX.target + (event.key === "ArrowRight" ? step : event.key === "ArrowLeft" ? -step : 0),
-          -Math.min(limit, viewportWidth / 3),
-          Math.min(limit, viewportWidth / 3),
+          -viewportWidth / 3,
+          viewportWidth / 3,
         );
         posY.target = clamp(
           posY.target + (event.key === "ArrowUp" ? step : event.key === "ArrowDown" ? -step : 0),
-          -Math.min(limit, viewportHeight / 3),
-          Math.min(limit, viewportHeight / 3),
+          -viewportHeight / 3,
+          viewportHeight / 3,
         );
         wake();
       }
@@ -1027,6 +996,10 @@ export default function PaperCrumple({
     hit.addEventListener("keyup", keyUp);
     hit.addEventListener("blur", blur);
     window.addEventListener("blur", cancel);
+    // The canvas stays put while the page moves under it: every scroll is a
+    // frame, so the sheet keeps to its box. A resize changes the canvas too.
+    window.addEventListener("scroll", wake, { passive: true });
+    window.addEventListener("resize", resize);
     document.addEventListener("visibilitychange", visibility);
     canvas.addEventListener("webglcontextlost", loseContext);
     canvas.addEventListener("webglcontextrestored", restoreContext);
@@ -1035,8 +1008,14 @@ export default function PaperCrumple({
     const intersectionObserver = new IntersectionObserver((entries) => {
       inView = entries[0].isIntersecting;
       lastTime = 0;
-      if (!inView) cancel();
-      else wake();
+      // Rendering stops out of view, and both the canvas and the hit area are
+      // fixed to the screen: the last frame would stay painted, and the hit
+      // area would stay where it last was, invisible, over whatever comes next.
+      hit.style.pointerEvents = inView ? "" : "none";
+      if (!inView) {
+        cancel();
+        renderer.clear();
+      } else wake();
     });
     intersectionObserver.observe(root);
     deform();
@@ -1098,6 +1077,8 @@ export default function PaperCrumple({
       hit.removeEventListener("keyup", keyUp);
       hit.removeEventListener("blur", blur);
       window.removeEventListener("blur", cancel);
+      window.removeEventListener("scroll", wake);
+      window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", visibility);
       canvas.removeEventListener("webglcontextlost", loseContext);
       canvas.removeEventListener("webglcontextrestored", restoreContext);
@@ -1142,7 +1123,9 @@ export default function PaperCrumple({
         ref={canvasRef}
         className="paper-crumple-canvas"
         aria-hidden="true"
-        style={{ visibility: status === "ready" ? "visible" : "hidden", filter: shadowFilter }}
+        // No CSS drop shadow on it: over the whole screen that filter would be
+        // recomposited on every scroll. The scene casts its own.
+        style={{ visibility: status === "ready" ? "visible" : "hidden" }}
       />
       {status !== "ready" && (
         // eslint-disable-next-line @next/next/no-img-element
@@ -1162,7 +1145,6 @@ export default function PaperCrumple({
         ref={hitRef}
         type="button"
         className="paper-crumple-hit"
-        data-draggable={draggable}
         disabled={status !== "ready"}
         aria-label={`${alt}. לחצו והחזיקו כדי לקמט. במקלדת: החזיקו רווח או Enter, Escape לאיפוס.`}
         aria-pressed="false"

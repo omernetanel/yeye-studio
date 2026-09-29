@@ -67,7 +67,8 @@ function Reveal({ children, className }: { children: ReactNode; className?: stri
   const prefersReducedMotion = usePrefersReducedMotion();
   return (
     <motion.div
-      className={className}
+      // Every block of text sits over the photograph when it is played with.
+      className={`relative z-10 ${className ?? ""}`}
       initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
@@ -88,7 +89,9 @@ export default function AboutPageContent() {
           a fixed column beside it: no measure on the paragraphs, which is what
           made the page read as a narrow feature. */}
       <header className="grid grid-cols-1 items-start gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,340px)] md:gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:gap-20">
-        <div>
+        {/* z-10: over the crumpled photograph when it is played across the
+            screen. See the figure. */}
+        <div className="relative z-10">
           <h1 className="font-display text-[44px] leading-[1.05] font-extrabold tracking-tight text-black md:text-[72px] lg:text-[84px]">
             נעים מאוד,
             <br />
@@ -134,8 +137,11 @@ export default function AboutPageContent() {
           </div>
         </div>
 
-        {/* Held in view beside the text on a desk while it scrolls. */}
-        <figure className="m-0 w-full max-w-[400px] justify-self-center md:sticky md:top-[120px] md:justify-self-end">
+        {/* Held in view beside the text on a desk while it scrolls. z-0, under
+            the text's z-10: the crumpled photograph is played with over the
+            whole screen, and it passes UNDER the words - depth, not a sticker
+            on top. */}
+        <figure className="relative z-0 m-0 w-full max-w-[400px] justify-self-center md:sticky md:top-[120px] md:justify-self-end">
           <CrumplePortrait src="/images/portrait.webp" alt={`עומר, מייסד ${SITE_NAME}`} />
         </figure>
       </header>

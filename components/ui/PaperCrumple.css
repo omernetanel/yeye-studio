@@ -1,16 +1,17 @@
+/* The box only holds the photograph's place. The canvas and the hit area are
+   fixed to the screen, so the wad can be played with anywhere on it - no
+   overflow clip and no isolation here, either would box them in again. */
 .paper-crumple {
   position: relative;
   width: 100%;
-  overflow: hidden;
-  isolation: isolate;
 }
 
 .paper-crumple-canvas {
   display: block;
-  position: absolute;
+  position: fixed;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
 }
 
@@ -24,13 +25,12 @@
   pointer-events: none;
 }
 
-/* touch-action: the hit area owns every gesture only when the sheet can be
-   dragged. Undraggable (a phone), it hands the vertical pan back to the page,
-   so a thumb over the photograph still scrolls and a still one crumples it.
+/* touch-action: the vertical pan stays the page's, so on a phone a thumb over
+   the photograph still scrolls; a sideways drag moves the wad.
    touch-callout: the hold is the gesture, so iOS's long-press menu stays shut. */
 .paper-crumple-hit {
   appearance: none;
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   padding: 0;
@@ -46,10 +46,6 @@
   cursor: grab;
   outline: none !important;
   box-shadow: none !important;
-}
-
-.paper-crumple-hit[data-draggable="true"] {
-  touch-action: none;
 }
 
 .paper-crumple-hit[data-held="true"] {
