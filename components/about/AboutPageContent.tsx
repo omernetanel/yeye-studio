@@ -91,7 +91,7 @@ export default function AboutPageContent() {
             אני עומר.
           </h1>
           <p className={`mt-6 md:mt-8 ${BODY} md:text-[22px]`}>
-            מעצב ומפתח אתרים, ומי שעומד מאחורי {SITE_NAME}. אני בונה אתרים מגיל 14, והיום מעצב ובונה אותם מאפס לעסקים קטנים וגדולים, מהרעיון ועד האתר
+            מעצב ומפתח אתרים, ומי שעומד מאחורי {SITE_NAME}. אני בונה אתרים מגיל 15, והיום מעצב ובונה אותם מאפס לעסקים קטנים וגדולים, מהרעיון ועד האתר
             שעולה לאוויר.
           </p>
 
@@ -102,9 +102,9 @@ export default function AboutPageContent() {
             <section>
               <h2 className={HEADING}>איך זה התחיל</h2>
               <p className={`mt-3 ${BODY}`}>
-                את האתר הראשון שלי בניתי ב־HTML בגיל 14, ועד גיל 15 למדתי לפתח ולשפר אותו. משם בניתי עוד ועוד:
-                אתרי מעריצים עם עשרות עמודים, ביניהם אתר המעריצים הישראלי של קייטי פרי, ואתר מדריכים שלימד
-                אחרים לעצב ולבנות. במקביל ערכתי וידאו ועיצבתי בפוטושופ. אף אחד לא ביקש ממני,{" "}
+                בגיל 14 נחשפתי לבניית אתרים, ובגיל 15 כבר בניתי את האתרים הראשונים שלי: אתרי מעריצים עם עשרות
+                עמודים, ביניהם אתר המעריצים הישראלי של קייטי פרי, ואתר מדריכים שלימד אחרים לעצב ולבנות. עד גיל 17
+                צללתי ל־CSS ול־PHP והתחלתי לפתח לעומק. במקביל ערכתי וידאו ועיצבתי בפוטושופ. אף אחד לא ביקש ממני,{" "}
                 <mark className="text-marker bg-transparent text-inherit">פשוט לא הצלחתי להפסיק.</mark>
               </p>
             </section>
@@ -115,13 +115,12 @@ export default function AboutPageContent() {
                 <mark className="text-marker bg-transparent text-inherit">לעצב ולבנות דברים מאפס.</mark> זה לא
                 הפסיק לזעוק, ולא יכולתי להתעלם מזה יותר. ככה נולד {SITE_NAME}.
               </p>
-              {/* The name, part of the same block but on lines of its own: both
-                  lines are a punchline, so both are bold, the second a step
-                  larger. */}
-              <p className={`mt-4 ${BODY}`}>ולגבי השם:</p>
-              <p className="mt-1 font-display leading-[1.35] font-bold text-black">
-                <span className="block text-[20px] text-balance md:text-[22px]">YE זה הקיצור של שם המשפחה שלי.</span>
-                <span className="block text-[24px] text-balance md:text-[28px]">YEYE פשוט נשמע טוב יותר.</span>
+              {/* The name, at the paragraph's own size: a wink is said quietly.
+                  The punchline bold, the aside after it grey. */}
+              <p className={`mt-4 ${BODY}`}>
+                ולגבי השם: YE זה הקיצור של שם המשפחה שלי, ו־
+                <strong className="font-bold text-black">YEYE פשוט נשמע טוב יותר.</strong>{" "}
+                <span className="text-black/45">(כן, זה כל הסיפור.)</span>
               </p>
             </section>
           </div>
