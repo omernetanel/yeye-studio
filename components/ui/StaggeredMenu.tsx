@@ -210,8 +210,17 @@ export default function StaggeredMenu({
         <ul className="sm-panel-list" role="list">
           {items.map((item) => (
             <li className="sm-panel-itemWrap" key={item.label}>
-              <button type="button" className="sm-panel-item" tabIndex={open ? 0 : -1} onClick={item.onSelect}>
-                <span className={`sm-panel-itemLabel ${item.highlight ? "text-marker" : ""}`}>{item.label}</span>
+              <button
+                type="button"
+                className={`sm-panel-item ${item.highlight ? "sm-panel-item--cta" : ""}`}
+                tabIndex={open ? 0 : -1}
+                onClick={item.onSelect}
+              >
+                {/* data-label: the call to action's hover draws its words a
+                    second time, white on black, from a pseudo-element. */}
+                <span className={`sm-panel-itemLabel ${item.highlight ? "text-marker" : ""}`} data-label={item.label}>
+                  {item.label}
+                </span>
               </button>
             </li>
           ))}

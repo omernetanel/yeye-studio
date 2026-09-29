@@ -24,7 +24,11 @@ export default function NavMenu() {
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const hoveringRef = useRef(false);
+  // HOW IT WAS OPENED DECIDES HOW IT CLOSES. Opened by a hover, it is a glance:
+  // it goes when the pointer leaves it. Opened by a click or a tap, it was
+  // asked for: it stays until a click outside it, an item or Escape. A click on
+  // the button while a hover holds it open turns the glance into that.
+  const openedByRef = useRef<"hover" | "click" | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const pathname = usePathname();
   const lenis = useLenis();
@@ -113,10 +117,14 @@ export default function NavMenu() {
   // reader: the next Tab went to whatever followed the button in the document,
   // not into the menu that had just appeared.
   //
-  // Only when the pointer is not the one doing the opening — a mouse hovering
-  // the corner should not steal focus from what someone is reading.
+  // Only when it was asked for — a mouse hovering the corner should not steal
+  // focus from what someone is reading.
   useEffect(() => {
-    if (!open || hoveringRef.current) return;
+    if (!open) {
+      openedByRef.current = null;
+      return;
+    }
+    if (openedByRef.current !== "click") return;
     document.querySelector<HTMLButtonElement>("[data-nav-panel] button")?.focus();
   }, [open]);
 
@@ -144,21 +152,30 @@ export default function NavMenu() {
   }, [open]);
 
   // WITH A MOUSE THE MENU OPENS ON HOVER, on the button or on the panel; a tap
-  // has no hover, so on a phone it is the click below that opens it. The close
-  // waits a moment, because the pointer leaves the button before it reaches the
-  // panel and the gap between them is not "outside".
+  // has no hover, so on a phone it is the click below that opens it. A hover
+  // close waits a moment, because the pointer leaves the button before it
+  // reaches the panel and the gap between them is not "outside".
   const hoverOpen = (event: React.PointerEvent) => {
     if (event.pointerType !== "mouse") return;
-    hoveringRef.current = true;
     if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
     closeTimerRef.current = null;
+    if (open) return;
+    openedByRef.current = "hover";
     setOpen(true);
   };
 
   const hoverClose = (event: React.PointerEvent) => {
-    if (event.pointerType !== "mouse") return;
-    hoveringRef.current = false;
+    if (event.pointerType !== "mouse" || openedByRef.current !== "hover") return;
     closeTimerRef.current = window.setTimeout(() => setOpen(false), HOVER_CLOSE_MS);
+  };
+
+  const toggle = () => {
+    if (open && openedByRef.current === "hover") {
+      openedByRef.current = "click";
+      return;
+    }
+    if (!open) openedByRef.current = "click";
+    setOpen(!open);
   };
 
   // A JUMP, NOT A JOURNEY. Whoever uses the menu wants what the label says,
@@ -211,9 +228,9 @@ export default function NavMenu() {
   const trigger = (
     <button
       type="button"
-      // Under a hovering mouse the menu is already open, and a click that
-      // toggled would close it under the pointer that opened it.
-      onClick={() => setOpen((value) => (hoveringRef.current ? true : !value))}
+      // Under a hovering mouse the menu is already open, and a click there
+      // keeps it open rather than closing it under the pointer - see toggle.
+      onClick={toggle}
       aria-expanded={open}
       aria-controls="nav-menu-panel"
       aria-label="תפריט"
