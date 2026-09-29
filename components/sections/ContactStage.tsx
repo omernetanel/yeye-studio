@@ -502,9 +502,11 @@ export default function ContactStage() {
   // overflow-x-clip: the form's honeypot is parked 9999px off to the side.
   // Unclipped, a phone widened its layout to reach it and zoomed the whole
   // page out to a blank strip.
+  // -mt-px: both sections are black but land on fractional pixels, and the
+  // white page showed through the seam as a hairline.
   if (prefersReducedMotion) {
     return (
-      <section id="contact" data-nav-dark="true" className="relative overflow-x-clip bg-black pt-4 pb-24">
+      <section id="contact" data-nav-dark="true" className="relative -mt-px overflow-x-clip bg-black pt-14 pb-24 md:pt-16">
         <ContactForm />
       </section>
     );

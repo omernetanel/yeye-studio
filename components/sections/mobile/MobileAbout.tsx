@@ -541,7 +541,7 @@ export default function MobileAbout() {
         <div
           className={
             prefersReducedMotion
-              ? "relative z-10 flex items-center px-6 pt-8 pb-12"
+              ? "relative z-10 flex items-center px-6 pt-20 pb-14"
               : "sticky top-0 z-10 flex h-[100svh] items-center px-6"
           }
         >

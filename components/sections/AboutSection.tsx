@@ -681,7 +681,7 @@ export default function AboutSection() {
         <div
           className={
             prefersReducedMotion
-              ? "relative z-10 flex items-center pt-20 pb-12"
+              ? "relative z-10 flex items-center pt-20 pb-16"
               : "sticky top-0 z-10 flex h-[100svh] items-center"
           }
         >
