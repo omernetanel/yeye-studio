@@ -6,6 +6,7 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import HeadingSwash from "@/components/ui/HeadingSwash";
 import BalloonDrop, { type DropState } from "@/components/sections/about/BalloonDrop";
 import { aboutFacts } from "@/lib/content";
+import FullStoryLink from "@/components/about/FullStoryLink";
 
 // Where each piece starts and finishes arriving, along the stage's travel.
 // The greeting finishes settling before the copy starts, so that reversed —
@@ -353,6 +354,8 @@ export default function AboutSection() {
       `translate(-50%, -50%) translate(${lerp(bigX, pLand.x, portraitDown)}px, ${lerp(0, pLand.y, portraitDown)}px) scale(${lerp(bigScale, 1, portraitDown).toFixed(4)})`;
 
     fade(claim, "claim", BEATS.claim);
+    // The block carries a link: it answers clicks only once it can be seen.
+    claim.style.pointerEvents = Number(claim.style.opacity) > 0.5 ? "auto" : "none";
     // TWO CURVES, doing two different jobs.
     //
     // Brightness is MONOTONE: dim until its turn, up to full as it is read, and
@@ -429,6 +432,7 @@ export default function AboutSection() {
         if (!el) return;
         el.style.opacity = "1";
         el.style.transform = "none";
+        el.style.pointerEvents = "";
       };
       if (portraitRef.current) portraitRef.current.style.display = "none";
       for (const el of [portraitSlotRef.current, contentRef.current, claimRef.current, closerLineRef.current]) {
@@ -605,6 +609,9 @@ export default function AboutSection() {
                       הקמתי את YEYE מתוך אובססיה לפרטים הקטנים ואמונה שאתר טוב צריך לעבוד טוב בדיוק
                       כמו שהוא נראה.
                     </p>
+                    {/* Inside the copy block, so it arrives with the paragraphs
+                        rather than as a moment of its own. */}
+                    <FullStoryLink className="mt-6" />
                   </div>
                 </div>
 

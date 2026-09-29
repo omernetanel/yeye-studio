@@ -160,8 +160,8 @@ export default function AboutPageContent() {
         </div>
       </Reveal>
 
-      {/* THE CLOSE: one line and the page's one button, across the row. */}
-      <Reveal className="mt-24 flex flex-col items-start gap-6 border-t border-black/10 pt-16 md:mt-32 md:flex-row md:items-center md:justify-between md:pt-20">
+      {/* THE CLOSE: one line and the page's one button, centred. */}
+      <Reveal className="mt-24 flex flex-col items-center gap-6 border-t border-black/10 pt-16 text-center md:mt-32 md:pt-20">
         <p className={HEADING}>יש לכם רעיון, או רק התחלה של רעיון?</p>
         <Button href="/#cta" className="!border-black !bg-none !bg-black !shadow-none">
           קבעו פגישה

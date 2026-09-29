@@ -6,6 +6,7 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import HeadingSwash from "@/components/ui/HeadingSwash";
 import BalloonDrop, { type DropState } from "@/components/sections/about/BalloonDrop";
 import BorderGlowCard from "@/components/ui/BorderGlowCard";
+import FullStoryLink from "@/components/about/FullStoryLink";
 import { ABOUT_FACTS_HEADING, aboutFacts } from "@/lib/content";
 
 /**
@@ -239,6 +240,8 @@ export default function MobileAbout() {
       const t = smoothstep(clamp01((screen - top) / (screen * RISE_VH)));
       copy.style.opacity = String(t);
       copy.style.transform = `translateY(${lerp(RISE_PX, 0, t).toFixed(1)}px)`;
+      // The block carries a link: it answers taps only once it can be seen.
+      copy.style.pointerEvents = t > 0.5 ? "auto" : "none";
     }
 
     // THE CARD, arriving as one block — heading, card and dots together.
@@ -333,6 +336,7 @@ export default function MobileAbout() {
         if (el) {
           el.style.opacity = "1";
           el.style.transform = "none";
+          el.style.pointerEvents = "";
         }
       }
       if (closerSwashRef.current) closerSwashRef.current.style.clipPath = "none";
@@ -453,6 +457,9 @@ export default function MobileAbout() {
             הקמתי את YEYE מתוך אובססיה לפרטים הקטנים ואמונה שאתר טוב צריך לעבוד טוב בדיוק כמו שהוא
             נראה.
           </p>
+          {/* Inside the copy block, so it arrives with the paragraphs rather
+              than as a moment of its own. */}
+          <FullStoryLink className="mt-5" />
         </div>
 
         {/* THE THREE AS ONE CARD THE READER SWIPES. Stacked, they were three
