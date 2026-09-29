@@ -77,18 +77,21 @@ function Reveal({ children, className }: { children: ReactNode; className?: stri
 export default function AboutPageContent() {
   return (
     // Wide, but held in from the edges of the screen.
-    <article className="mx-auto max-w-[1240px] px-6 pt-[140px] pb-24 md:px-16 md:pt-[150px]">
+    <article className="mx-auto max-w-[1400px] px-6 pt-[140px] pb-24 md:px-16 md:pt-[150px]">
       {/* THE OPENING: the photograph beside the heading, and everything the
           page has to say about who this is under it. Nothing here animates, so
           it is there on the first frame. */}
-      <header className="grid grid-cols-1 items-start gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)] md:gap-16 lg:gap-24">
+      {/* The text takes the row and the photo a fixed column beside it: no
+          measure on the paragraphs, which is what made the page read as a
+          narrow feature. */}
+      <header className="grid grid-cols-1 items-start gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,340px)] md:gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:gap-20">
         <div>
           <h1 className="font-display text-[44px] leading-[1.05] font-extrabold tracking-tight text-black md:text-[72px] lg:text-[84px]">
             נעים מאוד,
             <br />
             אני עומר.
           </h1>
-          <p className={`mt-6 max-w-[52ch] md:mt-8 ${BODY} md:text-[22px]`}>
+          <p className={`mt-6 md:mt-8 ${BODY} md:text-[22px]`}>
             מעצב ומפתח אתרים, ומי שעומד מאחורי{" "}
             <Link href="/" className="font-normal text-black underline underline-offset-4 hover:text-black/70">
               {SITE_NAME}
@@ -100,7 +103,7 @@ export default function AboutPageContent() {
           {/* The story, short, under the introduction and beside the photo:
               laid out below it in a row of its own, the opening was a name and
               a picture on an empty screen. */}
-          <div className="mt-10 max-w-[52ch] space-y-8 border-t border-black/10 pt-8 md:mt-12">
+          <div className="mt-10 space-y-8 border-t border-black/10 pt-8 md:mt-12">
             <section>
               <h2 className={HEADING}>איך זה התחיל</h2>
               <p className={`mt-3 ${BODY}`}>
