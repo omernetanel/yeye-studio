@@ -126,7 +126,7 @@ export default function AboutPageContent() {
               {/* The name, at the paragraph's own size: a wink is said quietly.
                   The punchline bold, the aside after it grey. */}
               <p className={`mt-4 ${BODY}`}>
-                ולגבי השם: YE זה הקיצור של שם המשפחה שלי, ו־
+                ולגבי השם: YE זה הקיצור של שם המשפחה שלי.{" "}
                 <strong className="font-bold text-black">YEYE פשוט נשמע טוב יותר.</strong>{" "}
                 <span className="text-black/45">(כן, זה כל הסיפור.)</span>
               </p>
