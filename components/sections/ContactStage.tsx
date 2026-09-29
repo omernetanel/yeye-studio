@@ -195,10 +195,10 @@ function ContactForm() {
       {status === "success" ? (
         // The same heading-and-line as the closing form's, on the footage.
         <div role="status" className="mt-8">
-          <p className="font-display text-m-title font-bold text-white md:text-[34px] md:leading-snug">
+          <p className="font-display text-m-sub font-bold text-white md:text-[22px]">
             קיבלתי, תודה!
           </p>
-          <p className="mt-2 font-body text-m-body text-white/85 md:text-lg">אחזור אליכם בקרוב מאוד.</p>
+          <p className="mt-1 font-body text-m-body text-white/85">אחזור אליכם בקרוב מאוד.</p>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">

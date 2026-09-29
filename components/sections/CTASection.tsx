@@ -183,10 +183,10 @@ export default function CTASection() {
               // 60% it sat in the page like any other paragraph, and the one
               // moment the reader most needs to see went past unnoticed.
               <div role="status">
-                <p className="font-display text-m-title font-bold text-black md:text-[34px] md:leading-snug">
+                <p className="font-display text-m-sub font-bold text-black md:text-[22px]">
                   קיבלתי, תודה!
                 </p>
-                <p className="mt-2 font-body text-m-body text-black/75 md:text-lg">אחזור אליכם בקרוב מאוד.</p>
+                <p className="mt-1 font-body text-m-body text-black/75">אחזור אליכם בקרוב מאוד.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 text-right sm:grid-cols-2 sm:gap-3">
