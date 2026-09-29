@@ -164,7 +164,7 @@ export default function AboutPageContent() {
       <Reveal className="mt-24 flex flex-col items-center gap-6 border-t border-black/10 pt-16 text-center md:mt-32 md:pt-20">
         <p className={HEADING}>יש לכם רעיון, או רק התחלה של רעיון?</p>
         <Button href="/#cta" className="!border-black !bg-none !bg-black !shadow-none">
-          קבעו פגישה
+          בואו נדבר על זה
         </Button>
       </Reveal>
     </article>
