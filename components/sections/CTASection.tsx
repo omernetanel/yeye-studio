@@ -65,7 +65,10 @@ export default function CTASection() {
       // (their centres at 68% of the 240px clip, less their radius), and at
       // this padding the privacy line ends 19px clear of them instead of being
       // printed across them. Measured, at 375px.
-      className="relative overflow-hidden bg-white px-6 pt-16 pb-40 text-center md:ps-[106px] md:pe-10 md:py-28 md:text-right"
+      // md:py-20, down from 28, pays for the button's own row that the note
+      // field added to the form: the section stays the height it was, and the
+      // balloons, which are sized to it, stay the size they were.
+      className="relative overflow-hidden bg-white px-6 pt-16 pb-40 text-center md:ps-[106px] md:pe-10 md:py-20 md:text-right"
     >
       {particles.map((p, i) => (
         <motion.div
@@ -209,9 +212,6 @@ export default function CTASection() {
                   placeholder="דוא״ל"
                   autoComplete="email"
                   inputMode="email"
-                  // A row of its own on the desk: with the message under it
-                  // at full width, sharing a row left half of it empty.
-                  className="sm:col-span-2"
                   value={form.reply_to}
                   onChange={(e) => setForm({ ...form, reply_to: e.target.value })}
                   required
@@ -223,13 +223,17 @@ export default function CTASection() {
                     fields. "What's on your mind" and not "the project": the
                     site's own line is that nobody has to know exactly what
                     they want to start. */}
+                {/* Beside the email on the desk, one field high, so the form
+                    grows by the button's row only - this section is sized to
+                    the screen, and its clip of balloons is sized to it. It can
+                    be pulled taller by whoever has more to say. */}
                 <Textarea
                   label="ספרו לי מה יש לכם בראש"
                   id="cta-message"
                   placeholder="ספרו לי מה יש לכם בראש (לא חובה)"
                   rows={3}
                   maxLength={2000}
-                  className="text-right sm:col-span-2"
+                  className="text-right sm:h-[54px] sm:min-h-[54px] sm:py-[14px]"
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                 />
