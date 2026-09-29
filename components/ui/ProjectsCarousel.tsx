@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import FlexCarousel from "@/components/ui/FlexCarousel";
 import { projects } from "@/lib/projects";
+import { PROJECTS_HEADING } from "@/lib/content";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
 // Four real projects today, and nothing here is written for four: the row takes
@@ -64,7 +65,9 @@ export default function ProjectsCarousel({
     <div className="flex w-full flex-col items-center">
       <FlexCarousel
         items={entries}
-        label="עבודות נבחרות"
+        // The section's own heading, so a screen reader names the region the
+        // way the page does.
+        label={PROJECTS_HEADING.join(" ")}
         cardHeight={cardHeight}
         wheelZone={wheelZone}
         contain={contain}

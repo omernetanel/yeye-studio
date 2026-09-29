@@ -245,10 +245,9 @@ export default function NavMenu() {
     // the button's width or the viewport's, and nothing has to be computed.
     <>
     <div
-      // 42px on a phone, 22 above it. The phone's opening screen puts its line
-      // right beside this row, and nearer the top the pair sat pressed against
-      // the edge of the glass. Must match the logo's own offset in Navbar — they
-      // are one row.
+      // 20px on a phone, 22 above it. The phone's opening screen puts its line
+      // right beside this row (the hero's pt-[18px]), and the two move as one.
+      // Must match the logo's own offset in Navbar — they are one row.
       //
       // THE BLEND GOES HERE, ON THE FIXED RAIL, and not on the button inside
       // it. This element is fixed with a z-index, so it is a stacking context

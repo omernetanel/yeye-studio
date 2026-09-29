@@ -17,9 +17,11 @@ import { A11Y_STORAGE_KEY } from "@/lib/a11y/storage-key";
  * site is #0a0a0a. That is why the site sat inside two black margins on a
  * screen that is white from the first pixel to the last.
  *
- * White, flatly, rather than tracking the section under the reader: the page
- * opens white and closes white, and a bar that changed colour halfway down
- * would draw more attention than the one it replaced.
+ * White here, as the page's starting point. On a phone the bars do change once
+ * on the way down: from "who I am" reaching the top of the screen to the work
+ * reaching it, they go black - see the edge strips in components/layout/
+ * Navbar.tsx. Safari 26 ignores this tag altogether and reads those strips;
+ * the tag is for every other browser.
  *
  * viewport-fit=cover is what lets the page reach under those bars in the first
  * place — without it iOS letterboxes the whole document inside the safe area

@@ -1,10 +1,11 @@
-# YEYE LABS
+# YEYE Digital
 
-Marketing site for YEYE LABS — a cinematic, scroll-driven Next.js site built
-with React Three Fiber, GSAP ScrollTrigger, Framer Motion, and Lenis.
+The site of YEYE Digital, a one-person digital studio: Hebrew, right to left,
+a cinematic scroll experience built with Next.js (App Router), TypeScript,
+Tailwind, Framer Motion, Lenis and raw WebGL.
 
-See `CLAUDE.md` for the full build spec, tech-stack rules, and the design-
-token/quality conventions this project follows.
+See `CLAUDE.md` for the build rules and conventions, and `CONTEXT.md` for the
+current state of every section and why it is built the way it is.
 
 ## Getting started
 

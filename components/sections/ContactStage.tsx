@@ -193,11 +193,13 @@ function ContactForm() {
           screen reader would otherwise be told nothing at all about a send that
           worked. Same for the failure below. */}
       {status === "success" ? (
-        <p role="status" className="mt-8 font-body text-m-body text-white/70">
-          קיבלתי, תודה!
-          <br />
-          אחזור אליכם בקרוב מאוד.
-        </p>
+        // The same heading-and-line as the closing form's, on the footage.
+        <div role="status" className="mt-8">
+          <p className="font-display text-m-title font-bold text-white md:text-[34px] md:leading-snug">
+            קיבלתי, תודה!
+          </p>
+          <p className="mt-2 font-body text-m-body text-white/85 md:text-lg">אחזור אליכם בקרוב מאוד.</p>
+        </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Input

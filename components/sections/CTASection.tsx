@@ -179,11 +179,15 @@ export default function CTASection() {
             className="mx-auto max-w-[620px] md:ms-0 md:me-auto md:max-w-[560px]"
           >
             {status === "success" ? (
-              <p role="status" className="font-body text-m-body text-black/60">
-                קיבלתי, תודה!
-                <br />
-                אחזור אליכם בקרוב מאוד.
-              </p>
+              // A heading and a line, not one grey sentence: at body size and
+              // 60% it sat in the page like any other paragraph, and the one
+              // moment the reader most needs to see went past unnoticed.
+              <div role="status">
+                <p className="font-display text-m-title font-bold text-black md:text-[34px] md:leading-snug">
+                  קיבלתי, תודה!
+                </p>
+                <p className="mt-2 font-body text-m-body text-black/75 md:text-lg">אחזור אליכם בקרוב מאוד.</p>
+              </div>
             ) : (
               <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 text-right sm:grid-cols-2 sm:gap-3">
                 <Input
