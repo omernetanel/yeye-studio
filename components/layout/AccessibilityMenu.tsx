@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { resetA11yPrefs, setA11yPref, useA11yPrefs, type A11yPrefs } from "@/lib/a11y/preferences";
+import { useOverDark } from "@/lib/use-over-dark";
 
 /**
  * THE WHEELCHAIR SYMBOL, drawn rather than imported.
@@ -88,6 +89,8 @@ export default function AccessibilityMenu() {
   const prefs = useA11yPrefs();
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dark = useOverDark(buttonRef);
 
   useEffect(() => {
     if (!open) return;
@@ -118,6 +121,7 @@ export default function AccessibilityMenu() {
     // the menu's own panel.
     <div ref={rootRef} className="group fixed bottom-[80px] left-5 z-40 md:bottom-[104px] md:left-7">
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
@@ -134,19 +138,22 @@ export default function AccessibilityMenu() {
         <WheelchairMark />
       </button>
 
-      {/* The same label the WhatsApp mark carries, on the same side and with
-          the same arming: a floating circle with an icon in it says nothing
-          about what pressing it does, and this is the one control on the page
-          where guessing wrong costs the most. It stays black on white in every
-          section, because so does the mark above it.
+      {/* The same label the WhatsApp mark carries, on the same side, with the
+          same arming and the same flip: a floating circle with an icon in it
+          says nothing about what pressing it does, and this is the one control
+          on the page where guessing wrong costs the most. A black pill vanishes
+          over a dark section, so over one it turns white with dark type. Its
+          words are the panel's own title.
           Hidden while the panel is open - the panel says what the button was
           going to. */}
       {!open && (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 left-full ml-3 -translate-x-1 -translate-y-1/2 rounded-full bg-black px-4 py-2 font-display text-[13px] leading-none font-medium whitespace-nowrap text-white opacity-0 shadow-[0_6px_20px_rgba(0,0,0,0.16)] transition-[opacity,transform] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100"
+          className={`pointer-events-none absolute top-1/2 left-full ml-3 -translate-x-1 -translate-y-1/2 rounded-full px-4 py-2 font-display text-[13px] leading-none font-medium whitespace-nowrap opacity-0 shadow-[0_6px_20px_rgba(0,0,0,0.16)] transition-[opacity,transform] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100 ${
+            dark ? "bg-white text-black" : "bg-black text-white"
+          }`}
         >
-          התאמות נגישות
+          הגדרות נגישות
         </span>
       )}
 

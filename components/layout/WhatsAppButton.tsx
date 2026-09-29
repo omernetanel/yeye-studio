@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { WHATSAPP_NUMBER } from "@/lib/site";
+import { useOverDark } from "@/lib/use-over-dark";
 
 /**
  * The one thing on the page that is always reachable.
@@ -16,7 +17,6 @@ import { WHATSAPP_NUMBER } from "@/lib/site";
  * the menu's panel when that is open.
  */
 export default function WhatsAppButton() {
-  const [dark, setDark] = useState(false);
   // Held back until the hero is behind the reader. Two reasons, and the second
   // is the one that forced it: the opening screen is a wordmark, one sentence
   // and one button, and a floating circle in the corner of it is a fourth thing
@@ -25,36 +25,18 @@ export default function WhatsAppButton() {
   // room to give. Everything after the hero has margins it can spare.
   const [past, setPast] = useState(false);
   const rootRef = useRef<HTMLAnchorElement>(null);
+  // Its own rect is what this reads, so the mark is never taken out of the
+  // layout while it waits - only made invisible and untouchable.
+  const dark = useOverDark(rootRef);
 
-  // Same contract the logo and the menu use: a section declares itself dark
-  // behind the chrome with data-nav-dark, and anything floating over it asks
-  // whether one of those is under its own corner.
+  // "Left the hero" is the hero's last pixel clearing the top of the screen;
+  // with no hero on the page at all (the sub-pages) there is nothing to wait for.
   useEffect(() => {
     let frame: number | null = null;
     const check = () => {
       frame = null;
-      const root = rootRef.current;
-      if (!root) return;
-      const box = root.getBoundingClientRect();
-      const x = box.left + box.width / 2;
-      const y = box.top + box.height / 2;
-
-      // Its own rect is what the colour check below reads, so it is never taken
-      // out of the layout — only made invisible and untouchable. "Left the
-      // hero" is the hero's last pixel clearing the top of the screen; with no
-      // hero on the page at all (the sub-pages) there is nothing to wait for.
       const hero = document.getElementById("hero");
       setPast(!hero || hero.getBoundingClientRect().bottom <= 0);
-
-      let over = false;
-      for (const el of document.querySelectorAll<HTMLElement>('[data-nav-dark="true"]')) {
-        const r = el.getBoundingClientRect();
-        if (r.left <= x && r.right >= x && r.top <= y && r.bottom >= y) {
-          over = true;
-          break;
-        }
-      }
-      setDark(over);
     };
     const schedule = () => {
       if (frame === null) frame = requestAnimationFrame(check);
