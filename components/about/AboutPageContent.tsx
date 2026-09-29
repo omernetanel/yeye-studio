@@ -1,10 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
-import HeadingSwash from "@/components/ui/HeadingSwash";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { SITE_NAME } from "@/lib/site";
 
@@ -19,8 +17,9 @@ import { SITE_NAME } from "@/lib/site";
  *   a celebrity. The page is laid out in rows that use the width instead,
  *   and the story is short.
  * - Pull quotes. A sentence of the story set large turned an anecdote into a
- *   headline. The one large line is the name's explanation, which was asked
- *   for.
+ *   headline, and the name's explanation reads better as part of its
+ *   paragraph than on a line of its own. Emphasis is a highlighter stroke
+ *   (.text-marker), inside the text.
  * - A black chapter-per-screen page, a row of facts, a grid of cards.
  *
  * Every claim is the owner's own, or already stated elsewhere on the site: the
@@ -92,11 +91,7 @@ export default function AboutPageContent() {
             אני עומר.
           </h1>
           <p className={`mt-6 md:mt-8 ${BODY} md:text-[22px]`}>
-            מעצב ומפתח אתרים, ומי שעומד מאחורי{" "}
-            <Link href="/" className="font-normal text-black underline underline-offset-4 hover:text-black/70">
-              {SITE_NAME}
-            </Link>
-            . אני בונה אתרים מגיל 14, והיום מעצב ובונה אותם מאפס לעסקים קטנים וגדולים, מהרעיון ועד האתר
+            מעצב ומפתח אתרים, ומי שעומד מאחורי {SITE_NAME}. אני בונה אתרים מגיל 14, והיום מעצב ובונה אותם מאפס לעסקים קטנים וגדולים, מהרעיון ועד האתר
             שעולה לאוויר.
           </p>
 
@@ -118,7 +113,8 @@ export default function AboutPageContent() {
               <p className={`mt-3 ${BODY}`}>
                 אחרי שנים של עבודה בעולם הטכנולוגי, חזרתי למה שתמיד משך אותי:{" "}
                 <mark className="text-marker bg-transparent text-inherit">לעצב ולבנות דברים מאפס.</mark> זה לא
-                הפסיק לזעוק, ולא יכולתי להתעלם מזה יותר. ככה נולד {SITE_NAME}.
+                הפסיק לזעוק, ולא יכולתי להתעלם מזה יותר. ככה נולד {SITE_NAME}. ולגבי השם: YE זה הקיצור של שם
+                המשפחה שלי. YEYE פשוט נשמע טוב יותר.
               </p>
             </section>
           </div>
@@ -137,17 +133,6 @@ export default function AboutPageContent() {
           />
         </figure>
       </header>
-
-      {/* THE NAME, set like the homepage's closing line - the one large line
-          on the page. */}
-      <Reveal className="mt-24 md:mt-32">
-        <p className={BODY}>ולגבי השם:</p>
-        <p className="mt-2 font-display text-m-lead font-bold text-black md:text-[56px] md:leading-[1.12]">
-          <span className="block text-balance">YE זה הקיצור של שם המשפחה שלי.</span>
-          <span className="block text-balance">YEYE פשוט נשמע טוב יותר.</span>
-        </p>
-        <HeadingSwash className="mt-6 w-[220px] text-black md:w-[320px]" />
-      </Reveal>
 
       {/* THE QUESTIONS, in two columns on a desk. */}
       <Reveal className="mt-24 border-t border-black/10 pt-16 md:mt-32 md:pt-20">
