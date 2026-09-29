@@ -56,8 +56,10 @@ const QUESTIONS = [
 
 const HEADING = "font-display text-[26px] leading-[1.2] font-extrabold tracking-tight text-black md:text-[32px]";
 const BODY = "font-display text-[18px] leading-[1.75] font-light text-black/75 md:text-[19px]";
-// Bold against the light body text, and full black against its 75%.
-const EMPHASIS = "font-bold text-black";
+// The story read at a glance: an eye that skims only these phrases still gets
+// it. A step up from the light body text and full black against its 75% - not
+// bold, which shouted. The name's punchline is the one bold phrase.
+const EMPHASIS = "font-medium text-black";
 
 /** A block that rises into place once, as it comes up. */
 function Reveal({ children, className }: { children: ReactNode; className?: string }) {
@@ -91,12 +93,9 @@ export default function AboutPageContent() {
             <br />
             אני עומר.
           </h1>
-          {/* The bold is the page read at a glance: an eye that skims only it
-              still gets who, since when and what. */}
           <p className={`mt-6 md:mt-8 ${BODY} md:text-[22px]`}>
-            <strong className={EMPHASIS}>מעצב ומפתח אתרים</strong>, ומי שעומד מאחורי {SITE_NAME}. אני בונה אתרים
-            מגיל 15, והיום מעצב ובונה אותם מאפס לעסקים קטנים וגדולים,{" "}
-            <strong className={EMPHASIS}>מהרעיון ועד האתר שעולה לאוויר.</strong>
+            מעצב ומפתח אתרים, ומי שעומד מאחורי {SITE_NAME}. אני בונה אתרים מגיל 15, והיום מעצב ובונה אותם מאפס
+            לעסקים קטנים וגדולים, מהרעיון ועד האתר שעולה לאוויר.
           </p>
 
           {/* The story, short, under the introduction and beside the photo:
@@ -127,7 +126,7 @@ export default function AboutPageContent() {
                   The punchline bold, the aside after it grey. */}
               <p className={`mt-4 ${BODY}`}>
                 ולגבי השם: YE זה הקיצור של שם המשפחה שלי, ו־
-                <strong className={EMPHASIS}>YEYE פשוט נשמע טוב יותר.</strong>{" "}
+                <strong className="font-bold text-black">YEYE פשוט נשמע טוב יותר.</strong>{" "}
                 <span className="text-black/45">(כן, זה כל הסיפור.)</span>
               </p>
             </section>
