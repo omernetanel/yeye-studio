@@ -789,9 +789,20 @@ video {
   overflow-y: auto;
   z-index: 10;
   opacity: 0;
-  /* No shadow: the source has none, and the black and grey layers dealt in
-     under it already give it its edge. */
+  /* Its edge is a hairline and a short soft shadow on the inner side. With
+     none, the white sheet sank into the white page once the layers under it
+     had passed; the first version's shadow (35%, reaching 80px in) was heavy.
+     This one is about a third of that, and does not reach far. */
   background: #fff;
+  box-shadow:
+    -1px 0 0 rgb(0 0 0 / 8%),
+    -16px 0 32px -18px rgb(0 0 0 / 14%);
+}
+
+.sm-root[data-position="left"] .staggered-menu-panel {
+  box-shadow:
+    1px 0 0 rgb(0 0 0 / 8%),
+    16px 0 32px -18px rgb(0 0 0 / 14%);
 }
 
 .sm-prelayers {
