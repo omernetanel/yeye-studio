@@ -6,13 +6,12 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { hasInSiteHistory } from "@/lib/nav/in-site-history";
 
-// About lives inside the homepage's services section rather than on a page of
-// its own, so it and "שירותים" deliberately resolve to the same anchor. Split
-// them only once there is a real destination to point at.
+// "מי אני" is a page of its own; the homepage's section keeps its anchor for
+// the homepage's own menu.
 const LINKS = [
   { label: "עבודות", href: "/projects" },
   { label: "שירותים", href: "/#services" },
-  { label: "מי אני", href: "/#about" },
+  { label: "מי אני", href: "/about" },
   { label: "צור קשר", href: "/#cta" },
 ];
 
