@@ -498,9 +498,13 @@ export default function ContactStage() {
   // over "who I am" by the phone's overlap and covering it. The video would
   // be motion this reader asked not to see. What is left is the ask, on the
   // black that "who I am" hands over, straight under its closing line.
+  //
+  // overflow-x-clip: the form's honeypot is parked 9999px off to the side.
+  // Unclipped, a phone widened its layout to reach it and zoomed the whole
+  // page out to a blank strip.
   if (prefersReducedMotion) {
     return (
-      <section id="contact" data-nav-dark="true" className="relative bg-black pt-4 pb-24">
+      <section id="contact" data-nav-dark="true" className="relative overflow-x-clip bg-black pt-4 pb-24">
         <ContactForm />
       </section>
     );
