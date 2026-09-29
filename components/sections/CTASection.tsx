@@ -253,7 +253,7 @@ export default function CTASection() {
                   type="submit"
                   disabled={status === "sending"}
                   showArrow={false}
-                  className="!border-black !bg-none !bg-black !text-white !shadow-none mt-4 w-auto justify-center justify-self-center !px-12 sm:col-span-2 sm:mt-0 sm:w-full sm:justify-self-stretch sm:!px-8"
+                  className="!border-black !bg-none !bg-black !text-white !shadow-none mt-4 w-auto justify-center justify-self-center !px-12 sm:col-span-2 sm:mt-0 sm:justify-self-start"
                 >
                   {status === "sending" ? "שולח..." : "בואו נתחיל ביחד"}
                 </Button>
