@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import FlexCarousel from "@/components/ui/FlexCarousel";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import FlexCarousel, { type FlexCarouselHandle } from "@/components/ui/FlexCarousel";
 import { projects } from "@/lib/projects";
 import { PROJECTS_HEADING } from "@/lib/content";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
@@ -53,6 +54,7 @@ export default function ProjectsCarousel({
   const router = useRouter();
   const prefersReducedMotion = usePrefersReducedMotion();
   const [active, setActive] = useState(0);
+  const carouselRef = useRef<FlexCarouselHandle>(null);
   const current = entries[active];
 
   const open = (index: number) => {
@@ -87,7 +89,9 @@ export default function ProjectsCarousel({
         bend={bend}
         dispersion={dispersion}
         flatMargin={12}
+        rtl
         reducedMotion={prefersReducedMotion}
+        ref={carouselRef}
         onChange={setActive}
         onSelect={open}
         className={stageClassName}
@@ -105,18 +109,39 @@ export default function ProjectsCarousel({
         </Link>
         <span className="mt-1 font-body text-m-small text-black/55 md:text-[15px]">{current.category}</span>
 
-        {/* Where you are in the work: a 10px circle per piece, the current one
-            black. The same indicator as the stages on the paper above, so it
-            reads as one thing across the site. */}
-        <div aria-hidden="true" className="mt-5 flex items-center justify-center gap-2.5">
-          {entries.map((entry, index) => (
-            <span
-              key={entry.href}
-              className={`block h-2.5 w-2.5 rounded-full transition-colors duration-200 ${
-                index === active ? "bg-black" : "bg-black/20"
-              }`}
-            />
-          ))}
+        {/* Previous, where you are, next. The arrows are real buttons, for
+            everyone who does not drag, swipe or scroll a wheel sideways - and
+            the row itself is laid right to left, so the "next" arrow on the
+            left brings the next piece in from the left, where the circles
+            count on to. The circles are the site's one indicator: 10px, the
+            current one black, decoration for sighted readers. */}
+        <div className="mt-5 flex items-center justify-center gap-4">
+          <button
+            type="button"
+            onClick={() => carouselRef.current?.step(-1)}
+            aria-label="העבודה הקודמת"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-black/15 text-black transition-colors duration-200 hover:border-black hover:bg-black hover:text-white"
+          >
+            <ChevronRight aria-hidden size={18} strokeWidth={2} />
+          </button>
+          <div aria-hidden="true" className="flex items-center gap-2.5">
+            {entries.map((entry, index) => (
+              <span
+                key={entry.href}
+                className={`block h-2.5 w-2.5 rounded-full transition-colors duration-200 ${
+                  index === active ? "bg-black" : "bg-black/20"
+                }`}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => carouselRef.current?.step(1)}
+            aria-label="העבודה הבאה"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-black/15 text-black transition-colors duration-200 hover:border-black hover:bg-black hover:text-white"
+          >
+            <ChevronLeft aria-hidden size={18} strokeWidth={2} />
+          </button>
         </div>
       </div>
     </div>

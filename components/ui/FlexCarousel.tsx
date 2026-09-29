@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useImperativeHandle, useRef, useState, type CSSProperties, type Ref } from "react";
 import { Mesh, Plane, Program, RenderTarget, Renderer, Texture, Triangle } from "ogl";
 
 import "./FlexCarousel.css";
@@ -236,7 +236,13 @@ interface Settings extends Lens {
   sideOpacity: number;
   edgeDim: number;
   overdraw: number;
+  rtl: boolean;
   reducedMotion: boolean;
+}
+
+export interface FlexCarouselHandle {
+  /** Move the row by whole cards: 1 is the next one, -1 the previous. */
+  step: (delta: number) => void;
 }
 
 interface Slot {
@@ -314,7 +320,11 @@ export interface FlexCarouselProps extends Partial<Lens> {
    * page around it. Read once, at mount.
    */
   overdraw?: number;
+  /** Lay the row right to left: the next card enters from the left. */
+  rtl?: boolean;
   reducedMotion?: boolean;
+  /** Buttons outside the row move it through this: `ref.current.step(1)`. */
+  ref?: Ref<FlexCarouselHandle>;
   /** Called whenever a different card reaches the centre. */
   onChange?: (index: number) => void;
   /** Called when the centred card is clicked, or Enter is pressed. */
@@ -350,7 +360,9 @@ export default function FlexCarousel({
   sideOpacity = 1,
   edgeDim = 0,
   overdraw = 0,
+  rtl = false,
   reducedMotion = false,
+  ref,
   onChange,
   onSelect,
   className = "",
@@ -359,7 +371,12 @@ export default function FlexCarousel({
   const containerRef = useRef<HTMLDivElement>(null);
   const settingsRef = useRef<Settings | null>(null);
   const itemsRef = useRef(items);
-  const engineRef = useRef<{ wake: () => void; setItems: (next: FlexCarouselItem[]) => void } | null>(null);
+  const engineRef = useRef<{
+    wake: () => void;
+    setItems: (next: FlexCarouselItem[]) => void;
+    step: (delta: number) => void;
+  } | null>(null);
+  useImperativeHandle(ref, () => ({ step: (delta: number) => engineRef.current?.step(delta) }), []);
   const callbacksRef = useRef({ onChange, onSelect });
   const [active, setActive] = useState(0);
 
@@ -393,6 +410,7 @@ export default function FlexCarousel({
       sideOpacity,
       edgeDim,
       overdraw,
+      rtl,
       reducedMotion,
     };
     engineRef.current?.wake();
@@ -608,8 +626,11 @@ export default function FlexCarousel({
       const widths = slots.map((slot) => (fixed || slot.aspect) * cardH);
       const centers: number[] = [];
       let cursor = 0;
+      // Right to left, the next card sits to the LEFT of this one - the way the
+      // page reads, and the way the circles under the row count.
+      const flow = s.rtl ? -1 : 1;
       for (let i = 0; i < widths.length; i++) {
-        centers.push(cursor + widths[i] / 2);
+        centers.push(flow * (cursor + widths[i] / 2));
         cursor += widths[i] + s.gap;
       }
       return { cardH, widths, centers, gap: s.gap, loop: Math.max(cursor, 1) };
@@ -644,13 +665,14 @@ export default function FlexCarousel({
       let at = snapPoint(m, goal);
       let index = nearest(m, at);
       const n = m.centers.length;
+      const flow = settingsRef.current?.rtl ? -1 : 1;
       for (let k = 0; k < Math.abs(delta); k++) {
         const next = (index + (delta > 0 ? 1 : n - 1)) % n;
         const distance =
           delta > 0
             ? m.widths[index] / 2 + m.gap + m.widths[next] / 2
             : -(m.widths[next] / 2 + m.gap + m.widths[index] / 2);
-        at += distance;
+        at += flow * distance;
         index = next;
       }
       goal = at;
@@ -1151,11 +1173,15 @@ export default function FlexCarousel({
       const s = settingsRef.current;
       if (!s) return;
       const m = metrics(s);
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      // The arrow that points the way the row runs is "next": left in a
+      // right-to-left row, right otherwise. Down is always next, up previous.
+      const nextKey = s.rtl ? "ArrowLeft" : "ArrowRight";
+      const prevKey = s.rtl ? "ArrowRight" : "ArrowLeft";
+      if (e.key === nextKey || e.key === "ArrowDown") {
         e.preventDefault();
         skipIntro();
         step(m, 1);
-      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      } else if (e.key === prevKey || e.key === "ArrowUp") {
         e.preventDefault();
         skipIntro();
         step(m, -1);
@@ -1199,6 +1225,12 @@ export default function FlexCarousel({
         start();
       },
       setItems,
+      step: (delta: number) => {
+        const s = settingsRef.current;
+        if (!s || !slots.length) return;
+        skipIntro();
+        step(metrics(s), delta);
+      },
     };
 
     resize();
