@@ -113,8 +113,15 @@ export default function AboutPageContent() {
               <p className={`mt-3 ${BODY}`}>
                 אחרי שנים של עבודה בעולם הטכנולוגי, חזרתי למה שתמיד משך אותי:{" "}
                 <mark className="text-marker bg-transparent text-inherit">לעצב ולבנות דברים מאפס.</mark> זה לא
-                הפסיק לזעוק, ולא יכולתי להתעלם מזה יותר. ככה נולד {SITE_NAME}. ולגבי השם: YE זה הקיצור של שם
-                המשפחה שלי. YEYE פשוט נשמע טוב יותר.
+                הפסיק לזעוק, ולא יכולתי להתעלם מזה יותר. ככה נולד {SITE_NAME}.
+              </p>
+              {/* The name, part of the same block but on lines of its own: both
+                  lines are a punchline, so both are bold, the second a step
+                  larger. */}
+              <p className={`mt-4 ${BODY}`}>ולגבי השם:</p>
+              <p className="mt-1 font-display leading-[1.35] font-bold text-black">
+                <span className="block text-[20px] md:text-[22px]">YE זה הקיצור של שם המשפחה שלי.</span>
+                <span className="block text-[24px] md:text-[28px]">YEYE פשוט נשמע טוב יותר.</span>
               </p>
             </section>
           </div>
