@@ -73,8 +73,12 @@ export default function Footer({ light = false }: FooterProps) {
               to the logo rather than as part of it.
               The indent is the letter-spacing coming back: 0.42em is added
               after every letter including the last, so the word sits that much
-              left of centre until the same amount is put back in front of it. */}
+              left of centre until the same amount is put back in front of it.
+              dir="ltr" is what makes that true: in the page's right-to-left
+              flow the indent went on the RIGHT, the same side as the trailing
+              spacing, and the two added up instead of cancelling. */}
           <span
+            dir="ltr"
             className={cn(
               "indent-[0.42em] font-display text-[11px] font-medium tracking-[0.42em] uppercase",
               light ? "text-black/40" : "text-white/35"
