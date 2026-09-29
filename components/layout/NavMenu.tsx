@@ -8,6 +8,8 @@ import { useDocked } from "@/lib/motion/heroDock";
 import { useIsMobile } from "@/lib/use-mobile";
 import { useChromePaintedByHero } from "@/lib/motion/chromeBackdrop";
 import { ALL_TARGETS, CTA, TARGETS, destinationOf, type HashTarget } from "@/lib/nav/hash-targets";
+import { usePrefersReducedMotion } from "@/lib/reduced-motion";
+import StaggeredMenu from "@/components/ui/StaggeredMenu";
 
 /**
  * THE HARD PART OF THIS MENU IS NOT THE MENU — it is where each link lands, and
@@ -22,13 +24,13 @@ export default function NavMenu() {
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
   const hoveringRef = useRef(false);
   const closeTimerRef = useRef<number | null>(null);
   const pathname = usePathname();
   const lenis = useLenis();
   const isMobile = useIsMobile();
   const docked = useDocked();
+  const reducedMotion = usePrefersReducedMotion();
 
   // WHICH CORNER THE MENU SITS IN, and it is not a preference — it is whether
   // the wordmark is currently occupying the other one.
@@ -115,7 +117,7 @@ export default function NavMenu() {
   // the corner should not steal focus from what someone is reading.
   useEffect(() => {
     if (!open || hoveringRef.current) return;
-    panelRef.current?.querySelector("button")?.focus();
+    document.querySelector<HTMLButtonElement>("[data-nav-panel] button")?.focus();
   }, [open]);
 
   useEffect(() => {
@@ -159,14 +161,17 @@ export default function NavMenu() {
     closeTimerRef.current = window.setTimeout(() => setOpen(false), HOVER_CLOSE_MS);
   };
 
+  // A JUMP, NOT A JOURNEY. Whoever uses the menu wants what the label says,
+  // not the page's moments on the way there: a 1.6s glide ran every pinned
+  // section it crossed at speed and arrived mid-arrival. The panel sliding
+  // away covers the cut. Through Lenis, never around it, so its own position
+  // agrees with the page's.
   const go = (target: HashTarget) => {
     setOpen(false);
     const to = destinationOf(target);
     if (to === null) return;
-    // Through Lenis, never around it: a native smooth scroll would run its own
-    // easing alongside Lenis's and the two would fight the whole way down.
-    if (lenis) lenis.scrollTo(to, { duration: 1.6 });
-    else window.scrollTo({ top: to, behavior: "smooth" });
+    if (lenis) lenis.scrollTo(to, { immediate: true });
+    else window.scrollTo(0, to);
   };
 
   // EVERY hash link on the page travels the way the menu's own do, not just the
@@ -217,8 +222,11 @@ export default function NavMenu() {
       // No colour transition until the hero is behind the reader: there the
       // button and the hero's copy of it hand over every time a scroll starts
       // and stops, and a 200ms fade between them left the menu half gone.
+      // Open, it stands on the panel's white whatever section is under it, and
+      // it is the real button that shows - the hero's painted copy is under
+      // the panel.
       className={`flex items-center gap-2 ${docked ? "transition-colors duration-200" : ""} ${
-        heroPaints ? "text-transparent" : dark ? "text-white" : "text-black"
+        open ? "text-black" : heroPaints ? "text-transparent" : dark ? "text-white" : "text-black"
       }`}
     >
       <span data-chrome-label className="font-body text-[15px] font-medium tracking-tight">
@@ -287,48 +295,22 @@ export default function NavMenu() {
 
       </div>
 
-      {/* THE PANEL IS A SIBLING OF THE RAIL, not a child of it, and on desktop
-          that is not a preference: the rail is a blend layer, and a white sheet
-          inside it would invert along with it. It is its own surface, so it
-          hangs off the same corner by its own fixed position instead.
-          Always white with black text, on every section — the chrome inverts
-          because it sits directly on the page; a panel that inverted too would
-          flicker section to section. */}
-      {open && (
-        <div
-          id="nav-menu-panel"
-          data-nav-panel
-          ref={panelRef}
-          role="menu"
-          aria-label="ניווט באתר"
-          onPointerEnter={hoverOpen}
-          onPointerLeave={hoverClose}
-          className={`fixed top-[60px] z-50 min-w-[176px] rounded-2xl bg-white py-2 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.45)] md:top-[62px] ${
-            atRight ? "right-6" : "left-6"
-          }`}
-        >
-          {TARGETS.map((target) => (
-            <button
-              key={target.id}
-              type="button"
-              onClick={() => go(target)}
-              className="block w-full px-5 py-2 text-right font-body text-[15px] text-black/70 transition-colors hover:text-black"
-            >
-              {target.label}
-            </button>
-          ))}
-
-          <div className="mt-2 px-3 pb-1">
-            <button
-              type="button"
-              onClick={() => go(CTA)}
-              className="block w-full rounded-full bg-black px-5 py-2.5 text-center font-body text-[15px] font-medium text-white"
-            >
-              {CTA.label}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* THE PANEL IS A SIBLING OF THE RAIL, not a child of it: the rail is a
+          blend layer, and a white sheet inside it would invert along with it.
+          It is its own surface, from the side the button stands on. Always
+          white with black text, on every section - a panel that inverted with
+          the chrome would flicker section to section. */}
+      <StaggeredMenu
+        open={open}
+        position={atRight ? "right" : "left"}
+        reducedMotion={reducedMotion}
+        items={[
+          ...TARGETS.map((target) => ({ label: target.label, onSelect: () => go(target) })),
+          { label: CTA.label, onSelect: () => go(CTA), highlight: true },
+        ]}
+        onPointerEnter={hoverOpen}
+        onPointerLeave={hoverClose}
+      />
     </>
   );
 }

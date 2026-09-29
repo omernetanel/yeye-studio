@@ -238,8 +238,12 @@ export class SteppedPlayhead {
     const target = this.targetFor(at);
 
     // Arriving on the page already inside the section - a reload, a link - is
-    // not a transition anyone asked to watch. The first reading is placed.
-    if (!this.placed) {
+    // not a transition anyone asked to watch. The first reading is placed, and
+    // so is any single reading of a screen or more: that is the page being put
+    // somewhere (the menu jumps), and whoever used the menu asked for what is
+    // there, not for the moments on the way.
+    const jumped = previous !== null && Math.abs(at - previous) >= MAX_GLIDE_READING_SCREENS;
+    if (!this.placed || jumped) {
       this.place(target);
       return;
     }

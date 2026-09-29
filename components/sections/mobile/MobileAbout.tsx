@@ -1,6 +1,7 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { registerLanding } from "@/lib/nav/landings";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import HeadingSwash from "@/components/ui/HeadingSwash";
@@ -373,6 +374,19 @@ export default function MobileAbout() {
     if (prefersReducedMotion) return;
     update();
   });
+
+  // WHERE THE MENU LANDS: the end of the pinned opening, with the greeting
+  // settled and the photograph fully up under it - the one screen that says
+  // who this is. The copy and the claims follow in the ordinary flow.
+  useEffect(
+    () =>
+      registerLanding("about", () => {
+        const stage = introStageRef.current;
+        if (!stage) return null;
+        return stage.getBoundingClientRect().top + window.scrollY + stage.offsetHeight - window.innerHeight;
+      }),
+    [],
+  );
 
   return (
     <section id="about" ref={sectionRef} data-nav-dark="true" className="relative bg-black">

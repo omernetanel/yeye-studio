@@ -1,52 +1,48 @@
 /**
  * WHERE A HASH LINK ON THE HOME PAGE ACTUALLY LANDS — the one table, and the
- * one piece of arithmetic that reads it.
+ * one function that reads it.
  *
  * Half the sections on that page are pinned panels that play out over screens
  * of scroll, and their `id` sits at the TOP of that run: at the very start of
- * the animation, where #services is a shrunken sheet, #about is an empty black
- * panel and #projects is a blurred heading below the bottom edge. A plain hash
- * jump would drop the reader on exactly the frame that means nothing.
+ * the animation, where #about is an empty black panel and #projects is a
+ * blurred heading below the bottom edge. A plain hash jump would drop the
+ * reader on exactly the frame that means nothing.
  *
- * So a target is a section plus how far into its own run to go. The fraction is
- * of the section's pin travel — its height less a viewport — which is zero for
- * an ordinary section, so the same arithmetic covers both kinds.
+ * So a pinned section reports where it is whole (lib/nav/landings.ts), and a
+ * link goes there. Someone who used the menu wants what the label says, on one
+ * complete screen - not a frame from the middle of an arrival. A section that
+ * reports nothing is simply its top.
  *
  * THIS LIVED IN NavMenu, and so did a second copy of "what to do when the page
  * arrives with a hash" — one in the menu and one in the scroll provider, both
  * firing on the same frame and quietly racing. The knowledge moved here; the
- * menu now uses it for clicks and the provider for arrivals, and neither knows
+ * menu uses it for clicks and the provider for arrivals, and neither knows
  * about the other.
  */
 
-import { isMobileViewport } from "@/lib/use-mobile";
 import { isMotionReduced } from "@/lib/reduced-motion";
+import { landingFor } from "@/lib/nav/landings";
 
-// `at` per layout where the phone's section is built differently from the
-// desktop's and the same fraction lands somewhere else in it.
-export type HashTarget = { label: string; id: string; at: number | { desktop: number; mobile: number } };
+/**
+ * `id` is the hash; `section` is the element it belongs to, when the two are
+ * not the same - "איך אני עובד" is a moment inside the services section, not a
+ * section of its own.
+ */
+export type HashTarget = { label: string; id: string; section?: string };
 
 export const TARGETS: HashTarget[] = [
-  { label: "הבית", id: "hero", at: 0 },
-  // The services themselves — the heading and the list, which is what the
-  // label promises. Further in is the process, which is a different section in
-  // all but markup.
-  { label: "מה אני עושה", id: "services", at: 0 },
-  // Past the greeting and the portrait's arrival, on the three claims. The
-  // phone's claims are cards under the portrait, further down its section:
-  // 0.42 there stopped on the paragraphs above them.
-  { label: "מי אני", id: "about", at: { desktop: 0.42, mobile: 0.56 } },
-  // After the heading has settled and the arc is up. 0.75 on desktop because
-  // the section runs on past its pin — the button under the arc — and 0.94 of
-  // the whole of it carried the heading off the top of the screen. The phone's
-  // section is not pinned: its top is where the heading is already settled.
-  { label: "פרויקטים", id: "projects", at: { desktop: 0.75, mobile: 0 } },
+  { label: "הבית", id: "hero" },
+  { label: "מה אני עושה", id: "services" },
+  // The first stage of the process, whole on the open sheet.
+  { label: "איך אני עובד", id: "process", section: "services" },
+  { label: "מי אני", id: "about" },
+  { label: "פרויקטים", id: "projects" },
 ];
 
 // The contact stage is deliberately absent from the menu: it is a section you
 // arrive at by reading, not one you jump into. The way to it is the CTA — and
 // every "contact" link on the page lands there too.
-export const CTA: HashTarget = { label: "בואו נדבר", id: "cta", at: 0 };
+export const CTA: HashTarget = { label: "בואו נדבר", id: "cta" };
 
 export const ALL_TARGETS = [...TARGETS, CTA];
 
@@ -77,23 +73,14 @@ export function destinationForHash(hash: string): number | null {
  * Where that target sits on the page right now, or null if its section is not
  * on this one. Reads the DOM, so it is only ever called from the browser.
  *
- * WHICH LAYOUT IS ON SCREEN IS ASKED OF THE WINDOW, not of a hook. The answer
- * has to be right for the frame this is placing on, and useIsMobile still holds
- * the server's guess until hydration finishes - which put the first placement
- * of /#about on a phone at the desktop fraction and then moved it, so the
- * reader saw a jump instead of an arrival.
+ * With less motion nothing is pinned and every section is simply its content,
+ * so the top is the place and nothing is asked of the sections.
  */
 export function destinationOf(target: HashTarget): number | null {
-  const section = document.getElementById(target.id);
-  if (!section) return null;
-  const top = section.getBoundingClientRect().top + window.scrollY;
-  // With less motion nothing is pinned, and a section's height is its content:
-  // the fraction then lands part way down a long section, past its heading.
-  // The top is the place.
-  if (isMotionReduced()) return Math.round(top);
-  // Zero for a section that is not pinned, so this one line serves both.
-  const run = Math.max(0, section.offsetHeight - window.innerHeight);
-  const at =
-    typeof target.at === "number" ? target.at : isMobileViewport() ? target.at.mobile : target.at.desktop;
-  return Math.round(top + run * at);
+  if (!isMotionReduced()) {
+    const landing = landingFor(target.id);
+    if (landing !== null) return Math.round(landing);
+  }
+  const section = document.getElementById(target.section ?? target.id);
+  return section ? Math.round(section.getBoundingClientRect().top + window.scrollY) : null;
 }

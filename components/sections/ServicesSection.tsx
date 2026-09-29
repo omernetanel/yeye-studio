@@ -1,6 +1,7 @@
 "use client";
 
-import { forwardRef, useLayoutEffect, useRef, type RefObject } from "react";
+import { forwardRef, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
+import { registerLanding } from "@/lib/nav/landings";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { SERVICES_HEADING, SERVICES_LEAD, services } from "@/lib/content";
@@ -910,6 +911,21 @@ export default function ServicesSection() {
   useMotionValueEvent(scrollY, "change", () => {
     if (!skipDesktopMotion) update();
   });
+
+  // WHERE THE MENU'S "איך אני עובד" LANDS: the first stage standing whole on
+  // the open sheet, halfway through its own span - the heading settled above
+  // it, the handover from the empty sheet behind it. The sheet clock runs on
+  // through the hold, so the time converts to progress at the moving rate.
+  useEffect(() => {
+    if (skipDesktopMotion) return;
+    return registerLanding("process", () => {
+      measurePinRange();
+      const seconds = STAGES_START + STAGE_SWAP + (STAGE_SPAN - STAGE_SWAP) / 2;
+      const progress = (seconds * (1 - TOTAL_HOLD_SHARE)) / CLIP_SECONDS;
+      const from = pinStartScrollYRef.current;
+      return from + progress * (clipEndScrollYRef.current - from);
+    });
+  }, [skipDesktopMotion]);
 
   if (skipDesktopMotion) {
     return (

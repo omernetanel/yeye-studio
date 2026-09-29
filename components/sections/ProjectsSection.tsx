@@ -1,6 +1,7 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { registerLanding } from "@/lib/nav/landings";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import ProjectsCarousel from "@/components/ui/ProjectsCarousel";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
@@ -44,6 +45,8 @@ const GALLERY = [0.45, 0.8] as const;
 // cover most of the panel, so leaving them live from the top of the section
 // means a reader can click a project that is not on screen yet.
 const GALLERY_LIVE_FROM = 0.9;
+// Where a menu link lands: just past that, with everything settled.
+const LANDING_PROGRESS = 0.95;
 
 // The stack's line length, as a share of the screen's width, and the most of
 // the screen's height it may take. THE SIZE IS A SCALE, NOT A FONT SIZE: a font
@@ -174,6 +177,22 @@ export default function ProjectsSection() {
     if (prefersReducedMotion) return;
     update();
   });
+
+  // WHERE THE MENU LANDS: the heading settled and the work up and live -
+  // progress past GALLERY_LIVE_FROM, the inverse of the arithmetic in update().
+  useEffect(
+    () =>
+      registerLanding("projects", () => {
+        const stage = stageRef.current;
+        if (!stage) return null;
+        const screen = window.innerHeight;
+        const travel = stage.offsetHeight - screen;
+        const lead = screen * LEAD_VH;
+        const offset = LANDING_PROGRESS * (travel + lead) - lead;
+        return stage.getBoundingClientRect().top + window.scrollY + offset;
+      }),
+    [],
+  );
 
   return (
     <section id="projects" className="relative pb-20 md:pb-24">

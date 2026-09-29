@@ -1,6 +1,7 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { registerLanding } from "@/lib/nav/landings";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import ServiceRow from "@/components/sections/services/ServiceRow";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
@@ -287,6 +288,10 @@ const STORY = {
 
 const TRAVEL_SCREENS = travelScreensFor(STORY);
 
+// The rest state in STORY.anchors where the first stage stands alone: after the
+// start, the ball and the open sheet.
+const FIRST_STAGE_ANCHOR = 3;
+
 /**
  * The services section, rebuilt for the phone around a 9:16 cut of the clip.
  *
@@ -339,11 +344,28 @@ export default function MobileServices() {
     // bar hides on scroll. Measuring the moving one would shift every line the
     // moments are picked by, mid-scroll.
     //
-    // A glide counts as momentum only when it is not the site moving itself:
-    // the menu's travel to a section is a smooth scroll Lenis is running.
+    // A glide counts as momentum only when it is not the site moving itself -
+    // a smooth scroll Lenis is running to a link.
     const momentum = isMomentum() && lenisRef.current?.isScrolling !== "smooth";
     playhead.setScroll(-wrapper.getBoundingClientRect().top / panel.offsetHeight, momentum);
   };
+
+  // WHERE THE MENU'S "איך אני עובד" LANDS: the first stage alone on the open
+  // sheet. Its rest state is reached once the scroll is past the line of the
+  // transition that brings it in, so the landing is the middle of that
+  // transition's room - clear of the line on both sides.
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    return registerLanding("process", () => {
+      const wrapper = wrapperRef.current;
+      const panel = panelRef.current;
+      if (!wrapper || !panel) return null;
+      const into = FIRST_STAGE_ANCHOR - 1;
+      const line = STORY.transitions.slice(0, into).reduce((total, transition) => total + transition.screens, 0);
+      const screens = line + STORY.transitions[into].screens / 2;
+      return wrapper.getBoundingClientRect().top + window.scrollY + screens * panel.offsetHeight;
+    });
+  }, [prefersReducedMotion]);
 
   // Where the playhead asks a throw to stop, in screens from where the panel
   // pins, turned into a place on the page.

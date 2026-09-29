@@ -745,6 +745,154 @@ video {
   user-select: none;
 }
 
+/* StaggeredMenu - React Bits (MIT + Commons Clause), restyled and turned
+   around for RTL; components/ui/StaggeredMenu.tsx drives it with GSAP.
+   NARROWER AND QUIETER than the first time it was here, which was taken out
+   for taking half a laptop to offer five words: a 360px sheet, not 480, and
+   labels at about two-thirds of the size. On a phone it takes the screen - a
+   sheet with a strip of the site beside it reads as one that failed to arrive.
+   The call to action is the last item with the site's highlighter under it
+   (.text-marker), not a button. */
+.sm-root {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+}
+
+.sm-root[data-open] {
+  pointer-events: auto;
+}
+
+/* PHYSICAL right/left here, not logical: `position` is which SIDE OF THE
+   SCREEN the panel comes from, and that is the side the button stands on.
+   Under dir="rtl" an inline-end would put it on the left. */
+.staggered-menu-panel,
+.sm-prelayers {
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  width: clamp(280px, 28vw, 360px);
+}
+
+.sm-root[data-position="left"] .staggered-menu-panel,
+.sm-root[data-position="left"] .sm-prelayers {
+  right: auto;
+  left: 0;
+}
+
+.staggered-menu-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6rem 2.25rem 2.5rem;
+  overflow-y: auto;
+  z-index: 10;
+  opacity: 0;
+  background: #fff;
+  box-shadow: -30px 0 80px -40px rgb(0 0 0 / 35%);
+}
+
+.sm-prelayers {
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+}
+
+.sm-prelayer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.sm-prelayer--light {
+  background: #d9d9d9;
+}
+
+.sm-prelayer--dark {
+  background: #000;
+}
+
+.sm-panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  counter-reset: sm-item;
+}
+
+/* The label rides up from under this edge, so the overflow is the mask that
+   makes it a reveal rather than a slide. */
+.sm-panel-itemWrap {
+  position: relative;
+  overflow: hidden;
+  line-height: 1;
+}
+
+.sm-panel-item {
+  position: relative;
+  display: inline-block;
+  padding-inline-end: 1.8em;
+  border: 0;
+  background: none;
+  color: #000;
+  cursor: pointer;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.6rem, 2.1vw, 2.1rem);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  text-align: start;
+  transition: color 0.25s;
+}
+
+.sm-panel-item:hover,
+.sm-panel-item:focus-visible {
+  color: #8a8a8a;
+}
+
+.sm-panel-itemLabel {
+  display: inline-block;
+  will-change: transform;
+  transform-origin: 50% 100%;
+}
+
+/* The numeral, counted rather than written, and faded in by the timeline
+   through --sm-num-opacity. At the END of the line, which under RTL is its
+   left. */
+.sm-panel-item::after {
+  counter-increment: sm-item;
+  content: counter(sm-item, decimal-leading-zero);
+  position: absolute;
+  top: 0.45em;
+  inset-inline-end: 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: #8a8a8a;
+  pointer-events: none;
+  user-select: none;
+  opacity: var(--sm-num-opacity, 0);
+}
+
+@media (max-width: 640px) {
+  .staggered-menu-panel,
+  .sm-prelayers {
+    width: 100%;
+  }
+
+  .staggered-menu-panel {
+    padding: 6rem 1.75rem 2rem;
+  }
+
+  .sm-panel-item {
+    font-size: 2.1rem;
+  }
+}
+
 /* A highlighter stroke behind a phrase: the lower part of the line, in the
    text's own colour at low strength, so it works on white and on black.
    clone keeps the stroke on every line a phrase wraps onto. */

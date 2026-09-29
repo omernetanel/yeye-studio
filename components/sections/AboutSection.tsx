@@ -1,6 +1,7 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { registerLanding } from "@/lib/nav/landings";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import HeadingSwash from "@/components/ui/HeadingSwash";
@@ -476,6 +477,20 @@ export default function AboutSection() {
     if (prefersReducedMotion) return;
     update();
   });
+
+  // WHERE THE MENU LANDS: the moment the whole screen is up - greeting,
+  // portrait, both paragraphs and all three claims, the last of them lit by the
+  // sweep. Earlier, the claims are still arriving or still dim.
+  useEffect(
+    () =>
+      registerLanding("about", () => {
+        const stage = stageRef.current;
+        if (!stage) return null;
+        const travel = stage.offsetHeight - window.innerHeight;
+        return stage.getBoundingClientRect().top + window.scrollY + travel * BEATS.focus[2][1];
+      }),
+    [],
+  );
 
   return (
     <section id="about" ref={sectionRef} data-nav-dark="true" className="relative bg-black">

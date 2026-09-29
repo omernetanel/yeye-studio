@@ -8,8 +8,8 @@ read in full, and so the requirement travels with the repository.
 
 ## React Bits
 
-Two style blocks in `app/globals.css` and two components are derived from React
-Bits:
+Three style blocks in `app/globals.css` and three components are derived from
+React Bits:
 
 - `.border-glow` and its sweep, from **BorderGlow** — the masked cone of light
   around a card's border. The pointer tracking was dropped and replaced by a CSS
@@ -24,6 +24,10 @@ Bits:
   **PaperCrumple** — ported to TypeScript with Hebrew labels; the printed back,
   reset key, disabled switch and error callback removed, and reduced motion left
   to the page, which shows the plain photograph instead.
+- `components/ui/StaggeredMenu.tsx` and the `.sm-` styles in `app/globals.css`,
+  from **StaggeredMenu** — ported to TypeScript and turned around for RTL; its
+  own toggle, logo, text cycle and social links removed, the panel narrowed,
+  and the call to action drawn as a highlighted item.
 
 Source: https://github.com/DavidHDev/react-bits
 
