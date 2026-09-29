@@ -79,16 +79,17 @@ export default function AboutPageContent() {
     // The same width as the sub-page bar above it, so the page fills the
     // screen the way the bar does.
     <article className="mx-auto max-w-[1400px] px-6 pt-[140px] pb-24 md:px-10 md:pt-[150px]">
-      {/* THE OPENING: the photograph beside the heading, the text under it.
-          Nothing here animates, so it is there on the first frame. */}
-      <header className="grid grid-cols-1 items-center gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)] md:gap-16 lg:gap-24">
+      {/* THE OPENING: the photograph beside the heading, and everything the
+          page has to say about who this is under it. Nothing here animates, so
+          it is there on the first frame. */}
+      <header className="grid grid-cols-1 items-start gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)] md:gap-16 lg:gap-24">
         <div>
           <h1 className="font-display text-[44px] leading-[1.05] font-extrabold tracking-tight text-black md:text-[72px] lg:text-[84px]">
             נעים מאוד,
             <br />
             אני עומר.
           </h1>
-          <p className={`mt-6 max-w-[46ch] md:mt-8 ${BODY} md:text-[22px]`}>
+          <p className={`mt-6 max-w-[52ch] md:mt-8 ${BODY} md:text-[22px]`}>
             מעצב ומפתח אתרים, ומי שעומד מאחורי{" "}
             <Link href="/" className="font-normal text-black underline underline-offset-4 hover:text-black/70">
               {SITE_NAME}
@@ -96,9 +97,33 @@ export default function AboutPageContent() {
             . אני בונה אתרים מגיל 14, והיום מעצב ובונה אותם מאפס לעסקים קטנים וגדולים, מהרעיון ועד האתר
             שעולה לאוויר.
           </p>
+
+          {/* The story, short, under the introduction and beside the photo:
+              laid out below it in a row of its own, the opening was a name and
+              a picture on an empty screen. */}
+          <div className="mt-10 max-w-[52ch] space-y-8 border-t border-black/10 pt-8 md:mt-12">
+            <section>
+              <h2 className={HEADING}>איך זה התחיל</h2>
+              <p className={`mt-3 ${BODY}`}>
+                את האתר הראשון שלי בניתי ב־HTML בגיל 14, ועד גיל 15 למדתי לפתח ולשפר אותו. משם בניתי עוד ועוד:
+                אתרי מעריצים עם עשרות עמודים, ביניהם אתר המעריצים הישראלי של קייטי פרי, ואתר מדריכים שלימד
+                אחרים לעצב ולבנות. במקביל ערכתי וידאו ועיצבתי בפוטושופ. אף אחד לא ביקש ממני,{" "}
+                <mark className="text-marker bg-transparent text-inherit">פשוט לא הצלחתי להפסיק.</mark>
+              </p>
+            </section>
+            <section>
+              <h2 className={HEADING}>למה YEYE</h2>
+              <p className={`mt-3 ${BODY}`}>
+                אחרי שנים של עבודה בעולם הטכנולוגי, חזרתי למה שתמיד משך אותי:{" "}
+                <mark className="text-marker bg-transparent text-inherit">לעצב ולבנות דברים מאפס.</mark> זה לא
+                הפסיק לזעוק, ולא יכולתי להתעלם מזה יותר. ככה נולד {SITE_NAME}.
+              </p>
+            </section>
+          </div>
         </div>
 
-        <figure className="m-0 justify-self-center md:justify-self-end">
+        {/* Held in view beside the text on a desk while it scrolls. */}
+        <figure className="m-0 justify-self-center md:sticky md:top-[140px] md:justify-self-end">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/portrait.webp"
@@ -110,27 +135,6 @@ export default function AboutPageContent() {
           />
         </figure>
       </header>
-
-      {/* THE STORY, SHORT, in two columns side by side rather than one after
-          the other down a narrow measure. */}
-      <Reveal className="mt-24 grid grid-cols-1 gap-14 border-t border-black/10 pt-16 md:mt-32 md:grid-cols-2 md:gap-16 md:pt-20 lg:gap-24">
-        <section>
-          <h2 className={HEADING}>איך זה התחיל</h2>
-          <p className={`mt-5 ${BODY}`}>
-            את האתר הראשון שלי בניתי ב־HTML בגיל 14, ועד גיל 15 למדתי לפתח ולשפר אותו. משם הכל התחבר:
-            אתרי מעריצים עם עשרות עמודים, ביניהם אתר
-            המעריצים הישראלי של קייטי פרי, ואתר מדריכים שלימד אחרים לעצב ולבנות. במקביל ערכתי וידאו ועיצבתי
-            בפוטושופ. אף אחד לא ביקש ממני, פשוט לא הצלחתי להפסיק.
-          </p>
-        </section>
-        <section>
-          <h2 className={HEADING}>למה YEYE</h2>
-          <p className={`mt-5 ${BODY}`}>
-            אחרי שנים של עבודה בעולם הטכנולוגי, חזרתי למה שתמיד משך אותי: לעצב ולבנות דברים מאפס. זה לא
-            הפסיק לזעוק, ולא יכולתי להתעלם מזה יותר. ככה נולד {SITE_NAME}.
-          </p>
-        </section>
-      </Reveal>
 
       {/* THE NAME, set like the homepage's closing line - the one large line
           on the page. */}

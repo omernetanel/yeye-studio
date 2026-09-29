@@ -734,6 +734,15 @@ body {
   scroll-behavior: auto !important;
 }
 
+/* A highlighter stroke behind a phrase: the lower part of the line, in the
+   text's own colour at low strength, so it works on white and on black.
+   clone keeps the stroke on every line a phrase wraps onto. */
+.text-marker {
+  background-image: linear-gradient(transparent 55%, color-mix(in srgb, currentColor 16%, transparent) 55%);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
 /* "WHO I AM" WITH LESS MOTION: the name is in its place before the first
    paint. The column reserves an invisible slot for the floating greeting to
    land on; with no travel the slot is the heading. Done from React it could
