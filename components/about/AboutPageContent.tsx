@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
+import CrumplePortrait from "@/components/about/CrumplePortrait";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { SITE_NAME } from "@/lib/site";
 
@@ -134,16 +135,8 @@ export default function AboutPageContent() {
         </div>
 
         {/* Held in view beside the text on a desk while it scrolls. */}
-        <figure className="m-0 justify-self-center md:sticky md:top-[140px] md:justify-self-end">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/portrait.webp"
-            alt={`עומר, מייסד ${SITE_NAME}`}
-            width={430}
-            height={560}
-            className="block h-auto max-h-[70svh] w-auto max-w-full rounded-2xl"
-            draggable={false}
-          />
+        <figure className="m-0 w-full max-w-[400px] justify-self-center md:sticky md:top-[120px] md:justify-self-end">
+          <CrumplePortrait src="/images/portrait.webp" alt={`עומר, מייסד ${SITE_NAME}`} />
         </figure>
       </header>
 

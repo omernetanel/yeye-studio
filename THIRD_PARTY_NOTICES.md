@@ -8,7 +8,7 @@ read in full, and so the requirement travels with the repository.
 
 ## React Bits
 
-Two style blocks in `app/globals.css` and one component are derived from React
+Two style blocks in `app/globals.css` and two components are derived from React
 Bits:
 
 - `.border-glow` and its sweep, from **BorderGlow** — the masked cone of light
@@ -20,6 +20,10 @@ Bits:
   **FlexCarousel** — ported to TypeScript; sample images, click-to-zoom,
   autoplay and built-in captions removed, and the lens sized from the centred
   card.
+- `components/ui/PaperCrumple.tsx` and `PaperCrumple.css`, from
+  **PaperCrumple** — ported to TypeScript with Hebrew labels; the printed back,
+  reset key, disabled switch and error callback removed, and reduced motion left
+  to the page, which shows the plain photograph instead.
 
 Source: https://github.com/DavidHDev/react-bits
 

@@ -3,6 +3,7 @@ import "./globals.css";
 import { googleSans, assistant } from "@/lib/fonts";
 import { SITE_NAME, SITE_TITLE, SITE_DESCRIPTION, SITE_BACKGROUND, SITE_URL } from "@/lib/site";
 import { SmoothScrollProvider } from "@/lib/motion/lenis";
+import MediaGuard from "@/components/layout/MediaGuard";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import AccessibilityMenu from "@/components/layout/AccessibilityMenu";
 import { A11Y_STORAGE_KEY } from "@/lib/a11y/storage-key";
@@ -116,6 +117,7 @@ export default function RootLayout({
           }}
         />
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
+        <MediaGuard />
         {/* Once, for every page: the footer no longer carries a way to WhatsApp,
             so the sub-pages need this as much as the homepage does. */}
         <WhatsAppButton />

@@ -734,6 +734,17 @@ body {
   scroll-behavior: auto !important;
 }
 
+/* NO SAVING THE PICTURES, by the owner's choice (copyright): no long-press
+   menu on iOS, no dragging an image out of the page. Right-click is closed by
+   MediaGuard. Text stays selectable - an address or a line someone wants to
+   copy is not what this protects. It stops the casual save, not a screenshot. */
+img,
+video {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
 /* A highlighter stroke behind a phrase: the lower part of the line, in the
    text's own colour at low strength, so it works on white and on black.
    clone keeps the stroke on every line a phrase wraps onto. */
