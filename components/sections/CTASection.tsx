@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Textarea from "@/components/ui/Textarea";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
 const particles = [...Array(16)].map((_, i) => ({
@@ -19,7 +20,7 @@ const particles = [...Array(16)].map((_, i) => ({
 export default function CTASection() {
   const prefersReducedMotion = usePrefersReducedMotion();
   // `website` is the honeypot — see the field itself in the form below.
-  const [form, setForm] = useState({ from_name: "", phone: "", reply_to: "", website: "" });
+  const [form, setForm] = useState({ from_name: "", phone: "", reply_to: "", message: "", website: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   // idle → shining → done. The glint borrows the line's colour for the length
   // of the sweep and hands it straight back: the gradient is how this line is
@@ -40,11 +41,10 @@ export default function CTASection() {
         body: JSON.stringify({
           from_name: form.from_name,
           reply_to: form.reply_to,
+          phone: form.phone,
+          message: form.message,
           website: form.website,
-          project_type: "לא צוין",
-          business_description: form.phone
-            ? `פנייה מסוף העמוד הראשי. טלפון ליצירת קשר: ${form.phone}`
-            : "פנייה מסוף העמוד הראשי",
+          source: "cta",
         }),
       });
       if (!response.ok) throw new Error("contact request failed");
@@ -195,7 +195,7 @@ export default function CTASection() {
                   label="טלפון"
                   id="cta-phone"
                   type="tel"
-                  placeholder="טלפון"
+                  placeholder="טלפון / וואטסאפ (לא חובה)"
                   autoComplete="tel"
                   inputMode="tel"
                   className="text-right"
@@ -209,9 +209,29 @@ export default function CTASection() {
                   placeholder="דוא״ל"
                   autoComplete="email"
                   inputMode="email"
+                  // A row of its own on the desk: with the message under it
+                  // at full width, sharing a row left half of it empty.
+                  className="sm:col-span-2"
                   value={form.reply_to}
                   onChange={(e) => setForm({ ...form, reply_to: e.target.value })}
                   required
+                />
+                {/* Only in this form, and never required. Whoever reaches the
+                    end of the page is the reader most likely to have something
+                    to say, and a line about it saves the first call a round of
+                    questions; the quick form over the footage stays three
+                    fields. "What's on your mind" and not "the project": the
+                    site's own line is that nobody has to know exactly what
+                    they want to start. */}
+                <Textarea
+                  label="ספרו לי מה יש לכם בראש"
+                  id="cta-message"
+                  placeholder="ספרו לי מה יש לכם בראש (לא חובה)"
+                  rows={3}
+                  maxLength={2000}
+                  className="text-right sm:col-span-2"
+                  value={form.message}
+                  onChange={(e) => setForm({ ...form, message: e.target.value })}
                 />
 
                 {/* The trap — see the same field in ContactStage. */}
@@ -229,7 +249,7 @@ export default function CTASection() {
                   type="submit"
                   disabled={status === "sending"}
                   showArrow={false}
-                  className="!border-black !bg-none !bg-black !text-white !shadow-none mt-4 w-auto justify-center justify-self-center !px-12 sm:mt-0 sm:w-full sm:justify-self-stretch sm:!px-8"
+                  className="!border-black !bg-none !bg-black !text-white !shadow-none mt-4 w-auto justify-center justify-self-center !px-12 sm:col-span-2 sm:mt-0 sm:w-full sm:justify-self-stretch sm:!px-8"
                 >
                   {status === "sending" ? "שולח..." : "בואו נתחיל ביחד"}
                 </Button>

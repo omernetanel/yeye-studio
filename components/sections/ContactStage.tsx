@@ -166,11 +166,9 @@ function ContactForm() {
         body: JSON.stringify({
           from_name: form.from_name,
           reply_to: form.reply_to,
+          phone: form.phone,
           website: form.website,
-          project_type: "לא צוין",
-          business_description: form.phone
-            ? `פנייה מהירה מהעמוד הראשי. טלפון ליצירת קשר: ${form.phone}`
-            : "פנייה מהירה מהעמוד הראשי",
+          source: "contact",
         }),
       });
       if (!response.ok) throw new Error("contact request failed");
@@ -215,7 +213,7 @@ function ContactForm() {
             label="טלפון"
             id="contact-stage-phone"
             type="tel"
-            placeholder="טלפון"
+            placeholder="טלפון / וואטסאפ (לא חובה)"
             autoComplete="tel"
             inputMode="tel"
             className={`${DARK_INPUT} text-right`}

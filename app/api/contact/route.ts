@@ -21,10 +21,17 @@ const MAX_BODY_BYTES = 8 * 1024;
 // address; the rest are generous versions of what the form can send.
 const LIMITS = {
   from_name: 120,
-  project_type: 80,
-  business_description: 2000,
-  timeline: 200,
+  phone: 40,
+  message: 2000,
   reply_to: 254,
+} as const;
+
+// Which form on the site a message came from, as the forms name it and as the
+// inbox reads it. A fixed list rather than free text: the label is printed in
+// the message, and nothing a stranger types should be able to set it.
+const SOURCES = {
+  contact: "הטופס שעל הסרטון, באמצע העמוד",
+  cta: "הטופס בסוף העמוד",
 } as const;
 
 // Deliberately loose: the point is to reject what is obviously not an address,
@@ -77,10 +84,10 @@ function oneLine(value: string) {
 
 interface ContactPayload {
   from_name: string;
-  project_type: string;
-  business_description: string;
-  timeline: string;
   reply_to: string;
+  phone: string;
+  message: string;
+  source: (typeof SOURCES)[keyof typeof SOURCES];
 }
 
 function readPayload(body: unknown): ContactPayload | null {
@@ -98,21 +105,28 @@ function readPayload(body: unknown): ContactPayload | null {
     return clean;
   };
 
+  // Name and address are required; the form cannot be answered without them.
   const from_name = text(b.from_name, LIMITS.from_name);
-  const project_type = text(b.project_type, LIMITS.project_type);
   const reply_to = text(b.reply_to, LIMITS.reply_to);
-  if (!from_name || !project_type || !reply_to || !EMAIL.test(reply_to)) return null;
+  if (!from_name || !reply_to || !EMAIL.test(reply_to)) return null;
 
-  // The body of the message, where line breaks are content rather than a
-  // header risk — so it keeps them, and is only capped.
-  if (typeof b.business_description !== "string") return null;
-  const business_description = b.business_description.trim();
-  if (business_description.length === 0 || business_description.length > LIMITS.business_description) return null;
+  if (typeof b.source !== "string" || !Object.hasOwn(SOURCES, b.source)) return null;
+  const source = SOURCES[b.source as keyof typeof SOURCES];
 
-  const timeline = b.timeline === undefined ? "" : text(b.timeline, LIMITS.timeline);
-  if (timeline === null) return null;
+  // Optional: absent or empty is fine, anything else must be a string that
+  // fits. The phone is one line like the name; the message keeps its line
+  // breaks, which are content in a body rather than a header risk.
+  const optional = (value: unknown, max: number, singleLine: boolean) => {
+    if (value === undefined || value === "") return "";
+    if (typeof value !== "string") return null;
+    const clean = singleLine ? oneLine(value) : value.trim();
+    return clean.length > max ? null : clean;
+  };
+  const phone = optional(b.phone, LIMITS.phone, true);
+  const message = optional(b.message, LIMITS.message, false);
+  if (phone === null || message === null) return null;
 
-  return { from_name, project_type, business_description, timeline, reply_to };
+  return { from_name, reply_to, phone, message, source };
 }
 
 export async function POST(request: Request) {
@@ -152,13 +166,14 @@ export async function POST(request: Request) {
   // Plain text, not HTML: everything in it came from a stranger, and text has
   // nothing in it a mail client could render or run. Hebrew labels, because it
   // is read in Hebrew.
+  // The phone on a line of its own, second, because it is how these are
+  // answered; "לא נמסר" rather than a missing line, so its absence is read.
   const lines = [
     `שם: ${payload.from_name}`,
+    `טלפון: ${payload.phone || "לא נמסר"}`,
     `דוא״ל: ${payload.reply_to}`,
-    `סוג הפרויקט: ${payload.project_type}`,
-    ...(payload.timeline ? [`לוח זמנים: ${payload.timeline}`] : []),
-    "",
-    payload.business_description,
+    `הגיעה מ: ${payload.source}`,
+    ...(payload.message ? ["", "מה יש להם בראש:", payload.message] : []),
   ];
 
   const response = await fetch(RESEND_ENDPOINT, {

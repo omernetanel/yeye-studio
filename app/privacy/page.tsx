@@ -13,8 +13,9 @@ export const metadata: Metadata = {
  * WRITTEN FROM THE CODE, claim by claim.
  *
  * Everything here was checked against what the site actually does: the two
- * forms and the fields they send, the message the browser builds around the
- * phone number, the honeypot, the IP read for rate limiting, the one route
+ * forms and the fields they send (name, email, optional phone, and an optional
+ * free-text box in the closing form only), the fixed label naming which form
+ * it came from, the honeypot, the IP read for rate limiting, the one route
  * that sends the enquiry, the services that carry it (Resend sends it,
  * ImprovMX forwards the domain's mail to a Gmail inbox, Vercel hosts), and the
  * two keys in the browser's own storage (accessibility choices in
@@ -57,9 +58,9 @@ export default function PrivacyPage() {
 
       <h2>איזה מידע נאסף</h2>
       <p>
-        באתר שני טפסי יצירת קשר, ושניהם אוספים את אותם הפרטים: שם מלא וכתובת דוא״ל כשדות חובה,
-        ומספר טלפון שמסירתו אינה חובה. יחד עם הפרטים נשלחת שורת זיהוי קצרה שמציינת מאיזה טופס באתר
-        הגיעה הפנייה, וכן הטלפון אם מילאתם אותו.
+        באתר שני טפסי יצירת קשר. שניהם אוספים שם מלא וכתובת דוא״ל כשדות חובה, ומספר טלפון שמסירתו
+        אינה חובה. בטופס שבסוף העמוד יש גם תיבה חופשית, שמילויה אינו חובה, שבה אפשר לספר על מה
+        שאתם צריכים. יחד עם הפרטים נשלח ציון של הטופס שממנו הגיעה הפנייה.
       </p>
       <p>
         בטופס קיים גם שדה נסתר שנועד לזהות שליחה אוטומטית של תוכנות ספאם. הוא אינו מיועד למילוי,
@@ -102,7 +103,8 @@ export default function PrivacyPage() {
       <h2>מסירת הפרטים היא מרצון</h2>
       <p>
         אין חובה חוקית למסור את הפרטים, ואתם בוחרים אם למלא את הטופס. ללא שם וכתובת דוא״ל לא אוכל
-        לחזור אליכם. מסירת הטלפון אינה נדרשת, והיא רק מאפשרת ליצור קשר טלפוני אם תעדיפו זאת.
+        לחזור אליכם. מסירת הטלפון אינה נדרשת, והיא רק מאפשרת ליצור קשר טלפוני אם תעדיפו זאת. גם
+        התיבה החופשית אינה נדרשת.
       </p>
 
       <h2>אחסון בדפדפן</h2>
