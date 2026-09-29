@@ -149,10 +149,21 @@ export default function ProjectsSection() {
     if (prefersReducedMotion) {
       // Nothing to arrive from: everything is simply here, and the pin's extra
       // scroll would be 90vh of empty page.
+      // The heading's letters are folded away until setFold opens them, and
+      // the scroll that would call it does not run here.
       const heading = headingRef.current;
       const gallery = galleryRef.current;
-      if (heading) heading.style.opacity = "1";
-      if (gallery) gallery.style.opacity = "1";
+      // And the stack is taken down: the first render runs before the
+      // preference is known, so update() may already have stood the words up.
+      if (heading) {
+        heading.style.opacity = "1";
+        setFold(heading, 1);
+        for (const word of Array.from(heading.children) as HTMLElement[]) word.style.transform = "";
+      }
+      if (gallery) {
+        gallery.style.opacity = "1";
+        gallery.style.pointerEvents = "auto";
+      }
       return;
     }
     update();

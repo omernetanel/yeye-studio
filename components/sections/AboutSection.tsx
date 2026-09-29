@@ -436,12 +436,18 @@ export default function AboutSection() {
         settle(el);
       }
       // The reserved slots are invisible copies that hold space for the
-      // travelling pair; with the pair gone they are what is seen.
+      // travelling pair; with the pair gone they are what is seen. The name's
+      // slot gets its size here too - measure() is what sets it, and measure()
+      // is part of the animation this mode does not run. Without both, the
+      // heading was an invisible gap above the paragraphs.
       portraitSlotRef.current?.classList.remove("invisible");
-      for (const line of greetLinesRef.current) {
-        const holder = line?.closest(".invisible");
-        holder?.classList.remove("invisible");
-        settle(line);
+      const slot = slotRef.current;
+      const width = sectionRef.current?.clientWidth ?? window.innerWidth;
+      if (slot) {
+        slot.classList.remove("invisible");
+        slot.style.fontSize = `${Math.round(
+          Math.max(GREET_SIZE_IN_COLUMN.min, Math.min(GREET_SIZE_IN_COLUMN.max, width * GREET_SIZE_IN_COLUMN.ofWidth)),
+        )}px`;
       }
       for (const fact of factsRef.current) settle(fact);
       // The rule under the closing line draws itself; with no drawing it is

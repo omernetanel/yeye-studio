@@ -87,6 +87,10 @@ export default function RootLayout({
       // is built from. Inline rather than declared in @theme so there is exactly
       // one value: see SITE_BACKGROUND.
       style={{ "--color-background": SITE_BACKGROUND } as React.CSSProperties}
+      // The reader's switches (below) are written onto this element before
+      // React hydrates it, on purpose; without this, React reports the
+      // attributes it did not render as a mismatch.
+      suppressHydrationWarning
     >
       {/* No bg/text utilities here on purpose: they would win over the html,body
           rule in globals.css, which is the one place the document's own surface

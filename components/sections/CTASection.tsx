@@ -127,8 +127,10 @@ export default function CTASection() {
           without. */}
       <div className="relative z-10 mx-auto w-full max-w-[1400px]">
         <div className="mx-auto w-full max-w-[620px] md:ms-0 md:me-auto">
+          {/* initial={false} with reduced motion: the page's last ask is simply
+              there, rather than hidden until it scrolls into view. */}
           <motion.h2
-            initial={{ opacity: 0, y: 32 }}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 32 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -157,7 +159,7 @@ export default function CTASection() {
           </motion.h2>
 
           <motion.p
-            initial={{ opacity: 0, y: 16 }}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -172,7 +174,7 @@ export default function CTASection() {
               fields are three, they fit here, and the page they would have gone
               to has the same three. */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.6, delay: 0.3 }}

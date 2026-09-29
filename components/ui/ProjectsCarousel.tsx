@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -62,6 +63,40 @@ export default function ProjectsCarousel({
     if (entry.external) window.open(entry.href, "_blank", "noopener,noreferrer");
     else router.push(entry.href);
   };
+
+  // WITH LESS MOTION, NO CAROUSEL AT ALL: every piece at once, still, whole.
+  // The row exists to move - bend, drift, swap - and a reader who asked for
+  // less of that should not have to step through the work one card at a time
+  // to see it. Two columns on the desk, one on a phone; each card a plain link.
+  if (prefersReducedMotion) {
+    return (
+      <ul className="mx-auto grid w-full max-w-[1100px] grid-cols-1 gap-8 px-6 md:grid-cols-2 md:gap-10">
+        {entries.map((entry) => (
+          <li key={entry.href}>
+            <Link
+              href={entry.href}
+              target={entry.external ? "_blank" : undefined}
+              rel={entry.external ? "noopener noreferrer" : undefined}
+              className="group block text-right"
+            >
+              <Image
+                src={entry.src}
+                alt={entry.alt}
+                width={1672}
+                height={941}
+                sizes="(min-width: 768px) 540px, 100vw"
+                className="block aspect-[1672/941] w-full rounded-2xl object-cover"
+              />
+              <span className="mt-4 block font-display text-m-sub font-bold text-black underline-offset-4 group-hover:underline md:text-[22px]">
+                {entry.title}
+              </span>
+              <span className="mt-1 block font-body text-m-small text-black/55 md:text-[15px]">{entry.category}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    );
+  }
 
   return (
     <div className="flex w-full flex-col items-center">

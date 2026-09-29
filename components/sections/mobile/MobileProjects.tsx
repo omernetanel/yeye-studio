@@ -110,7 +110,15 @@ export default function MobileProjects() {
 
   useLayoutEffect(() => {
     if (prefersReducedMotion) {
-      if (headingRef.current) headingRef.current.style.opacity = "1";
+      // The letters are folded away until setFold opens them; no scroll does
+      // it in this mode.
+      // And the stack is taken down: the first render runs before the
+      // preference is known, so update() may already have stood the words up.
+      if (headingRef.current) {
+        headingRef.current.style.opacity = "1";
+        setFold(headingRef.current, 1);
+        for (const word of Array.from(headingRef.current.children) as HTMLElement[]) word.style.transform = "";
+      }
       if (carouselRef.current) {
         carouselRef.current.style.opacity = "1";
         carouselRef.current.style.transform = "none";
