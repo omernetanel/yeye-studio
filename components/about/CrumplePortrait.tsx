@@ -81,7 +81,7 @@ export default function CrumplePortrait({ src, alt }: { src: string; alt: string
           tried ? "opacity-0" : "opacity-100"
         }`}
       >
-        נסו ללחוץ ולהחזיק
+        תנסו ללחוץ ולהחזיק אותי
       </p>
     </>
   );
