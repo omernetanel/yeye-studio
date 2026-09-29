@@ -3,28 +3,25 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
 import Button from "@/components/ui/Button";
 import HeadingSwash from "@/components/ui/HeadingSwash";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { SITE_NAME } from "@/lib/site";
 
 /**
- * The about page: a profile, not an advert.
+ * The about page. Plain on purpose: the photograph beside a heading and the
+ * text under it, laid across the whole width of the screen.
  *
- * THE FIRST SCREEN CARRIES THE ANSWER. Two earlier versions opened on a name
- * and a photograph and left the rest below the fold - a screen that looked
- * empty. Here the opening already says who, what, since when and for whom: the
- * name, a two-sentence introduction and four plain facts. Nothing in it
- * animates, so it is there on the first frame.
- *
- * THE PHOTOGRAPH BELONGS TO THE STORY, so it sits beside it - held in view on
- * a desk while the story scrolls past, and between the opening and the story on
- * a phone.
- *
- * LESS SELLING. No list of services and no "see it in action" block: the page
- * ends on one quiet line and one button, with the work and the services as
- * plain links under it.
+ * WHAT IT IS NOT, because each was built and turned down:
+ * - One long narrow column of headings and paragraphs. However good the
+ *   words, a single measure down the middle of a wide screen reads as a long
+ *   feature about someone, and this is a one-person studio, not a profile of
+ *   a celebrity. The page is laid out in rows that use the width instead,
+ *   and the story is short.
+ * - Pull quotes. A sentence of the story set large turned an anecdote into a
+ *   headline. The one large line is the name's explanation, which was asked
+ *   for.
+ * - A black chapter-per-screen page, a row of facts, a grid of cards.
  *
  * Every claim is the owner's own, or already stated elsewhere on the site: the
  * month of support, teaching clients to edit their content and the one business
@@ -33,13 +30,6 @@ import { SITE_NAME } from "@/lib/site";
  */
 
 const EASE = [0.25, 0.46, 0.45, 0.94] as const;
-
-const FACTS = [
-  { label: "סטודיו", value: SITE_NAME },
-  { label: "תחום", value: "עיצוב ופיתוח אתרים" },
-  { label: "התחלתי", value: "בגיל 15, באתרי מעריצים" },
-  { label: "עובד עם", value: "עסקים קטנים וגדולים" },
-];
 
 const QUESTIONS = [
   {
@@ -65,21 +55,8 @@ const QUESTIONS = [
   },
 ];
 
-// Plain links at the foot of the page, for whoever wants more: the work first,
-// then each service by name.
-const MORE_LINKS = [
-  { label: "העבודות", href: "/#projects" },
-  { label: "אתרי תדמית", href: "/services/business-sites" },
-  { label: "דפי נחיתה", href: "/services/landing-pages" },
-  { label: "חנויות אונליין", href: "/services/online-stores" },
-  { label: "מיתוג", href: "/services/branding" },
-  { label: "מערכות ודשבורדים", href: "/services/dashboards" },
-];
-
-const HEADING = "font-display text-[26px] leading-[1.2] font-extrabold tracking-tight text-black md:text-[34px]";
-const BODY = "font-display text-[18px] leading-[1.75] font-light text-black/75 md:text-[20px]";
-// The homepage's closing-line size, for the two sentences worth remembering.
-const STATEMENT = "font-display text-m-lead font-bold text-black md:text-[44px] md:leading-[1.15]";
+const HEADING = "font-display text-[26px] leading-[1.2] font-extrabold tracking-tight text-black md:text-[32px]";
+const BODY = "font-display text-[18px] leading-[1.75] font-light text-black/75 md:text-[19px]";
 
 /** A block that rises into place once, as it comes up. */
 function Reveal({ children, className }: { children: ReactNode; className?: string }) {
@@ -99,136 +76,92 @@ function Reveal({ children, className }: { children: ReactNode; className?: stri
 
 export default function AboutPageContent() {
   return (
-    <article className="mx-auto max-w-[1160px] px-6 pt-[140px] pb-24 md:pt-[160px]">
-      {/* THE OPENING: who, what, since when, for whom - all on the first
-          screen, and none of it animated. */}
-      <header>
-        <p className="font-display text-[15px] font-bold text-black/45 md:text-[16px]">מי אני</p>
-        <h1 className="mt-3 font-display text-[44px] leading-[1.05] font-extrabold tracking-tight text-black md:text-[80px]">
-          נעים מאוד, אני עומר.
-        </h1>
-        <p className="mt-6 max-w-[40ch] font-display text-[20px] leading-[1.6] font-light text-black/75 md:text-[26px]">
-          מעצב ומפתח אתרים, ומי שעומד מאחורי{" "}
-          <Link href="/" className="font-normal text-black underline underline-offset-4 hover:text-black/70">
-            {SITE_NAME}
-          </Link>
-          . אני בונה אתרים מגיל 15, והיום מעצב ובונה אותם מאפס, מהרעיון ועד האתר שעולה לאוויר.
-        </p>
+    // The same width as the sub-page bar above it, so the page fills the
+    // screen the way the bar does.
+    <article className="mx-auto max-w-[1400px] px-6 pt-[140px] pb-24 md:px-10 md:pt-[150px]">
+      {/* THE OPENING: the photograph beside the heading, the text under it.
+          Nothing here animates, so it is there on the first frame. */}
+      <header className="grid grid-cols-1 items-center gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)] md:gap-16 lg:gap-24">
+        <div>
+          <h1 className="font-display text-[44px] leading-[1.05] font-extrabold tracking-tight text-black md:text-[72px] lg:text-[84px]">
+            נעים מאוד,
+            <br />
+            אני עומר.
+          </h1>
+          <p className={`mt-6 max-w-[46ch] md:mt-8 ${BODY} md:text-[22px]`}>
+            מעצב ומפתח אתרים, ומי שעומד מאחורי{" "}
+            <Link href="/" className="font-normal text-black underline underline-offset-4 hover:text-black/70">
+              {SITE_NAME}
+            </Link>
+            . אני בונה אתרים מגיל 15, והיום מעצב ובונה אותם מאפס לעסקים קטנים וגדולים, מהרעיון ועד האתר
+            שעולה לאוויר.
+          </p>
+        </div>
 
-        <dl className="mt-12 grid grid-cols-2 gap-x-6 gap-y-8 border-t border-black/10 pt-8 md:mt-16 md:grid-cols-4">
-          {FACTS.map((fact) => (
-            <div key={fact.label}>
-              <dt className="font-display text-[14px] text-black/45">{fact.label}</dt>
-              <dd className="mt-1 font-display text-[17px] font-bold text-black md:text-[19px]">{fact.value}</dd>
-            </div>
-          ))}
-        </dl>
-      </header>
-
-      {/* THE STORY, with the photograph beside it. On a desk the picture is
-          held in view (sticky) while the story scrolls; on a phone it comes
-          first, between the opening and the story. */}
-      <div className="mt-20 grid grid-cols-1 gap-12 md:mt-28 md:grid-cols-[minmax(0,1fr)_minmax(0,340px)] md:gap-20">
-        <figure className="m-0 md:sticky md:top-[140px] md:order-last md:self-start">
+        <figure className="m-0 justify-self-center md:justify-self-end">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/portrait.webp"
             alt={`עומר, מייסד ${SITE_NAME}`}
             width={430}
             height={560}
-            className="mx-auto block h-auto w-full max-w-[340px] rounded-2xl"
+            className="block h-auto max-h-[70svh] w-auto max-w-full rounded-2xl"
             draggable={false}
           />
-          <figcaption className="mt-3 text-center font-body text-m-small text-black/45 md:text-start">
-            עומר, {SITE_NAME}
-          </figcaption>
         </figure>
+      </header>
 
-        <div className="space-y-20 md:space-y-24">
-          <Reveal>
-            <section>
-              <h2 className={HEADING}>איך זה התחיל</h2>
-              <p className={`mt-5 ${BODY}`}>
-                בגיל 15 בניתי את האתר הראשון שלי, ומשם זה רק גדל: אתרי מעריצים עם עשרות עמודים ומערכת חדשות
-                שעדכנה אותם, ואתר מדריכים שלימד אחרים לעצב, לבנות ולהבין קוד.
-              </p>
-              <p className={`mt-8 ${STATEMENT}`}>
-                <span className="block text-balance">אחד מהם היה אתר המעריצים הישראלי של קייטי פרי.</span>
-                <span className="block text-balance text-black/40">בגוגל, מיד אחרי האתר הרשמי שלה.</span>
-              </p>
-              <p className={`mt-8 ${BODY}`}>
-                במקביל הקמתי פורומים לקהילות מעריצים, ערכתי וידאו ועיצבתי בפוטושופ. אף אחד לא ביקש ממני. פשוט
-                לא הצלחתי להפסיק.
-              </p>
-            </section>
-          </Reveal>
+      {/* THE STORY, SHORT, in two columns side by side rather than one after
+          the other down a narrow measure. */}
+      <Reveal className="mt-24 grid grid-cols-1 gap-14 border-t border-black/10 pt-16 md:mt-32 md:grid-cols-2 md:gap-16 md:pt-20 lg:gap-24">
+        <section>
+          <h2 className={HEADING}>איך זה התחיל</h2>
+          <p className={`mt-5 ${BODY}`}>
+            בגיל 15 בניתי את האתר הראשון שלי, ומשם זה רק גדל: אתרי מעריצים עם עשרות עמודים, ביניהם אתר
+            המעריצים הישראלי של קייטי פרי, ואתר מדריכים שלימד אחרים לעצב ולבנות. במקביל ערכתי וידאו ועיצבתי
+            בפוטושופ. אף אחד לא ביקש ממני, פשוט לא הצלחתי להפסיק.
+          </p>
+        </section>
+        <section>
+          <h2 className={HEADING}>למה YEYE</h2>
+          <p className={`mt-5 ${BODY}`}>
+            אחרי שנים של עבודה בעולם הטכנולוגי, חזרתי למה שתמיד משך אותי: לעצב ולבנות דברים מאפס. זה לא
+            הפסיק לזעוק, ולא יכולתי להתעלם מזה יותר. ככה נולד {SITE_NAME}.
+          </p>
+        </section>
+      </Reveal>
 
-          <Reveal>
-            <section>
-              <h2 className={HEADING}>למה YEYE</h2>
-              <p className={`mt-5 ${BODY}`}>
-                אחרי שנים של עבודה בעולם הטכנולוגי, חזרתי למה שתמיד משך אותי: לעצב ולבנות דברים מאפס. זה לא
-                הפסיק לזעוק, ולא יכולתי להתעלם מזה יותר. ככה נולד {SITE_NAME}.
-              </p>
-              <p className={`mt-8 ${BODY}`}>ולגבי השם:</p>
-              <p className={`mt-2 ${STATEMENT}`}>
-                <span className="block text-balance">YE זה הקיצור של שם המשפחה שלי.</span>
-                <span className="block text-balance">YEYE פשוט נשמע טוב יותר.</span>
-              </p>
-              <HeadingSwash className="mt-6 w-[220px] text-black md:w-[300px]" />
-            </section>
-          </Reveal>
+      {/* THE NAME, set like the homepage's closing line - the one large line
+          on the page. */}
+      <Reveal className="mt-24 md:mt-32">
+        <p className={BODY}>ולגבי השם:</p>
+        <p className="mt-2 font-display text-m-lead font-bold text-black md:text-[56px] md:leading-[1.12]">
+          <span className="block text-balance">YE זה הקיצור של שם המשפחה שלי.</span>
+          <span className="block text-balance">YEYE פשוט נשמע טוב יותר.</span>
+        </p>
+        <HeadingSwash className="mt-6 w-[220px] text-black md:w-[320px]" />
+      </Reveal>
 
-          <Reveal>
-            <section>
-              <h2 className={HEADING}>שאלות שכדאי לשאול</h2>
-              <div className="mt-8 space-y-8">
-                {QUESTIONS.map((item) => (
-                  <div key={item.question} className="border-t border-black/10 pt-6">
-                    <h3 className="font-display text-[18px] font-bold text-black md:text-[20px]">{item.question}</h3>
-                    <p className="mt-2 max-w-[60ch] font-body text-m-body text-black/70 md:text-[17px]">{item.answer}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </Reveal>
-
-          {/* THE CLOSE: one quiet line, the page's one button, and plain links
-              for whoever wants more. */}
-          <Reveal>
-            <section className="border-t border-black/10 pt-12">
-              <p className={HEADING}>רוצים לדבר?</p>
-              <p className={`mt-3 ${BODY}`}>יש לכם רעיון, או רק התחלה של רעיון? אשמח לשמוע.</p>
-              <div className="mt-8">
-                <Button href="/#cta" className="!border-black !bg-none !bg-black !shadow-none">
-                  קבעו פגישה
-                </Button>
-              </div>
-              <nav aria-label="עוד באתר" className="mt-12">
-                <p className="font-display text-[14px] text-black/45">עוד באתר</p>
-                <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-3">
-                  {MORE_LINKS.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        className="group inline-flex items-center gap-1.5 font-display text-[16px] text-black/70 transition-colors hover:text-black"
-                      >
-                        {link.label}
-                        <ArrowLeft
-                          aria-hidden
-                          size={15}
-                          strokeWidth={2}
-                          className="transition-transform duration-200 group-hover:-translate-x-1"
-                        />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            </section>
-          </Reveal>
+      {/* THE QUESTIONS, in two columns on a desk. */}
+      <Reveal className="mt-24 border-t border-black/10 pt-16 md:mt-32 md:pt-20">
+        <h2 className={HEADING}>שאלות שכדאי לשאול</h2>
+        <div className="mt-10 grid grid-cols-1 gap-x-16 gap-y-10 md:grid-cols-2 lg:gap-x-24">
+          {QUESTIONS.map((item) => (
+            <div key={item.question}>
+              <h3 className="font-display text-[18px] font-bold text-black md:text-[20px]">{item.question}</h3>
+              <p className="mt-2 font-body text-m-body text-black/70 md:text-[17px]">{item.answer}</p>
+            </div>
+          ))}
         </div>
-      </div>
+      </Reveal>
+
+      {/* THE CLOSE: one line and the page's one button, across the row. */}
+      <Reveal className="mt-24 flex flex-col items-start gap-6 border-t border-black/10 pt-16 md:mt-32 md:flex-row md:items-center md:justify-between md:pt-20">
+        <p className={HEADING}>יש לכם רעיון, או רק התחלה של רעיון?</p>
+        <Button href="/#cta" className="!border-black !bg-none !bg-black !shadow-none">
+          קבעו פגישה
+        </Button>
+      </Reveal>
     </article>
   );
 }
