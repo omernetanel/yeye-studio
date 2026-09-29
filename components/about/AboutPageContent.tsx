@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import Button from "@/components/ui/Button";
+import HeadingSwash from "@/components/ui/HeadingSwash";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { SITE_NAME } from "@/lib/site";
 
@@ -153,9 +154,15 @@ export default function AboutPageContent() {
               אחרי שנים של עבודה בעולם הטכנולוגי, חזרתי למה שתמיד משך אותי: לעצב ולבנות דברים מאפס. זה
               לא הפסיק לזעוק, ולא יכולתי להתעלם מזה יותר. ככה נולד {SITE_NAME}.
             </p>
-            <p className={`mt-5 ${BODY}`}>
-              ולגבי השם: YE זה הקיצור של שם המשפחה שלי. YEYE פשוט נשמע טוב יותר.
+            {/* The name, set like the homepage's closing line: big, bold, and
+                the swash under it. */}
+            <p className={`mt-12 ${BODY}`}>ולגבי השם:</p>
+            {/* The phone's size is the phone homepage's closing line (m-lead). */}
+            <p className="mt-3 font-display text-m-lead font-bold text-black md:text-[60px] md:leading-[1.12]">
+              <span className="block text-balance">YE זה הקיצור של שם המשפחה שלי.</span>
+              <span className="block text-balance">YEYE פשוט נשמע טוב יותר.</span>
             </p>
+            <HeadingSwash className="mt-8 w-[260px] text-black md:w-[360px]" />
           </section>
         </Reveal>
 
