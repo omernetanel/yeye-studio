@@ -106,9 +106,9 @@ export default function AboutPageContent() {
               <h2 className={HEADING}>איך זה התחיל</h2>
               <p className={`mt-3 ${BODY}`}>
                 בגיל 14 נחשפתי לבניית אתרים, ו
-                <strong className={EMPHASIS}>בגיל 15 כבר בניתי את האתרים הראשונים שלי</strong>: אתרי מעריצים עם
-                עשרות עמודים, ביניהם <strong className={EMPHASIS}>אתר המעריצים הישראלי של קייטי פרי</strong>, ואתר
-                מדריכים שלימד אחרים לעצב ולבנות. עד גיל 17 כבר הבנתי לעומק{" "}
+                <strong className={EMPHASIS}>בגיל 15 כבר בניתי את האתרים הראשונים שלי</strong>: אתרי קהילה עם
+                עשרות עמודים ומערכת תוכן שעדכנה אותם, ואתר מדריכים למי שרצה להתחיל לבנות אתרים. עד גיל 17 כבר
+                הבנתי לעומק{" "}
                 <strong className={EMPHASIS}>איך אתר בנוי מבפנים</strong>, מהעיצוב, דרך הקוד ועד השרת שמריץ אותו.
                 במקביל ערכתי וידאו ועיצבתי בפוטושופ. אף אחד לא ביקש ממני,{" "}
                 <mark className="text-marker bg-transparent text-inherit">פשוט לא הצלחתי להפסיק.</mark>
