@@ -50,9 +50,9 @@ export function confirmationEmail(name: string) {
     "קיבלתי את הפנייה שלך, תודה!",
     "בדרך כלל אחזור אליך בתוך יום עסקים אחד.",
     "",
-    "בינתיים, כל מה שעולה לך בראש, רעיונות, אתרים שאהבת או שאלות,",
+    "בינתיים, כל מה שעולה לך בראש, רעיונות, אתרים שאהבת, רפרנסים או שאלות,",
     `אפשר לשלוח לי ישר בוואטסאפ: ${WHATSAPP_URL}`,
-    "בלי שפה רשמית, כותבים כמו שמדברים.",
+    "אפשר (ומומלץ) לוותר על השפה הרשמית בפנייה :)",
     "",
     "עומר",
     SITE_NAME,
@@ -80,7 +80,7 @@ export function confirmationEmail(name: string) {
 <tr><td style="padding:28px 32px 8px;">
 ${p(escapeHtml(hello), "font-weight:bold;")}
 ${p("קיבלתי את הפנייה שלך, תודה!<br>בדרך כלל אחזור אליך בתוך יום עסקים אחד.")}
-${p("בינתיים, כל מה שעולה לך בראש, רעיונות, אתרים שאהבת או שאלות, אפשר לשלוח לי ישר בוואטסאפ. בלי שפה רשמית, כותבים כמו שמדברים.")}
+${p("בינתיים, כל מה שעולה לך בראש, רעיונות, אתרים שאהבת, רפרנסים או שאלות, אפשר לשלוח לי ישר בוואטסאפ. אפשר (ומומלץ) לוותר על השפה הרשמית בפנייה :)")}
 </td></tr>
 <tr><td align="center" style="padding:8px 32px 4px;">
 <a href="${WHATSAPP_URL}" style="display:inline-block;background:${WHATSAPP_GREEN};color:#ffffff;font-size:16px;font-weight:bold;text-decoration:none;padding:14px 36px;border-radius:999px;">לכתוב לי בוואטסאפ</a>
