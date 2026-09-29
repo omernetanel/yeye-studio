@@ -27,14 +27,12 @@ const PERSON = {
 
 export default function AboutPage() {
   return (
-    // Black, like the homepage's "who I am": data-nav-dark turns the logo and
-    // the phone's browser chrome to match.
-    <main id="main" data-nav-dark="true" className="min-h-screen bg-black">
+    <main id="main" className="min-h-screen bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(PERSON) }} />
       <Navbar />
-      <SubPageNav dark />
+      <SubPageNav />
       <AboutPageContent />
-      <Footer />
+      <Footer light />
     </main>
   );
 }

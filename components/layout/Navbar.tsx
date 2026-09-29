@@ -65,14 +65,10 @@ export default function Navbar() {
     // rather than needing to know how each section works.
     let onDark = false;
     let topDark = false;
-    // The bottom edge the same way, for a page that is dark as a whole (the
-    // about page). The homepage's phone rule below overrides it.
-    let bottomDark = false;
     for (const el of document.querySelectorAll<HTMLElement>('[data-nav-dark="true"]')) {
       const rect = el.getBoundingClientRect();
       if (rect.top <= LOGO_CENTER_Y_PX && rect.bottom >= LOGO_CENTER_Y_PX) onDark = true;
       if (rect.top <= 0 && rect.bottom > 0) topDark = true;
-      if (rect.top < window.innerHeight && rect.bottom >= window.innerHeight) bottomDark = true;
     }
     img.style.filter = onDark ? DARK_FILTER : LIGHT_FILTER;
 
@@ -83,6 +79,7 @@ export default function Navbar() {
     // The bottom bar is dark only while both edges are inside the stretch, so
     // it turns white as the work comes up from below and the top stays black
     // until the work reaches it.
+    let bottomDark = false;
     const about = document.getElementById("about");
     const projects = document.getElementById("projects");
     if (isMobileViewport() && about && projects) {

@@ -10,18 +10,21 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { SITE_NAME } from "@/lib/site";
 
 /**
- * The about page: the story the homepage has no room for, told in chapters.
+ * The about page: a profile, not an advert.
  *
- * NOT AN ARTICLE. A first version was headings over paragraphs, and it read
- * like a news site. Here each part of the story is ONE sentence set large on
- * the black the homepage's "who I am" is set on - the same weight and size as
- * its closing line - with at most a short line of detail under it. The reader
- * remembers sentences, not paragraphs. Services, questions and the ask come
- * after, compact, because by then the story has done its work.
+ * THE FIRST SCREEN CARRIES THE ANSWER. Two earlier versions opened on a name
+ * and a photograph and left the rest below the fold - a screen that looked
+ * empty. Here the opening already says who, what, since when and for whom: the
+ * name, a two-sentence introduction and four plain facts. Nothing in it
+ * animates, so it is there on the first frame.
  *
- * NOTHING STARTS EMPTY. The opening is on screen from the first frame: only
- * the greeting's two lines arrive, and quickly. The chapters below rise as
- * they come up, and the page scrolls like a page - nothing is pinned.
+ * THE PHOTOGRAPH BELONGS TO THE STORY, so it sits beside it - held in view on
+ * a desk while the story scrolls past, and between the opening and the story on
+ * a phone.
+ *
+ * LESS SELLING. No list of services and no "see it in action" block: the page
+ * ends on one quiet line and one button, with the work and the services as
+ * plain links under it.
  *
  * Every claim is the owner's own, or already stated elsewhere on the site: the
  * month of support, teaching clients to edit their content and the one business
@@ -31,15 +34,11 @@ import { SITE_NAME } from "@/lib/site";
 
 const EASE = [0.25, 0.46, 0.45, 0.94] as const;
 
-// Five, one line each: the homepage groups landing pages with business sites,
-// but each has a page of its own, and this is the one place that can point a
-// reader at all five by name.
-const SERVICES = [
-  { title: "אתרי תדמית", description: "אתר שמייצג את העסק ובונה אמון מהרגע הראשון.", href: "/services/business-sites" },
-  { title: "דפי נחיתה", description: "דף אחד, מטרה אחת, בנוי כדי שיפנו.", href: "/services/landing-pages" },
-  { title: "חנויות אונליין", description: "מהמוצר ועד התשלום, בלי חיכוך.", href: "/services/online-stores" },
-  { title: "מיתוג", description: "זהות שלמה: לוגו, צבעים, טיפוגרפיה ומדריך מותג.", href: "/services/branding" },
-  { title: "מערכות ודשבורדים", description: "כלי עבודה שמסדרים את העסק במקום אחד.", href: "/services/dashboards" },
+const FACTS = [
+  { label: "סטודיו", value: SITE_NAME },
+  { label: "תחום", value: "עיצוב ופיתוח אתרים" },
+  { label: "התחלתי", value: "בגיל 15, באתרי מעריצים" },
+  { label: "עובד עם", value: "עסקים קטנים וגדולים" },
 ];
 
 const QUESTIONS = [
@@ -66,14 +65,21 @@ const QUESTIONS = [
   },
 ];
 
-// The chapter sentence is the homepage's closing line: m-lead on a phone, 60px
-// on a desk.
-const STATEMENT = "font-display text-m-lead font-bold text-white md:text-[60px] md:leading-[1.12]";
-const LABEL = "font-display text-[15px] font-bold text-white/50 md:text-[16px]";
-const DETAIL = "max-w-[46ch] font-display text-[17px] leading-[1.7] font-light text-white/65 md:text-[20px]";
-const HEADING = "font-display text-[28px] leading-[1.15] font-extrabold tracking-tight text-white md:text-[40px]";
-const TEXT_LINK =
-  "group inline-flex items-center gap-2 font-display text-[17px] font-bold text-white underline-offset-4 hover:underline md:text-[19px]";
+// Plain links at the foot of the page, for whoever wants more: the work first,
+// then each service by name.
+const MORE_LINKS = [
+  { label: "העבודות", href: "/#projects" },
+  { label: "אתרי תדמית", href: "/services/business-sites" },
+  { label: "דפי נחיתה", href: "/services/landing-pages" },
+  { label: "חנויות אונליין", href: "/services/online-stores" },
+  { label: "מיתוג", href: "/services/branding" },
+  { label: "מערכות ודשבורדים", href: "/services/dashboards" },
+];
+
+const HEADING = "font-display text-[26px] leading-[1.2] font-extrabold tracking-tight text-black md:text-[34px]";
+const BODY = "font-display text-[18px] leading-[1.75] font-light text-black/75 md:text-[20px]";
+// The homepage's closing-line size, for the two sentences worth remembering.
+const STATEMENT = "font-display text-m-lead font-bold text-black md:text-[44px] md:leading-[1.15]";
 
 /** A block that rises into place once, as it comes up. */
 function Reveal({ children, className }: { children: ReactNode; className?: string }) {
@@ -81,202 +87,147 @@ function Reveal({ children, className }: { children: ReactNode; className?: stri
   return (
     <motion.div
       className={className}
-      initial={prefersReducedMotion ? false : { opacity: 0, y: 32 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.25 }}
-      transition={{ duration: 0.8, ease: EASE }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.6, ease: EASE }}
     >
       {children}
     </motion.div>
   );
 }
 
-/**
- * One chapter: a small label, the sentence, and a line of detail under it.
- * Each line of the sentence is its own block, so a break falls where the
- * thought does rather than wherever the width runs out.
- */
-function Chapter({ label, lines, children }: { label: string; lines: ReactNode[]; children?: ReactNode }) {
-  return (
-    <section className="flex min-h-[70svh] items-center py-16">
-      <Reveal className="w-full">
-        <p className={LABEL}>{label}</p>
-        <p className={`mt-5 ${STATEMENT}`}>
-          {lines.map((line, i) => (
-            <span key={i} className="block text-balance">
-              {line}
-            </span>
-          ))}
-        </p>
-        {children}
-      </Reveal>
-    </section>
-  );
-}
-
 export default function AboutPageContent() {
-  const prefersReducedMotion = usePrefersReducedMotion();
-
-  // The homepage's greeting: each line arrives blurred and sharpens, the second
-  // a beat after the first. Quick, so the screen is never empty for long.
-  const greetLine = (delay: number) => ({
-    initial: prefersReducedMotion ? false : { opacity: 0, y: 20, filter: "blur(8px)" },
-    animate: { opacity: 1, y: 0, filter: "blur(0px)" },
-    transition: { duration: 0.7, delay, ease: EASE },
-  });
-
   return (
-    <article className="mx-auto max-w-[1100px] px-6">
-      {/* THE OPENING, a screen tall. The portrait is on screen from the first
-          frame - the same photograph as the homepage's, one file to replace. */}
-      <header className="grid min-h-[100svh] grid-cols-1 content-center items-center gap-10 pt-[130px] pb-16 md:grid-cols-[minmax(0,1fr)_minmax(0,380px)] md:gap-16 md:pt-[110px]">
-        <div>
-          <h1 className="font-display leading-[1.06] font-bold text-white">
-            <motion.span {...greetLine(0)} className="block text-[26px] text-white/60 md:text-[34px]">
-              נעים מאוד,
-            </motion.span>
-            <motion.span {...greetLine(0.25)} className="block text-[52px] whitespace-nowrap md:text-[96px]">
-              אני עומר.
-            </motion.span>
-          </h1>
-          <motion.p {...greetLine(0.5)} className={`mt-6 ${DETAIL}`}>
-            מעצב ומפתח אתרים, ומי שעומד מאחורי{" "}
-            <Link href="/" className="font-normal text-white underline underline-offset-4 hover:text-white/70">
-              {SITE_NAME}
-            </Link>
-            .
-          </motion.p>
-        </div>
+    <article className="mx-auto max-w-[1160px] px-6 pt-[140px] pb-24 md:pt-[160px]">
+      {/* THE OPENING: who, what, since when, for whom - all on the first
+          screen, and none of it animated. */}
+      <header>
+        <p className="font-display text-[15px] font-bold text-black/45 md:text-[16px]">מי אני</p>
+        <h1 className="mt-3 font-display text-[44px] leading-[1.05] font-extrabold tracking-tight text-black md:text-[80px]">
+          נעים מאוד, אני עומר.
+        </h1>
+        <p className="mt-6 max-w-[40ch] font-display text-[20px] leading-[1.6] font-light text-black/75 md:text-[26px]">
+          מעצב ומפתח אתרים, ומי שעומד מאחורי{" "}
+          <Link href="/" className="font-normal text-black underline underline-offset-4 hover:text-black/70">
+            {SITE_NAME}
+          </Link>
+          . אני בונה אתרים מגיל 15, והיום מעצב ובונה אותם מאפס, מהרעיון ועד האתר שעולה לאוויר.
+        </p>
 
-        <figure className="m-0 justify-self-center md:justify-self-end">
+        <dl className="mt-12 grid grid-cols-2 gap-x-6 gap-y-8 border-t border-black/10 pt-8 md:mt-16 md:grid-cols-4">
+          {FACTS.map((fact) => (
+            <div key={fact.label}>
+              <dt className="font-display text-[14px] text-black/45">{fact.label}</dt>
+              <dd className="mt-1 font-display text-[17px] font-bold text-black md:text-[19px]">{fact.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </header>
+
+      {/* THE STORY, with the photograph beside it. On a desk the picture is
+          held in view (sticky) while the story scrolls; on a phone it comes
+          first, between the opening and the story. */}
+      <div className="mt-20 grid grid-cols-1 gap-12 md:mt-28 md:grid-cols-[minmax(0,1fr)_minmax(0,340px)] md:gap-20">
+        <figure className="m-0 md:sticky md:top-[140px] md:order-last md:self-start">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/portrait.webp"
             alt={`עומר, מייסד ${SITE_NAME}`}
             width={430}
             height={560}
-            className="block h-auto max-h-[52svh] w-auto max-w-full rounded-2xl"
+            className="mx-auto block h-auto w-full max-w-[340px] rounded-2xl"
             draggable={false}
           />
+          <figcaption className="mt-3 text-center font-body text-m-small text-black/45 md:text-start">
+            עומר, {SITE_NAME}
+          </figcaption>
         </figure>
-      </header>
 
-      <Chapter label="איך זה התחיל" lines={["בגיל 15 בניתי", "את האתר הראשון שלי."]}>
-        <p className={`mt-8 ${DETAIL}`}>
-          ומשם זה רק גדל: אתרי מעריצים עם עשרות עמודים ומערכת חדשות שעדכנה אותם, ואתר מדריכים שלימד
-          אחרים לעצב, לבנות ולהבין קוד.
-        </p>
-      </Chapter>
+        <div className="space-y-20 md:space-y-24">
+          <Reveal>
+            <section>
+              <h2 className={HEADING}>איך זה התחיל</h2>
+              <p className={`mt-5 ${BODY}`}>
+                בגיל 15 בניתי את האתר הראשון שלי, ומשם זה רק גדל: אתרי מעריצים עם עשרות עמודים ומערכת חדשות
+                שעדכנה אותם, ואתר מדריכים שלימד אחרים לעצב, לבנות ולהבין קוד.
+              </p>
+              <p className={`mt-8 ${STATEMENT}`}>
+                <span className="block text-balance">אחד מהם היה אתר המעריצים הישראלי של קייטי פרי.</span>
+                <span className="block text-balance text-black/40">בגוגל, מיד אחרי האתר הרשמי שלה.</span>
+              </p>
+              <p className={`mt-8 ${BODY}`}>
+                במקביל הקמתי פורומים לקהילות מעריצים, ערכתי וידאו ועיצבתי בפוטושופ. אף אחד לא ביקש ממני. פשוט
+                לא הצלחתי להפסיק.
+              </p>
+            </section>
+          </Reveal>
 
-      <Chapter
-        label="אחד מהם"
-        lines={[
-          "אתר המעריצים הישראלי של קייטי פרי.",
-          <span key="after" className="text-white/45">
-            בגוגל, מיד אחרי האתר הרשמי שלה.
-          </span>,
-        ]}
-      >
-        <p className={`mt-8 ${DETAIL}`}>
-          במקביל הקמתי פורומים לקהילות מעריצים, ערכתי וידאו ועיצבתי בפוטושופ. אף אחד לא ביקש ממני. פשוט
-          לא הצלחתי להפסיק.
-        </p>
-      </Chapter>
+          <Reveal>
+            <section>
+              <h2 className={HEADING}>למה YEYE</h2>
+              <p className={`mt-5 ${BODY}`}>
+                אחרי שנים של עבודה בעולם הטכנולוגי, חזרתי למה שתמיד משך אותי: לעצב ולבנות דברים מאפס. זה לא
+                הפסיק לזעוק, ולא יכולתי להתעלם מזה יותר. ככה נולד {SITE_NAME}.
+              </p>
+              <p className={`mt-8 ${BODY}`}>ולגבי השם:</p>
+              <p className={`mt-2 ${STATEMENT}`}>
+                <span className="block text-balance">YE זה הקיצור של שם המשפחה שלי.</span>
+                <span className="block text-balance">YEYE פשוט נשמע טוב יותר.</span>
+              </p>
+              <HeadingSwash className="mt-6 w-[220px] text-black md:w-[300px]" />
+            </section>
+          </Reveal>
 
-      <Chapter label="למה YEYE" lines={["חזרתי למה", "שתמיד משך אותי."]}>
-        <p className={`mt-8 ${DETAIL}`}>
-          אחרי שנים של עבודה בעולם הטכנולוגי, חזרתי לעצב ולבנות דברים מאפס. זה לא הפסיק לזעוק, ולא יכולתי
-          להתעלם מזה יותר. ככה נולד {SITE_NAME}.
-        </p>
-      </Chapter>
+          <Reveal>
+            <section>
+              <h2 className={HEADING}>שאלות שכדאי לשאול</h2>
+              <div className="mt-8 space-y-8">
+                {QUESTIONS.map((item) => (
+                  <div key={item.question} className="border-t border-black/10 pt-6">
+                    <h3 className="font-display text-[18px] font-bold text-black md:text-[20px]">{item.question}</h3>
+                    <p className="mt-2 max-w-[60ch] font-body text-m-body text-black/70 md:text-[17px]">{item.answer}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </Reveal>
 
-      <Chapter label="ולגבי השם" lines={["YE זה הקיצור של שם המשפחה שלי.", "YEYE פשוט נשמע טוב יותר."]}>
-        <HeadingSwash className="mt-8 w-[260px] text-white md:w-[360px]" />
-      </Chapter>
-
-      {/* AFTER THE STORY, the practical part, compact: by now the story has
-          done its work, and these are for whoever wants the details. */}
-      <div className="space-y-24 border-t border-white/10 pt-24 pb-28 md:space-y-32 md:pt-32">
-        <Reveal>
-          <section>
-            <h2 className={HEADING}>מה אני עושה</h2>
-            <ul className="mt-8 border-b border-white/10">
-              {SERVICES.map((service) => (
-                <li key={service.href} className="border-t border-white/10">
-                  <Link
-                    href={service.href}
-                    className="group flex items-center justify-between gap-6 py-5 transition-colors hover:bg-white/[0.03]"
-                  >
-                    <span>
-                      <span className="block font-display text-[19px] font-bold text-white md:text-[22px]">
-                        {service.title}
-                      </span>
-                      <span className="mt-1 block font-body text-m-body text-white/60">{service.description}</span>
-                    </span>
-                    <ArrowLeft
-                      aria-hidden
-                      size={20}
-                      strokeWidth={1.75}
-                      className="shrink-0 text-white/40 transition-transform duration-200 group-hover:-translate-x-1 group-hover:text-white"
-                    />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </Reveal>
-
-        {/* THE WAY ON TO THE HOMEPAGE, for whoever arrived here from a search:
-            they have read who is behind the site and not yet seen what it does.
-            Text links, not buttons - the page's one button is the meeting at
-            the end - and nothing automatic. */}
-        <Reveal>
-          <section>
-            <h2 className={HEADING}>רוצים לראות את זה בפעולה?</h2>
-            <p className={`mt-6 ${DETAIL}`}>
-              העמוד הראשי הוא לא רק עמוד בית. זה המקום שבו אני מראה מה אפשר לעשות עם אתר, מהגלילה הראשונה ועד
-              האחרונה.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-x-10 gap-y-4">
-              <Link href="/" className={TEXT_LINK}>
-                לחוויה המלאה
-                <ArrowLeft aria-hidden size={18} strokeWidth={2} className="transition-transform duration-200 group-hover:-translate-x-1" />
-              </Link>
-              <Link href="/#projects" className={TEXT_LINK}>
-                לעבודות
-                <ArrowLeft aria-hidden size={18} strokeWidth={2} className="transition-transform duration-200 group-hover:-translate-x-1" />
-              </Link>
-            </div>
-          </section>
-        </Reveal>
-
-        <Reveal>
-          <section>
-            <h2 className={HEADING}>שאלות שכדאי לשאול</h2>
-            <div className="mt-8 space-y-8">
-              {QUESTIONS.map((item) => (
-                <div key={item.question}>
-                  <h3 className="font-display text-[19px] font-bold text-white md:text-[22px]">{item.question}</h3>
-                  <p className="mt-2 max-w-[60ch] font-body text-m-body text-white/65 md:text-[17px]">{item.answer}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        </Reveal>
-
-        <Reveal>
-          <section>
-            <p className={STATEMENT}>
-              <span className="block text-balance">יש לכם רעיון,</span>
-              <span className="block text-balance">או רק התחלה של רעיון?</span>
-            </p>
-            <div className="mt-10">
-              <Button href="/#cta" className="!border-white !bg-none !bg-white !text-black !shadow-none">
-                קבעו פגישה
-              </Button>
-            </div>
-          </section>
-        </Reveal>
+          {/* THE CLOSE: one quiet line, the page's one button, and plain links
+              for whoever wants more. */}
+          <Reveal>
+            <section className="border-t border-black/10 pt-12">
+              <p className={HEADING}>רוצים לדבר?</p>
+              <p className={`mt-3 ${BODY}`}>יש לכם רעיון, או רק התחלה של רעיון? אשמח לשמוע.</p>
+              <div className="mt-8">
+                <Button href="/#cta" className="!border-black !bg-none !bg-black !shadow-none">
+                  קבעו פגישה
+                </Button>
+              </div>
+              <nav aria-label="עוד באתר" className="mt-12">
+                <p className="font-display text-[14px] text-black/45">עוד באתר</p>
+                <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-3">
+                  {MORE_LINKS.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        className="group inline-flex items-center gap-1.5 font-display text-[16px] text-black/70 transition-colors hover:text-black"
+                      >
+                        {link.label}
+                        <ArrowLeft
+                          aria-hidden
+                          size={15}
+                          strokeWidth={2}
+                          className="transition-transform duration-200 group-hover:-translate-x-1"
+                        />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </section>
+          </Reveal>
+        </div>
       </div>
     </article>
   );

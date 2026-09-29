@@ -24,27 +24,10 @@ const LINKS = [
 // One set of styles for the back control, because it renders as a button or as
 // a link depending on where the reader came from and the two have to be
 // indistinguishable.
-const BACK_CLASS = "group inline-flex items-center gap-2 font-display text-[14px] font-medium transition-colors";
+const BACK_CLASS =
+  "group inline-flex items-center gap-2 font-display text-[14px] font-medium text-black/70 transition-colors hover:text-black";
 
-// Every sub-page is white except the about page, which carries the homepage's
-// black "who I am" on. Only the colours change.
-const THEME = {
-  light: {
-    bar: "border-black/5 bg-white/85",
-    link: "text-black/60 hover:text-black",
-    dot: "text-black/20",
-    back: "text-black/70 hover:text-black",
-  },
-  dark: {
-    bar: "border-white/10 bg-black/85",
-    link: "text-white/60 hover:text-white",
-    dot: "text-white/20",
-    back: "text-white/70 hover:text-white",
-  },
-};
-
-export default function SubPageNav({ dark = false }: { dark?: boolean }) {
-  const theme = dark ? THEME.dark : THEME.light;
+export default function SubPageNav() {
   const router = useRouter();
   // GOING BACK MEANS GOING BACK, not going to a fixed address. This was a hard
   // link to /#services, so a reader who arrived from the work grid, from the
@@ -69,7 +52,7 @@ export default function SubPageNav({ dark = false }: { dark?: boolean }) {
 
   return (
     <>
-      <nav className={`fixed inset-x-0 top-0 z-40 border-b backdrop-blur-md ${theme.bar}`}>
+      <nav className="fixed inset-x-0 top-0 z-40 border-b border-black/5 bg-white/85 backdrop-blur-md">
         {/* justify-start is the RIGHT edge under dir="rtl", which is where the
             row belongs. The logo Navbar owns is pinned physically left, so the
             space kept clear for it is padding-inline-END here — reserving it at
@@ -82,11 +65,11 @@ export default function SubPageNav({ dark = false }: { dark?: boolean }) {
             <div key={link.href + link.label} className="flex items-center gap-6">
               <Link
                 href={link.href}
-                className={`font-display text-[13px] whitespace-nowrap transition-colors sm:text-[14px] ${theme.link}`}
+                className="font-display text-[13px] whitespace-nowrap text-black/60 transition-colors hover:text-black sm:text-[14px]"
               >
                 {link.label}
               </Link>
-              {i < LINKS.length - 1 && <span aria-hidden className={`hidden sm:inline ${theme.dot}`}>·</span>}
+              {i < LINKS.length - 1 && <span aria-hidden className="hidden text-black/20 sm:inline">·</span>}
             </div>
           ))}
         </div>
@@ -97,12 +80,12 @@ export default function SubPageNav({ dark = false }: { dark?: boolean }) {
       <div className="fixed inset-x-0 top-[72px] z-40">
         <div className="mx-auto flex max-w-[1400px] justify-start px-6 pt-4">
           {canGoBack ? (
-            <button type="button" onClick={() => router.back()} className={`${BACK_CLASS} ${theme.back}`}>
+            <button type="button" onClick={() => router.back()} className={BACK_CLASS}>
               <span>חזור</span>
               <ArrowLeft size={16} strokeWidth={2} className="transition-transform duration-200 group-hover:-translate-x-1" />
             </button>
           ) : (
-            <Link href="/" className={`${BACK_CLASS} ${theme.back}`}>
+            <Link href="/" className={BACK_CLASS}>
               <span>חזור</span>
               <ArrowLeft size={16} strokeWidth={2} className="transition-transform duration-200 group-hover:-translate-x-1" />
             </Link>
