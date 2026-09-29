@@ -11,6 +11,7 @@ import { hasInSiteHistory } from "@/lib/nav/in-site-history";
 const LINKS = [
   { label: "עבודות", href: "/projects" },
   { label: "שירותים", href: "/#services" },
+  { label: "איך אני עובד", href: "/#process" },
   { label: "מי אני", href: "/about" },
   { label: "צור קשר", href: "/#cta" },
 ];
@@ -58,14 +59,14 @@ export default function SubPageNav() {
             space kept clear for it is padding-inline-END here — reserving it at
             the start instead is what was pushing the row into the logo. */}
         {/* Tighter on a phone, and without the dots: at desktop spacing the
-            four links did not fit beside the logo and "צור קשר" broke onto two
-            lines. */}
-        <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-start gap-4 px-6 pe-[88px] sm:gap-6 sm:pe-[120px]">
+            links do not fit beside the logo - "צור קשר" broke onto two lines,
+            and with five of them the row ran into the logo. */}
+        <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-start gap-3 ps-4 pe-[88px] sm:gap-6 sm:ps-6 sm:pe-[120px]">
           {LINKS.map((link, i) => (
             <div key={link.href + link.label} className="flex items-center gap-6">
               <Link
                 href={link.href}
-                className="font-display text-[13px] whitespace-nowrap text-black/60 transition-colors hover:text-black sm:text-[14px]"
+                className="font-display text-[12.5px] whitespace-nowrap text-black/60 transition-colors hover:text-black sm:text-[14px]"
               >
                 {link.label}
               </Link>
