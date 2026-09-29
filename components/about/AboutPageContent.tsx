@@ -56,6 +56,8 @@ const QUESTIONS = [
 
 const HEADING = "font-display text-[26px] leading-[1.2] font-extrabold tracking-tight text-black md:text-[32px]";
 const BODY = "font-display text-[18px] leading-[1.75] font-light text-black/75 md:text-[19px]";
+// Bold against the light body text, and full black against its 75%.
+const EMPHASIS = "font-bold text-black";
 
 /** A block that rises into place once, as it comes up. */
 function Reveal({ children, className }: { children: ReactNode; className?: string }) {
@@ -79,10 +81,9 @@ export default function AboutPageContent() {
     <article className="mx-auto max-w-[1400px] px-6 pt-[140px] pb-24 md:px-16 md:pt-[150px]">
       {/* THE OPENING: the photograph beside the heading, and everything the
           page has to say about who this is under it. Nothing here animates, so
-          it is there on the first frame. */}
-      {/* The text takes the row and the photo a fixed column beside it: no
-          measure on the paragraphs, which is what made the page read as a
-          narrow feature. */}
+          it is there on the first frame. The text takes the row and the photo
+          a fixed column beside it: no measure on the paragraphs, which is what
+          made the page read as a narrow feature. */}
       <header className="grid grid-cols-1 items-start gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,340px)] md:gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:gap-20">
         <div>
           <h1 className="font-display text-[44px] leading-[1.05] font-extrabold tracking-tight text-black md:text-[72px] lg:text-[84px]">
@@ -90,9 +91,12 @@ export default function AboutPageContent() {
             <br />
             אני עומר.
           </h1>
+          {/* The bold is the page read at a glance: an eye that skims only it
+              still gets who, since when and what. */}
           <p className={`mt-6 md:mt-8 ${BODY} md:text-[22px]`}>
-            מעצב ומפתח אתרים, ומי שעומד מאחורי {SITE_NAME}. אני בונה אתרים מגיל 15, והיום מעצב ובונה אותם מאפס לעסקים קטנים וגדולים, מהרעיון ועד האתר
-            שעולה לאוויר.
+            <strong className={EMPHASIS}>מעצב ומפתח אתרים</strong>, ומי שעומד מאחורי {SITE_NAME}. אני בונה אתרים
+            מגיל 15, והיום מעצב ובונה אותם מאפס לעסקים קטנים וגדולים,{" "}
+            <strong className={EMPHASIS}>מהרעיון ועד האתר שעולה לאוויר.</strong>
           </p>
 
           {/* The story, short, under the introduction and beside the photo:
@@ -102,9 +106,12 @@ export default function AboutPageContent() {
             <section>
               <h2 className={HEADING}>איך זה התחיל</h2>
               <p className={`mt-3 ${BODY}`}>
-                בגיל 14 נחשפתי לבניית אתרים, ובגיל 15 כבר בניתי את האתרים הראשונים שלי: אתרי מעריצים עם עשרות
-                עמודים, ביניהם אתר המעריצים הישראלי של קייטי פרי, ואתר מדריכים שלימד אחרים לעצב ולבנות. עד גיל 17
-                כבר הבנתי לעומק איך אתר בנוי מבפנים, מהעיצוב, דרך הקוד ועד השרת שמריץ אותו. במקביל ערכתי וידאו ועיצבתי בפוטושופ. אף אחד לא ביקש ממני,{" "}
+                בגיל 14 נחשפתי לבניית אתרים, ו
+                <strong className={EMPHASIS}>בגיל 15 כבר בניתי את האתרים הראשונים שלי</strong>: אתרי מעריצים עם
+                עשרות עמודים, ביניהם <strong className={EMPHASIS}>אתר המעריצים הישראלי של קייטי פרי</strong>, ואתר
+                מדריכים שלימד אחרים לעצב ולבנות. עד גיל 17 כבר הבנתי לעומק{" "}
+                <strong className={EMPHASIS}>איך אתר בנוי מבפנים</strong>, מהעיצוב, דרך הקוד ועד השרת שמריץ אותו.
+                במקביל ערכתי וידאו ועיצבתי בפוטושופ. אף אחד לא ביקש ממני,{" "}
                 <mark className="text-marker bg-transparent text-inherit">פשוט לא הצלחתי להפסיק.</mark>
               </p>
             </section>
@@ -113,13 +120,14 @@ export default function AboutPageContent() {
               <p className={`mt-3 ${BODY}`}>
                 אחרי שנים של עבודה בעולם הטכנולוגי, חזרתי למה שתמיד משך אותי:{" "}
                 <mark className="text-marker bg-transparent text-inherit">לעצב ולבנות דברים מאפס.</mark> זה לא
-                הפסיק לזעוק, ולא יכולתי להתעלם מזה יותר. ככה נולד {SITE_NAME}.
+                הפסיק לזעוק, ולא יכולתי להתעלם מזה יותר.{" "}
+                <strong className={EMPHASIS}>ככה נולד {SITE_NAME}.</strong>
               </p>
               {/* The name, at the paragraph's own size: a wink is said quietly.
                   The punchline bold, the aside after it grey. */}
               <p className={`mt-4 ${BODY}`}>
                 ולגבי השם: YE זה הקיצור של שם המשפחה שלי, ו־
-                <strong className="font-bold text-black">YEYE פשוט נשמע טוב יותר.</strong>{" "}
+                <strong className={EMPHASIS}>YEYE פשוט נשמע טוב יותר.</strong>{" "}
                 <span className="text-black/45">(כן, זה כל הסיפור.)</span>
               </p>
             </section>
