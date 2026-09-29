@@ -2,7 +2,6 @@
 
 import { useLayoutEffect, useRef } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
-import Button from "@/components/ui/Button";
 import ProjectsCarousel from "@/components/ui/ProjectsCarousel";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { stackHeading } from "@/lib/motion/stack-heading";
@@ -251,15 +250,9 @@ export default function ProjectsSection() {
         </div>
       </div>
 
-      {/* The section carries no side padding any more — the panel has to span
-          the full width or its clip cuts the arc 24px in from each edge, which
-          is a hard line in the middle of the picture. The padding lives here
-          instead, on the only thing that needs a measure. */}
-      <div className="relative z-10 mt-16 flex justify-center px-6 md:mt-20">
-        <Button href="/projects" variant="primary" className="!border-black !bg-none !bg-black !shadow-none">
-          לכל העבודות
-        </Button>
-      </div>
+      {/* No "all the work" button, as on the phone: it went to /projects,
+          which lists the same work the carousel just showed - a door out of
+          the page leading somewhere with nothing new in it. */}
     </section>
   );
 }
