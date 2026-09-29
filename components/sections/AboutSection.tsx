@@ -574,9 +574,11 @@ export default function AboutSection() {
                   <div
                     ref={slotRef}
                     aria-hidden="true"
-                    className="about-greet-slot invisible inline-block text-center font-display leading-[1.06] font-bold whitespace-nowrap"
+                    className="about-greet-slot invisible inline-block text-center font-display leading-[1.06] font-bold whitespace-nowrap text-white"
                   >
-                    <span className="block text-[0.4em]">נעים מאוד,</span>
+                    {/* The floating copy's colours too: with less motion this
+                        slot is the heading that is seen. */}
+                    <span className="block text-[0.4em] text-white/70">נעים מאוד,</span>
                     <span className="block text-[1.34em]">אני עומר.</span>
                   </div>
 
