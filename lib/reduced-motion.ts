@@ -11,9 +11,12 @@ function subscribe(callback: () => void) {
   return () => mediaQueryList.removeEventListener("change", callback);
 }
 
-function getSnapshot() {
+/** The same answer outside React, for code that runs on a single frame. */
+export function isMotionReduced() {
   return window.matchMedia(QUERY).matches || motionOffByPreference();
 }
+
+const getSnapshot = isMotionReduced;
 
 function getServerSnapshot() {
   return false;

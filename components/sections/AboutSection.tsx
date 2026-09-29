@@ -430,25 +430,15 @@ export default function AboutSection() {
         el.style.opacity = "1";
         el.style.transform = "none";
       };
-      if (greetRef.current) greetRef.current.style.display = "none";
       if (portraitRef.current) portraitRef.current.style.display = "none";
       for (const el of [portraitSlotRef.current, contentRef.current, claimRef.current, closerLineRef.current]) {
         settle(el);
       }
-      // The reserved slots are invisible copies that hold space for the
-      // travelling pair; with the pair gone they are what is seen. The name's
-      // slot gets its size here too - measure() is what sets it, and measure()
-      // is part of the animation this mode does not run. Without both, the
-      // heading was an invisible gap above the paragraphs.
+      // The reserved portrait slot is an invisible copy that holds space for
+      // the travelling picture; with the picture gone it is what is seen. The
+      // name's slot and the floating greeting are handled in globals.css
+      // (.about-greet-slot), so the heading is there before the first paint.
       portraitSlotRef.current?.classList.remove("invisible");
-      const slot = slotRef.current;
-      const width = sectionRef.current?.clientWidth ?? window.innerWidth;
-      if (slot) {
-        slot.classList.remove("invisible");
-        slot.style.fontSize = `${Math.round(
-          Math.max(GREET_SIZE_IN_COLUMN.min, Math.min(GREET_SIZE_IN_COLUMN.max, width * GREET_SIZE_IN_COLUMN.ofWidth)),
-        )}px`;
-      }
       for (const fact of factsRef.current) settle(fact);
       // The rule under the closing line draws itself; with no drawing it is
       // simply there.
@@ -532,7 +522,7 @@ export default function AboutSection() {
               reserves below, so the layout still decides where it ends up. */}
           <div
             ref={greetRef}
-            className="pointer-events-none absolute top-1/2 left-1/2 z-20 text-center font-display leading-[1.06] font-bold whitespace-nowrap text-white will-change-transform"
+            className="about-greet-float pointer-events-none absolute top-1/2 left-1/2 z-20 text-center font-display leading-[1.06] font-bold whitespace-nowrap text-white will-change-transform"
             style={{ opacity: 0, fontSize: `${GREET_SIZE_ALONE_VW}vw` }}
           >
             {/* Each line is a block that stacks, holding an inline-block only
@@ -584,7 +574,7 @@ export default function AboutSection() {
                   <div
                     ref={slotRef}
                     aria-hidden="true"
-                    className="invisible inline-block text-center font-display leading-[1.06] font-bold whitespace-nowrap"
+                    className="about-greet-slot invisible inline-block text-center font-display leading-[1.06] font-bold whitespace-nowrap"
                   >
                     <span className="block text-[0.4em]">נעים מאוד,</span>
                     <span className="block text-[1.34em]">אני עומר.</span>
@@ -689,7 +679,7 @@ export default function AboutSection() {
         <div
           className={
             prefersReducedMotion
-              ? "relative z-10 flex items-center pt-20 pb-24"
+              ? "relative z-10 flex items-center pt-20 pb-12"
               : "sticky top-0 z-10 flex h-[100svh] items-center"
           }
         >

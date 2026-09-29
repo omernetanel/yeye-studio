@@ -322,12 +322,11 @@ export default function MobileAbout() {
       // Everything simply here. The desktop section has a standing bug where
       // reduced motion leaves a blank black screen — every element starts at
       // opacity 0 and the driver never runs — and there is no reason to carry
-      // it across.
+      // it across. The greeting and the portrait are placed by globals.css
+      // (.about-m-greet), so they are there before the first paint.
       for (const el of [
-        portraitRef.current,
         copyRef.current,
         closerLineRef.current,
-        ...greetLinesRef.current,
         cardsRef.current,
         ...claimsRef.current,
       ]) {
@@ -391,7 +390,7 @@ export default function MobileAbout() {
               the pair keeps its proportions at every size on the way up. */}
           <div
             ref={greetRef}
-            className="absolute inset-x-0 top-[19%] text-center font-display leading-[1.06] font-bold whitespace-nowrap text-white will-change-transform"
+            className="about-m-greet absolute inset-x-0 top-[19%] text-center font-display leading-[1.06] font-bold whitespace-nowrap text-white will-change-transform"
             style={{ fontSize: `${GREET_SIZE_SETTLED_PX}px` }}
           >
             <span className="block text-[0.4em] text-white/70">
@@ -425,7 +424,7 @@ export default function MobileAbout() {
               greeting. */}
           <div
             ref={portraitRef}
-            className="absolute inset-x-0 bottom-16 mx-auto w-[min(86%,420px,calc(50svh*430/560))] origin-bottom will-change-transform"
+            className="about-m-portrait absolute inset-x-0 bottom-16 mx-auto w-[min(86%,420px,calc(50svh*430/560))] origin-bottom will-change-transform"
             style={{ opacity: 0 }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -542,7 +541,7 @@ export default function MobileAbout() {
         <div
           className={
             prefersReducedMotion
-              ? "relative z-10 flex items-center px-6 pt-8 pb-24"
+              ? "relative z-10 flex items-center px-6 pt-8 pb-12"
               : "sticky top-0 z-10 flex h-[100svh] items-center px-6"
           }
         >

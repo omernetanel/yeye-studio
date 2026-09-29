@@ -492,8 +492,22 @@ export default function ContactStage() {
     if (balloons && gate) dropStateRef.current.armed = gate.getBoundingClientRect().top < 0;
   });
 
-  // Mobile and reduced motion: no pin and no zoom — the clip is just a
-  // backdrop with the contact block on it.
+  // REDUCED MOTION: THE FORM, AND NOTHING AROUND IT. The room exists to be
+  // zoomed out of and the footage to play inside it; with neither, the plate
+  // was a still photograph of a showroom a screen and a half tall, pulled up
+  // over "who I am" by the phone's overlap and covering it. The video would
+  // be motion this reader asked not to see. What is left is the ask, on the
+  // black that "who I am" hands over, straight under its closing line.
+  if (prefersReducedMotion) {
+    return (
+      <section id="contact" data-nav-dark="true" className="relative bg-black pt-4 pb-24">
+        <ContactForm />
+      </section>
+    );
+  }
+
+  // Mobile: no pin and no zoom — the clip is just a backdrop with the contact
+  // block on it.
   //
   // THE FORM SETS THE HEIGHT, and it did not before. The section used to be as
   // tall as the footage's own 2237:1152 box — 193px on a phone — with the

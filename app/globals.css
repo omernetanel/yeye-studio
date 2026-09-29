@@ -734,6 +734,71 @@ body {
   scroll-behavior: auto !important;
 }
 
+/* "WHO I AM" WITH LESS MOTION: the name is in its place before the first
+   paint. The column reserves an invisible slot for the floating greeting to
+   land on; with no travel the slot is the heading. Done from React it could
+   only happen after hydration, and the heading popped in a beat after the
+   rest of the section. The size is GREET_SIZE_IN_COLUMN in AboutSection.
+   The phone's greeting and portrait are laid over the panel absolutely for
+   their travel; here they join the flow, the name at its settled 42px
+   (GREET_SIZE_SETTLED_PX in MobileAbout). !important because the scroll
+   driver may already have written inline sizes, blurs and offsets on the
+   first render, before the preference was known. */
+[data-a11y-motion] .about-greet-float {
+  display: none;
+}
+[data-a11y-motion] .about-greet-slot {
+  visibility: visible;
+  font-size: clamp(34px, 4.2vw, 58px);
+}
+[data-a11y-motion] .about-m-greet,
+[data-a11y-motion] .about-m-portrait {
+  position: relative;
+  top: auto;
+  bottom: auto;
+  opacity: 1 !important;
+  transform: none !important;
+}
+[data-a11y-motion] .about-m-greet {
+  font-size: 42px !important;
+}
+[data-a11y-motion] .about-m-greet > span > span {
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
+}
+[data-a11y-motion] .about-m-portrait {
+  margin-top: 40px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-greet-float {
+    display: none;
+  }
+  .about-greet-slot {
+    visibility: visible;
+    font-size: clamp(34px, 4.2vw, 58px);
+  }
+  .about-m-greet,
+  .about-m-portrait {
+    position: relative;
+    top: auto;
+    bottom: auto;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .about-m-greet {
+    font-size: 42px !important;
+  }
+  .about-m-greet > span > span {
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+  }
+  .about-m-portrait {
+    margin-top: 40px;
+  }
+}
+
 /* ONE FOCUS RING, EVERYWHERE. Keyboard users were finding their way around a
    site that mostly did not say where they were: a few controls in the gallery
    drew their own outline and nothing else did. :focus-visible, so a mouse click

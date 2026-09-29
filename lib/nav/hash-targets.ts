@@ -20,6 +20,7 @@
  */
 
 import { isMobileViewport } from "@/lib/use-mobile";
+import { isMotionReduced } from "@/lib/reduced-motion";
 
 // `at` per layout where the phone's section is built differently from the
 // desktop's and the same fraction lands somewhere else in it.
@@ -86,6 +87,10 @@ export function destinationOf(target: HashTarget): number | null {
   const section = document.getElementById(target.id);
   if (!section) return null;
   const top = section.getBoundingClientRect().top + window.scrollY;
+  // With less motion nothing is pinned, and a section's height is its content:
+  // the fraction then lands part way down a long section, past its heading.
+  // The top is the place.
+  if (isMotionReduced()) return Math.round(top);
   // Zero for a section that is not pinned, so this one line serves both.
   const run = Math.max(0, section.offsetHeight - window.innerHeight);
   const at =
