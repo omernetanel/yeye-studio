@@ -194,7 +194,9 @@ function ContactForm() {
           worked. Same for the failure below. */}
       {status === "success" ? (
         <p role="status" className="mt-8 font-body text-m-body text-white/70">
-          קיבלתי, תודה! אחזור אליכם בהקדם.
+          קיבלתי, תודה!
+          <br />
+          אחזור אליכם בקרוב מאוד.
         </p>
       ) : (
         <form onSubmit={handleSubmit} className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">

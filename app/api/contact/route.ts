@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { FORMS_INBOX, FORMS_SENDER } from "@/lib/site";
+import { CONTACT_EMAIL, FORMS_INBOX, FORMS_SENDER, SITE_NAME } from "@/lib/site";
+import { confirmationEmail, greetingName } from "@/lib/email/confirmation";
+
+// The receipt comes from the studio's general address, and a reply to it
+// lands in the same inbox as everything else.
+const CONFIRMATION_SENDER = `${SITE_NAME} <${CONTACT_EMAIL}>`;
 
 // Resend's REST endpoint, called straight from the server: the key never
 // reaches the browser, and no SDK is needed for one POST.
@@ -167,26 +172,26 @@ export async function POST(request: Request) {
   // nothing in it a mail client could render or run. Hebrew labels, because it
   // is read in Hebrew.
   // The phone on a line of its own, second, because it is how these are
-  // answered; "לא נמסר" rather than a missing line, so its absence is read.
+  // answered; "לא הושאר מספר" rather than a missing line, so its absence is
+  // read. With a number, the last line opens a WhatsApp chat to it with a
+  // first message already written, so answering takes half a minute.
+  const whatsapp = whatsappLink(payload.phone, payload.from_name);
   const lines = [
     `שם: ${payload.from_name}`,
-    `טלפון: ${payload.phone || "לא נמסר"}`,
+    `טלפון: ${payload.phone || "לא הושאר מספר"}`,
     `דוא״ל: ${payload.reply_to}`,
     `הגיעה מ: ${payload.source}`,
     ...(payload.message ? ["", "מה יש להם בראש:", payload.message] : []),
+    ...(whatsapp ? ["", `לכתוב בוואטסאפ: ${whatsapp}`] : []),
   ];
 
-  const response = await fetch(RESEND_ENDPOINT, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: FORMS_SENDER,
-      to: [FORMS_INBOX],
-      // "Reply" in the inbox answers the person who wrote, not the form.
-      reply_to: payload.reply_to,
-      subject: `פנייה חדשה מהאתר: ${payload.from_name}`,
-      text: lines.join("\n"),
-    }),
+  const response = await send(apiKey, {
+    from: FORMS_SENDER,
+    to: [FORMS_INBOX],
+    // "Reply" in the inbox answers the person who wrote, not the form.
+    reply_to: payload.reply_to,
+    subject: `פנייה חדשה מהאתר: ${payload.from_name}`,
+    text: lines.join("\n"),
   });
 
   if (!response.ok) {
@@ -198,5 +203,45 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "failed to send" }, { status: 502 });
   }
 
+  // The visitor's receipt. Only once the enquiry itself is sent, and a failure
+  // here is logged, not reported: the message reached the inbox, so for the
+  // visitor it worked. Awaited, because a serverless function can be stopped
+  // the moment it has answered.
+  const receipt = confirmationEmail(payload.from_name);
+  const confirmation = await send(apiKey, {
+    from: CONFIRMATION_SENDER,
+    to: [payload.reply_to],
+    reply_to: CONTACT_EMAIL,
+    subject: receipt.subject,
+    html: receipt.html,
+    text: receipt.text,
+  }).catch(() => null);
+  if (!confirmation?.ok) {
+    const reason = confirmation ? await confirmation.text().catch(() => "") : "network error";
+    console.error(`contact: confirmation not sent: ${reason.slice(0, 300)}`);
+  }
+
   return NextResponse.json({ ok: true });
+}
+
+function send(apiKey: string, message: Record<string, unknown>) {
+  return fetch(RESEND_ENDPOINT, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify(message),
+  });
+}
+
+/**
+ * A wa.me link to the number a visitor left, or null when there is none or it
+ * is not a phone number. Israeli numbers are written locally (050...), and
+ * wa.me wants the full international form with no leading zero or plus.
+ */
+function whatsappLink(phone: string, name: string) {
+  const digits = phone.replace(/\D/g, "");
+  const international = digits.startsWith("0") ? `972${digits.slice(1)}` : digits;
+  if (!/^\d{9,15}$/.test(international)) return null;
+  const who = greetingName(name);
+  const opener = `היי${who ? ` ${who}` : ""}, זה עומר מ-${SITE_NAME}. קיבלתי את הפנייה שלך מהאתר, מתי נוח לדבר?`;
+  return `https://wa.me/${international}?text=${encodeURIComponent(opener)}`;
 }

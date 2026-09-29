@@ -180,7 +180,9 @@ export default function CTASection() {
           >
             {status === "success" ? (
               <p role="status" className="font-body text-m-body text-black/60">
-                קיבלתי, תודה! אחזור אליכם בהקדם.
+                קיבלתי, תודה!
+                <br />
+                אחזור אליכם בקרוב מאוד.
               </p>
             ) : (
               <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 text-right sm:grid-cols-2 sm:gap-3">

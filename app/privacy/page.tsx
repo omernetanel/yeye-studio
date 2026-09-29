@@ -15,7 +15,8 @@ export const metadata: Metadata = {
  * Everything here was checked against what the site actually does: the two
  * forms and the fields they send (name, email, optional phone, and an optional
  * free-text box in the closing form only), the fixed label naming which form
- * it came from, the honeypot, the IP read for rate limiting, the one route
+ * it came from, the automatic receipt mailed to the address given, the
+ * honeypot, the IP read for rate limiting, the one route
  * that sends the enquiry, the services that carry it (Resend sends it,
  * ImprovMX forwards the domain's mail to a Gmail inbox, Vercel hosts), and the
  * two keys in the browser's own storage (accessibility choices in
@@ -84,6 +85,9 @@ export default function PrivacyPage() {
       <p>
         לחזור אליכם ולענות לפנייה, להמשיך התקשרות עסקית אם היא נוצרת, לתעד את ההתקשרות, ולהגן על
         האתר מפני שימוש לרעה. פרטי הפנייה אינם משמשים לדיוור פרסומי ואינם נמכרים או מושכרים.
+      </p>
+      <p>
+        לאחר שליחת הטופס נשלח לכתובת הדוא״ל שהוזנה מייל אישור אוטומטי על קבלת הפנייה.
       </p>
 
       <h2>מי מעבד את המידע</h2>
