@@ -120,8 +120,8 @@ export default function AboutPageContent() {
                   larger. */}
               <p className={`mt-4 ${BODY}`}>ולגבי השם:</p>
               <p className="mt-1 font-display leading-[1.35] font-bold text-black">
-                <span className="block text-[20px] md:text-[22px]">YE זה הקיצור של שם המשפחה שלי.</span>
-                <span className="block text-[24px] md:text-[28px]">YEYE פשוט נשמע טוב יותר.</span>
+                <span className="block text-[20px] text-balance md:text-[22px]">YE זה הקיצור של שם המשפחה שלי.</span>
+                <span className="block text-[24px] text-balance md:text-[28px]">YEYE פשוט נשמע טוב יותר.</span>
               </p>
             </section>
           </div>
