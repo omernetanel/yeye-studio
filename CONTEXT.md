@@ -456,10 +456,13 @@ WebGL דרך `ogl`: השורה מצוירת לטקסטורה ועוברת דרך
 
 - **דוא״ל וטפסים** (הוקם 2026-09-28): `info@` ו‑`omer@yeye.co.il` מועברים דרך
   ImprovMX (חינם) ל‑Gmail עסקי נפרד; הטפסים שולחים דרך Resend (חינם) מ‑
-  `forms@yeye.co.il`. הרשומות ב‑box.co.il, והפירוט ב‑`CLAUDE.md`. **נשאר:**
-  אימות הדומיין ב‑Resend, `RESEND_API_KEY` ב‑Vercel, פנייה בדיקה מהאתר החי,
-  ו"שלח דואר בתור" ב‑Gmail בשם `omer@` דרך ה‑SMTP של Resend. **Google Workspace
-  נדחה** עד שהעסק מכניס; המעבר הוא החלפת רשומות MX ו‑SPF בלבד.
+  `forms@yeye.co.il`. הרשומות ב‑box.co.il, והפירוט ב‑`CLAUDE.md`. **הכול עובד
+  ואומת (2026-09-29):** הדומיין מאומת ב‑Resend, `RESEND_API_KEY` ב‑Vercel
+  (Production), שני הטפסים שולחים מהאתר החי, ו‑Gmail העסקי שולח בשם `omer@`
+  דרך ה‑SMTP של Resend (מפתח נפרד) — SPF, DKIM ו‑DMARC עוברים ומגיע ל‑Inbox.
+  **דואר נכנס מועבר נופל לספאם** ב‑Gmail העסקי; פותרים במסנן "אל: yeye.co.il →
+  אף פעם לא לספאם". **Google Workspace נדחה** עד שהעסק מכניס; המעבר הוא החלפת
+  רשומות MX ו‑SPF בלבד.
 - `/about` — דף אמיתי. הקישור בעמודי המשנה מצביע היום ל‑`/#about`, שקיים.
 - **`prefers-reduced-motion` ב‑`AboutSection` מציג מסך שחור ריק.** כל האלמנטים
   מתחילים ב‑`opacity: 0` ו‑`update()` לא רץ בכלל, אז שום דבר לא מגיע. זה נוגד
