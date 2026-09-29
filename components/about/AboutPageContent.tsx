@@ -76,9 +76,8 @@ function Reveal({ children, className }: { children: ReactNode; className?: stri
 
 export default function AboutPageContent() {
   return (
-    // The same width as the sub-page bar above it, so the page fills the
-    // screen the way the bar does.
-    <article className="mx-auto max-w-[1400px] px-6 pt-[140px] pb-24 md:px-10 md:pt-[150px]">
+    // Wide, but held in from the edges of the screen.
+    <article className="mx-auto max-w-[1240px] px-6 pt-[140px] pb-24 md:px-16 md:pt-[150px]">
       {/* THE OPENING: the photograph beside the heading, and everything the
           page has to say about who this is under it. Nothing here animates, so
           it is there on the first frame. */}

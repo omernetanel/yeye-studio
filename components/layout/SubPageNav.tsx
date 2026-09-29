@@ -76,8 +76,10 @@ export default function SubPageNav() {
       </nav>
 
       {/* Below the row, per its own line in the layout — offset by the bar's
-          own height so it never sits under it. */}
-      <div className="fixed inset-x-0 top-[72px] z-40">
+          own height so it never sits under it. Absolute, not fixed: pinned to
+          the screen it floated over the text once the page scrolled under it.
+          It sits in the top padding every sub-page leaves, and scrolls away. */}
+      <div className="absolute inset-x-0 top-[72px] z-30">
         <div className="mx-auto flex max-w-[1400px] justify-start px-6 pt-4">
           {canGoBack ? (
             <button type="button" onClick={() => router.back()} className={BACK_CLASS}>
