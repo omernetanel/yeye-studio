@@ -932,10 +932,26 @@ video {
   opacity: var(--sm-num-opacity, 0);
 }
 
+/* The social links, in the panel's bottom-left corner - physical left, as
+   asked, whichever side the panel comes from. */
+.sm-panel-social {
+  position: absolute;
+  bottom: 2rem;
+  left: 2.25rem;
+  display: flex;
+  gap: 1rem;
+  color: #000;
+  opacity: 0;
+}
+
 @media (max-width: 640px) {
   .staggered-menu-panel,
   .sm-prelayers {
     width: 100%;
+  }
+
+  .sm-panel-social {
+    left: 1.75rem;
   }
 
   .staggered-menu-panel {

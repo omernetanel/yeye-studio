@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import InstagramLink from "@/components/ui/InstagramLink";
 
 const LEGAL_LINKS = [
   { label: "פרטיות", href: "/privacy" },
@@ -88,14 +89,18 @@ export default function Footer({ light = false }: FooterProps) {
           </span>
         </div>
 
-        <span
+        {/* The line, and the studio's Instagram beside it - the one outward
+            link the footer carries (see NO CONTACT ICONS above: WhatsApp is
+            already in the corner of every screen, Instagram is not). */}
+        <div
           className={cn(
-            "font-display text-[12px] md:justify-self-end",
+            "flex items-center gap-4 font-display text-[12px] md:justify-self-end",
             light ? "text-black/60" : "text-white/60"
           )}
         >
-          © 2026 YEYE Digital. כל הזכויות שמורות.
-        </span>
+          <span>© 2026 YEYE Digital. כל הזכויות שמורות.</span>
+          <InstagramLink size={18} className={light ? "hover:text-black" : "hover:text-white"} />
+        </div>
       </div>
     </footer>
   );

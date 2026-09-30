@@ -10,6 +10,7 @@ import { useChromePaintedByHero } from "@/lib/motion/chromeBackdrop";
 import { ALL_TARGETS, CTA, TARGETS, destinationOf, type HashTarget } from "@/lib/nav/hash-targets";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import StaggeredMenu from "@/components/ui/StaggeredMenu";
+import InstagramLink from "@/components/ui/InstagramLink";
 
 /**
  * THE HARD PART OF THIS MENU IS NOT THE MENU — it is where each link lands, and
@@ -325,6 +326,7 @@ export default function NavMenu() {
           ...TARGETS.map((target) => ({ label: target.label, onSelect: () => go(target) })),
           { label: CTA.label, onSelect: () => go(CTA), highlight: true },
         ]}
+        social={<InstagramLink size={22} tabIndex={open ? 0 : -1} />}
         onPointerEnter={hoverOpen}
         onPointerLeave={hoverClose}
       />

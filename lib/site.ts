@@ -38,6 +38,9 @@ export const SITE_BACKGROUND_DARK = "#000000";
  */
 export const WHATSAPP_NUMBER = "972552759445";
 
+/** The studio's Instagram profile (@yeye__digital). */
+export const INSTAGRAM_URL = "https://www.instagram.com/yeye__digital/";
+
 /**
  * The address the site publishes, in one place.
  *

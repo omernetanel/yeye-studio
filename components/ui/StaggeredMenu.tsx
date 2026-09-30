@@ -42,6 +42,7 @@ export default function StaggeredMenu({
   open,
   position = "right",
   items,
+  social,
   reducedMotion = false,
   onPointerEnter,
   onPointerLeave,
@@ -49,6 +50,8 @@ export default function StaggeredMenu({
   open: boolean;
   position?: "left" | "right";
   items: StaggeredMenuItem[];
+  /** Sits in the panel's bottom-left corner - the studio's social links. */
+  social?: React.ReactNode;
   reducedMotion?: boolean;
   /** The button opens this on hover, so the panel has to count as the same
    *  surface: a pointer crossing from one to the other must not close it. */
@@ -95,8 +98,11 @@ export default function StaggeredMenu({
     const itemEls = Array.from(panel.querySelectorAll(".sm-panel-itemLabel")) as HTMLElement[];
     const numberEls = Array.from(panel.querySelectorAll(".sm-panel-item")) as HTMLElement[];
 
+    const socialEl = panel.querySelector(".sm-panel-social");
+
     if (itemEls.length) gsap.set(itemEls, { yPercent: 140, rotate: 10 });
     if (numberEls.length) gsap.set(numberEls, { "--sm-num-opacity": 0 });
+    if (socialEl) gsap.set(socialEl, { y: 12, opacity: 0 });
 
     const tl = gsap.timeline({ paused: true });
 
@@ -125,6 +131,12 @@ export default function StaggeredMenu({
         { duration: 0.6, ease: "power2.out", "--sm-num-opacity": 1, stagger: { each: 0.08, from: "start" } },
         itemsStart + 0.1,
       );
+    }
+
+    // The social links come up last, after the list - the source's timing for
+    // its own socials row.
+    if (socialEl) {
+      tl.to(socialEl, { y: 0, opacity: 1, duration: 0.55, ease: "power3.out" }, panelInsertTime + panelDuration * 0.4);
     }
 
     openTlRef.current = tl;
@@ -166,6 +178,8 @@ export default function StaggeredMenu({
         if (itemEls.length) gsap.set(itemEls, { yPercent: 140, rotate: 10 });
         const numberEls = Array.from(panel.querySelectorAll(".sm-panel-item")) as HTMLElement[];
         if (numberEls.length) gsap.set(numberEls, { "--sm-num-opacity": 0 });
+        const socialEl = panel.querySelector(".sm-panel-social");
+        if (socialEl) gsap.set(socialEl, { y: 12, opacity: 0 });
         busyRef.current = false;
       },
     });
@@ -225,6 +239,8 @@ export default function StaggeredMenu({
             </li>
           ))}
         </ul>
+
+        {social && <div className="sm-panel-social">{social}</div>}
       </aside>
     </div>
   );
