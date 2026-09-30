@@ -101,9 +101,10 @@ const LINE_IN_TO = 0.62;
 // Where a claim card opens. Each is a sheet folded back from its top edge and
 // unfolds toward the reader; CLAIM_FOLDED is where it starts. Two coming up at
 // once still open one after another, CLAIM_STAGGER_MS apart.
-// 0.62, not 0.85: at the bottom edge a card had finished opening before the
-// eye got there, and the unfold was never seen.
-const CLAIM_IN_VH = 0.62;
+// 0.7, between two that missed: at 0.85, the bottom edge, a card had finished
+// opening before the eye got there; at 0.62 the last card opened so late that
+// the impact line and the balloons after it were rushed.
+const CLAIM_IN_VH = 0.7;
 const CLAIM_FOLDED = "perspective(700px) rotateX(-88deg)";
 const CLAIM_OPEN = "perspective(700px) rotateX(0deg)";
 const CLAIM_STAGGER_MS = 500;

@@ -206,7 +206,7 @@ export default function CTASection() {
                   label="טלפון"
                   id="cta-phone"
                   type="tel"
-                  placeholder="טלפון / וואטסאפ (לא חובה)"
+                  placeholder="טלפון / וואטסאפ (לא חובה, אבל מומלץ)"
                   autoComplete="tel"
                   inputMode="tel"
                   className="text-right"

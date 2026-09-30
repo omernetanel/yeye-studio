@@ -217,7 +217,7 @@ function ContactForm() {
             label="טלפון"
             id="contact-stage-phone"
             type="tel"
-            placeholder="טלפון / וואטסאפ (לא חובה)"
+            placeholder="טלפון / וואטסאפ (לא חובה, אבל מומלץ)"
             autoComplete="tel"
             inputMode="tel"
             className={`${DARK_INPUT} text-right`}
