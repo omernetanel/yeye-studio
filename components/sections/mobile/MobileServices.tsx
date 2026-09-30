@@ -159,24 +159,25 @@ const SWAP_SPAN = 0.9;
 /** A short, soft lift: at 28px on a slower swap the drift was the event. */
 const SWAP_RISE_PX = 16;
 /**
- * Where the position starts: a full swap before the first stage, so the first
- * stage arrives the same way every later one does — after the heading has
- * settled — and rests for as long as each of them.
+ * Where the position starts, in stages: two before the first one. The heading
+ * has the first of them to itself - it arrives only once the paper is open, as
+ * a step of its own, like each stage after it - and the first stage then
+ * arrives the same way every later one does.
  */
-const FIRST_ARRIVAL = -0.5 - SWAP_SPAN / 2;
+const FIRST_ARRIVAL = -2;
 /**
- * THE HEADING comes up alone in the exact centre of the screen while the paper
- * opens, and over the last HEADING_RISE_SECONDS of the opening it rises to its
- * place above the stages. Only then does the first stage come in.
+ * THE HEADING, on the open sheet, in the same position space as the stages.
+ * Its letters fold in as a big stack in the exact centre of the screen - the
+ * same entrance as the projects heading, this share of the screen's width and
+ * at most this share of its height, between one line length and one type size
+ * - and it stands there alone (HEADING_ALONE, a rest state). Then it rises to
+ * its place above the stages, and only after that does the first stage come in.
+ * It used to fold in while the paper was still opening, and the two movements
+ * competed.
  */
-const HEADING_RISE_SECONDS = 0.5;
-/**
- * The heading's entrance, the same as the projects heading's: its letters fold
- * in over this stretch of the clip (ending on the rest state where it stands
- * alone in the middle), as a stack this share of the screen's width and at most
- * this share of its height, and between one line length and one type size.
- */
-const HEADING_FOLD = [CUE_ABOUT_IN - 0.2, CUE_ABOUT_IN + FADE_SECONDS] as const;
+const HEADING_FOLD = [-2, -1.55] as const;
+const HEADING_ALONE = -1.5;
+const HEADING_RISE = [-1.45, -0.95] as const;
 const HEADING_STACK_WIDTH = 0.8;
 const HEADING_STACK_MAX_HEIGHT = 0.4;
 const HEADING_STACK_SAME_SIZE = 0.5;
@@ -216,11 +217,12 @@ function progressAtTime(time: number) {
 }
 
 /**
- * The progress at which stage `index` stands alone on the sheet, fully shown:
- * the inverse of the position arithmetic in the render below.
+ * The progress at which the open sheet is at `position`, in stages - so a whole
+ * number is that stage standing alone, fully shown: the inverse of the position
+ * arithmetic in the render below.
  */
-function progressAtStage(index: number) {
-  const onSheet = (STAGES_END * (index - FIRST_ARRIVAL)) / (STAGE_COUNT - 1 - FIRST_ARRIVAL);
+function progressAtPosition(position: number) {
+  const onSheet = (STAGES_END * (position - FIRST_ARRIVAL)) / (STAGE_COUNT - 1 - FIRST_ARRIVAL);
   return STAGES_FROM + onSheet * (STAGES_TO - STAGES_FROM);
 }
 
@@ -260,8 +262,9 @@ const STORY = {
   anchors: [
     0,
     progressAtTime(FREE_END_TIME), // the ball, the list still whole
-    progressAtTime(CUE_ABOUT_IN + FADE_SECONDS), // open, "איך אני עובד?" alone in the middle
-    ...STAGE_TITLES.map((_, index) => progressAtStage(index)), // each stage alone on the sheet
+    STAGES_FROM, // the paper open and still, nothing on it yet
+    progressAtPosition(HEADING_ALONE), // "איך אני עובד?" alone in the middle
+    ...STAGE_TITLES.map((_, index) => progressAtPosition(index)), // each stage alone on the sheet
     progressAtTime(BALL_REST_TIME), // crumpled, the ball landed
     progressAtTime(PLANE_REST_TIME), // a plane, the closing line up behind it
     1, // the plane gone, the line on white
@@ -275,7 +278,8 @@ const STORY = {
     { kind: "scrub", screens: 1 }, // the ball with the list on it
     // The clocks were slowed by about half after a real hand: at 1.8 / 0.5 /
     // 2.8 / 2.2 seconds everything happened before it could be watched.
-    { kind: "play", screens: 0.6, seconds: 2.6 }, // the list goes, the paper opens, the heading folds in
+    { kind: "play", screens: 0.6, seconds: 2.6 }, // the list goes and the paper opens
+    { kind: "play", screens: 0.55, seconds: 1.2 }, // the heading folds in, alone, once the paper is still
     { kind: "play", screens: 0.55, seconds: 1.6 }, // the heading settles into its place and the first stage comes in
     { kind: "play", screens: 0.55, seconds: 1.2 }, // stage to stage
     { kind: "play", screens: 0.55, seconds: 1.2 },
@@ -289,8 +293,8 @@ const STORY = {
 const TRAVEL_SCREENS = travelScreensFor(STORY);
 
 // The rest state in STORY.anchors where the first stage stands alone: after the
-// start, the ball and the open sheet.
-const FIRST_STAGE_ANCHOR = 3;
+// start, the ball, the open sheet and the heading alone.
+const FIRST_STAGE_ANCHOR = 4;
 
 /**
  * The services section, rebuilt for the phone around a 9:16 cut of the clip.
@@ -421,12 +425,16 @@ export default function MobileServices() {
     aboutLayer.style.opacity = String(Math.min(fadeIn(time, CUE_ABOUT_IN), 1 - collapse));
     aboutLayer.style.transform = `scale(${lerp(1, COLLAPSED_SCALE, collapse)})`;
 
-    // Where the reader is in the four, as a continuous position — 1.5 is halfway
-    // between the second and the third. Read off the scroll inside the hold, not
-    // off clip time, which is standing still there.
-    // The heading folds in as a big stack centred on the screen while the paper
-    // opens, and settles into its line at its place as it rises.
-    const rise = smoothstep(clamp01((time - (CUE_PAPER_FLAT - HEADING_RISE_SECONDS)) / HEADING_RISE_SECONDS));
+    // Where the reader is on the open sheet, as a continuous position in stages
+    // — 1.5 is halfway between the second and the third, and below zero is the
+    // heading's own stretch. Read off the scroll inside the hold, not off clip
+    // time, which is standing still there.
+    const onSheet = clamp01((progress - STAGES_FROM) / (STAGES_TO - STAGES_FROM));
+    const position = lerp(FIRST_ARRIVAL, STAGE_COUNT - 1, clamp01(onSheet / STAGES_END));
+
+    // The heading folds in as a big stack centred on the screen once the paper
+    // is still, and settles into its line at its place as it rises.
+    const rise = smoothstep(clamp01((position - HEADING_RISE[0]) / (HEADING_RISE[1] - HEADING_RISE[0])));
     stackHeading(
       heading,
       heading.offsetWidth / 2,
@@ -436,10 +444,7 @@ export default function MobileServices() {
       rise,
       HEADING_STACK_SAME_SIZE,
     );
-    setFold(heading, (time - HEADING_FOLD[0]) / (HEADING_FOLD[1] - HEADING_FOLD[0]));
-
-    const onSheet = clamp01((progress - STAGES_FROM) / (STAGES_TO - STAGES_FROM));
-    const position = lerp(FIRST_ARRIVAL, STAGE_COUNT - 1, clamp01(onSheet / STAGES_END));
+    setFold(heading, (position - HEADING_FOLD[0]) / (HEADING_FOLD[1] - HEADING_FOLD[0]));
 
     for (let index = 0; index < STAGE_COUNT; index++) {
       // 0 → 1 across the swap into this stage, and across the swap out of it.
@@ -541,10 +546,15 @@ export default function MobileServices() {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative aspect-[9/16] w-[min(100%,calc(100svh*9/16))]">
             <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />
-            {/* The frame's own bottom edge cuts the paper in a straight line
-                where the clip ends. A short fade to the page's white there
-                lets the sheet run out instead of being cut off. Over the
-                picture only - the words above it are later layers. */}
+            {/* The frame's own edges cut the paper in a straight line where
+                the clip ends, at the bottom and at the top. A short fade to
+                the page's white at each lets the sheet run out instead of
+                being cut off. Over the picture only - the words above it are
+                later layers. */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 top-0 h-[14%] bg-gradient-to-b from-white to-transparent"
+            />
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-x-0 bottom-0 h-[14%] bg-gradient-to-t from-white to-transparent"
