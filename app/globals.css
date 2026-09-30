@@ -847,7 +847,7 @@ video {
 .sm-panel-item {
   position: relative;
   display: inline-block;
-  padding-inline-start: 34px;
+  padding-inline-end: 1.8em;
   border: 0;
   background: none;
   color: #000;
@@ -918,16 +918,15 @@ video {
 }
 
 /* The numeral, counted rather than written, and faded in by the timeline
-   through --sm-num-opacity. At the START of the line - the right, under RTL -
-   so the numerals stand in one column beside the words. At the end, where the
-   source puts them, each sat after its own word, and words of different
-   lengths scattered them across the panel. */
+   through --sm-num-opacity. After its word - the end of the line, its left
+   under RTL - where the source puts it. A column at the start of the words
+   was tried and turned down. */
 .sm-panel-item::after {
   counter-increment: sm-item;
   content: counter(sm-item, decimal-leading-zero);
   position: absolute;
-  top: 0.55em;
-  inset-inline-start: 0;
+  top: 0.45em;
+  inset-inline-end: 0;
   font-family: var(--font-body), sans-serif;
   font-size: 13px;
   font-weight: 500;
@@ -973,8 +972,11 @@ video {
     padding: 6rem 1.75rem 2rem;
   }
 
+  /* The numeral closer to its word than on a desk: at 1.8em of the bigger
+     phone type it stood well clear of it. */
   .sm-panel-item {
     font-size: 2.1rem;
+    padding-inline-end: 1.1em;
   }
 }
 
