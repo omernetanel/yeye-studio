@@ -36,7 +36,7 @@ export const TARGETS: HashTarget[] = [
   // The first stage of the process, whole on the open sheet.
   { label: "איך אני עובד", id: "process", section: "services" },
   { label: "מי אני", id: "about" },
-  { label: "פרויקטים", id: "projects" },
+  { label: "עבודות", id: "projects" },
 ];
 
 // The contact stage is deliberately absent from the menu: it is a section you

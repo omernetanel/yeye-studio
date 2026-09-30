@@ -1,6 +1,7 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { registerLanding } from "@/lib/nav/landings";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import ProjectsCarousel from "@/components/ui/ProjectsCarousel";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
@@ -62,6 +63,7 @@ function smoothstep(t: number) {
 }
 
 export default function MobileProjects() {
+  const sectionRef = useRef<HTMLElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
   const seenRef = useRef(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -135,6 +137,19 @@ export default function MobileProjects() {
     update();
   });
 
+  // WHERE THE MENU LANDS: a pixel INTO the section, not on its top. The top
+  // falls on a fraction of a pixel, and a landing a third of a pixel short left
+  // the contact section's black as the first thing on screen - and the phone's
+  // clock strip, which follows the dark stretch, black with it.
+  useEffect(
+    () =>
+      registerLanding("projects", () => {
+        const section = sectionRef.current;
+        return section ? Math.ceil(section.getBoundingClientRect().top + window.scrollY) + 1 : null;
+      }),
+    [],
+  );
+
   return (
     // pb-12 against the CTA's own pt-14: 48 + 56 comes to a little over a
     // hundred, which is one beat between two sections rather than the 156 the
@@ -142,7 +157,7 @@ export default function MobileProjects() {
     // 250px block of balloons; the clip is the ground of that section now, so
     // the number it was matched to is gone.
     // pt-32, up from 24: the settled line sat too close to the section above.
-    <section id="projects" className="relative bg-white pt-32 pb-4">
+    <section ref={sectionRef} id="projects" className="relative bg-white pt-32 pb-4">
       <h2
         ref={headingRef}
         // flex-wrap: at this size the two words do not fit one line on a
