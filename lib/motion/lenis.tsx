@@ -16,6 +16,9 @@ const LenisContext = createContext<Lenis | null>(null);
 // it is over before a reader who lands and immediately reaches for the wheel
 // would notice - and their first touch ends it anyway.
 const HOLD_ARRIVAL_MS = 500;
+// How much longer it may keep holding while the page is still too short to
+// reach its place.
+const HOLD_REACH_MS = 1500;
 
 /** The active Lenis instance, or null when smooth scroll is disabled (prefers-reduced-motion). */
 export function useLenis() {
@@ -60,10 +63,9 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
   }, [prefersReducedMotion]);
 
   // BACK AND FORWARD ARE NOT NEW PAGES. A route change normally has to be sent
-  // to the top — see the effect below — but a history navigation is the reader
-  // returning to a place they were, and the whole point of it is the position
-  // they left. This flag marks those so the reset below stands down for one
-  // route change; the browser and Next restore the position themselves.
+  // to the top or to its hash — see the effect below — but a history
+  // navigation is the reader returning to a place they were, and the whole
+  // point of it is the position they left. This flag marks those.
   const poppedRef = useRef(false);
   useEffect(() => {
     const onPop = () => {
@@ -71,6 +73,28 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  // WHERE THE READER STOOD ON EACH PAGE, kept by the site. This used to be
+  // left to the browser and to Next, and on the home page it did not survive:
+  // the page is still growing as it comes back - the pinned sections, the
+  // frames - so the position was restored against a shorter page and clamped,
+  // and back from a project landed on the hero. Restored here instead, and held
+  // while the page grows, the same way a hash arrival is.
+  //
+  // Recorded only while the address is still the page it is recorded for: when
+  // a route changes, the new page's scroll to the top must not be written over
+  // the old page's place.
+  const positionsRef = useRef(new Map<string, number>());
+  const placedPathRef = useRef<string | null>(null);
+  useEffect(() => {
+    window.history.scrollRestoration = "manual";
+    const onScroll = () => {
+      const path = placedPathRef.current;
+      if (path !== null && window.location.pathname === path) positionsRef.current.set(path, window.scrollY);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   // A client-side route change unmounts/mounts new page content at whatever
@@ -99,14 +123,15 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     const moved = !arriving && lastPathRef.current !== pathname;
     lastPathRef.current = pathname;
     if (arriving) noteArrival(pathname);
+    placedPathRef.current = pathname;
 
-    if (poppedRef.current) {
-      poppedRef.current = false;
-      if (moved) noteHistoryNavigation(pathname);
-      return;
-    }
-
-    if (moved) noteForwardNavigation(pathname);
+    // Back or forward to a page the reader stood on: where they stood. A pop
+    // to a page with no record (a reload lost it) goes by its address instead.
+    const popped = poppedRef.current;
+    poppedRef.current = false;
+    const returnTo = popped ? positionsRef.current.get(pathname) : undefined;
+    if (popped && moved) noteHistoryNavigation(pathname);
+    else if (moved) noteForwardNavigation(pathname);
 
     // THE OFFSET OF A SECTION IS NOT FINAL ON THE FRAME THE ROUTE SETTLES:
     // fonts land, the paper's frame sequence arrives, and the page grows above
@@ -117,7 +142,7 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     // ResizeObserver answers exactly that: place again on every change, and
     // fall silent on its own once the height holds.
     const place = () => {
-      const top = destinationForHash(window.location.hash) ?? 0;
+      const top = returnTo ?? destinationForHash(window.location.hash) ?? 0;
       if (lenis) lenis.scrollTo(top, { immediate: true });
       else window.scrollTo(0, top);
       return top;
@@ -150,8 +175,14 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("keydown", stop);
     };
 
+    // And not over before the page has actually reached its place: a return
+    // to a deep position waits for the page to grow tall enough to hold it,
+    // up to a limit.
+    const limit = until + HOLD_REACH_MS;
     const hold = () => {
-      if (performance.now() > until) return stop();
+      const now = performance.now();
+      const reached = Math.abs(window.scrollY - aimed) < 2;
+      if (now > limit || (now > until && reached)) return stop();
       place();
       frame = requestAnimationFrame(hold);
     };
