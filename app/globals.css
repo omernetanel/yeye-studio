@@ -847,7 +847,7 @@ video {
 .sm-panel-item {
   position: relative;
   display: inline-block;
-  padding-inline-end: 1.8em;
+  padding-inline-start: 34px;
   border: 0;
   background: none;
   color: #000;
@@ -918,14 +918,16 @@ video {
 }
 
 /* The numeral, counted rather than written, and faded in by the timeline
-   through --sm-num-opacity. At the END of the line, which under RTL is its
-   left. */
+   through --sm-num-opacity. At the START of the line - the right, under RTL -
+   so the numerals stand in one column beside the words. At the end, where the
+   source puts them, each sat after its own word, and words of different
+   lengths scattered them across the panel. */
 .sm-panel-item::after {
   counter-increment: sm-item;
   content: counter(sm-item, decimal-leading-zero);
   position: absolute;
-  top: 0.45em;
-  inset-inline-end: 0;
+  top: 0.55em;
+  inset-inline-start: 0;
   font-family: var(--font-body), sans-serif;
   font-size: 13px;
   font-weight: 500;
@@ -954,8 +956,17 @@ video {
     width: 100%;
   }
 
+  /* On a phone, bottom right and bigger - clear of the browser's own bar at
+     the foot of the screen. */
   .sm-panel-social {
-    left: 1.75rem;
+    left: auto;
+    right: 1.75rem;
+    bottom: calc(2.5rem + env(safe-area-inset-bottom));
+  }
+
+  .sm-panel-social svg {
+    width: 28px;
+    height: 28px;
   }
 
   .staggered-menu-panel {

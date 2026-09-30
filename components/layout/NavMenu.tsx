@@ -30,6 +30,7 @@ export default function NavMenu() {
   // asked for: it stays until a click outside it, an item or Escape. A click on
   // the button while a hover holds it open turns the glance into that.
   const openedByRef = useRef<"hover" | "click" | null>(null);
+  const openedByKeyboardRef = useRef(false);
   const closeTimerRef = useRef<number | null>(null);
   const pathname = usePathname();
   const router = useRouter();
@@ -100,7 +101,9 @@ export default function NavMenu() {
       openedByRef.current = null;
       return;
     }
-    if (openedByRef.current !== "click") return;
+    // From the keyboard only. Moved there after a tap or a click, the focus lit
+    // the first item as if it were being hovered - grey, with its marker drawn.
+    if (!openedByKeyboardRef.current) return;
     document.querySelector<HTMLButtonElement>("[data-nav-panel] button")?.focus();
   }, [open]);
 
@@ -145,12 +148,17 @@ export default function NavMenu() {
     closeTimerRef.current = window.setTimeout(() => setOpen(false), HOVER_CLOSE_MS);
   };
 
-  const toggle = () => {
+  // A click's detail is the number of presses; a button pressed from the
+  // keyboard fires one with a detail of 0.
+  const toggle = (event: React.MouseEvent) => {
     if (open && openedByRef.current === "hover") {
       openedByRef.current = "click";
       return;
     }
-    if (!open) openedByRef.current = "click";
+    if (!open) {
+      openedByRef.current = "click";
+      openedByKeyboardRef.current = event.detail === 0;
+    }
     setOpen(!open);
   };
 
