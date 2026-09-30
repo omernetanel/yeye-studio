@@ -781,7 +781,11 @@ video {
   left: 0;
 }
 
+/* touch-action: a sideways thumb on the panel is the menu's (it closes it),
+   not the page's - no sideways nudge, no browser back-swipe. */
 .staggered-menu-panel {
+  touch-action: pan-y;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   justify-content: center;

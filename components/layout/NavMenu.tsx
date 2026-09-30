@@ -305,6 +305,7 @@ export default function NavMenu() {
           { label: CTA.label, onSelect: () => go(CTA), highlight: true },
         ]}
         social={<InstagramLink size={22} tabIndex={open ? 0 : -1} />}
+        onSwipeClose={() => setOpen(false)}
         onPointerEnter={hoverOpen}
         onPointerLeave={hoverClose}
       />

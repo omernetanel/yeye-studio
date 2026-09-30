@@ -31,6 +31,9 @@ import { gsap } from "gsap";
  * in here. With less motion the timeline is jumped to its end.
  */
 
+// How far a thumb has to travel sideways across the panel to close it.
+const SWIPE_CLOSE_PX = 60;
+
 export type StaggeredMenuItem = {
   label: string;
   onSelect: () => void;
@@ -43,6 +46,7 @@ export default function StaggeredMenu({
   position = "right",
   items,
   social,
+  onSwipeClose,
   reducedMotion = false,
   onPointerEnter,
   onPointerLeave,
@@ -52,6 +56,8 @@ export default function StaggeredMenu({
   items: StaggeredMenuItem[];
   /** Sits in the panel's bottom-left corner - the studio's social links. */
   social?: React.ReactNode;
+  /** A sideways swipe across the panel asks for it to close. */
+  onSwipeClose?: () => void;
   reducedMotion?: boolean;
   /** The button opens this on hover, so the panel has to count as the same
    *  surface: a pointer crossing from one to the other must not close it. */
@@ -185,6 +191,25 @@ export default function StaggeredMenu({
     });
   }, [offscreen, reducedMotion]);
 
+  // A SIDEWAYS SWIPE CLOSES IT, in either direction: on a phone the panel is
+  // the whole screen, and a thumb pushing it aside is the natural way out -
+  // where before it nudged the page sideways or, in some browsers, went back a
+  // page. More across than down, and far enough to be meant.
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = (event: React.TouchEvent) => {
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+  const onTouchEnd = (event: React.TouchEvent) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start || !onSwipeClose) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) > SWIPE_CLOSE_PX && Math.abs(dx) > Math.abs(dy) * 1.5) onSwipeClose();
+  };
+
   // The button owns the state; this only plays what the flag says. Skipped on
   // the very first render, or the panel would slam shut on a page that never
   // opened it.
@@ -218,6 +243,8 @@ export default function StaggeredMenu({
         data-nav-panel
         ref={panelRef}
         className="staggered-menu-panel"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
         aria-hidden={!open}
         aria-label="ניווט באתר"
       >
