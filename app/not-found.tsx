@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Button from "@/components/ui/Button";
+import BackToPreviousLink from "@/components/ui/BackToPreviousLink";
 import { pageTitle } from "@/lib/site";
 
 /**
@@ -11,8 +11,8 @@ import { pageTitle } from "@/lib/site";
  * Until now there was none, so a mistyped URL landed on Next's own English
  * default — left-to-right, black on white, with the framework's name on it.
  * This is the site's own page: the nav still works, the footer still carries
- * the legal row, and the reader is offered the two places they were most
- * likely heading for.
+ * the legal row, and the reader is offered the home page and the page they
+ * came from.
  *
  * Deliberately still: no ink, no pinning, nothing to scroll. Someone who is
  * lost wants the way back, not a composition.
@@ -36,19 +36,14 @@ export default function NotFound() {
           הדף הזה לא קיים
         </h1>
         <p className="mt-4 max-w-[420px] font-body text-[17px] leading-[1.8] text-black/70">
-          כנראה שהכתובת השתנתה, או שיש שם טעות קטנה. אפשר לחזור לעמוד הבית או לראות את העבודות.
+          כנראה שהכתובת השתנתה, או שיש שם טעות קטנה. אפשר לחזור לעמוד הבית או לעמוד שממנו הגעת.
         </p>
 
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
           <Button href="/" className="!border-black !bg-none !bg-black !text-white !shadow-none">
             לעמוד הבית
           </Button>
-          <Link
-            href="/projects"
-            className="font-body text-[16px] text-black/70 underline underline-offset-4 transition-colors hover:text-black"
-          >
-            העבודות שלי
-          </Link>
+          <BackToPreviousLink className="font-body text-[16px] text-black/70 underline underline-offset-4 transition-colors hover:text-black" />
         </div>
       </div>
 
