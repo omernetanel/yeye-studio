@@ -1,6 +1,6 @@
-/* The box only holds the photograph's place. The canvas and the hit area are
-   fixed to the screen, so the wad can be played with anywhere on it - no
-   overflow clip and no isolation here, either would box them in again. */
+/* The box holds the photograph. The canvas is fixed to the screen, so the wad
+   can be played with anywhere on it - no overflow clip and no isolation here,
+   either would box it in again. */
 .paper-crumple {
   position: relative;
   width: 100%;
@@ -28,11 +28,13 @@
 /* touch-action: the vertical pan stays the page's, so on a phone a thumb over
    the photograph still scrolls; a sideways drag moves the wad.
    touch-callout: the hold is the gesture, so iOS's long-press menu stays shut. */
+/* Over the photograph's own box, in the page's flow, so it is always exactly
+   where the photograph is. Once a hold starts the pointer is captured, so the
+   wad can be dragged far outside it. */
 .paper-crumple-hit {
   appearance: none;
-  position: fixed;
-  top: 0;
-  left: 0;
+  position: absolute;
+  inset: 0;
   padding: 0;
   margin: 0;
   border: 0;

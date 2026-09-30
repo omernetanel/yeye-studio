@@ -22,9 +22,9 @@ import "./PaperCrumple.css";
  * - THE WHOLE SCREEN IS THE TABLE. The original drew into a canvas the size of
  *   its own box, so the wad was cut off at the photograph's edge. Here the
  *   canvas is fixed over the whole viewport and the sheet's resting place is
- *   measured from the box every frame, so at rest it sits exactly where the
- *   photograph is and scrolls with it, and held it can go anywhere on screen.
- *   Release always brings it home. The box itself only holds the space.
+ *   measured from the box every frame, so held it can go anywhere on screen.
+ *   Release always brings it home. At rest the canvas is not shown at all:
+ *   the photograph is a plain image in the page's flow (see setLive).
  * - The vertical pan stays the page's (touch-action: pan-y). On a phone a
  *   sideways drag moves the wad and an up-or-down one scrolls, which lets go.
  * - No long-press menu on the photograph (iOS "save image"): the hold is the
@@ -367,6 +367,9 @@ export default function PaperCrumple({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hitRef = useRef<HTMLButtonElement>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  // Whether the canvas is showing - see setLive in the effect.
+  const [live, setLiveState] = useState(false);
+  const liveRef = useRef(false);
   const options = useRef<Options>({
     releaseBehavior,
     crumpleAmount,
@@ -692,30 +695,16 @@ export default function PaperCrumple({
       lighting.value = THREE.MathUtils.smoothstep(fold + memory.value, 0, 0.4);
     }
 
-    function placeHitTarget() {
-      const bounds = geometry.boundingBox;
-      if (!bounds || !hit) return;
-      let minX = Infinity,
-        minY = Infinity,
-        maxX = -Infinity,
-        maxY = -Infinity;
-      for (let i = 0; i < 8; i++) {
-        corner.set(
-          i & 1 ? bounds.max.x : bounds.min.x,
-          i & 2 ? bounds.max.y : bounds.min.y,
-          i & 4 ? bounds.max.z : bounds.min.z,
-        );
-        corner.applyMatrix4(sheet.matrixWorld).project(camera);
-        const x = ((corner.x + 1) * viewportWidth) / 2,
-          y = ((1 - corner.y) * viewportHeight) / 2;
-        minX = Math.min(minX, x);
-        maxX = Math.max(maxX, x);
-        minY = Math.min(minY, y);
-        maxY = Math.max(maxY, y);
-      }
-      hit.style.transform = `translate3d(${minX}px, ${minY}px, 0)`;
-      hit.style.width = `${Math.max(24, maxX - minX)}px`;
-      hit.style.height = `${Math.max(24, maxY - minY)}px`;
+    // LIVE ONLY WHILE IN PLAY. At rest the photograph is the plain image in
+    // the page's own flow, so it scrolls with the page exactly and costs
+    // nothing; the fixed canvas takes over from the first frame it has drawn
+    // of a hold, and hands back once the sheet has opened out and come home.
+    // A fixed canvas redrawn on scroll trails the page by a frame, and at rest
+    // that read as a photograph that would not keep still.
+    function setLive(next: boolean) {
+      if (liveRef.current === next) return;
+      liveRef.current = next;
+      setLiveState(next);
     }
 
     function setPointer(x: number, y: number) {
@@ -776,8 +765,9 @@ export default function PaperCrumple({
         floor.position.z = backZ - scale * shortSide * 0.08;
       }
       renderer.render(scene, camera);
-      placeHitTarget();
-      if (moving) wake();
+      if (held) setLive(true);
+      if (moving || held) wake();
+      else setLive(false);
     }
 
     function wake() {
@@ -864,6 +854,10 @@ export default function PaperCrumple({
       pointerX = lastX = event.clientX;
       pointerY = lastY = event.clientY;
       setPointer(pointerX, pointerY);
+      // At rest nothing has been drawn since the page last moved, so the sheet
+      // is put where the photograph is now before it is aimed at.
+      measureHome();
+      sheet.position.set(homeX + posX.value, homeY + posY.value, 0);
       sheet.updateMatrixWorld(true);
       const intersection = raycaster.intersectObjects([front, back], false)[0];
       if (!intersection?.face) return;
@@ -996,9 +990,14 @@ export default function PaperCrumple({
     hit.addEventListener("keyup", keyUp);
     hit.addEventListener("blur", blur);
     window.addEventListener("blur", cancel);
-    // The canvas stays put while the page moves under it: every scroll is a
-    // frame, so the sheet keeps to its box. A resize changes the canvas too.
-    window.addEventListener("scroll", wake, { passive: true });
+    // While the sheet is in play the canvas stays put as the page moves under
+    // it, so every scroll is a frame and the sheet keeps to its box. At rest
+    // the plain photograph scrolls by itself and there is nothing to draw. A
+    // resize changes the canvas too.
+    const onScroll = () => {
+      if (liveRef.current) wake();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", resize);
     document.addEventListener("visibilitychange", visibility);
     canvas.addEventListener("webglcontextlost", loseContext);
@@ -1008,10 +1007,8 @@ export default function PaperCrumple({
     const intersectionObserver = new IntersectionObserver((entries) => {
       inView = entries[0].isIntersecting;
       lastTime = 0;
-      // Rendering stops out of view, and both the canvas and the hit area are
-      // fixed to the screen: the last frame would stay painted, and the hit
-      // area would stay where it last was, invisible, over whatever comes next.
-      hit.style.pointerEvents = inView ? "" : "none";
+      // Rendering stops out of view, and the canvas is fixed to the screen:
+      // the last frame would otherwise stay painted over whatever comes next.
       if (!inView) {
         cancel();
         renderer.clear();
@@ -1077,7 +1074,7 @@ export default function PaperCrumple({
       hit.removeEventListener("keyup", keyUp);
       hit.removeEventListener("blur", blur);
       window.removeEventListener("blur", cancel);
-      window.removeEventListener("scroll", wake);
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", visibility);
       canvas.removeEventListener("webglcontextlost", loseContext);
@@ -1125,9 +1122,11 @@ export default function PaperCrumple({
         aria-hidden="true"
         // No CSS drop shadow on it: over the whole screen that filter would be
         // recomposited on every scroll. The scene casts its own.
-        style={{ visibility: status === "ready" ? "visible" : "hidden" }}
+        style={{ visibility: status === "ready" && live ? "visible" : "hidden" }}
       />
-      {status !== "ready" && (
+      {/* The photograph itself, in the page's flow: all there is at rest, and
+          while the scene loads or if it cannot run. */}
+      {!(status === "ready" && live) && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           className="paper-crumple-fallback"
