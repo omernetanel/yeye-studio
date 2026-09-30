@@ -5,22 +5,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { hasInSiteHistory } from "@/lib/nav/in-site-history";
-
-// "מי אני" is a page of its own; the homepage's section keeps its anchor for
-// the homepage's own menu.
-const LINKS = [
-  { label: "עבודות", href: "/projects" },
-  { label: "שירותים", href: "/#services" },
-  { label: "איך אני עובד", href: "/#process" },
-  { label: "מי אני", href: "/about" },
-  { label: "צור קשר", href: "/#cta" },
-];
+import NavMenu from "@/components/layout/NavMenu";
 
 /**
- * The way off a sub-page. The homepage navbar is a bare logo — nothing to
- * navigate with — which left the service pages as dead ends once you landed
- * on one. Sits alongside that logo (which stays owned by Navbar) and adds a
- * back link under the row.
+ * The header of a sub-page: the site's own menu, the same button and panel as
+ * the home page, and a way back under it.
+ *
+ * ONE MENU, EVERYWHERE. This used to be a row of four text links of its own -
+ * a second navigation with its own labels, its own spacing and its own way of
+ * being crowded on a phone. A reader who moves between the home page and a
+ * project should find the same button in the same corner. From here its items
+ * go to the home page and land where each section is whole (see NavMenu).
+ *
+ * The white bar stays: on a sub-page the text scrolls up under the logo and
+ * the button, and without it the two ran into whatever passed beneath them.
  */
 // One set of styles for the back control, because it renders as a button or as
 // a link depending on where the reader came from and the two have to be
@@ -30,21 +28,15 @@ const BACK_CLASS =
 
 export default function SubPageNav() {
   const router = useRouter();
-  // GOING BACK MEANS GOING BACK, not going to a fixed address. This was a hard
-  // link to /#services, so a reader who arrived from the work grid, from the
-  // menu, or from another project was sent to the services section of the home
-  // page instead of to the place they left - and to the top of it. At no point
-  // does it go to the services section on its own any more.
+  // GOING BACK MEANS GOING BACK, not going to a fixed address - to the place
+  // the reader left, which the scroll provider restores.
   //
   // It only behaves that way when there is somewhere of OURS to go back to.
   // Someone who landed here from a search result has none, and sending them
   // back would send them out of the site; they get the home page instead.
-  // Read through useSyncExternalStore, the same way the site reads the
-  // reader's motion and accessibility preferences: the server snapshot is
-  // false, so the markup that arrives is the plain link, and the client
-  // snapshot answers once it is hydrated. The subscribe is empty because the
-  // depth announces nothing - it is read when this renders, which is on
-  // arriving at the page the control sits on.
+  // Read through useSyncExternalStore: the server snapshot is false, so the
+  // markup that arrives is the plain link, and the client snapshot answers once
+  // it is hydrated.
   const canGoBack = useSyncExternalStore(
     () => () => {},
     hasInSiteHistory,
@@ -53,33 +45,12 @@ export default function SubPageNav() {
 
   return (
     <>
-      <nav className="fixed inset-x-0 top-0 z-40 border-b border-black/5 bg-white/85 backdrop-blur-md">
-        {/* justify-start is the RIGHT edge under dir="rtl", which is where the
-            row belongs. The logo Navbar owns is pinned physically left, so the
-            space kept clear for it is padding-inline-END here — reserving it at
-            the start instead is what was pushing the row into the logo. */}
-        {/* Tighter on a phone, and without the dots: at desktop spacing the
-            links do not fit beside the logo - "צור קשר" broke onto two lines,
-            and with five of them the row ran into the logo. */}
-        <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-start gap-3 ps-4 pe-[88px] sm:gap-6 sm:ps-6 sm:pe-[120px]">
-          {LINKS.map((link, i) => (
-            <div key={link.href + link.label} className="flex items-center gap-6">
-              <Link
-                href={link.href}
-                className="font-display text-[12.5px] whitespace-nowrap text-black/60 transition-colors hover:text-black sm:text-[14px]"
-              >
-                {link.label}
-              </Link>
-              {i < LINKS.length - 1 && <span aria-hidden className="hidden text-black/20 sm:inline">·</span>}
-            </div>
-          ))}
-        </div>
-      </nav>
+      <div aria-hidden="true" className="fixed inset-x-0 top-0 z-40 h-[64px] border-b border-black/5 bg-white/85 backdrop-blur-md md:h-[68px]" />
+      <NavMenu />
 
-      {/* Below the row, per its own line in the layout — offset by the bar's
-          own height so it never sits under it. Absolute, not fixed: pinned to
-          the screen it floated over the text once the page scrolled under it.
-          It sits in the top padding every sub-page leaves, and scrolls away. */}
+      {/* Under the bar, in the top padding every sub-page leaves. Absolute, not
+          fixed: pinned to the screen it floated over the text once the page
+          scrolled under it. */}
       <div className="absolute inset-x-0 top-[72px] z-30">
         <div className="mx-auto flex max-w-[1400px] justify-start px-6 pt-4">
           {canGoBack ? (

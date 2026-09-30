@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useLenis } from "@/lib/motion/lenis";
 import { useDocked } from "@/lib/motion/heroDock";
@@ -9,6 +9,7 @@ import { useIsMobile } from "@/lib/use-mobile";
 import { useChromePaintedByHero } from "@/lib/motion/chromeBackdrop";
 import { ALL_TARGETS, CTA, TARGETS, destinationOf, type HashTarget } from "@/lib/nav/hash-targets";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
+import { useOverDark } from "@/lib/use-over-dark";
 import StaggeredMenu from "@/components/ui/StaggeredMenu";
 import InstagramLink from "@/components/ui/InstagramLink";
 
@@ -23,7 +24,6 @@ const HOVER_CLOSE_MS = 220;
 
 export default function NavMenu() {
   const [open, setOpen] = useState(false);
-  const [dark, setDark] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   // HOW IT WAS OPENED DECIDES HOW IT CLOSES. Opened by a hover, it is a glance:
   // it goes when the pointer leaves it. Opened by a click or a tap, it was
@@ -32,9 +32,15 @@ export default function NavMenu() {
   const openedByRef = useRef<"hover" | "click" | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
   const lenis = useLenis();
   const isMobile = useIsMobile();
-  const docked = useDocked();
+  const onHome = pathname === "/";
+  // Off the home page there is no hero to dock from: the logo is always in
+  // its corner, so the menu is always in the other one. The same rule Navbar
+  // applies to the logo.
+  const heroDocked = useDocked();
+  const docked = onHome ? heroDocked : true;
   const reducedMotion = usePrefersReducedMotion();
 
   // WHICH CORNER THE MENU SITS IN, and it is not a preference — it is whether
@@ -73,38 +79,7 @@ export default function NavMenu() {
   // stays white on a white page. The hero's own tagline and CTA blend correctly
   // because they are INSIDE the hero, next to the canvas. Position is what
   // decides this, not the blend mode.
-  useEffect(() => {
-    if (pathname !== "/") return;
-    let frame: number | null = null;
-    const check = () => {
-      frame = null;
-      const root = rootRef.current;
-      if (!root) return;
-      const box = root.getBoundingClientRect();
-      const x = box.left + box.width / 2;
-      const y = box.top + box.height / 2;
-      let over = false;
-      for (const el of document.querySelectorAll<HTMLElement>('[data-nav-dark="true"]')) {
-        const r = el.getBoundingClientRect();
-        if (r.left <= x && r.right >= x && r.top <= y && r.bottom >= y) {
-          over = true;
-          break;
-        }
-      }
-      setDark(over);
-    };
-    const schedule = () => {
-      if (frame === null) frame = requestAnimationFrame(check);
-    };
-    check();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    return () => {
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      if (frame !== null) cancelAnimationFrame(frame);
-    };
-  }, [pathname]);
+  const dark = useOverDark(rootRef);
 
   useEffect(
     () => () => {
@@ -186,6 +161,13 @@ export default function NavMenu() {
   // agrees with the page's.
   const go = (target: HashTarget) => {
     setOpen(false);
+    // Off the home page the sections are not here: go to the home page with
+    // the hash, and the scroll provider lands the arrival where the section
+    // is whole, the same place a click on the home page would have gone.
+    if (!onHome) {
+      router.push(`/#${target.id}`);
+      return;
+    }
     const to = destinationOf(target);
     if (to === null) return;
     if (lenis) lenis.scrollTo(to, { immediate: true });
@@ -221,10 +203,6 @@ export default function NavMenu() {
     // destinationOf asks the window itself at the moment of the click.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, lenis]);
-
-  // The targets only exist on the home page.
-  if (pathname !== "/") return null;
-
 
   const trigger = (
     <button
