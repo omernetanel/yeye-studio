@@ -467,6 +467,12 @@ export default function MobileAbout() {
           <p className="font-display text-m-body font-light text-accent-light">
             אני מעצב מגיל 15, מפתח מגיל 17, ואני עיצבתי ובניתי את מה שאתם רואים כאן.
           </p>
+          {/* Phone only: here the copy flows under the pinned opening and has
+              room for one more line of the story; the desktop's column is
+              pinned to one screen and has none. */}
+          <p className="mt-[0.78em] font-display text-m-body font-light text-accent-light">
+            כבר אז בניתי אתרי קהילה עם עשרות עמודים, ולמדתי לעומק איך אתר בנוי מבפנים, מהעיצוב ועד השרת.
+          </p>
           <p className="mt-[0.78em] font-display text-m-body font-light text-accent-light">
             הקמתי את YEYE מתוך אובססיה לפרטים הקטנים ואמונה שאתר טוב צריך לעבוד טוב בדיוק כמו שהוא
             נראה.
