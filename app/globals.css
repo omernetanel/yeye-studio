@@ -955,17 +955,18 @@ video {
     width: 100%;
   }
 
-  /* On a phone, bottom right and bigger - clear of the browser's own bar at
-     the foot of the screen. */
+  /* On a phone, the mirror of the WhatsApp mark in the opposite corner: the
+     same 50px and the same 20px from the bottom and from its side (see
+     WhatsAppButton - bottom-5 left-5, h-[50px]). */
   .sm-panel-social {
     left: auto;
-    right: 1.75rem;
-    bottom: calc(2.5rem + env(safe-area-inset-bottom));
+    right: 20px;
+    bottom: 20px;
   }
 
   .sm-panel-social svg {
-    width: 28px;
-    height: 28px;
+    width: 50px;
+    height: 50px;
   }
 
   .staggered-menu-panel {
