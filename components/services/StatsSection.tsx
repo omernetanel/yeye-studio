@@ -6,6 +6,10 @@ interface Stat {
   stat: string;
   statLabel: string;
   text: string;
+  // Where a NUMBER comes from. Only a figure taken from someone else's research
+  // carries one, and only after the figure was read in the source itself - a
+  // stat that is a word ("24/7", "בנייד") has nothing to cite.
+  source?: { name: string; href: string };
 }
 
 interface StatsSectionProps {
@@ -42,6 +46,17 @@ export default function StatsSection({ title, stats }: StatsSectionProps) {
                   {item.stat}
                 </div>
                 <div className="font-display text-xs leading-[1.4] text-black/60">{item.statLabel}</div>
+                {item.source && (
+                  <a
+                    href={item.source.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-block font-display text-[11px] leading-[1.4] text-black/45 underline decoration-black/20 underline-offset-[3px] transition-colors hover:text-black hover:decoration-black/60"
+                  >
+                    מקור: {/* One left-to-right run, so the year stays after the name. */}
+                    <span dir="ltr">{item.source.name}</span>
+                  </a>
+                )}
               </div>
               <div className="hidden h-20 w-px shrink-0 bg-gradient-to-b from-transparent via-primary-light/40 to-transparent sm:block" />
               <p className="flex-1 font-body text-[17px] leading-[1.85] text-black/70">{item.text}</p>

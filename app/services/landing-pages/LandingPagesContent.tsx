@@ -35,9 +35,12 @@ const processSteps = [
 ];
 
 const stats = [
-  { stat: "-7%", statLabel: "בהמרות, בעיכוב של שנייה בטעינה", text: "מי שלוחץ על מודעה מחליט תוך שניות אם להישאר. אתר רגיל מציג לו תפריט, עמוד בית ועשר דרכים ללכת לאיבוד. דף נחיתה עושה דבר אחד: מוביל אותו ישר לפעולה." },
-  { stat: "19.3%", statLabel: "שיעור ההמרה הממוצע בדפי נחיתה מתנועת אימייל", text: "גם קמפיין טוב יכול לאבד פניות אם הוא שולח לעמוד שלא בנוי להמרה. דף ייעודי מרכז את המסר ואת הפעולה במקום אחד." },
-  { stat: "×3", statLabel: "המרות בדף שנטען בשנייה מול דף שנטען בחמש", text: "מסר אחד, פעולה אחת ושום דבר שמסיח את הדעת. ככה נראה דף שמביא פניות." },
+  // Each figure below was read in the source itself (2026-10-01), and the label
+  // says exactly what the source says - the first one used to read "a second"
+  // where the report measured a tenth of one. Change a number only with its source.
+  { stat: "-7%", statLabel: "בהמרות בטלפון, על עיכוב של עשירית שנייה בטעינה", source: { name: "Akamai, 2017", href: "https://www.akamai.com/newsroom/press-release/akamai-releases-spring-2017-state-of-online-retail-performance-report" }, text: "מי שלוחץ על מודעה מחליט תוך שניות אם להישאר. אתר רגיל מציג לו תפריט, עמוד בית ועשר דרכים ללכת לאיבוד. דף נחיתה עושה דבר אחד: מוביל אותו ישר לפעולה." },
+  { stat: "19.3%", statLabel: "שיעור ההמרה הממוצע בדפי נחיתה מתנועת אימייל", source: { name: "Unbounce, 2024", href: "https://unbounce.com/conversion-benchmark-report/" }, text: "גם קמפיין טוב יכול לאבד פניות אם הוא שולח לעמוד שלא בנוי להמרה. דף ייעודי מרכז את המסר ואת הפעולה במקום אחד." },
+  { stat: "×3", statLabel: "המרות באתר לידים שנטען בשנייה, מול אתר שנטען בחמש", source: { name: "Portent, 2022", href: "https://portent.com/blog/analytics/research-site-speed-hurting-everyones-revenue.htm" }, text: "מסר אחד, פעולה אחת ושום דבר שמסיח את הדעת. ככה נראה דף שמביא פניות." },
 ];
 
 const whatYouGetRows = [
