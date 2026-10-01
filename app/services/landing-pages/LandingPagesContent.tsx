@@ -41,6 +41,7 @@ const stats = [
   { stat: "-7%", statLabel: "בהמרות בטלפון, על עיכוב של עשירית שנייה בטעינה", source: { name: "Akamai, 2017", href: "https://www.akamai.com/newsroom/press-release/akamai-releases-spring-2017-state-of-online-retail-performance-report" }, text: "מי שלוחץ על מודעה מחליט תוך שניות אם להישאר. אתר רגיל מציג לו תפריט, עמוד בית ועשר דרכים ללכת לאיבוד. דף נחיתה עושה דבר אחד: מוביל אותו ישר לפעולה." },
   { stat: "19.3%", statLabel: "שיעור ההמרה הממוצע בדפי נחיתה מתנועת אימייל", source: { name: "Unbounce, 2024", href: "https://unbounce.com/conversion-benchmark-report/" }, text: "גם קמפיין טוב יכול לאבד פניות אם הוא שולח לעמוד שלא בנוי להמרה. דף ייעודי מרכז את המסר ואת הפעולה במקום אחד." },
   { stat: "×3", statLabel: "המרות באתר לידים שנטען בשנייה, מול אתר שנטען בחמש", source: { name: "Portent, 2022", href: "https://portent.com/blog/analytics/research-site-speed-hurting-everyones-revenue.htm" }, text: "מסר אחד, פעולה אחת ושום דבר שמסיח את הדעת. ככה נראה דף שמביא פניות." },
+  { stat: "83%", statLabel: "מהביקורים בדפי נחיתה מגיעים מהטלפון", source: { name: "Unbounce, 2024", href: "https://unbounce.com/conversion-benchmark-report/" }, text: "רוב מי שיגיע לדף שלכם יראה אותו על מסך קטן, ביד אחת. לכן אני מתכנן קודם את הגרסה לטלפון, ורק אחריה את המחשב." },
 ];
 
 const whatYouGetRows = [
