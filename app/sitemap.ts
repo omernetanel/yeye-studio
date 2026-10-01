@@ -20,10 +20,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...serviceSlugs.map((slug) => ({ url: `${SITE_URL}/services/${slug}`, priority: 0.7 })),
   ];
 
-  const projectRoutes: MetadataRoute.Sitemap = projects.map((project) => ({
-    url: `${SITE_URL}/projects/${project.slug}`,
-    priority: 0.6,
-  }));
+  // Only the projects that have a page here. An external one opens the client's
+  // own site and has no /projects/[slug] page, so listing it offered a search
+  // engine an address that answers 404 - the same filter the page itself uses.
+  const projectRoutes: MetadataRoute.Sitemap = projects
+    .filter((project) => !project.external)
+    .map((project) => ({
+      url: `${SITE_URL}/projects/${project.slug}`,
+      priority: 0.6,
+    }));
 
   return [...staticRoutes, ...projectRoutes];
 }
