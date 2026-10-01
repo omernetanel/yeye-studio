@@ -312,7 +312,7 @@ export default function NavMenu() {
           ...TARGETS.map((target) => ({ label: target.label, onSelect: () => go(target) })),
           { label: CTA.label, onSelect: () => go(CTA), highlight: true },
         ]}
-        social={<InstagramLink size={22} tabIndex={open ? 0 : -1} />}
+        social={<InstagramLink tabIndex={open ? 0 : -1} />}
         onSwipeClose={() => setOpen(false)}
         onPointerEnter={hoverOpen}
         onPointerLeave={hoverClose}

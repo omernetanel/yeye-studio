@@ -949,6 +949,12 @@ video {
   opacity: 0;
 }
 
+/* Its size is set here, for both layouts - 32px on a desk, on its own terms. */
+.sm-panel-social svg {
+  width: 32px;
+  height: 32px;
+}
+
 @media (max-width: 640px) {
   .staggered-menu-panel,
   .sm-prelayers {
