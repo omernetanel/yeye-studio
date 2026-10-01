@@ -28,6 +28,15 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },
       {
+        // The clips, under the same rule and for the same reason: megabytes
+        // that were re-checked with the server on every visit. A RE-EXPORT
+        // TAKES A NEW NAME (herobg.mp4 → herobg-v2.mp4) and the code points at
+        // it. Written over the old name, returning visitors keep the old clip
+        // for a year.
+        source: "/videos/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
         // Everything the site serves. These are the cheap protections that
         // cost nothing to keep and are only noticed when they are missing.
         source: "/:path*",

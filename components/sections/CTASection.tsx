@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
+
+const VIDEO_SRC = "/videos/cta_end.mp4";
+// Two screens ahead, the same lead the contact stage gives its own clip.
+const VIDEO_PRELOAD_MARGIN = "200% 0px";
 
 export default function CTASection() {
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -45,8 +49,27 @@ export default function CTASection() {
     }
   };
 
+  const sectionRef = useRef<HTMLElement>(null);
+  const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setVideoSrc(VIDEO_SRC);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: VIDEO_PRELOAD_MARGIN },
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section
+      ref={sectionRef}
       id="cta"
       // On a phone the balloons are the ground of the close: pinned to the
       // bottom of the section, behind the privacy line and the button. As a
@@ -81,7 +104,10 @@ export default function CTASection() {
           balloons standing still, which is what the section needs from it
           anyway. */}
       <video
-        src="/videos/cta_end.mp4"
+        // Held back until the section is close (see VIDEO_PRELOAD_MARGIN):
+        // autoPlay makes a browser fetch the whole clip at once, whatever
+        // preload says, and this one sits at the very end of the page.
+        src={videoSrc}
         autoPlay={!prefersReducedMotion}
         muted
         loop={!prefersReducedMotion}

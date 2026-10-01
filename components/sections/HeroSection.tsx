@@ -260,7 +260,7 @@ export default function HeroSection() {
             <FluidInkReveal
               ref={inkRef}
               logoSrc="/images/logo.png"
-              videoSrc="/videos/herobg.mp4"
+              videoSrc="/videos/herobg-v2.mp4"
               textTargets={[
                 ...(SHOW_TAGLINE ? [taglineTarget] : []),
                 { ref: footWorksRef, arrowRef: footWorksArrowRef, color: "#000000" },
@@ -458,7 +458,7 @@ export default function HeroSection() {
           <FluidInkReveal
             ref={inkRef}
             logoSrc="/images/logo.png"
-            videoSrc="/videos/herobg.mp4"
+            videoSrc="/videos/herobg-v2.mp4"
             textTargets={SHOW_TAGLINE ? [taglineTarget, studioTarget] : [studioTarget]}
             logoSlotRef={logoSlotRef}
             ctas={[worksCta, contactCta]}
