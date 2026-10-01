@@ -1090,3 +1090,17 @@ select:focus-visible,
     scroll-behavior: auto !important;
   }
 }
+
+/* THE CALM VERSION OF THE SITE'S MOTION (components/layout/CalmMotion.tsx):
+   with less motion asked for, a block fades in as it is scrolled into view.
+   Opacity and nothing else - no movement. The one transition allowed through
+   the two rules above that switch transitions off, which is why it is last in
+   the file and carries !important. The classes are added by script and taken
+   off again, so with no script nothing is ever hidden. */
+.calm {
+  transition: opacity 0.7s ease !important;
+}
+
+.calm-wait {
+  opacity: 0 !important;
+}

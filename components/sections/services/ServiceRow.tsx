@@ -39,6 +39,9 @@ export default function ServiceRow({ service, index, compact = false, className 
   return (
     <Link
       href={service.href}
+      // With less motion the row fades in as one piece - its number, icon and
+      // arrow with its words (see CalmMotion).
+      data-calm
       className={cn(
         "group flex items-center justify-between border-b border-black/8 last:border-b-0",
         // A short phone gets the tighter rows back: the four at py-4 do not fit

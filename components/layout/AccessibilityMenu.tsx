@@ -80,7 +80,7 @@ function WheelchairMark() {
 
 const SWITCHES: { key: keyof A11yPrefs; label: string; hint: string }[] = [
   { key: "contrast", label: "ניגודיות גבוהה", hint: "מכהה את הטקסטים הקטנים" },
-  { key: "motion", label: "הפחתת תנועה", hint: "עוצר אנימציות ותנועה בגלילה" },
+  { key: "motion", label: "הפחתת תנועה", hint: "בלי תזוזה, רק הופעה עדינה של התוכן" },
   { key: "links", label: "הדגשת קישורים", hint: "קו תחתון לכל קישור" },
 ];
 
