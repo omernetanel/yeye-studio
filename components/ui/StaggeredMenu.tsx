@@ -31,6 +31,8 @@ import { gsap } from "gsap";
  * in here. With less motion the timeline is jumped to its end.
  */
 
+const HIDDEN = { visibility: "hidden" } as const;
+
 // How far a thumb has to travel sideways across the panel to close it.
 const SWIPE_CLOSE_PX = 60;
 
@@ -64,6 +66,7 @@ export default function StaggeredMenu({
   onPointerEnter?: React.PointerEventHandler;
   onPointerLeave?: React.PointerEventHandler;
 }) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLElement>(null);
   const preLayersRef = useRef<HTMLDivElement>(null);
   const preLayerElsRef = useRef<HTMLElement[]>([]);
@@ -73,21 +76,40 @@ export default function StaggeredMenu({
 
   const offscreen = position === "left" ? -100 : 100;
 
+  // PARKED OFF ITS SIDE OF THE SCREEN, and re-parked whenever the side changes
+  // (on a phone the button crosses the header as the logo docks).
+  //
+  // `x: 0` IS NOT DECORATION. This used to be a gsap.context reverted on every
+  // change of side, and after one the sheet could be left carrying both
+  // "100% out" and a pixel offset of its own width back in - the two cancel, so
+  // a white sheet the size of the screen sat over the whole site with the menu
+  // closed, letting clicks through. It showed with reduced motion, as three
+  // screens of blank white from the services down. So the pixel offset is
+  // zeroed explicitly here and on every close, and a closed menu is hidden
+  // outright (see the root's visibility below) - whatever its position.
+  const openRef = useRef(open);
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
+
   useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      const panel = panelRef.current;
-      const preContainer = preLayersRef.current;
-      if (!panel) return;
+    const panel = panelRef.current;
+    const preContainer = preLayersRef.current;
+    if (!panel) return;
 
-      const preLayers = preContainer
-        ? (Array.from(preContainer.querySelectorAll(".sm-prelayer")) as HTMLElement[])
-        : [];
-      preLayerElsRef.current = preLayers;
+    const preLayers = preContainer
+      ? (Array.from(preContainer.querySelectorAll(".sm-prelayer")) as HTMLElement[])
+      : [];
+    preLayerElsRef.current = preLayers;
+    if (preContainer) gsap.set(preContainer, { xPercent: 0, x: 0, opacity: 1 });
+    // Open, it is on screen and stays there; it is parked on its new side
+    // when it next closes.
+    if (openRef.current) return;
 
-      gsap.set([panel, ...preLayers], { xPercent: offscreen, opacity: 1 });
-      if (preContainer) gsap.set(preContainer, { xPercent: 0, opacity: 1 });
-    });
-    return () => ctx.revert();
+    openTlRef.current?.kill();
+    closeTweenRef.current?.kill();
+    busyRef.current = false;
+    gsap.set([panel, ...preLayers], { xPercent: offscreen, x: 0, opacity: 1 });
   }, [offscreen]);
 
   const buildOpenTimeline = useCallback(() => {
@@ -160,6 +182,7 @@ export default function StaggeredMenu({
     tl.eventCallback("onComplete", () => {
       busyRef.current = false;
     });
+    if (rootRef.current) rootRef.current.style.visibility = "visible";
     if (reducedMotion) tl.progress(1);
     else tl.play(0);
   }, [buildOpenTimeline, reducedMotion]);
@@ -174,10 +197,13 @@ export default function StaggeredMenu({
     closeTweenRef.current?.kill();
     closeTweenRef.current = gsap.to([...preLayerElsRef.current, panel], {
       xPercent: offscreen,
+      x: 0,
       duration: reducedMotion ? 0 : 0.32,
       ease: "power3.in",
       overwrite: "auto",
       onComplete: () => {
+        // Closed is hidden, not merely moved aside.
+        if (rootRef.current) rootRef.current.style.visibility = "hidden";
         // Put every part back where the open timeline expects to find it, so
         // the second opening looks exactly like the first.
         const itemEls = Array.from(panel.querySelectorAll(".sm-panel-itemLabel")) as HTMLElement[];
@@ -225,7 +251,11 @@ export default function StaggeredMenu({
 
   return (
     <div
+      ref={rootRef}
       className="sm-root"
+      // Hidden until it is opened, and again once it has closed - set from
+      // playOpen and playClose. A constant here, so React never rewrites it.
+      style={HIDDEN}
       data-position={position}
       data-open={open || undefined}
       onPointerEnter={onPointerEnter}
