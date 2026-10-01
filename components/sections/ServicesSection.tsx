@@ -1046,6 +1046,16 @@ export default function ServicesSection() {
               (a full-range re-encode changed nothing). */}
           <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full bg-white" />
 
+          {/* The clip's own frame cuts the sheet off at the bottom while it
+              closes, and the cut showed as a hard edge along the foot of the
+              screen. This fades it into the page instead. Over the canvas only -
+              the words and the diagram sit above it - and invisible wherever
+              the picture is already white. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-white to-transparent"
+          />
+
           {/* Two content layers share the same on-screen slot — Services
               fades/shrinks out first (as the paper unfolds), then About
               fades in on top of the now-open paper and shrinks/fades out

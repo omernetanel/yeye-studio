@@ -8,15 +8,6 @@ import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
-const particles = [...Array(16)].map((_, i) => ({
-  size: i % 3 === 0 ? 3 : 2,
-  color: i % 2 === 0 ? "#4a4a4a" : "#9a9a9a",
-  left: `${8 + ((i * 7.5) % 84)}%`,
-  top: `${15 + ((i * 13) % 70)}%`,
-  duration: 3 + (i % 4),
-  delay: i * 0.4,
-}));
-
 export default function CTASection() {
   const prefersReducedMotion = usePrefersReducedMotion();
   // `website` is the honeypot — see the field itself in the form below.
@@ -70,16 +61,6 @@ export default function CTASection() {
       // balloons, which are sized to it, stay the size they were.
       className="relative overflow-hidden bg-white px-6 pt-16 pb-40 text-center md:ps-[106px] md:pe-10 md:py-20 md:text-right"
     >
-      {particles.map((p, i) => (
-        <motion.div
-          key={i}
-          animate={{ y: [0, -20, 0], opacity: [0.2, 0.6, 0.2] }}
-          transition={{ duration: p.duration, repeat: Infinity, ease: "easeInOut", delay: p.delay }}
-          className="pointer-events-none absolute rounded-full"
-          style={{ width: p.size, height: p.size, backgroundColor: p.color, left: p.left, top: p.top }}
-        />
-      ))}
-
       {/* ONE ELEMENT, THE GROUND ON BOTH.
           On a phone it sits along the bottom of the section, behind the privacy
           line and the button. On a desktop it covers the section, with the form

@@ -6,7 +6,7 @@ import Footer from "@/components/layout/Footer";
 import AboutPageContent from "@/components/about/AboutPageContent";
 import { FOUNDER_ID, JsonLd, STUDIO_ID } from "@/components/seo/StructuredData";
 
-const DESCRIPTION = `עומר, מעצב ומפתח אתרים ומי שעומד מאחורי ${SITE_NAME}. איך זה התחיל, למה YEYE, ומה אני עושה.`;
+const DESCRIPTION = "נעים מאוד, אני עומר: מעצב ובונה אתרים מאפס לעסקים. איך זה התחיל, ולמה YEYE.";
 
 export const metadata: Metadata = pageMetadata({ label: "מי אני", description: DESCRIPTION, path: "/about" });
 

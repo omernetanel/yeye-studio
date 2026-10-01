@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { hasInSiteHistory } from "@/lib/nav/in-site-history";
+import { hasInSiteHistory, subscribeInSiteHistory } from "@/lib/nav/in-site-history";
 import NavMenu from "@/components/layout/NavMenu";
 
 /**
@@ -36,12 +36,9 @@ export default function SubPageNav() {
   // back would send them out of the site; they get the home page instead.
   // Read through useSyncExternalStore: the server snapshot is false, so the
   // markup that arrives is the plain link, and the client snapshot answers once
-  // it is hydrated.
-  const canGoBack = useSyncExternalStore(
-    () => () => {},
-    hasInSiteHistory,
-    () => false,
-  );
+  // it is hydrated - and again when the trail is written, which happens after
+  // this has rendered (see subscribeInSiteHistory).
+  const canGoBack = useSyncExternalStore(subscribeInSiteHistory, hasInSiteHistory, () => false);
 
   return (
     <>

@@ -42,12 +42,28 @@ function read(): string[] {
   }
 }
 
+// THE BACK CONTROL HAS TO HEAR ABOUT A CHANGE. The trail is written by the
+// scroll provider's effect, which runs AFTER the new page has rendered - so a
+// control that only read the trail while rendering saw the trail from before
+// the move, decided there was nowhere to go back to, and stayed a plain link
+// to the top of the home page. A development build hid it, because it renders
+// twice.
+const listeners = new Set<() => void>();
+
+export function subscribeInSiteHistory(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
 function write(trail: string[]) {
   try {
     window.sessionStorage.setItem(KEY, JSON.stringify(trail.slice(-MAX)));
   } catch {
     // Nothing to do: the control falls back to the link for this visit.
   }
+  listeners.forEach((listener) => listener());
 }
 
 /** The page the reader entered on. Only ever starts a trail, never adds to one. */
