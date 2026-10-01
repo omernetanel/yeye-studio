@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPage from "@/components/legal/LegalPage";
-import { CONTACT_EMAIL, SITE_NAME, WHATSAPP_NUMBER, pageTitle } from "@/lib/site";
+import { CONTACT_EMAIL, SITE_NAME, WHATSAPP_NUMBER, pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: pageTitle("מדיניות פרטיות"),
+export const metadata: Metadata = pageMetadata({
+  label: "מדיניות פרטיות",
   description: "איזה מידע נאסף באתר YEYE Digital, מי מעבד אותו, כמה זמן הוא עשוי להישמר ואילו זכויות עומדות לכם.",
-  alternates: { canonical: "/privacy" },
-};
+  path: "/privacy",
+});
 
 /**
  * WRITTEN FROM THE CODE, claim by claim.

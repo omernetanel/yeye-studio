@@ -1,13 +1,20 @@
 import type { Metadata } from "next";
-import { pageTitle } from "@/lib/site";
+import { pageMetadata } from "@/lib/site";
+import { ServiceStructuredData } from "@/components/seo/StructuredData";
 import BrandingContent from "./BrandingContent";
 
-export const metadata: Metadata = {
-  title: pageTitle("מיתוג עסקי"),
-  description: "זהות חזותית מלאה שמבדלת אתכם מהמתחרים: לוגו, מדריך מותג ועיצוב אחיד בכל מקום.",
-  alternates: { canonical: "/services/branding" },
-};
+const NAME = "מיתוג עסקי ועיצוב לוגו";
+const DESCRIPTION =
+  "מיתוג לעסקים: זהות חזותית מלאה שמבדלת אתכם מהמתחרים. לוגו, מדריך מותג ועיצוב אחיד בכל מקום.";
+const PATH = "/services/branding";
+
+export const metadata: Metadata = pageMetadata({ label: NAME, description: DESCRIPTION, path: PATH });
 
 export default function BrandingPage() {
-  return <BrandingContent />;
+  return (
+    <>
+      <ServiceStructuredData name={NAME} description={DESCRIPTION} path={PATH} />
+      <BrandingContent />
+    </>
+  );
 }

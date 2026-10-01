@@ -2,8 +2,14 @@
 // page's metadata and had already drifted: the homepage said "YEYE Digital"
 // while every sub-page tab said "YEYE LABS".
 export const SITE_NAME = "YEYE Digital";
-export const SITE_TITLE = `${SITE_NAME} | סטודיו דיגיטלי`;
-export const SITE_DESCRIPTION = "אני בונה אתרים ומערכות שמייצרות לקוחות לעסקים.";
+// The name first, so a saved tab reads as the studio and not as a list of
+// services; what it does comes after, in the words people search for.
+export const SITE_TITLE = `${SITE_NAME} | עיצוב ובניית אתרים ומיתוג לעסקים`;
+export const SITE_DESCRIPTION =
+  "אני עומר, ואני מעצב ובונה אתרים מאפס: אתרי תדמית, דפי נחיתה, חנויות אונליין ומיתוג. בלי תבניות ובלי אנשים באמצע, מהרעיון ועד שהאתר באוויר.";
+
+/** The name as it is said and searched for in Hebrew. Never shown on a page. */
+export const SITE_NAME_HEBREW = "YEYE דיגיטל";
 
 /**
  * The document's own surface — THE one place this colour is written.
@@ -72,4 +78,26 @@ export const SITE_URL = "https://yeye.co.il";
 /** Title for any page that is not the homepage. */
 export function pageTitle(label: string) {
   return `${label} | ${SITE_NAME}`;
+}
+
+/**
+ * Everything a page below the homepage says about itself, from one call.
+ *
+ * A page that set only `title` and `description` kept the layout's share card,
+ * so a link to a service page arrived in WhatsApp under the homepage's title
+ * and declared the homepage as its address. Next replaces `openGraph` whole
+ * rather than merging it, which is why the site name and locale are repeated
+ * here and not left to the layout - and why the card is named outright: the
+ * image from app/opengraph-image.tsx is dropped along with the rest.
+ */
+export function pageMetadata({ label, description, path }: { label: string; description: string; path: string }) {
+  const title = pageTitle(label);
+  const images = [{ url: "/opengraph-image", width: 1200, height: 630, alt: SITE_NAME }];
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: { title, description, url: path, siteName: SITE_NAME, locale: "he_IL", type: "website" as const, images },
+    twitter: { card: "summary_large_image" as const, title, description, images },
+  };
 }

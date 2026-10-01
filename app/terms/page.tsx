@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPage from "@/components/legal/LegalPage";
-import { CONTACT_EMAIL, SITE_NAME, pageTitle } from "@/lib/site";
+import { CONTACT_EMAIL, SITE_NAME, pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: pageTitle("תנאי שימוש"),
+export const metadata: Metadata = pageMetadata({
+  label: "תנאי שימוש",
   description: "תנאי השימוש באתר YEYE Digital: מה האתר מציג, זכויות בתוכן, העבודות המוצגות ואחריות.",
-  alternates: { canonical: "/terms" },
-};
+  path: "/terms",
+});
 
 /**
  * TERMS FOR A PORTFOLIO SITE, and nothing wider than that.

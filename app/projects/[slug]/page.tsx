@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { pageTitle } from "@/lib/site";
+import { pageMetadata } from "@/lib/site";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import SubPageNav from "@/components/layout/SubPageNav";
@@ -21,16 +21,14 @@ export async function generateMetadata({
   const project = projects.find((p) => p.slug === slug);
   if (!project) return {};
 
-  return {
-    title: pageTitle(project.title),
+  const meta = pageMetadata({
+    label: project.title,
     description: project.description,
-    alternates: { canonical: `/projects/${project.slug}` },
-    openGraph: {
-      title: pageTitle(project.title),
-      description: project.description,
-      images: [project.image],
-    },
-  };
+    path: `/projects/${project.slug}`,
+  });
+  // The project's own picture on its share card, instead of the wordmark.
+  const images = [project.image];
+  return { ...meta, openGraph: { ...meta.openGraph, images }, twitter: { ...meta.twitter, images } };
 }
 
 export default async function ProjectPage({ params }: { params: Promise<{ slug: string }> }) {

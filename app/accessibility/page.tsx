@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPage from "@/components/legal/LegalPage";
-import { CONTACT_EMAIL, SITE_NAME, WHATSAPP_NUMBER, pageTitle } from "@/lib/site";
+import { CONTACT_EMAIL, SITE_NAME, WHATSAPP_NUMBER, pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: pageTitle("הצהרת נגישות"),
+export const metadata: Metadata = pageMetadata({
+  label: "הצהרת נגישות",
   description: "אילו התאמות נגישות קיימות באתר של YEYE Digital, מה מגבלותיהן, ואיך לפנות בנושא.",
-  alternates: { canonical: "/accessibility" },
-};
+  path: "/accessibility",
+});
 
 /**
  * WRITTEN FROM THE CODE, item by item.

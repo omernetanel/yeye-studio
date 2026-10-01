@@ -1,13 +1,20 @@
 import type { Metadata } from "next";
-import { pageTitle } from "@/lib/site";
+import { pageMetadata } from "@/lib/site";
+import { ServiceStructuredData } from "@/components/seo/StructuredData";
 import OnlineStoresContent from "./OnlineStoresContent";
 
-export const metadata: Metadata = {
-  title: pageTitle("חנויות אונליין"),
-  description: "חנות אונליין שמוכרת גם כשאתם ישנים: מעוצבת, מהירה ומאובטחת.",
-  alternates: { canonical: "/services/online-stores" },
-};
+const NAME = "בניית חנות אונליין";
+const DESCRIPTION =
+  "הקמת חנות אינטרנטית שמוכרת גם כשאתם ישנים: חנות אונליין מעוצבת מאפס, מהירה ומאובטחת.";
+const PATH = "/services/online-stores";
+
+export const metadata: Metadata = pageMetadata({ label: NAME, description: DESCRIPTION, path: PATH });
 
 export default function OnlineStoresPage() {
-  return <OnlineStoresContent />;
+  return (
+    <>
+      <ServiceStructuredData name={NAME} description={DESCRIPTION} path={PATH} />
+      <OnlineStoresContent />
+    </>
+  );
 }

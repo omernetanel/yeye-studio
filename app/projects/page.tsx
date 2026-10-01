@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { pageTitle } from "@/lib/site";
+import { pageMetadata } from "@/lib/site";
 import Navbar from "@/components/layout/Navbar";
 import SubPageNav from "@/components/layout/SubPageNav";
 import Footer from "@/components/layout/Footer";
 import { projects } from "@/lib/projects";
 import ProjectCard from "@/components/ui/ProjectCard";
 
-export const metadata: Metadata = {
-  title: pageTitle("פרויקטים"),
+export const metadata: Metadata = pageMetadata({
+  label: "פרויקטים",
   description: "עבודה מלאה שבניתי כדי להראות איך אני חושב ובונה.",
-  alternates: { canonical: "/projects" },
-};
+  path: "/projects",
+});
 
 export default function ProjectsPage() {
   return (
