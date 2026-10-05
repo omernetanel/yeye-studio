@@ -37,6 +37,10 @@ const VIDEO_POSTER = "/images/open-space-poster.webp";
 const VIDEO_IS_DARK = true;
 const ROOM_IS_DARK = true;
 
+// Where the volume pill stands in all three layouts: centred, at the head of
+// the picture it belongs to.
+const VOLUME_AT_HEAD = "absolute top-3 left-1/2 -translate-x-1/2";
+
 // How long the sound takes to come up or go down.
 const SOUND_FADE_MS = 600;
 
@@ -393,16 +397,15 @@ function StageVideo({
 }
 
 /**
- * The sound, as a switch that says what it is and what each side of it does.
+ * The sound: one black pill with the word and the switch in it, centred at the
+ * head of the picture.
  *
- * "ווליום" over it, "שקט" on the side that is off and "קול" on the side that is
- * on, the live one in full white - so nobody has to work out which way is which
- * from a pill with a dot in it. The words are for the eye; a screen reader gets
- * the switch itself, named, with its state.
+ * It was a taller block with "שקט" and "קול" either side of the switch, in a
+ * corner. The pill is the reference the studio chose: a label, a switch, and
+ * nothing to read twice. The word is for the eye; a screen reader gets the
+ * switch itself, named, with its state.
  *
- * On a dark pill of its own: it stands over the clip, the room and the black
- * under them in turn, and has to read on all three. Left to right inside a
- * right-to-left page, so the off side is on the left where the thumb rests.
+ * Solid black, so it reads over the clip, the room and the page alike.
  */
 function VolumeControl({
   on,
@@ -413,36 +416,27 @@ function VolumeControl({
   onChange: (on: boolean) => void;
   className?: string;
 }) {
-  const side = "transition-colors duration-300";
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-1.5 rounded-[22px] bg-black/60 px-5 pt-2.5 pb-3 backdrop-blur-sm select-none",
+        "flex items-center gap-3.5 rounded-full bg-black py-2.5 ps-6 pe-3 ring-1 ring-white/15 select-none",
         className,
       )}
     >
-      <span aria-hidden="true" className="font-display text-[11px] font-medium tracking-[0.18em] text-white/60">
+      <span aria-hidden="true" className="font-display text-[16px] font-bold text-white">
         ווליום
       </span>
-      <div dir="ltr" className="flex items-center gap-3 font-display text-[14px] font-medium">
-        <span aria-hidden="true" className={cn(side, on ? "text-white/45" : "text-white")}>
-          שקט
-        </span>
-        <SquishSwitch
-          checked={on}
-          onChange={onChange}
-          label="ווליום הסרטון"
-          trackColor="var(--color-primary)"
-          trackOnColor="var(--color-white)"
-          thumbColor="var(--color-primary-light)"
-          thumbOnColor="var(--color-black)"
-          width={60}
-          height={30}
-        />
-        <span aria-hidden="true" className={cn(side, on ? "text-white" : "text-white/45")}>
-          קול
-        </span>
-      </div>
+      <SquishSwitch
+        checked={on}
+        onChange={onChange}
+        label="ווליום הסרטון"
+        trackColor="var(--color-primary)"
+        trackOnColor="var(--color-white)"
+        thumbColor="var(--color-white)"
+        thumbOnColor="var(--color-black)"
+        width={52}
+        height={28}
+      />
     </div>
   );
 }
@@ -745,6 +739,7 @@ export default function ContactStage() {
             <FramedRoom>
               <StageVideo src={videoSrc} videoRef={videoRef} still />
             </FramedRoom>
+            <VolumeControl on={soundOn} onChange={toggleSound} className={VOLUME_AT_HEAD} />
           </div>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
             <Button variant="outline" showArrow={false} onClick={togglePlaying}>
@@ -753,7 +748,6 @@ export default function ContactStage() {
                 {playing ? "עצירת הסרטון" : "הפעלת הסרטון"}
               </span>
             </Button>
-            <VolumeControl on={soundOn} onChange={toggleSound} />
           </div>
         </div>
         <div className="mt-14">
@@ -823,12 +817,7 @@ export default function ContactStage() {
           <FramedRoom>
             <StageVideo src={videoSrc} videoRef={videoRef} />
           </FramedRoom>
-        </div>
-
-        {/* The sound, straight under the picture it belongs to. z-10 for the
-            same reason as the form below: the balloons fall behind it. */}
-        <div className="relative z-10 mt-5 flex justify-center">
-          <VolumeControl on={soundOn} onChange={toggleSound} />
+          <VolumeControl on={soundOn} onChange={toggleSound} className={VOLUME_AT_HEAD} />
         </div>
 
         {/* And the ask underneath it. No heading over the picture: the block
@@ -838,7 +827,7 @@ export default function ContactStage() {
             in the layer at z-[5], and a form without a level of its own is
             painted underneath that layer — they dropped straight across the
             fields. Lifted to the picture's level, they pass behind both. */}
-        <div className="relative z-10 mt-[7svh]">
+        <div className="relative z-10 mt-[9svh]">
           <ContactForm />
         </div>
       </section>
@@ -930,11 +919,11 @@ export default function ContactStage() {
           <ContactForm />
         </div>
 
-        {/* The sound, in the corner of the pinned screen for the whole of the
+        {/* The sound, at the head of the pinned screen for the whole of the
             zoom: over the clip while it fills the screen and over the room once
             it has pulled back. Above the form's layer, which covers the panel.
-            The right corner - the left one holds the two floating buttons. */}
-        <VolumeControl on={soundOn} onChange={toggleSound} className="absolute right-7 bottom-7 z-20" />
+            The logo and the menu hold the two corners; the middle is free. */}
+        <VolumeControl on={soundOn} onChange={toggleSound} className={cn(VOLUME_AT_HEAD, "top-5 z-20")} />
       </div>
     </section>
 
