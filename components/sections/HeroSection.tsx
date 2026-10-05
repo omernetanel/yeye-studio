@@ -10,7 +10,6 @@ import FluidInkReveal, {
   type IconTarget,
   type TextTarget,
 } from "@/components/sections/hero/FluidInkReveal";
-import ArrowIcon from "@/components/ui/ArrowIcon";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
 import { setDocked } from "@/lib/motion/heroDock";
@@ -79,24 +78,16 @@ export default function HeroSection() {
   // keyboard focusable — but are visually transparent; these refs are what the
   // canvas measures to know where to paint each box, each line, each arrow.
   // Both layouts share the button refs: only one of the two renders at a time.
-  const ctaWorksRef = useRef<HTMLAnchorElement>(null);
-  const ctaWorksLabelRef = useRef<HTMLSpanElement>(null);
-  const ctaWorksArrowRef = useRef<HTMLSpanElement>(null);
+  //
+  // ONE BUTTON. There was a second, "העבודות שלי", beside it on the desk and as
+  // a text link at the foot on a phone, and it was the first thing people
+  // pressed: straight to the gallery, past the whole page the gallery is the
+  // end of. The menu still goes there for anyone who wants it.
   const ctaContactRef = useRef<HTMLAnchorElement>(null);
   const ctaContactLabelRef = useRef<HTMLSpanElement>(null);
   const ctaContactArrowRef = useRef<HTMLSpanElement>(null);
-  const footWorksRef = useRef<HTMLAnchorElement>(null);
-  const footWorksArrowRef = useRef<HTMLSpanElement>(null);
   const footStudioRef = useRef<HTMLSpanElement>(null);
 
-  const worksCta: CtaTarget = {
-    ref: ctaWorksRef,
-    labelRef: ctaWorksLabelRef,
-    arrowRef: ctaWorksArrowRef,
-    fill: "#ffffff",
-    textColor: "#000000",
-    borderColor: "#000000",
-  };
   const contactCta: CtaTarget = {
     ref: ctaContactRef,
     labelRef: ctaContactLabelRef,
@@ -263,7 +254,6 @@ export default function HeroSection() {
               videoSrc="/videos/herobg-v2.mp4"
               textTargets={[
                 ...(SHOW_TAGLINE ? [taglineTarget] : []),
-                { ref: footWorksRef, arrowRef: footWorksArrowRef, color: "#000000" },
                 { ref: footStudioRef, color: "rgba(0, 0, 0, 0.45)" },
               ]}
               logoSlotRef={logoSlotRef}
@@ -327,22 +317,10 @@ export default function HeroSection() {
               screens this is modelled on all have and this did not. */}
           <div
             ref={footRowRef}
-            className="pointer-events-auto flex w-full items-baseline justify-between font-display text-m-small"
+            // Centred: the studio line stands here alone now. It shared the row
+            // with the works link, one at either end.
+            className="pointer-events-auto flex w-full items-baseline justify-center font-display text-m-small"
           >
-            <Link
-              ref={footWorksRef}
-              href="/#projects"
-              className={`inline-flex items-center gap-1.5 font-medium ${painted ? "text-transparent" : "text-black"}`}
-            >
-              העבודות שלי
-              {/* The icon's exact box and nothing in it — the paper draws the
-                  arrow. An SVG left here would still paint in currentColor. */}
-              {painted ? (
-                <span ref={footWorksArrowRef} aria-hidden="true" className="block h-[14px] w-[14px] shrink-0" />
-              ) : (
-                <ArrowIcon />
-              )}
-            </Link>
             <span ref={footStudioRef} className={painted ? "text-transparent" : "text-black/60"}>
               סטודיו דיגיטלי עצמאי
             </span>
@@ -461,7 +439,7 @@ export default function HeroSection() {
             videoSrc="/videos/herobg-v2.mp4"
             textTargets={SHOW_TAGLINE ? [taglineTarget, studioTarget] : [studioTarget]}
             logoSlotRef={logoSlotRef}
-            ctas={[worksCta, contactCta]}
+            ctas={[contactCta]}
             icons={footIcons}
             className="relative h-full w-full select-none"
           />
@@ -611,9 +589,6 @@ export default function HeroSection() {
           >
             {prefersReducedMotion ? (
               <div className="flex items-center gap-3">
-                <Button href="/#projects" variant="primary" className="!border !border-black !bg-none !bg-white !text-black !shadow-none px-10 py-4 text-lg">
-                  העבודות שלי
-                </Button>
                 <Button href="/#cta" variant="primary" className="!border-black !bg-none !bg-black !shadow-none px-10 py-4 text-lg">
                   קבעו פגישה
                 </Button>
@@ -626,14 +601,6 @@ export default function HeroSection() {
                  The arrow's slide is the one exception, and it only needs a
                  repaint on enter and leave. */
               <div className="pointer-events-auto flex items-center gap-3">
-                <Link
-                  ref={ctaWorksRef}
-                  href="/#projects"
-                  className="inline-flex items-center gap-2 rounded-full px-10 py-4 font-display text-lg font-medium text-transparent"
-                >
-                  <span ref={ctaWorksLabelRef}>העבודות שלי</span>
-                  <span ref={ctaWorksArrowRef} aria-hidden className="block h-[14px] w-[14px]" />
-                </Link>
                 <Link
                   ref={ctaContactRef}
                   href="/#cta"
