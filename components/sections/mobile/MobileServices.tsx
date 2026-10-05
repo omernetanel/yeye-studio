@@ -262,7 +262,7 @@ const STORY = {
   anchors: [
     0,
     progressAtTime(FREE_END_TIME), // the ball, the list still whole
-    STAGES_FROM, // the paper open and still, nothing on it yet
+    STAGES_FROM, // the paper open and still, nothing on it yet - passed through, see below
     progressAtPosition(HEADING_ALONE), // "איך אני עובד?" alone in the middle
     ...STAGE_TITLES.map((_, index) => progressAtPosition(index)), // each stage alone on the sheet
     progressAtTime(BALL_REST_TIME), // crumpled, the ball landed
@@ -278,7 +278,12 @@ const STORY = {
     { kind: "scrub", screens: 1 }, // the ball with the list on it
     // The clocks were slowed by about half after a real hand: at 1.8 / 0.5 /
     // 2.8 / 2.2 seconds everything happened before it could be watched.
-    { kind: "play", screens: 0.6, seconds: 2.6 }, // the list goes and the paper opens
+    // NO ROOM OF ITS OWN (screens: 0): the open sheet with nothing on it was a
+    // rest state, and every reader who stopped there took the page for stuck -
+    // a blank sheet and no sign that another swipe would bring anything. The
+    // paper still opens whole and comes to a stop, and the heading then folds
+    // in by itself, on the same swipe.
+    { kind: "play", screens: 0, seconds: 2.6 }, // the list goes and the paper opens
     { kind: "play", screens: 0.55, seconds: 1.2 }, // the heading folds in, alone, once the paper is still
     { kind: "play", screens: 0.55, seconds: 1.6 }, // the heading settles into its place and the first stage comes in
     { kind: "play", screens: 0.55, seconds: 1.2 }, // stage to stage

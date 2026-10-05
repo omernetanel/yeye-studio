@@ -44,6 +44,14 @@ export type Transition =
       /**
        * Scroll travel, in screens, from its line to the next one - the room the
        * rest state it arrives at is shown in.
+       *
+       * ZERO MEANS NOBODY RESTS THERE. The state it arrives at is passed
+       * through: this transition plays at its own pace and comes to a stop, and
+       * the next one starts by itself, with no second swipe. Its line and the
+       * next one's are the same line, so going back plays the pair in reverse.
+       * For a moment that has to finish before the next begins, but is not
+       * something to be left looking at - a sheet that has opened and is still
+       * empty.
        */
       screens: number;
       /** How long it takes to play, in seconds, at its own pace. */
@@ -343,7 +351,7 @@ export class SteppedPlayhead {
     if (this.move) [this.position, this.velocity] = sampleMove(this.move, now);
 
     const from = this.position;
-    const to = this.target;
+    const to = this.nextStop(from, this.target);
     const distance = to - from;
     if (Math.abs(distance) < 1e-6) {
       this.move = null;
@@ -366,6 +374,30 @@ export class SteppedPlayhead {
 
     this.move = { from, to, tangent, start: now, duration };
     if (this.frame === null) this.frame = requestAnimationFrame(this.tick);
+  }
+
+  /**
+   * Where a move towards `target` goes first: the target itself, unless a
+   * state nobody rests at (see Transition.screens) lies on the way. Then the
+   * move ends there, at rest, and tick starts the next one - so the two
+   * transitions either side of it each play whole and at their own pace,
+   * instead of being run together as one hurried curve.
+   */
+  private nextStop(from: number, target: number) {
+    const passedThrough = (anchor: number) => {
+      const into = this.options.transitions[anchor - 1];
+      return into.kind === "play" && into.screens === 0;
+    };
+    if (target > from) {
+      for (let anchor = Math.floor(from) + 1; anchor < target; anchor++) {
+        if (passedThrough(anchor)) return anchor;
+      }
+    } else {
+      for (let anchor = Math.ceil(from) - 1; anchor > target; anchor--) {
+        if (passedThrough(anchor)) return anchor;
+      }
+    }
+    return target;
   }
 
   /**
@@ -405,6 +437,8 @@ export class SteppedPlayhead {
       this.move = null;
       this.hurry = false;
       this.frame = null;
+      // It stopped at a state nobody rests at: on to the next, from rest.
+      if (this.position !== this.target) this.startMove();
       return;
     }
     this.frame = requestAnimationFrame(this.tick);
