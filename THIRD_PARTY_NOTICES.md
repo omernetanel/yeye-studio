@@ -28,6 +28,11 @@ React Bits:
   from **StaggeredMenu** — ported to TypeScript and turned around for RTL; its
   own toggle, logo, text cycle and social links removed, the panel narrowed,
   and the call to action drawn as a highlighted item.
+- `components/ui/SquishSwitch.tsx` and `SquishSwitch.css`, from
+  **SquishSwitch** — ported to TypeScript and made controlled only; the
+  uncontrolled mode, built-in label, disabled state and radius option removed,
+  the motion functions taken from framer-motion, reduced motion left to the
+  site's own setting, and every colour passed in rather than written in.
 
 Source: https://github.com/DavidHDev/react-bits
 
