@@ -9,7 +9,7 @@ import { SERVICES_HEADING, SERVICES_LEAD, services } from "@/lib/content";
 // same four stages. Only the layout below is the desktop's own.
 import { ICONS, ICON_MOTION, IconExtras, PROCESS_HEADING, STAGE_LINES, STAGE_TITLES } from "./process/stages";
 import FoldText, { setFold } from "@/components/ui/FoldText";
-import StageRail, { setStageRail } from "@/components/ui/StageRail";
+import ScrollCue from "@/components/ui/ScrollCue";
 // The row itself is shared with the phone, which prints the same four at a
 // smaller size — see there.
 import ServiceRow from "./services/ServiceRow";
@@ -514,14 +514,13 @@ function ProcessStages() {
         </div>
       ))}
 
-      {/* Four of four, as a column down the right side of the sheet - see
-          StageRail for why not a row. HIDDEN UNTIL THE FIRST STAGE ARRIVES, so
-          it never counts stages that have not appeared. */}
-      <div data-process-dots style={{ opacity: 0 }} className="absolute top-1/2 right-[3%] -translate-y-1/2">
-        {/* Larger than the phone's and with no grey route laid out ahead:
-            on the desk the line only draws between two circles while the
-            sheet moves from one stage to the next. */}
-        <StageRail count={STAGE_TITLES.length} />
+      {/* KEEP SCROLLING, down the right side of the sheet - the phone's own cue,
+          see ScrollCue. It stands where a column of four circles counted the
+          stages; each stage already carries its numeral, and what the reader
+          was missing was not the count but a sign that the page goes on.
+          HIDDEN UNTIL THE FIRST STAGE ARRIVES, with the stages it belongs to. */}
+      <div data-process-cue style={{ opacity: 0 }} className="absolute top-1/2 right-[3%] -translate-y-1/2">
+        <ScrollCue />
       </div>
     </div>
   );
@@ -780,30 +779,19 @@ export default function ServicesSection() {
     // all: the block itself shrinks into the paper on its own cue.
     const stages = sheet.querySelectorAll<HTMLElement>("[data-process-stage]");
     const last = stages.length - 1;
-    let current = -1;
-    // How much of the line is drawn: each stage after the first adds its own
-    // arrival to it, so the line travels only while a swap is under way.
-    let drawn = 0;
     stages.forEach((stage, i) => {
       const start = STAGES_START + i * STAGE_SPAN;
       const arrive = smoothstep(mapRange(seconds, start, start + STAGE_SWAP, 0, 1));
-      if (i > 0) drawn += arrive;
       const leave = i === last ? 0 : smoothstep(mapRange(seconds, start + STAGE_SPAN - STAGE_SWAP, start + STAGE_SPAN, 0, 1));
       const shown = arrive * (1 - leave);
       stage.style.opacity = String(shown);
       stage.style.transform = `translateY(${(lerp(STAGE_RISE_PX, 0, arrive) + lerp(0, -STAGE_RISE_PX, leave)).toFixed(2)}px)`;
-      // The last stage past half its arrival, not the one most visible now:
-      // mid-swap neither is more than half shown, and the circles emptied.
-      if (arrive >= 0.5) current = i;
     });
 
-    // The row arrives on the first stage's own cue, so the count never appears
-    // before the thing it counts.
-    const dots = sheet.querySelector<HTMLElement>("[data-process-dots]");
-    if (dots) {
-      dots.style.opacity = String(smoothstep(mapRange(seconds, STAGES_START, STAGES_START + STAGE_SWAP, 0, 1)));
-      setStageRail(dots, drawn / last, current);
-    }
+    // The cue arrives on the first stage's own cue, with the stages it
+    // belongs to, and goes with the sheet.
+    const cue = sheet.querySelector<HTMLElement>("[data-process-cue]");
+    if (cue) cue.style.opacity = String(smoothstep(mapRange(seconds, STAGES_START, STAGES_START + STAGE_SWAP, 0, 1)));
   };
 
   const measurePinRange = () => {

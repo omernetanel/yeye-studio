@@ -12,6 +12,7 @@ import { isMomentum, stopMomentumAt, trackTouch } from "@/lib/scrub/momentum";
 import { useLenis } from "@/lib/motion/lenis";
 import { stackHeading } from "@/lib/motion/stack-heading";
 import FoldText, { setFold } from "@/components/ui/FoldText";
+import ScrollCue from "@/components/ui/ScrollCue";
 import { PROCESS_HEADING, STAGE_LINES, STAGE_TITLES } from "../process/stages";
 
 // The paper, as the clip's own frames — every one of servicesbg-mobile.mp4's 458,
@@ -678,26 +679,15 @@ export default function MobileServices() {
           </div>
         </div>
 
-        {/* KEEP SCROLLING. Nothing on a pinned screen says that the page is not
-            stuck, and every reader who was handed the phone thought it was. A
-            dot travelling up a short line - a thumb's own movement - and two
-            words, at the foot of the screen from the moment the heading stands
-            on the open sheet until the section lets go. On the panel and not in
-            the layer above, which shrinks away with the crumple. Decoration: a
-            reader who cannot see it is not on a pinned screen to begin with. */}
+        {/* KEEP SCROLLING (see ScrollCue): at the foot of the screen from the
+            moment the heading stands on the open sheet until the section lets
+            go. On the panel and not in the layer above, which shrinks away with
+            the crumple. */}
         <div
           ref={cueRef}
-          aria-hidden="true"
-          // select-none: a long press on a phone selected the two words and put
-          // the system's copy bubble over the sheet.
-          className="pointer-events-none absolute inset-x-0 bottom-[max(18px,env(safe-area-inset-bottom))] flex flex-col items-center gap-2.5 opacity-0 select-none"
+          className="pointer-events-none absolute inset-x-0 bottom-[max(18px,env(safe-area-inset-bottom))] flex justify-center opacity-0"
         >
-          {/* The line and the dot are the sign; the words only name it. At 32px
-              and 7px they were lost at the foot of a phone. */}
-          <span className="relative block h-14 w-px bg-black/25">
-            <span className="scroll-cue-dot absolute top-1/2 -left-[5px] block h-[11px] w-[11px] rounded-full bg-black" />
-          </span>
-          <span className="paper-halo font-display text-m-small font-medium text-black/60">גללו להמשך</span>
+          <ScrollCue />
         </div>
 
         {/* 22%, not 11%. The clip is 9:16 inside a screen that is taller than
