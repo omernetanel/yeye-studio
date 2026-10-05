@@ -622,9 +622,10 @@ export default function ContactStage() {
     // footage behind it.
     form.style.pointerEvents = fadeT > 0.5 ? "none" : "auto";
 
-    // Start: the screen cut-out spans the full viewport width.
+    // Start: the screen cut-out covers the viewport - as wide as it or as tall
+    // as it, whichever asks for more - so nothing of the room shows yet.
     // End: the plate at rest, from the one place that decides that.
-    const scaleStart = vw / VIDEO_W;
+    const scaleStart = Math.max(vw / VIDEO_W, vh / VIDEO_H);
     const rest = roomAtRest(vw, vh);
     const scaleEnd = rest.scale;
     const zoomT = smoothstep(mapRange(progress, ZOOM_START, ZOOM_END, 0, 1));
@@ -633,8 +634,15 @@ export default function ContactStage() {
     // Where the screen's centre sits on screen at each end. Interpolating the
     // focal point (rather than the plate's corner) is what anchors the zoom to
     // the footage instead of letting the scene slide while it shrinks.
+    //
+    // It starts on the MIDDLE OF THE SCREEN. It used to start with its top
+    // edge on the top of the panel, which on any window wider than the
+    // cut-out's own shape hung the whole overflow off the bottom - the
+    // television came into view cut off below and only centred itself at the
+    // very end of the zoom. From the middle, what does not fit is shared
+    // above and below, and the set is whole the moment it is small enough.
     const focalStartX = vw / 2;
-    const focalStartY = (VIDEO_H * scaleStart) / 2;
+    const focalStartY = vh / 2;
     const focalEndX = rest.left + SCREEN_CX * scaleEnd;
     const focalEndY = rest.top + SCREEN_CY * scaleEnd;
 
