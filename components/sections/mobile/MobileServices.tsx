@@ -12,15 +12,7 @@ import { isMomentum, stopMomentumAt, trackTouch } from "@/lib/scrub/momentum";
 import { useLenis } from "@/lib/motion/lenis";
 import { stackHeading } from "@/lib/motion/stack-heading";
 import FoldText, { setFold } from "@/components/ui/FoldText";
-import StageRail, { setStageRail } from "@/components/ui/StageRail";
-import {
-  ICONS,
-  ICON_MOTION,
-  IconExtras,
-  PROCESS_HEADING,
-  STAGE_LINES,
-  STAGE_TITLES,
-} from "../process/stages";
+import { PROCESS_HEADING, STAGE_LINES, STAGE_TITLES } from "../process/stages";
 
 // The paper, as the clip's own frames — every one of servicesbg-mobile.mp4's 458,
 // at its own 720×1280 and 30fps, so nothing is thinned out against the video it
@@ -181,6 +173,21 @@ const HEADING_RISE = [-1.45, -0.95] as const;
 const HEADING_STACK_WIDTH = 0.8;
 const HEADING_STACK_MAX_HEIGHT = 0.4;
 const HEADING_STACK_SAME_SIZE = 0.5;
+/**
+ * How small the heading is once it has risen to its corner. It is set in the
+ * big type it enters in and scaled down to this, rather than set small and
+ * scaled up into the stack: enlarged four times, small type came out soft on a
+ * phone. At 56px this lands on the size of a sub-heading, so the numeral under
+ * it is the largest thing on the sheet and the heading only says where one is.
+ */
+const HEADING_REST_SCALE = 0.38;
+
+// "1/4", the way the site sets a number: the digit as the largest thing on the
+// screen and the total beside it in grey. Left to right, so it reads in order
+// inside a right-to-left page, and pushed to the end of its row - the right.
+const COUNT_ROW = "flex items-baseline justify-end gap-1.5 font-display";
+const COUNT_DIGIT = "text-m-numeral font-extrabold tracking-[-0.04em] text-black";
+const COUNT_TOTAL = "text-m-title font-bold text-black/30";
 
 /** Eases both ends of a 0 → 1 move, so the heading lifts off and lands softly. */
 function smoothstep(t: number) {
@@ -257,6 +264,7 @@ function progressAtPosition(position: number) {
 const FREE_END_TIME = CUE_SERVICES_OUT - FADE_SECONDS;
 const BALL_REST_TIME = 250 / CLIP_FPS;
 const PLANE_REST_TIME = CUE_STATEMENT_IN + FADE_SECONDS;
+const PLANE_REST = progressAtTime(PLANE_REST_TIME);
 
 const STORY = {
   anchors: [
@@ -266,7 +274,7 @@ const STORY = {
     progressAtPosition(HEADING_ALONE), // "איך אני עובד?" alone in the middle
     ...STAGE_TITLES.map((_, index) => progressAtPosition(index)), // each stage alone on the sheet
     progressAtTime(BALL_REST_TIME), // crumpled, the ball landed
-    progressAtTime(PLANE_REST_TIME), // a plane, the closing line up behind it
+    PLANE_REST, // a plane, the closing line up behind it
     1, // the plane gone, the line on white
   ],
   // The spacing is one ordinary swipe per moment. It was 1.1 screens a stage and
@@ -324,10 +332,12 @@ export default function MobileServices() {
   const framesRef = useRef<ScrollFrames | null>(null);
   const servicesLayerRef = useRef<HTMLDivElement>(null);
   const aboutLayerRef = useRef<HTMLDivElement>(null);
-  const stageBlockRef = useRef<HTMLDivElement>(null);
+  const headingBoxRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const countRef = useRef<HTMLParagraphElement>(null);
+  const digitRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const stageRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const dotsRef = useRef<HTMLDivElement>(null);
+  const cueRef = useRef<HTMLDivElement>(null);
   const statementLayerRef = useRef<HTMLDivElement>(null);
 
   const playheadRef = useRef<SteppedPlayhead | null>(null);
@@ -390,24 +400,26 @@ export default function MobileServices() {
     const frames = framesRef.current;
     const servicesLayer = servicesLayerRef.current;
     const aboutLayer = aboutLayerRef.current;
-    const stageBlock = stageBlockRef.current;
+    const headingBox = headingBoxRef.current;
     const heading = headingRef.current;
-    const dots = dotsRef.current;
+    const count = countRef.current;
+    const cue = cueRef.current;
     const statementLayer = statementLayerRef.current;
-    if (!panel || !frames || !servicesLayer || !aboutLayer || !stageBlock || !heading || !dots || !statementLayer) {
+    if (!panel || !frames || !servicesLayer || !aboutLayer || !headingBox || !heading || !count || !cue || !statementLayer) {
       return;
     }
 
     // Every measurement first, before any style below is written: a read after a
     // write forces a layout on every frame.
     //
-    // How far the heading's place sits above the middle of the screen. Layout
-    // offsets, which ignore the transforms written below — the heading's own
-    // rise and the layer's shrink — so this target never moves under its own
-    // animation. The stage block is laid out once and does not change height
-    // as stages swap, since all four share one grid cell.
-    const headingOffset =
-      panel.offsetHeight / 2 - (stageBlock.offsetTop + heading.offsetTop + heading.offsetHeight / 2);
+    // The middle of the screen, in the heading's own box - where its stack
+    // stands before it rises to its corner. Layout offsets, which ignore the
+    // transforms written below - the words' own, the box's shrink and the
+    // layer's - so this target never moves under its own animation.
+    const stackX = panel.offsetWidth / 2 - (headingBox.offsetLeft + heading.offsetLeft);
+    const stackY = panel.offsetHeight / 2 - (headingBox.offsetTop + heading.offsetTop);
+    const stackWidth = panel.offsetWidth * HEADING_STACK_WIDTH;
+    const stackMaxHeight = panel.offsetHeight * HEADING_STACK_MAX_HEIGHT;
 
     const time = progressToTime(progress);
 
@@ -438,18 +450,20 @@ export default function MobileServices() {
     const position = lerp(FIRST_ARRIVAL, STAGE_COUNT - 1, clamp01(onSheet / STAGES_END));
 
     // The heading folds in as a big stack centred on the screen once the paper
-    // is still, and settles into its line at its place as it rises.
+    // is still, and settles into one small line in its corner as it rises: the
+    // words run back into their line while the box they sit in shrinks towards
+    // its own top right.
+    const folded = clamp01((position - HEADING_FOLD[0]) / (HEADING_FOLD[1] - HEADING_FOLD[0]));
     const rise = smoothstep(clamp01((position - HEADING_RISE[0]) / (HEADING_RISE[1] - HEADING_RISE[0])));
-    stackHeading(
-      heading,
-      heading.offsetWidth / 2,
-      heading.offsetHeight / 2 + headingOffset,
-      panel.offsetWidth * HEADING_STACK_WIDTH,
-      panel.offsetHeight * HEADING_STACK_MAX_HEIGHT,
-      rise,
-      HEADING_STACK_SAME_SIZE,
-    );
-    setFold(heading, (position - HEADING_FOLD[0]) / (HEADING_FOLD[1] - HEADING_FOLD[0]));
+    stackHeading(heading, stackX, stackY, stackWidth, stackMaxHeight, rise, HEADING_STACK_SAME_SIZE);
+    headingBox.style.transform = `scale(${lerp(1, HEADING_REST_SCALE, rise)})`;
+    setFold(heading, folded);
+
+    // THE CUE comes in with the heading - the first thing that stands still on
+    // the open sheet - and stays for everything after it: the four stages, the
+    // crumple and the plane. It goes as the plane flies off, which the finger
+    // drives, so by then nobody needs telling.
+    cue.style.opacity = String(Math.min(folded, clamp01((1 - progress) / (1 - PLANE_REST))));
 
     for (let index = 0; index < STAGE_COUNT; index++) {
       // 0 → 1 across the swap into this stage, and across the swap out of it.
@@ -461,18 +475,20 @@ export default function MobileServices() {
       // so each goes and comes softly instead of at a constant rate.
       const arriving = smoothstep(clamp01(swapIn * 2 - 1));
       const leaving = smoothstep(clamp01(swapOut * 2));
-      const visibility = Math.min(arriving, 1 - leaving);
-      // The dots count stages, so they wait for the first one rather than
-      // showing under the heading while it is still alone on the sheet.
-      if (index === 0) dots.style.opacity = String(arriving);
+      const visibility = String(Math.min(arriving, 1 - leaving));
+      const lift = `translateY(${((1 - arriving) - leaving) * SWAP_RISE_PX}px)`;
+      // The "/4" counts stages, so it waits for the first one rather than
+      // showing under the heading while that is still alone on the sheet. Then
+      // it stays put, and only the digit in front of it changes.
+      if (index === 0) count.style.opacity = String(arriving);
 
-      const stage = stageRefs.current[index];
-      if (stage) {
-        stage.style.opacity = String(visibility);
-        stage.style.transform = `translateY(${((1 - arriving) - leaving) * SWAP_RISE_PX}px)`;
+      // The digit and the words of a stage go and come as one.
+      for (const part of [digitRefs.current[index], stageRefs.current[index]]) {
+        if (!part) continue;
+        part.style.opacity = visibility;
+        part.style.transform = lift;
       }
     }
-    setStageRail(dots, position / (STAGE_COUNT - 1), Math.round(position));
 
     const statementOpacity = fadeIn(time, CUE_STATEMENT_IN);
     statementLayer.style.opacity = String(statementOpacity);
@@ -519,12 +535,12 @@ export default function MobileServices() {
     return (
       <section id="services" className="bg-white px-6 py-20">
         <ServicesIntro />
-        <h2 className="mt-20 text-center font-display text-m-title font-bold text-black">
+        <h2 className="mt-20 text-right font-display text-m-title font-bold text-black">
           {PROCESS_HEADING.join(" ")}
         </h2>
         <div className="mt-12 space-y-16">
           {STAGE_TITLES.map((title, index) => (
-            <ProcessStage key={title} index={index} className="flex flex-col items-center" />
+            <ProcessStage key={title} index={index} withCount />
           ))}
         </div>
         <Statement className="mt-20" />
@@ -590,25 +606,29 @@ export default function MobileServices() {
             until the paper opens, and it sat over the four service rows and
             swallowed every tap on them. Nothing in it is a link. */}
         <div ref={aboutLayerRef} className="pointer-events-none absolute inset-0 opacity-0">
-          {/* The heading and the stages as one block, centred between the menu
-              row and the dots. Pinned to the top on its own, the heading hung
-              far above the stage and read as detached from it. The grid cell is
-              as tall as the tallest stage, so the block — and the heading with
-              it — holds still as the stages swap. */}
-          <div
-            ref={stageBlockRef}
-            className="absolute inset-x-6 top-[8%] bottom-[14%] flex flex-col items-center justify-center"
-          >
-            {/* The projects heading's entrance: it folds in as a big stack in the
-                middle of the opened sheet, then settles into its line as it
-                rises to its place. Only the words move, so the heading's own
-                box stays an honest reading for the offsets in render. */}
-            {/* The projects heading's type exactly - size, weight, tracking and
-                no halo. At the smaller bold size with the white halo, scaled up
-                into the stack the halo grew with it into a glow. */}
+          {/* THE SHEET, SET THE WAY THE SITE SETS A PAGE: against the right
+              edge, a numeral as the largest thing on it, a heavy title and one
+              sentence. It was a black disc with a line drawing in it over a
+              centred title - a "features" card, and the one screen on the
+              phone that did not look like this studio.
+
+              NOTHING IS DRAWN BEHIND THE WORDS YET. The studio's own
+              illustrations go there, one for each stage, the way the desk
+              prints its diagram on the paper: a layer in this div before the
+              block below, each picture given the same opacity and lift its
+              stage gets in render. */}
+
+          {/* The projects heading's entrance: it folds in as a big stack in the
+              middle of the opened sheet, then runs back into one line as it
+              rises to this corner. Set in the type it enters in - the projects
+              heading's exactly, with no halo, which grew into a glow when it
+              was scaled up - and the box is what shrinks (HEADING_REST_SCALE).
+              w-max and no wrapping: at this size the line is wider than the
+              screen, and it is the shrunk line that has to fit, not this one. */}
+          <div ref={headingBoxRef} className="absolute top-[max(76px,11%)] right-6 w-max origin-top-right">
             <h2
               ref={headingRef}
-              className="relative flex flex-wrap justify-center gap-x-[0.25em] text-center font-display text-m-display font-extrabold tracking-tight whitespace-nowrap text-black"
+              className="flex gap-x-[0.25em] font-display text-m-display font-extrabold tracking-tight whitespace-nowrap text-black"
             >
               {PROCESS_HEADING.map((words) => (
                 <span key={words} className="block origin-center">
@@ -616,9 +636,34 @@ export default function MobileServices() {
                 </span>
               ))}
             </h2>
+          </div>
+
+          {/* From a fixed line under the heading, not centred in what is left:
+              centred, the numeral hung in the middle of the sheet with a field
+              of empty paper between it and the heading it belongs to. */}
+          <div className="absolute inset-x-6 top-[23%]">
+            {/* "1/4", and it is also the plainest sign that there is more: the
+                "/4" stands still while the digit in front of it changes. All
+                four digits share one grid cell, set against the slash. */}
+            <p ref={countRef} dir="ltr" aria-hidden="true" className={`${COUNT_ROW} opacity-0`}>
+              <span className="grid justify-items-end">
+                {STAGE_TITLES.map((title, index) => (
+                  <span
+                    key={title}
+                    ref={(element) => {
+                      digitRefs.current[index] = element;
+                    }}
+                    className={`${COUNT_DIGIT} opacity-0 [grid-area:1/1]`}
+                  >
+                    {index + 1}
+                  </span>
+                ))}
+              </span>
+              <span className={COUNT_TOTAL}>/{STAGE_COUNT}</span>
+            </p>
             {/* All four stacked in one grid cell, so each stage takes the same
-                place as the one before. */}
-            <div className="mt-10 grid w-full place-items-center px-2">
+                place as the one before and the block holds still as they swap. */}
+            <div className="mt-6 grid">
               {STAGE_TITLES.map((title, index) => (
                 <ProcessStage
                   key={title}
@@ -626,17 +671,29 @@ export default function MobileServices() {
                   stageRef={(element) => {
                     stageRefs.current[index] = element;
                   }}
-                  className="flex flex-col items-center opacity-0 [grid-area:1/1]"
+                  className="opacity-0 [grid-area:1/1]"
                 />
               ))}
             </div>
           </div>
-          {/* Where the reader is in the four, as a column down the right edge -
-              the desk's indicator, see StageRail for why not a row. Decoration
-              for sighted readers; each stage carries its own numeral. */}
-          <div ref={dotsRef} className="absolute top-1/2 right-[7px] -translate-y-1/2 opacity-0">
-            <StageRail count={STAGE_TITLES.length} />
-          </div>
+        </div>
+
+        {/* KEEP SCROLLING. Nothing on a pinned screen says that the page is not
+            stuck, and every reader who was handed the phone thought it was. A
+            dot travelling up a short line - a thumb's own movement - and two
+            words, at the foot of the screen from the moment the heading stands
+            on the open sheet until the section lets go. On the panel and not in
+            the layer above, which shrinks away with the crumple. Decoration: a
+            reader who cannot see it is not on a pinned screen to begin with. */}
+        <div
+          ref={cueRef}
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-[max(18px,env(safe-area-inset-bottom))] flex flex-col items-center gap-2 opacity-0"
+        >
+          <span className="relative block h-8 w-px bg-black/20">
+            <span className="scroll-cue-dot absolute top-1/2 -left-[3px] block h-[7px] w-[7px] rounded-full bg-black" />
+          </span>
+          <span className="paper-halo font-display text-m-small font-medium text-black/60">גללו להמשך</span>
         </div>
 
         {/* 22%, not 11%. The clip is 9:16 inside a screen that is taller than
@@ -672,58 +729,42 @@ function ServicesIntro() {
 }
 
 /**
- * One stage of the work, given the whole of the open sheet: its icon large and
- * moving, the numeral, the title, and the sentence under it that says what
- * actually happens there. Printed on the sheet in the slot the "who I am" block
- * used to occupy, on the same cues.
+ * One stage of the work, given the whole of the open sheet: its title and the
+ * sentence under it that says what actually happens there, set against the
+ * right edge. On the pinned sheet the numeral stands above all four as one
+ * shared "1/4"; laid out as a plain list, each prints its own (`withCount`).
  *
  * It used to be all four at once as a column of small icons and titles down one
  * side of the page. Four steps and no words under any of them read as a list
  * with nothing in it, and squeezing the sentences in would have made it a wall.
  * One at a time, each stage has room to say what it is.
- *
- * The icon needs no position of its own, so its animation class sits straight
- * on the group — the desktop splits position and motion across two groups only
- * because there the position is an SVG transform, which a CSS animation would
- * overwrite.
  */
 function ProcessStage({
   index,
   stageRef,
   className,
+  withCount = false,
 }: {
   index: number;
   stageRef?: (element: HTMLDivElement | null) => void;
   className?: string;
+  /** Print the stage's own "1/4" above it - where no shared one stands beside it. */
+  withCount?: boolean;
 }) {
-  const number = String(index + 1).padStart(2, "0");
   return (
-    <div ref={stageRef} className={`text-center ${className ?? ""}`}>
-      {/* A solid black disc with the drawing in white, heavy enough to hold its
-          own on the crumpled paper. A thin grey outline straight on the sheet
-          read as clip-art beside the site's heavy black type. */}
-      <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-black text-white">
-        <svg viewBox="-60 -60 120 120" aria-hidden="true" className="h-12 w-12 overflow-visible">
-          <g
-            className={ICON_MOTION[number]}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            {ICONS[number].map((part) => (
-              <path key={part.d} d={part.d} className={part.cls} />
-            ))}
-            <IconExtras number={number} />
-          </g>
-        </svg>
-      </div>
-      <span className="mt-7 block font-display text-m-small font-bold tracking-[0.2em] text-black/35">{number}</span>
-      <h3 className="paper-halo mt-2 font-display text-m-statement font-bold text-balance text-black">
+    <div ref={stageRef} className={`text-right ${className ?? ""}`}>
+      {withCount && (
+        <p dir="ltr" aria-hidden="true" className={`${COUNT_ROW} mb-5`}>
+          <span className={COUNT_DIGIT}>{index + 1}</span>
+          <span className={COUNT_TOTAL}>/{STAGE_COUNT}</span>
+        </p>
+      )}
+      <h3 className="paper-halo font-display text-m-statement leading-[1.15] font-extrabold text-balance text-black">
+        {/* The big numeral is decoration; this is the same count, read out. */}
+        <span className="sr-only">{`שלב ${index + 1} מתוך ${STAGE_COUNT}: `}</span>
         {STAGE_TITLES[index]}
       </h3>
-      <p className="paper-halo mx-auto mt-3 max-w-[30ch] font-body text-m-body text-balance text-black/60">
+      <p className="paper-halo mt-3 max-w-[32ch] font-body text-m-body text-pretty text-black/65">
         {STAGE_LINES[index].join(" ")}
       </p>
     </div>

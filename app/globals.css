@@ -42,6 +42,14 @@
    * `m-` for mobile: these are the base sizes, and the desktop keeps its own
    * fluid clamps above the breakpoint.
    */
+  /*
+   * The stage numeral on the open sheet: one digit, the largest thing on the
+   * phone, with nothing else at this size. The line height is under one because
+   * a digit has no descender, and at 1 the row carried a band of empty paper
+   * beneath it.
+   */
+  --text-m-numeral: 112px;
+  --text-m-numeral--line-height: 0.85;
   --text-m-display: 56px;
   --text-m-display--line-height: 1.02;
   --text-m-title: 40px;
@@ -338,6 +346,28 @@ body {
     0 0 4px #fff,
     0 0 12px #fff,
     0 0 28px rgb(255 255 255 / 0.85);
+}
+
+/* The dot of the phone's "keep scrolling" cue: it travels up its line the way a
+   thumb does, fades out at the top and starts again from below. Slow, and never
+   a blink - it has to say the page is alive without asking to be looked at. */
+@keyframes scroll-cue {
+  0% {
+    transform: translateY(13px);
+    opacity: 0;
+  }
+  25%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+}
+
+.scroll-cue-dot {
+  animation: scroll-cue 2.2s ease-in-out infinite;
 }
 
 @keyframes icon-rocket {

@@ -521,7 +521,7 @@ function ProcessStages() {
         {/* Larger than the phone's and with no grey route laid out ahead:
             on the desk the line only draws between two circles while the
             sheet moves from one stage to the next. */}
-        <StageRail count={STAGE_TITLES.length} size="lg" track={false} />
+        <StageRail count={STAGE_TITLES.length} />
       </div>
     </div>
   );
