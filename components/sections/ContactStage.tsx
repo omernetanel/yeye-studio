@@ -1,15 +1,75 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import Link from "next/link";
 import { useMotionValueEvent, useScroll } from "framer-motion";
+import { Pause, Play } from "lucide-react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import SquishSwitch from "@/components/ui/SquishSwitch";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
+import { cn } from "@/lib/utils";
 import BalloonDrop, { type DropState } from "@/components/sections/about/BalloonDrop";
 
-const VIDEO_SRC = "/videos/hearmeoutbgvid.mp4";
+// THE CLIP, WITH ITS SOUND. Thirty seconds at 1280x720 with a stereo track,
+// re-encoded from a 30MB master that stays out of git (crf 27, AAC at 128k:
+// 4.3MB). `v1` is in the name because /videos is served immutable for a year -
+// a re-export takes a new name, see next.config.ts.
+//
+// It starts muted, as any clip that plays by itself must, and the switch beside
+// it turns the sound on from wherever the clip has got to. Nothing about that
+// is remembered: a reload starts silent again. It loops always, with or without
+// sound.
+const VIDEO_SRC = "/videos/open-space-v1.mp4";
+// The clip's own frame at half a second, for the one place it stands still
+// before it is played: the reduced-motion stage.
+const VIDEO_POSTER = "/images/open-space-poster.webp";
+// The clip is a dark interior, and so is the room around it.
+const VIDEO_IS_DARK = true;
+const ROOM_IS_DARK = true;
+
+// How long the sound takes to come up or go down.
+const SOUND_FADE_MS = 600;
+
+/**
+ * Brings the clip's sound up, or takes it down, over SOUND_FADE_MS.
+ *
+ * Silence is `muted`, not a volume of zero: the clip is muted when the ramp
+ * down ends and unmuted before the ramp up begins. That is what makes it work
+ * on an iPhone, where the volume of a video cannot be set from a page at all -
+ * there the ramp does nothing and the sound simply goes or comes at its end.
+ */
+function fadeSound(video: HTMLVideoElement, audible: boolean, timer: { current: number | null }) {
+  if (timer.current !== null) window.clearInterval(timer.current);
+  if (audible && video.muted) {
+    video.volume = 0;
+    video.muted = false;
+  }
+  const from = video.volume;
+  const to = audible ? 1 : 0;
+  const start = performance.now();
+  // A timer, not animation frames: frames stop when the page is not being
+  // drawn, and a ramp down that never finishes is a clip that never goes quiet.
+  timer.current = window.setInterval(() => {
+    const t = clamp01((performance.now() - start) / SOUND_FADE_MS);
+    // Clamped, and not for tidiness: a volume a hair outside 0..1 is not
+    // rounded by the browser, it throws - and it did, at 1.001.
+    video.volume = clamp01(from + (to - from) * t);
+    if (t < 1) return;
+    if (timer.current !== null) window.clearInterval(timer.current);
+    timer.current = null;
+    if (!audible) video.muted = true;
+  }, 16);
+}
 // The plate ships at half its nominal pixel size (3344x1882 against a ROOM_W
 // of 6688). That is fine and deliberate: the composition below is expressed in
 // the plate's own coordinate space and the <img> is laid out at the full
@@ -295,27 +355,142 @@ function ContactForm() {
   );
 }
 
-function StageVideo({ src }: { src?: string }) {
+function StageVideo({
+  src,
+  videoRef,
+  still = false,
+}: {
+  src?: string;
+  videoRef: RefObject<HTMLVideoElement | null>;
+  /** Stand on the poster until it is played by hand, instead of playing on arrival. */
+  still?: boolean;
+}) {
   return (
     <video
+      ref={videoRef}
       // Held back until the stage is close (see VIDEO_PRELOAD_MARGIN). This is
       // the heaviest asset on the site by a wide margin and it lives at the far
       // end of a very long page, so loading it up front made every visitor who
       // never got here pay for it in full. Setting the attribute later runs the
       // media load algorithm, so it still autoplays on arrival.
       src={src}
+      poster={still ? VIDEO_POSTER : undefined}
       aria-hidden="true"
       tabIndex={-1}
+      // Always written muted: it is what lets the clip start by itself, and
+      // the sound is turned on from the element (see fadeSound), not from here.
       muted
       playsInline
       loop
-      autoPlay
-      preload="auto"
+      autoPlay={!still}
+      preload={still ? "metadata" : "auto"}
       disablePictureInPicture
       // Its box is built at the clip's own 16:9, so nothing is ever cropped
       // or letterboxed here — the frame is shown whole at every zoom level.
       className="h-full w-full object-cover"
     />
+  );
+}
+
+/**
+ * The sound, as a switch that says what it is and what each side of it does.
+ *
+ * "ווליום" over it, "שקט" on the side that is off and "קול" on the side that is
+ * on, the live one in full white - so nobody has to work out which way is which
+ * from a pill with a dot in it. The words are for the eye; a screen reader gets
+ * the switch itself, named, with its state.
+ *
+ * On a dark pill of its own: it stands over the clip, the room and the black
+ * under them in turn, and has to read on all three. Left to right inside a
+ * right-to-left page, so the off side is on the left where the thumb rests.
+ */
+function VolumeControl({
+  on,
+  onChange,
+  className,
+}: {
+  on: boolean;
+  onChange: (on: boolean) => void;
+  className?: string;
+}) {
+  const side = "transition-colors duration-300";
+  return (
+    <div
+      className={cn(
+        "flex flex-col items-center gap-1.5 rounded-[22px] bg-black/60 px-5 pt-2.5 pb-3 backdrop-blur-sm select-none",
+        className,
+      )}
+    >
+      <span aria-hidden="true" className="font-display text-[11px] font-medium tracking-[0.18em] text-white/60">
+        ווליום
+      </span>
+      <div dir="ltr" className="flex items-center gap-3 font-display text-[14px] font-medium">
+        <span aria-hidden="true" className={cn(side, on ? "text-white/45" : "text-white")}>
+          שקט
+        </span>
+        <SquishSwitch
+          checked={on}
+          onChange={onChange}
+          label="ווליום הסרטון"
+          trackColor="var(--color-primary)"
+          trackOnColor="var(--color-white)"
+          thumbColor="var(--color-primary-light)"
+          thumbOnColor="var(--color-black)"
+          width={60}
+          height={30}
+        />
+        <span aria-hidden="true" className={cn(side, on ? "text-white" : "text-white/45")}>
+          קול
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The room, framed rather than filled, with the clip in its own cut-out: a
+ * SQUARE window holding the plate's full height, cropped at the sides and
+ * centred on the screen. The composition the zoom ends on, for the two places
+ * the zoom does not run - a phone, and a reader who asked for less motion.
+ *
+ * Positioned by the same four numbers the desktop zoom uses, expressed as
+ * fractions of the plate: nothing here is measured by eye, and moving the
+ * cut-out moves both. At full width the plate is a wide shot and its cut-out
+ * comes out 125px across on a phone - the thing this section is about, smaller
+ * than a thumbnail. The square keeps the whole room and loses only the wall at
+ * either end.
+ */
+function FramedRoom({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className="absolute top-0"
+      style={{
+        width: `${MOBILE_PLATE_WIDTH_PCT}%`,
+        left: `${50 - MOBILE_PLATE_WIDTH_PCT * (SCREEN_CX / ROOM_W)}%`,
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={ROOM_SRC}
+        alt=""
+        aria-hidden="true"
+        width={ROOM_W}
+        height={ROOM_H}
+        className="block h-auto w-full"
+        draggable={false}
+      />
+      <div
+        className="absolute overflow-hidden rounded-[3px] border-[5px] border-[#0d0d0d] bg-[#0d0d0d]"
+        style={{
+          left: `${((SCREEN_X + (SCREEN_W * (1 - MOBILE_SCREEN_SCALE)) / 2) / ROOM_W) * 100}%`,
+          top: `${((SCREEN_Y + (SCREEN_H * (1 - MOBILE_SCREEN_SCALE)) / 2) / ROOM_H) * 100}%`,
+          width: `${((SCREEN_W * MOBILE_SCREEN_SCALE) / ROOM_W) * 100}%`,
+          height: `${((SCREEN_H * MOBILE_SCREEN_SCALE) / ROOM_H) * 100}%`,
+        }}
+      >
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -364,6 +539,57 @@ export default function ContactStage() {
   const dropStateRef = useRef<DropState>({ armed: false, wallLive: false, leaving: false });
   const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
   const [tail, setTail] = useState<{ height: number; width: number; left: number; top: number } | null>(null);
+
+  // THE SOUND. Off on every load. Turning it on is the reader's own press, which
+  // is also the only thing a browser accepts as leave to play sound at all.
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [soundOn, setSoundOn] = useState(false);
+  // What the observer below reads: it outlives the render that made it.
+  const soundOnRef = useRef(false);
+  const inViewRef = useRef(false);
+  const fadeTimerRef = useRef<number | null>(null);
+  // Only the reduced-motion stage has this: there the clip waits to be played.
+  const [playing, setPlaying] = useState(false);
+
+  const toggleSound = (next: boolean) => {
+    const video = videoRef.current;
+    soundOnRef.current = next;
+    setSoundOn(next);
+    if (video) fadeSound(video, next && inViewRef.current, fadeTimerRef);
+  };
+
+  const togglePlaying = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      void video.play();
+      setPlaying(true);
+    } else {
+      video.pause();
+      setPlaying(false);
+    }
+  };
+
+  // A READER WHO LEFT THE SOUND ON AND SCROLLED AWAY does not go on hearing a
+  // clip they can no longer see for the rest of the page. It fades out as the
+  // section leaves the screen and back in when it returns. The clip itself
+  // never stops.
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      inViewRef.current = entry.isIntersecting;
+      const video = videoRef.current;
+      if (video && soundOnRef.current) fadeSound(video, entry.isIntersecting, fadeTimerRef);
+    });
+    observer.observe(wrapper);
+    const fadeTimer = fadeTimerRef;
+    return () => {
+      observer.disconnect();
+      if (fadeTimer.current !== null) window.clearInterval(fadeTimer.current);
+    };
+    // The section is a different element in each of the three layouts.
+  }, [skipPin, prefersReducedMotion]);
 
   useEffect(() => {
     const gate = gateRef.current;
@@ -422,12 +648,10 @@ export default function ContactStage() {
     // The clip is centred on the focal point, so its on-screen box falls out
     // of the same two numbers.
     //
-    // INVERTED AGAINST WHAT THIS ONCE DID, because the plate was replaced. The
-    // old room was a white showroom, so the clip was the dark thing and the
-    // logo went white only while it sat over it. bghearmeout.png is a dark
-    // studio and the footage inside the screen is a bright office — so the
-    // reverse is now true, and reporting the old way left the logo black on
-    // black for the whole of the zoom-out.
+    // WHICH OF THE TWO IS DARK HAS CHANGED TWICE, so it is two constants now
+    // and not a sentence in this comment: a white showroom around dark footage,
+    // then a dark studio around a bright office, and now both dark. The logo
+    // reads whichever one is under its corner.
     const halfW = (VIDEO_W * scale) / 2;
     const halfH = (VIDEO_H * scale) / 2;
     const overClip =
@@ -435,7 +659,7 @@ export default function ContactStage() {
       LOGO_X_PX <= focalX + halfW &&
       LOGO_Y_PX >= focalY - halfH &&
       LOGO_Y_PX <= focalY + halfH;
-    wrapperRef.current?.setAttribute("data-nav-dark", overClip ? "false" : "true");
+    wrapperRef.current?.setAttribute("data-nav-dark", String(overClip ? VIDEO_IS_DARK : ROOM_IS_DARK));
   };
 
   // What is left of the plate below the bottom edge once the zoom has come to
@@ -492,12 +716,16 @@ export default function ContactStage() {
     if (balloons && gate) dropStateRef.current.armed = gate.getBoundingClientRect().top < 0;
   });
 
-  // REDUCED MOTION: THE FORM, AND NOTHING AROUND IT. The room exists to be
-  // zoomed out of and the footage to play inside it; with neither, the plate
-  // was a still photograph of a showroom a screen and a half tall, pulled up
-  // over "who I am" by the phone's overlap and covering it. The video would
-  // be motion this reader asked not to see. What is left is the ask, on the
-  // black that "who I am" hands over, straight under its closing line.
+  // REDUCED MOTION: THE ROOM STANDING STILL, AND A BUTTON TO PLAY IT. Nothing
+  // zooms and nothing plays by itself - that is what this reader asked for -
+  // but the clip is not taken away from them either. It stands on its own
+  // frame in the room, and playing it is their choice. It used to be the form
+  // alone, which left a reader with this setting without the one thing on the
+  // page that has sound and a picture in it.
+  //
+  // No pull up into "who I am" here, unlike the phone: there the room climbs
+  // in under a pinned closing line, and with no pin the same overlap laid the
+  // plate straight over that section's text.
   //
   // overflow-x-clip: the form's honeypot is parked 9999px off to the side.
   // Unclipped, a phone widened its layout to reach it and zoomed the whole
@@ -506,8 +734,31 @@ export default function ContactStage() {
   // white page showed through the seam as a hairline.
   if (prefersReducedMotion) {
     return (
-      <section id="contact" data-nav-dark="true" className="relative -mt-px overflow-x-clip bg-black pt-14 pb-24 md:pt-16">
-        <ContactForm />
+      <section
+        ref={wrapperRef}
+        id="contact"
+        data-nav-dark="true"
+        className="relative -mt-px overflow-x-clip bg-black pt-14 pb-24 md:pt-16"
+      >
+        <div className="mx-auto w-full max-w-[560px] px-6">
+          <div ref={gateRef} className="relative aspect-square w-full overflow-hidden">
+            <FramedRoom>
+              <StageVideo src={videoSrc} videoRef={videoRef} still />
+            </FramedRoom>
+          </div>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+            <Button variant="outline" showArrow={false} onClick={togglePlaying}>
+              <span className="inline-flex items-center gap-2">
+                {playing ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
+                {playing ? "עצירת הסרטון" : "הפעלת הסרטון"}
+              </span>
+            </Button>
+            <VolumeControl on={soundOn} onChange={toggleSound} />
+          </div>
+        </div>
+        <div className="mt-14">
+          <ContactForm />
+        </div>
       </section>
     );
   }
@@ -554,20 +805,10 @@ export default function ContactStage() {
         className="relative z-20 -mt-[42svh] overflow-hidden bg-[linear-gradient(to_bottom,transparent_calc(42svh_-_2px),black_calc(42svh_-_2px))] py-24"
       >
         {balloons && <BalloonDrop sectionRef={wrapperRef} stateRef={dropStateRef} variant="contact" />}
-        {/* The plate, framed rather than filled. The zoom does not run on a
-            phone, so what is left of this section is the composition it ends on
-            — and a composition wants black around it, not a screen it bleeds
-            off. The clip sits in the room's own cut-out, positioned by the same
-            four numbers the desktop zoom uses, expressed as fractions of the
-            plate: nothing here is measured by eye, and moving the cut-out moves
-            both. */}
-        {/* CROPPED AT THE SIDES, not zoomed. At full width the plate is a wide
-            shot and its cut-out comes out 125px across on a phone — the thing
-            this section is about, rendered smaller than a thumbnail. A square
-            window holding the plate's full height keeps the whole room and
-            loses only the wall at the ends. The left offset puts the cut-out's
-            own centre on the frame's centre; every number is derived from the
-            same four the desktop zoom uses, so nothing here is nudged by eye. */}
+        {/* The plate, framed rather than filled - see FramedRoom. The zoom does
+            not run on a phone, so what is left of this section is the
+            composition it ends on, and a composition wants black around it,
+            not a screen it bleeds off. */}
         {/* data-balloon-floor: where the balloons falling out of "who I am"
             stop being visible — see BalloonDrop.
 
@@ -579,35 +820,15 @@ export default function ContactStage() {
           data-balloon-floor
           className="relative z-10 aspect-square w-full overflow-hidden"
         >
-          <div
-            className="absolute top-0"
-            style={{
-              width: `${MOBILE_PLATE_WIDTH_PCT}%`,
-              left: `${50 - MOBILE_PLATE_WIDTH_PCT * (SCREEN_CX / ROOM_W)}%`,
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={ROOM_SRC}
-              alt=""
-              aria-hidden="true"
-              width={ROOM_W}
-              height={ROOM_H}
-              className="block h-auto w-full"
-              draggable={false}
-            />
-            <div
-              className="absolute overflow-hidden rounded-[3px] border-[5px] border-[#0d0d0d] bg-[#0d0d0d]"
-              style={{
-                left: `${((SCREEN_X + (SCREEN_W * (1 - MOBILE_SCREEN_SCALE)) / 2) / ROOM_W) * 100}%`,
-                top: `${((SCREEN_Y + (SCREEN_H * (1 - MOBILE_SCREEN_SCALE)) / 2) / ROOM_H) * 100}%`,
-                width: `${((SCREEN_W * MOBILE_SCREEN_SCALE) / ROOM_W) * 100}%`,
-                height: `${((SCREEN_H * MOBILE_SCREEN_SCALE) / ROOM_H) * 100}%`,
-              }}
-            >
-              <StageVideo src={videoSrc} />
-            </div>
-          </div>
+          <FramedRoom>
+            <StageVideo src={videoSrc} videoRef={videoRef} />
+          </FramedRoom>
+        </div>
+
+        {/* The sound, straight under the picture it belongs to. z-10 for the
+            same reason as the form below: the balloons fall behind it. */}
+        <div className="relative z-10 mt-5 flex justify-center">
+          <VolumeControl on={soundOn} onChange={toggleSound} />
         </div>
 
         {/* And the ask underneath it. No heading over the picture: the block
@@ -617,7 +838,7 @@ export default function ContactStage() {
             in the layer at z-[5], and a form without a level of its own is
             painted underneath that layer — they dropped straight across the
             fields. Lifted to the picture's level, they pass behind both. */}
-        <div className="relative z-10 mt-[9svh]">
+        <div className="relative z-10 mt-[7svh]">
           <ContactForm />
         </div>
       </section>
@@ -700,7 +921,7 @@ export default function ContactStage() {
               className="absolute top-1/2 left-1/2 overflow-hidden"
               style={{ width: SCREEN_W, height: SCREEN_H, transform: "translate(-50%, -50%)" }}
             >
-              <StageVideo src={videoSrc} />
+              <StageVideo src={videoSrc} videoRef={videoRef} />
             </div>
           </div>
         </div>
@@ -708,6 +929,12 @@ export default function ContactStage() {
         <div ref={formRef} className="absolute inset-0 z-10 flex items-center justify-center">
           <ContactForm />
         </div>
+
+        {/* The sound, in the corner of the pinned screen for the whole of the
+            zoom: over the clip while it fills the screen and over the room once
+            it has pulled back. Above the form's layer, which covers the panel.
+            The right corner - the left one holds the two floating buttons. */}
+        <VolumeControl on={soundOn} onChange={toggleSound} className="absolute right-7 bottom-7 z-20" />
       </div>
     </section>
 
