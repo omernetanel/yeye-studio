@@ -74,11 +74,9 @@ function fadeSound(video: HTMLVideoElement, audible: boolean, timer: { current: 
     if (!audible) video.muted = true;
   }, 16);
 }
-// The plate ships at half its nominal pixel size (3344x1882 against a ROOM_W
-// of 6688). That is fine and deliberate: the composition below is expressed in
-// the plate's own coordinate space and the <img> is laid out at the full
-// ROOM_W regardless, so the file's own resolution is free to differ from it.
-const ROOM_SRC = "/images/bghearmeout.webp";
+// The room: a dark office front with a wall-mounted screen, and the screen is a
+// hole in the picture.
+const ROOM_SRC = "/images/open_space_bg.webp";
 
 // How far ahead of the stage the clip starts downloading, as a share of the
 // viewport. Generous on purpose: the clip is full-screen from the very first
@@ -86,14 +84,16 @@ const ROOM_SRC = "/images/bghearmeout.webp";
 // not merely requested.
 const VIDEO_PRELOAD_MARGIN = "200% 0px";
 
-// The showroom plate, and the screen cut-out measured out of its own alpha
-// channel rather than eyeballed: a solid transparent rectangle at
-// x 2235..4472, y 1248..2400. Everything below is expressed in this image's
-// own pixel space, which is what lets the whole scene move as one rigid
-// composition — the video is pinned to this rect and never animated
-// separately, so scrolling only ever changes one scale and one offset.
-const ROOM_W = 6688;
-const ROOM_H = 3764;
+// The plate at its own size, and the screen cut-out measured out of its alpha
+// channel rather than eyeballed: transparent from x 1056 to 1793 and y 519 to
+// 962 (the half-alpha edge; inside it a faint black shadow fades out over
+// about 60px, at most 7% - the plate's own inner shadow on the screen).
+// Everything below is expressed in this image's own pixel space, which is what
+// lets the whole scene move as one rigid composition — the video is pinned to
+// this rect and never animated separately, so scrolling only ever changes one
+// scale and one offset.
+const ROOM_W = 2848;
+const ROOM_H = 1600;
 
 /**
  * Where the plate lands once the zoom is done: covering the viewport, centred
@@ -111,43 +111,38 @@ function roomAtRest(vw: number, vh: number) {
   const scale = Math.max(vw / ROOM_W, vh / ROOM_H);
   return { scale, left: (vw - ROOM_W * scale) / 2, top: (vh - ROOM_H * scale) / 2 };
 }
-const SCREEN_X = 2235;
-const SCREEN_Y = 1248;
-const SCREEN_W = 2237;
-const SCREEN_H = 1152;
+const SCREEN_X = 1056;
+const SCREEN_Y = 519;
+const SCREEN_W = 738;
+const SCREEN_H = 444;
 
 const SCREEN_CX = SCREEN_X + SCREEN_W / 2;
 const SCREEN_CY = SCREEN_Y + SCREEN_H / 2;
 
-// The phone's framing of the plate: a SQUARE window holding the plate's full
-// height, cropped at the sides and centred on the cut-out. The whole room is
-// there top to bottom — the ceiling lights, the monitor, the rocks on the floor
-// — and what goes is the empty wall at either end, which is the only part of a
-// 16:9 room shot that a phone has no width for.
+// THE CLIP LIES UNDER THE PLATE, a little larger than the hole it shows
+// through. The plate has its own television frame and its own shadow on the
+// screen's edge, so nothing is drawn around the clip any more - it is simply
+// behind the picture, and the picture's edge is the edge. The margin is what
+// keeps a hairline of the page from showing where the two are resampled.
+const SCREEN_BLEED = 4;
+
+// The phone's framing of the plate: a SQUARE window on the middle of it,
+// centred on the screen. At the plate's full height the screen came out 172px
+// across on a phone — the thing this section is about, smaller than a
+// thumbnail — so the window is closer than that: what goes is the glass doors
+// at either end and a band of ceiling and desk, and the screen is a good half
+// of the frame's width.
 //
 // The plate is scaled by height, so its width comes out at the room's own
-// aspect ratio against the square: 177.7% of the frame.
-const MOBILE_PLATE_WIDTH_PCT = (ROOM_W / ROOM_H) * 100;
+// aspect ratio against the square, times how close the window is.
+const MOBILE_CLOSE = 1.4;
+const MOBILE_PLATE_WIDTH_PCT = (ROOM_W / ROOM_H) * 100 * MOBILE_CLOSE;
 
-// The clip is held a little inside the plate's cut-out rather than filling it,
-// and the gap is drawn as a bezel. Filling the cut-out edge to edge, the
-// footage reads as a rectangle floating on a wall — the thing that makes it a
-// television is the dark border around the picture, and the plate's own screen
-// edge is too thin to be that at this size.
-const MOBILE_SCREEN_SCALE = 0.9;
-
-// The clip fills the cut-out edge to edge. The plate is a placeholder whose
-// cut-out is 1.94:1 against the clip's 16:9, so filling it costs ~4% off the
-// top and bottom of the frame — the alternative was fitting the clip by height
-// and leaving a bare strip of bezel down each side, which read as margin rather
-// than as part of the frame. When the plate is replaced with one whose screen
-// is a real 16:9 the crop disappears on its own, with nothing here to change.
+// The clip fills the cut-out. The hole is 1.66:1 against the clip's 16:9, so
+// filling it costs about 3% off each side of the frame — the alternative was a
+// strip of bare wall above and below the picture.
 const VIDEO_H = SCREEN_H;
 const VIDEO_W = SCREEN_W;
-
-// Plasma-style bezel, in the same image space, so it scales with everything
-// else instead of staying a fixed number of screen pixels.
-const BEZEL = 44;
 
 // Scroll length of the pinned run, on top of the section's own first screen.
 const PIN_VH = 220;
@@ -419,11 +414,13 @@ function VolumeControl({
   return (
     <div
       className={cn(
-        "flex items-center gap-3.5 rounded-full bg-black py-2.5 ps-6 pe-3 ring-1 ring-white/15 select-none",
+        // Mostly see-through: it stands on the picture and should not cover it.
+        // The blur behind it is what keeps the word legible over a bright frame.
+        "flex items-center gap-2.5 rounded-full bg-black/35 py-1.5 ps-4 pe-2 ring-1 ring-white/15 backdrop-blur-md select-none",
         className,
       )}
     >
-      <span aria-hidden="true" className="font-display text-[16px] font-bold text-white">
+      <span aria-hidden="true" className="font-display text-[13px] font-bold text-white">
         ווליום
       </span>
       <SquishSwitch
@@ -434,35 +431,53 @@ function VolumeControl({
         trackOnColor="var(--color-white)"
         thumbColor="var(--color-white)"
         thumbOnColor="var(--color-black)"
-        width={52}
-        height={28}
+        width={40}
+        height={22}
       />
+      {/* Which way it is, in a word, for anyone a dot in a pill does not tell.
+          A fixed width, so the pill does not change size when it changes. */}
+      <span aria-hidden="true" className="w-[30px] text-start font-display text-[12px] font-medium text-white/70">
+        {on ? "פעיל" : "כבוי"}
+      </span>
     </div>
   );
 }
 
 /**
- * The room, framed rather than filled, with the clip in its own cut-out: a
- * SQUARE window holding the plate's full height, cropped at the sides and
- * centred on the screen. The composition the zoom ends on, for the two places
- * the zoom does not run - a phone, and a reader who asked for less motion.
+ * The room, framed rather than filled, with the clip behind its cut-out: a
+ * SQUARE window on the middle of the plate, centred on the screen (see
+ * MOBILE_CLOSE for how close). The composition the zoom ends on, for the two
+ * places the zoom does not run - a phone, and a reader who asked for less
+ * motion.
  *
  * Positioned by the same four numbers the desktop zoom uses, expressed as
  * fractions of the plate: nothing here is measured by eye, and moving the
- * cut-out moves both. At full width the plate is a wide shot and its cut-out
- * comes out 125px across on a phone - the thing this section is about, smaller
- * than a thumbnail. The square keeps the whole room and loses only the wall at
- * either end.
+ * cut-out moves both.
  */
 function FramedRoom({ children }: { children: ReactNode }) {
   return (
     <div
-      className="absolute top-0"
+      className="absolute"
       style={{
         width: `${MOBILE_PLATE_WIDTH_PCT}%`,
+        // The screen's own centre on the window's centre, both ways. The window
+        // is square, so its height is its width and one zoom serves both.
         left: `${50 - MOBILE_PLATE_WIDTH_PCT * (SCREEN_CX / ROOM_W)}%`,
+        top: `${50 - MOBILE_CLOSE * 100 * (SCREEN_CY / ROOM_H)}%`,
       }}
     >
+      {/* The clip first and the plate over it: see SCREEN_BLEED. */}
+      <div
+        className="absolute overflow-hidden"
+        style={{
+          left: `${((SCREEN_X - SCREEN_BLEED) / ROOM_W) * 100}%`,
+          top: `${((SCREEN_Y - SCREEN_BLEED) / ROOM_H) * 100}%`,
+          width: `${((SCREEN_W + SCREEN_BLEED * 2) / ROOM_W) * 100}%`,
+          height: `${((SCREEN_H + SCREEN_BLEED * 2) / ROOM_H) * 100}%`,
+        }}
+      >
+        {children}
+      </div>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={ROOM_SRC}
@@ -470,20 +485,9 @@ function FramedRoom({ children }: { children: ReactNode }) {
         aria-hidden="true"
         width={ROOM_W}
         height={ROOM_H}
-        className="block h-auto w-full"
+        className="relative block h-auto w-full"
         draggable={false}
       />
-      <div
-        className="absolute overflow-hidden rounded-[3px] border-[5px] border-[#0d0d0d] bg-[#0d0d0d]"
-        style={{
-          left: `${((SCREEN_X + (SCREEN_W * (1 - MOBILE_SCREEN_SCALE)) / 2) / ROOM_W) * 100}%`,
-          top: `${((SCREEN_Y + (SCREEN_H * (1 - MOBILE_SCREEN_SCALE)) / 2) / ROOM_H) * 100}%`,
-          width: `${((SCREEN_W * MOBILE_SCREEN_SCALE) / ROOM_W) * 100}%`,
-          height: `${((SCREEN_H * MOBILE_SCREEN_SCALE) / ROOM_H) * 100}%`,
-        }}
-      >
-        {children}
-      </div>
     </div>
   );
 }
@@ -492,7 +496,7 @@ function FramedRoom({ children }: { children: ReactNode }) {
  * The contact stage between the paper-ball section and the process section.
  *
  * The whole thing is one composition in the room image's pixel space: the
- * showroom plate, and the clip locked into the screen cut-out on top of it.
+ * room plate, and the clip locked behind the screen cut-out in it.
  * Scroll never moves those two relative to each other — it only drives a
  * single scale and offset applied to the pair, so the effect is a genuine
  * zoom out of a scene that was always assembled that way, not two elements
@@ -855,6 +859,22 @@ export default function ContactStage() {
           className="absolute top-0 left-0 origin-top-left will-change-transform"
           style={{ width: ROOM_W, height: ROOM_H }}
         >
+          {/* The clip, under the plate and a little larger than the hole it is
+              seen through - see SCREEN_BLEED. The frame around the screen used
+              to be drawn here, a chrome bezel with a sweep of light across it,
+              because the old plate had none; this one has its own. */}
+          <div
+            className="absolute overflow-hidden"
+            style={{
+              left: SCREEN_X - SCREEN_BLEED,
+              top: SCREEN_Y - SCREEN_BLEED,
+              width: SCREEN_W + SCREEN_BLEED * 2,
+              height: SCREEN_H + SCREEN_BLEED * 2,
+            }}
+          >
+            <StageVideo src={videoSrc} videoRef={videoRef} />
+          </div>
+
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={ROOM_SRC}
@@ -868,51 +888,6 @@ export default function ContactStage() {
             className="absolute inset-0 h-full w-full"
             draggable={false}
           />
-
-          {/* The screen. The bezel is drawn outward from the cut-out so it lands
-              on the plate's own edge rather than eating into the picture, and
-              the clip now FILLS that cut-out — it used to sit inside it at its
-              own 16:9, which left a strip of bare bezel down each side that read
-              as margin rather than as part of the frame.
-
-              Chrome rather than black, with a glossy sweep over it, so it reads
-              as a plasma set's frame instead of a flat rectangle. The gradient
-              runs across the corner, which is what gives a moulded edge its
-              light and dark sides. */}
-          <div
-            className="absolute"
-            style={{
-              left: SCREEN_X - BEZEL,
-              top: SCREEN_Y - BEZEL,
-              width: SCREEN_W + BEZEL * 2,
-              height: SCREEN_H + BEZEL * 2,
-              background:
-                "linear-gradient(148deg, #2e2e2e 0%, #171717 14%, #080808 38%, #0d0d0d 62%, #1c1c1c 84%, #383838 100%)",
-              padding: BEZEL,
-              boxSizing: "border-box",
-              borderRadius: BEZEL * 0.5,
-              boxShadow:
-                "inset 0 2px 3px rgba(255,255,255,0.16), inset 0 -2px 3px rgba(0,0,0,0.70), 0 30px 70px rgba(0,0,0,0.40)",
-            }}
-          >
-            {/* The specular sweep. Separate layer so it sits over the bezel's
-                own gradient without tinting the screen inside it. */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0"
-              style={{
-                borderRadius: BEZEL * 0.5,
-                background:
-                  "linear-gradient(112deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.11) 43%, rgba(255,255,255,0.03) 51%, rgba(255,255,255,0) 62%)",
-              }}
-            />
-            <div
-              className="absolute top-1/2 left-1/2 overflow-hidden"
-              style={{ width: SCREEN_W, height: SCREEN_H, transform: "translate(-50%, -50%)" }}
-            >
-              <StageVideo src={videoSrc} videoRef={videoRef} />
-            </div>
-          </div>
         </div>
 
         <div ref={formRef} className="absolute inset-0 z-10 flex items-center justify-center">
