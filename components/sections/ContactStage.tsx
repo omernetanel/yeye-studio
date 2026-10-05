@@ -416,11 +416,11 @@ function VolumeControl({
       className={cn(
         // Mostly see-through: it stands on the picture and should not cover it.
         // The blur behind it is what keeps the word legible over a bright frame.
-        "flex items-center gap-2.5 rounded-full bg-black/35 py-1.5 ps-4 pe-2 ring-1 ring-white/15 backdrop-blur-md select-none",
+        "flex items-center gap-2 rounded-full bg-black/35 py-1 ps-3.5 pe-1.5 ring-1 ring-white/15 backdrop-blur-md select-none",
         className,
       )}
     >
-      <span aria-hidden="true" className="font-display text-[13px] font-bold text-white">
+      <span aria-hidden="true" className="font-display text-[12px] font-bold text-white">
         ווליום
       </span>
       <SquishSwitch
@@ -431,12 +431,12 @@ function VolumeControl({
         trackOnColor="var(--color-white)"
         thumbColor="var(--color-white)"
         thumbOnColor="var(--color-black)"
-        width={40}
-        height={22}
+        width={34}
+        height={18}
       />
       {/* Which way it is, in a word, for anyone a dot in a pill does not tell.
           A fixed width, so the pill does not change size when it changes. */}
-      <span aria-hidden="true" className="w-[30px] text-start font-display text-[12px] font-medium text-white/70">
+      <span aria-hidden="true" className="w-[27px] text-start font-display text-[11px] font-medium text-white/70">
         {on ? "פעיל" : "כבוי"}
       </span>
     </div>
