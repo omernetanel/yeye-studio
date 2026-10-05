@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import BorderGlowCard from "./BorderGlowCard";
+import ExternalNote from "./ExternalNote";
 
 interface ProjectCardProps {
   title: string;
@@ -24,9 +25,14 @@ export default function ProjectCard({ title, category, imageSrc, href, external 
         <div className="relative mb-3.5 aspect-[1672/941] w-full overflow-hidden rounded-[14px] bg-white/[0.04]">
           <Image src={imageSrc} alt={title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-contain" />
         </div>
-        <div className="flex items-center justify-between px-2 pb-1.5">
+        <div className="flex items-center justify-between px-2">
           <span className="font-display text-[13px] text-white/75">{category}</span>
           <span className="font-display text-[17px] font-bold text-white">{title}</span>
+        </div>
+        {/* On every card, shown only where the link leaves the site, so the
+            cards in a row stay one height. */}
+        <div className="flex justify-end px-2 pt-1 pb-1.5">
+          <ExternalNote shown={Boolean(external) && href.startsWith("http")} className="text-white/55" />
         </div>
       </BorderGlowCard>
     </Link>

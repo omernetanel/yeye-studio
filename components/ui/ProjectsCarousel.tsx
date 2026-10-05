@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import ExternalNote from "@/components/ui/ExternalNote";
 import FlexCarousel, { type FlexCarouselHandle } from "@/components/ui/FlexCarousel";
 import { projects } from "@/lib/projects";
 import { PROJECTS_HEADING } from "@/lib/content";
@@ -20,6 +21,9 @@ const entries = projects.map((project) => ({
   category: project.cardCategory ?? project.category,
   href: project.external ? project.url : `/projects/${project.slug}`,
   external: project.external,
+  // Really another site, and not merely "has no page here": one piece is marked
+  // external and still points at an address on this one.
+  leavesSite: Boolean(project.external) && project.url.startsWith("http"),
 }));
 
 /**
@@ -91,6 +95,7 @@ export default function ProjectsCarousel({
                 {entry.title}
               </span>
               <span className="mt-1 block font-body text-m-small text-black/55 md:text-[15px]">{entry.category}</span>
+              {entry.leavesSite && <ExternalNote className="mt-1.5 text-black/50" />}
             </Link>
           </li>
         ))}
@@ -143,6 +148,9 @@ export default function ProjectsCarousel({
           {current.title}
         </Link>
         <span className="mt-1 font-body text-m-small text-black/55 md:text-[15px]">{current.category}</span>
+        {/* Always there, shown only for a piece that leaves the site: the
+            caption must not grow and shrink as the row turns. */}
+        <ExternalNote shown={current.leavesSite} className="mt-1.5 text-black/50" />
 
         {/* Previous, where you are, next. The arrows are real buttons, for
             everyone who does not drag, swipe or scroll a wheel sideways - and

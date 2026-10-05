@@ -53,7 +53,21 @@ function apply(next: A11yPrefs) {
   root.toggleAttribute("data-a11y-links", next.links);
 }
 
+// Told just BEFORE the motion setting changes, while the page is still laid
+// out the old way. Switching it re-lays the whole home page - every pinned
+// section collapses or unfolds - and whoever wants to keep the reader on the
+// section they were reading has to look where they are before that happens.
+const beforeMotionChange = new Set<() => void>();
+
+export function onBeforeMotionChange(listener: () => void) {
+  beforeMotionChange.add(listener);
+  return () => {
+    beforeMotionChange.delete(listener);
+  };
+}
+
 function publish(next: A11yPrefs) {
+  if (next.motion !== prefs.motion) for (const listener of beforeMotionChange) listener();
   prefs = next;
   apply(next);
   try {

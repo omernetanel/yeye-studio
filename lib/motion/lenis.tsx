@@ -27,6 +27,9 @@ export function useLenis() {
 
 export function SmoothScrollProvider({ children }: { children: ReactNode }) {
   const [lenis, setLenis] = useState<Lenis | null>(null);
+  // The same instance, for the route effect below, which must not re-run when
+  // the instance is rebuilt - see there.
+  const lenisRef = useRef<Lenis | null>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
   const pathname = usePathname();
 
@@ -52,12 +55,14 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
 
     // Exposing the freshly constructed instance requires state — it's an
     // imperative external-system handle, not something derivable at render time.
+    lenisRef.current = instance;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLenis(instance);
 
     return () => {
       gsap.ticker.remove(syncWithGsapTicker);
       instance.destroy();
+      lenisRef.current = null;
       setLenis(null);
     };
   }, [prefersReducedMotion]);
@@ -111,11 +116,16 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
   // they asked for far below and nothing saying so. Everything that used to
   // work around that belongs here instead.
   //
-  // WHICH PATH WE WERE ON LAST, because this effect also runs when the Lenis
-  // instance itself appears or is rebuilt, and those are not route changes. The
-  // depth the back control reads is counted here - this is the one place in the
-  // app that sees every route change and knows which kind it was - and counting
-  // an instance rebuild as a move put it four steps deep on a plain reload.
+  // IT RUNS ON A ROUTE CHANGE AND ON NOTHING ELSE. It used to depend on the
+  // Lenis instance too, and the instance is torn down and rebuilt whenever the
+  // reader switches reduced motion on or off - so flipping that switch in the
+  // middle of the page ran this, found no hash, and sent them to the top. The
+  // instance is read from a ref instead. Where a reader stands after that
+  // switch is KeepPlace's job.
+  //
+  // WHICH PATH WE WERE ON LAST: the depth the back control reads is counted
+  // here - this is the one place in the app that sees every route change and
+  // knows which kind it was.
   const lastPathRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -143,7 +153,8 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     // fall silent on its own once the height holds.
     const place = () => {
       const top = returnTo ?? destinationForHash(window.location.hash) ?? 0;
-      if (lenis) lenis.scrollTo(top, { immediate: true });
+      const instance = lenisRef.current;
+      if (instance) instance.scrollTo(top, { immediate: true });
       else window.scrollTo(0, top);
       return top;
     };
@@ -193,7 +204,7 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     frame = requestAnimationFrame(hold);
 
     return stop;
-  }, [pathname, lenis]);
+  }, [pathname]);
 
   return (
     // reducedMotion="user" is the one line that makes every framer-motion
