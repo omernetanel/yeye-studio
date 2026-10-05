@@ -187,7 +187,7 @@ const HEADING_REST_SCALE = 0.38;
 // inside a right-to-left page, and pushed to the end of its row - the right.
 const COUNT_ROW = "flex items-baseline justify-end gap-1.5 font-display";
 const COUNT_DIGIT = "text-m-numeral font-extrabold tracking-[-0.04em] text-black";
-const COUNT_TOTAL = "text-m-title font-bold text-black/30";
+const COUNT_TOTAL = "text-m-display font-bold text-black/30";
 
 /** Eases both ends of a 0 → 1 move, so the heading lifts off and lands softly. */
 function smoothstep(t: number) {
@@ -764,7 +764,10 @@ function ProcessStage({
         <span className="sr-only">{`שלב ${index + 1} מתוך ${STAGE_COUNT}: `}</span>
         {STAGE_TITLES[index]}
       </h3>
-      <p className="paper-halo mt-3 max-w-[32ch] font-body text-m-body text-pretty text-black/65">
+      {/* Nearly black, in the display face, across the whole column. It was the
+          small grey body text held to a short measure, and beside a numeral
+          this size it read as a caption that had run out early. */}
+      <p className="paper-halo mt-4 font-display text-m-sub leading-[1.5] text-pretty text-black/80">
         {STAGE_LINES[index].join(" ")}
       </p>
     </div>
