@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { registerLanding } from "@/lib/nav/landings";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import ProjectsCarousel from "@/components/ui/ProjectsCarousel";
@@ -66,6 +66,11 @@ export default function MobileProjects() {
   const sectionRef = useRef<HTMLElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
   const seenRef = useRef(false);
+  // The first time the row is actually shown, which is what its own entrance
+  // waits for - see ProjectsCarousel's `revealed`. The ref is what update
+  // reads on every scroll tick; the state is what tells the row.
+  const revealedRef = useRef(false);
+  const [revealed, setRevealed] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
   const { scrollY } = useScroll();
@@ -108,6 +113,10 @@ export default function MobileProjects() {
     const shown = seenRef.current && settled;
     carousel.style.opacity = shown ? "1" : "0";
     carousel.style.transform = shown ? "translateY(0)" : `translateY(${CARD_RISE_PX}px)`;
+    if (shown && !revealedRef.current) {
+      revealedRef.current = true;
+      setRevealed(true);
+    }
   };
 
   useLayoutEffect(() => {
@@ -180,7 +189,7 @@ export default function MobileProjects() {
         className="transition-[opacity,transform] duration-700 ease-out will-change-transform"
         style={{ opacity: 0, transform: `translateY(${CARD_RISE_PX}px)` }}
       >
-        <ProjectsCarousel stageClassName="!h-[56vw]" />
+        <ProjectsCarousel stageClassName="!h-[56vw]" revealed={revealed} />
       </div>
 
       {/* No "see all the work" button. It went to /projects, which lists the

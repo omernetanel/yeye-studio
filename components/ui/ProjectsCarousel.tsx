@@ -44,6 +44,7 @@ export default function ProjectsCarousel({
   sideOpacity,
   edgeDim,
   overdraw,
+  revealed = true,
 }: {
   stageClassName: string;
   cardHeight?: number;
@@ -55,6 +56,13 @@ export default function ProjectsCarousel({
   sideOpacity?: number;
   edgeDim?: number;
   overdraw?: number;
+  /**
+   * Whether the page has brought the row into view yet. Until it has, the
+   * entrance is held: the sections fade this in on scroll, and an entrance that
+   * starts when the pictures have loaded has run its two seconds behind a
+   * wrapper nobody can see yet.
+   */
+  revealed?: boolean;
 }) {
   const router = useRouter();
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -131,6 +139,7 @@ export default function ProjectsCarousel({
         flatMargin={12}
         rtl
         reducedMotion={prefersReducedMotion}
+        holdIntro={!revealed}
         ref={carouselRef}
         onChange={setActive}
         onSelect={open}
@@ -138,7 +147,7 @@ export default function ProjectsCarousel({
       />
 
       {/* relative: painted over a canvas that reaches down behind it. */}
-      <div className="relative mt-6 flex flex-col items-center px-6 text-center">
+      <div className="relative mt-6 flex flex-col items-center px-6 text-center md:mt-0">
         {/* Straight under the picture, in the gap that was already there, and
             out of the flow: as a line of its own under the category it pushed
             the arrows down, and the caption was right as it stood. */}
