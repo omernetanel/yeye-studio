@@ -5,6 +5,17 @@ import type { NextConfig } from "next";
 const isDev = process.env.NODE_ENV !== "production";
 
 const nextConfig: NextConfig = {
+  // EVERY BUILD COMPILES FROM SCRATCH. Since 16.3 a build keeps Turbopack's
+  // work in .next/cache and Vercel hands that folder to the next build, and on
+  // 2026-10-05 that served a stale app/globals.css: the deploy carried the new
+  // markup and the new utility classes, but neither the new theme token nor the
+  // new keyframes from the same commits, so a 168px numeral came out at 16px
+  // on every phone. A local build of the same commit was right. The cache buys
+  // a few seconds; a stylesheet that silently lags the code is not worth them.
+  experimental: {
+    turbopackFileSystemCacheForBuild: false,
+  },
+
   images: {
     formats: ["image/avif", "image/webp"],
   },

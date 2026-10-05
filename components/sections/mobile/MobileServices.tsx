@@ -185,7 +185,7 @@ const HEADING_REST_SCALE = 0.38;
 // "1/4", the way the site sets a number: the digit as the largest thing on the
 // screen and the total beside it in grey. Left to right, so it reads in order
 // inside a right-to-left page, and pushed to the end of its row - the right.
-const COUNT_ROW = "flex items-baseline justify-end gap-1.5 font-display";
+const COUNT_ROW = "flex items-baseline justify-end gap-1.5 font-display select-none";
 const COUNT_DIGIT = "text-m-numeral font-extrabold tracking-[-0.04em] text-black";
 const COUNT_TOTAL = "text-m-display font-bold text-black/30";
 
@@ -688,10 +688,14 @@ export default function MobileServices() {
         <div
           ref={cueRef}
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-[max(18px,env(safe-area-inset-bottom))] flex flex-col items-center gap-2 opacity-0"
+          // select-none: a long press on a phone selected the two words and put
+          // the system's copy bubble over the sheet.
+          className="pointer-events-none absolute inset-x-0 bottom-[max(18px,env(safe-area-inset-bottom))] flex flex-col items-center gap-2.5 opacity-0 select-none"
         >
-          <span className="relative block h-8 w-px bg-black/20">
-            <span className="scroll-cue-dot absolute top-1/2 -left-[3px] block h-[7px] w-[7px] rounded-full bg-black" />
+          {/* The line and the dot are the sign; the words only name it. At 32px
+              and 7px they were lost at the foot of a phone. */}
+          <span className="relative block h-14 w-px bg-black/25">
+            <span className="scroll-cue-dot absolute top-1/2 -left-[5px] block h-[11px] w-[11px] rounded-full bg-black" />
           </span>
           <span className="paper-halo font-display text-m-small font-medium text-black/60">גללו להמשך</span>
         </div>
