@@ -764,10 +764,12 @@ function ProcessStage({
         <span className="sr-only">{`שלב ${index + 1} מתוך ${STAGE_COUNT}: `}</span>
         {STAGE_TITLES[index]}
       </h3>
-      {/* Nearly black, in the display face, across the whole column. It was the
-          small grey body text held to a short measure, and beside a numeral
-          this size it read as a caption that had run out early. */}
-      <p className="paper-halo mt-4 font-display text-m-sub leading-[1.5] text-pretty text-black/80">
+      {/* The site's own colour for a line that explains - the same black/70 the
+          desk's stages and the service rows use - in the display face, across
+          the whole column. It was the small body text held to a short measure,
+          and beside a numeral this size it read as a caption that had run out
+          early. */}
+      <p className="paper-halo mt-4 font-display text-m-sub leading-[1.5] text-pretty text-black/70">
         {STAGE_LINES[index].join(" ")}
       </p>
     </div>
