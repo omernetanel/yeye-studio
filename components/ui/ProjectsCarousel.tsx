@@ -139,6 +139,13 @@ export default function ProjectsCarousel({
 
       {/* relative: painted over a canvas that reaches down behind it. */}
       <div className="relative mt-6 flex flex-col items-center px-6 text-center">
+        {/* Straight under the picture, in the gap that was already there, and
+            out of the flow: as a line of its own under the category it pushed
+            the arrows down, and the caption was right as it stood. */}
+        <ExternalNote
+          shown={current.leavesSite}
+          className="absolute -top-[21px] left-1/2 -translate-x-1/2 whitespace-nowrap text-black/50"
+        />
         <Link
           href={current.href}
           target={current.external ? "_blank" : undefined}
@@ -148,9 +155,6 @@ export default function ProjectsCarousel({
           {current.title}
         </Link>
         <span className="mt-1 font-body text-m-small text-black/55 md:text-[15px]">{current.category}</span>
-        {/* Always there, shown only for a piece that leaves the site: the
-            caption must not grow and shrink as the row turns. */}
-        <ExternalNote shown={current.leavesSite} className="mt-1.5 text-black/50" />
 
         {/* Previous, where you are, next. The arrows are real buttons, for
             everyone who does not drag, swipe or scroll a wheel sideways - and

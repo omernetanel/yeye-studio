@@ -43,6 +43,11 @@ const VOLUME_AT_HEAD = "absolute top-3 left-1/2 -translate-x-1/2";
 
 // How long the sound takes to come up or go down.
 const SOUND_FADE_MS = 600;
+// How loud the clip plays once it is on: a little under full, so turning it on
+// is not a jolt. There is no slider, on purpose - every device has its own
+// volume, and on an iPhone a page cannot set a video's level at all (there
+// this is ignored and the clip plays at the phone's volume).
+const SOUND_LEVEL = 0.85;
 
 /**
  * Brings the clip's sound up, or takes it down, over SOUND_FADE_MS.
@@ -59,7 +64,7 @@ function fadeSound(video: HTMLVideoElement, audible: boolean, timer: { current: 
     video.muted = false;
   }
   const from = video.volume;
-  const to = audible ? 1 : 0;
+  const to = audible ? SOUND_LEVEL : 0;
   const start = performance.now();
   // A timer, not animation frames: frames stop when the page is not being
   // drawn, and a ramp down that never finishes is a clip that never goes quiet.
