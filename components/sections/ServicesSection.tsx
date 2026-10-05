@@ -518,7 +518,8 @@ function ProcessStages() {
           see ScrollCue. It stands where a column of four circles counted the
           stages; each stage already carries its numeral, and what the reader
           was missing was not the count but a sign that the page goes on.
-          HIDDEN UNTIL THE FIRST STAGE ARRIVES, with the stages it belongs to. */}
+          Hidden while the services text is up; update() brings it in as that
+          text goes. */}
       <div data-process-cue style={{ opacity: 0 }} className="absolute top-1/2 right-[3%] -translate-y-1/2">
         <ScrollCue />
       </div>
@@ -788,10 +789,16 @@ export default function ServicesSection() {
       stage.style.transform = `translateY(${(lerp(STAGE_RISE_PX, 0, arrive) + lerp(0, -STAGE_RISE_PX, leave)).toFixed(2)}px)`;
     });
 
-    // The cue arrives on the first stage's own cue, with the stages it
-    // belongs to, and goes with the sheet.
+    // The cue comes in as the services text goes and the paper starts to open -
+    // the moment the screen stops offering anything to read, which is exactly
+    // when a reader needs telling the page goes on. It waited for the first
+    // stage, four seconds of clip later. It goes with the sheet.
     const cue = sheet.querySelector<HTMLElement>("[data-process-cue]");
-    if (cue) cue.style.opacity = String(smoothstep(mapRange(seconds, STAGES_START, STAGES_START + STAGE_SWAP, 0, 1)));
+    if (cue) {
+      cue.style.opacity = String(
+        smoothstep(mapRange(seconds, SERVICES_FADE_START_SECONDS, SERVICES_FADE_END_SECONDS, 0, 1)),
+      );
+    }
   };
 
   const measurePinRange = () => {
