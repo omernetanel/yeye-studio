@@ -528,6 +528,11 @@ interface FluidInkRevealProps {
    * this screen is: an element the paper does not carry is simply covered by
    * the ink, with no invert region to bring it back. */
   icons?: IconTarget[];
+  /** How much of the foot of the canvas takes no new ink. The default suits a
+   *  canvas with run-off below what it paints (see INTERACTIVE_BOTTOM_MARGIN_PX);
+   *  one whose last row sits on its bottom edge passes 0, or the ink never
+   *  reaches that row. */
+  bottomMargin?: number;
   className?: string;
 }
 
@@ -565,7 +570,7 @@ export interface TextTarget {
 }
 
 const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(function FluidInkReveal(
-  { logoSrc, videoSrc, textTargets, logoSlotRef, ctas, icons, className },
+  { logoSrc, videoSrc, textTargets, logoSlotRef, ctas, icons, bottomMargin = INTERACTIVE_BOTTOM_MARGIN_PX, className },
   ref
 ) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -582,6 +587,8 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
   textTargetsRef.current = textTargets;
   const iconsRef = useRef<IconTarget[] | undefined>(icons);
   iconsRef.current = icons;
+  const bottomMarginRef = useRef(bottomMargin);
+  bottomMarginRef.current = bottomMargin;
   const prefersReducedMotion = usePrefersReducedMotion();
 
   useImperativeHandle(ref, () => ({
@@ -1310,7 +1317,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
 
     const handlePointerMove = (e: PointerEvent) => {
       const rect = wrapper.getBoundingClientRect();
-      if (e.clientY > rect.bottom - INTERACTIVE_BOTTOM_MARGIN_PX) {
+      if (e.clientY > rect.bottom - bottomMarginRef.current) {
         // Same handling as the pointer actually leaving — see
         // INTERACTIVE_BOTTOM_MARGIN_PX's own comment. Re-entering the
         // reactive area above starts a fresh stroke instead of connecting
@@ -1344,7 +1351,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       const touch = e.touches[0];
       if (!touch) return;
       const rect = wrapper.getBoundingClientRect();
-      if (touch.clientY > rect.bottom - INTERACTIVE_BOTTOM_MARGIN_PX) {
+      if (touch.clientY > rect.bottom - bottomMarginRef.current) {
         lastPointer.has = false;
         return;
       }

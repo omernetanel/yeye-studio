@@ -48,6 +48,9 @@ const SOUND_FADE_MS = 600;
 // volume, and on an iPhone a page cannot set a video's level at all (there
 // this is ignored and the clip plays at the phone's volume).
 const SOUND_LEVEL = 0.85;
+// How long the clip is given to move after the page comes back, before it is
+// taken to be stuck.
+const STALL_CHECK_MS = 450;
 
 /**
  * Brings the clip's sound up, or takes it down, over SOUND_FADE_MS.
@@ -606,15 +609,47 @@ export default function ContactStage() {
     resumeRef.current = resume;
   });
 
+  // COMING BACK FROM ANOTHER APP IS NOT COMING BACK FROM ANOTHER TAB. A phone
+  // that was sent to a notification and back may tell the page nothing useful:
+  // the clip can say it is playing while it stands on the frame it was left
+  // on, and a play() asked for the instant the page shows can be accepted and
+  // do nothing. So the return is not trusted - the clip is watched for a
+  // moment afterwards, and if its time has not moved it is stopped and started
+  // by hand, without sound, since sound with no press is what a phone refuses.
   useEffect(() => {
+    let timers: number[] = [];
+    const check = () => {
+      const video = videoRef.current;
+      if (!video || document.hidden || !shouldPlayRef.current) return;
+      const at = video.currentTime;
+      timers.push(
+        window.setTimeout(() => {
+          if (document.hidden || !shouldPlayRef.current || video.currentTime !== at) return;
+          video.muted = true;
+          soundOnRef.current = false;
+          setSoundOn(false);
+          video.pause();
+          void video.play().catch(() => {});
+        }, STALL_CHECK_MS),
+      );
+    };
     const onReturn = () => {
-      if (!document.hidden) resumeRef.current();
+      if (document.hidden) return;
+      for (const timer of timers) window.clearTimeout(timer);
+      timers = [];
+      resumeRef.current();
+      // Twice: the first look can come before the phone has let the page run.
+      check();
+      timers.push(window.setTimeout(check, STALL_CHECK_MS * 2));
     };
     document.addEventListener("visibilitychange", onReturn);
     window.addEventListener("pageshow", onReturn);
+    window.addEventListener("focus", onReturn);
     return () => {
+      for (const timer of timers) window.clearTimeout(timer);
       document.removeEventListener("visibilitychange", onReturn);
       window.removeEventListener("pageshow", onReturn);
+      window.removeEventListener("focus", onReturn);
     };
   }, []);
 

@@ -334,6 +334,10 @@ export default function HeroSection() {
               logoSlotRef={logoSlotRef}
               ctas={[contactCta]}
               icons={footIcons}
+              // The foot row sits twelve pixels off the bottom of this canvas,
+              // with no run-off under it as the desk has: the usual dead band
+              // covered the row whole, and the ink never got to it.
+              bottomMargin={0}
               className="relative h-full w-full select-none"
             />
           </div>
