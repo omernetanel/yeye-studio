@@ -20,7 +20,6 @@ const entries = projects.map((project) => ({
   title: project.cardTitle ?? project.title,
   category: project.cardCategory ?? project.category,
   href: project.external ? project.url : `/projects/${project.slug}`,
-  external: project.external,
   // Really another site, and not merely "has no page here": one piece is marked
   // external and still points at an address on this one.
   leavesSite: Boolean(project.external) && project.url.startsWith("http"),
@@ -72,7 +71,7 @@ export default function ProjectsCarousel({
 
   const open = (index: number) => {
     const entry = entries[index];
-    if (entry.external) window.open(entry.href, "_blank", "noopener,noreferrer");
+    if (entry.leavesSite) window.open(entry.href, "_blank", "noopener,noreferrer");
     else router.push(entry.href);
   };
 
@@ -87,8 +86,8 @@ export default function ProjectsCarousel({
           <li key={entry.href}>
             <Link
               href={entry.href}
-              target={entry.external ? "_blank" : undefined}
-              rel={entry.external ? "noopener noreferrer" : undefined}
+              target={entry.leavesSite ? "_blank" : undefined}
+              rel={entry.leavesSite ? "noopener noreferrer" : undefined}
               className="group block text-right"
             >
               <Image
@@ -157,8 +156,8 @@ export default function ProjectsCarousel({
         />
         <Link
           href={current.href}
-          target={current.external ? "_blank" : undefined}
-          rel={current.external ? "noopener noreferrer" : undefined}
+          target={current.leavesSite ? "_blank" : undefined}
+          rel={current.leavesSite ? "noopener noreferrer" : undefined}
           className="font-display text-m-sub font-bold text-black underline-offset-4 hover:underline md:text-[22px]"
         >
           {current.title}

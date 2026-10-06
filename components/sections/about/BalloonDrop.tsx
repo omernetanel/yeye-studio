@@ -430,7 +430,19 @@ export default function BalloonDrop({ sectionRef, lineRef, stateRef, variant = "
     );
     watcher.observe(section);
 
+    // ONLY WHEN THE WIDTH CHANGES. A phone's browser bar slides away when a
+    // reader who has been standing still starts to scroll, and slides back when
+    // they stop - and each of those is a resize of the window's HEIGHT. Rebuilt
+    // on every resize, the whole cast was put back above the fold and dropped
+    // again each time: balloons that had landed jumped and fell a second time
+    // the moment the page moved. The cast is laid out across the width and
+    // sized from the window's short side, which on an upright phone is the
+    // width too - so those two are what a rebuild is for, and nothing else.
+    const shape = () => `${window.innerWidth}:${Math.min(window.innerWidth, window.innerHeight)}`;
+    let builtFor = shape();
     const onResize = () => {
+      if (shape() === builtFor) return;
+      builtFor = shape();
       build();
       draw(section.getBoundingClientRect().bottom);
     };

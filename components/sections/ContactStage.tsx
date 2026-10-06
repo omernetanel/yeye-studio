@@ -39,7 +39,7 @@ const ROOM_IS_DARK = true;
 
 // Where the volume pill stands in all three layouts: centred, at the head of
 // the picture it belongs to.
-const VOLUME_AT_HEAD = "absolute top-3 left-1/2 -translate-x-1/2";
+const VOLUME_AT_HEAD = "absolute top-6 left-1/2 -translate-x-1/2";
 
 // How long the sound takes to come up or go down.
 const SOUND_FADE_MS = 600;
@@ -140,7 +140,10 @@ const SCREEN_BLEED = 4;
 //
 // The plate is scaled by height, so its width comes out at the room's own
 // aspect ratio against the square, times how close the window is.
-const MOBILE_CLOSE = 1.4;
+//
+// 1.58, up from 1.4: at 1.4 the lit pillars either side of the set still
+// showed as two bright slivers at the edges of the phone.
+const MOBILE_CLOSE = 1.58;
 const MOBILE_PLATE_WIDTH_PCT = (ROOM_W / ROOM_H) * 100 * MOBILE_CLOSE;
 
 // The clip fills the cut-out. The hole is 1.66:1 against the clip's 16:9, so
@@ -561,17 +564,59 @@ export default function ContactStage() {
     if (video) fadeSound(video, next && inViewRef.current, fadeTimerRef);
   };
 
+  // Whether the clip is meant to be running. Always, except on the
+  // reduced-motion stage, where it waits for its button.
+  const shouldPlayRef = useRef(!prefersReducedMotion);
+  useEffect(() => {
+    shouldPlayRef.current = !prefersReducedMotion;
+  }, [prefersReducedMotion]);
+
   const togglePlaying = () => {
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) {
       void video.play();
+      shouldPlayRef.current = true;
       setPlaying(true);
     } else {
       video.pause();
+      shouldPlayRef.current = false;
       setPlaying(false);
     }
   };
+
+  // STARTS THE CLIP AGAIN WHEN THE PAGE DID NOT ASK FOR IT TO STOP. A phone
+  // pauses a video when its tab goes to the background and does not start it
+  // again on the way back, and it may pause one whose sound was turned back on
+  // without a press. Playing is tried as it stands; if the browser will not
+  // play it with sound and no press, it plays without, and the switch goes off
+  // to say so - a clip standing frozen in the room is worse than a quiet one.
+  const resume = () => {
+    const video = videoRef.current;
+    if (!video || !shouldPlayRef.current || !video.paused) return;
+    video.play().catch(() => {
+      video.muted = true;
+      soundOnRef.current = false;
+      setSoundOn(false);
+      void video.play().catch(() => {});
+    });
+  };
+  const resumeRef = useRef(resume);
+  useEffect(() => {
+    resumeRef.current = resume;
+  });
+
+  useEffect(() => {
+    const onReturn = () => {
+      if (!document.hidden) resumeRef.current();
+    };
+    document.addEventListener("visibilitychange", onReturn);
+    window.addEventListener("pageshow", onReturn);
+    return () => {
+      document.removeEventListener("visibilitychange", onReturn);
+      window.removeEventListener("pageshow", onReturn);
+    };
+  }, []);
 
   // A READER WHO LEFT THE SOUND ON AND SCROLLED AWAY does not go on hearing a
   // clip they can no longer see for the rest of the page. It fades out as the
@@ -583,7 +628,11 @@ export default function ContactStage() {
     const observer = new IntersectionObserver(([entry]) => {
       inViewRef.current = entry.isIntersecting;
       const video = videoRef.current;
-      if (video && soundOnRef.current) fadeSound(video, entry.isIntersecting, fadeTimerRef);
+      if (!video || !soundOnRef.current) return;
+      fadeSound(video, entry.isIntersecting, fadeTimerRef);
+      // Coming back, the sound is turned on with no press behind it. A phone
+      // may answer that by pausing the clip - see resume.
+      if (entry.isIntersecting) window.setTimeout(() => resumeRef.current(), 150);
     });
     observer.observe(wrapper);
     const fadeTimer = fadeTimerRef;

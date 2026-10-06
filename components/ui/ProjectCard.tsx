@@ -13,11 +13,14 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ title, category, imageSrc, href, external }: ProjectCardProps) {
+  // A piece can be marked external and still point at an address on this
+  // site. Only one that really goes elsewhere opens a new tab and says so.
+  const leavesSite = Boolean(external) && href.startsWith("http");
   return (
     <Link
       href={href}
-      target={external ? "_blank" : undefined}
-      rel={external ? "noopener noreferrer" : undefined}
+      target={leavesSite ? "_blank" : undefined}
+      rel={leavesSite ? "noopener noreferrer" : undefined}
       className="group block transition-transform duration-200 ease-out hover:scale-[1.02]"
     >
       {/* The benefit cards from the home page, with the screenshot inside. */}
@@ -31,7 +34,7 @@ export default function ProjectCard({ title, category, imageSrc, href, external 
           {/* Under the picture, in the gap above this row, and out of the flow,
               so a card that leaves the site is the same height as one that
               does not. */}
-          {external && href.startsWith("http") && (
+          {leavesSite && (
             <ExternalNote className="absolute -top-[13px] left-1/2 -translate-x-1/2 whitespace-nowrap text-white/55" />
           )}
         </div>

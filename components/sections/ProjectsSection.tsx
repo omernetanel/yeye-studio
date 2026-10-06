@@ -45,9 +45,11 @@ const GALLERY = [0.45, 0.8] as const;
 // cover most of the panel, so leaving them live from the top of the section
 // means a reader can click a project that is not on screen yet.
 const GALLERY_LIVE_FROM = 0.9;
-// How far in the gallery has to be before its row plays its entrance: half
-// shown, so the cards rise as the box they are in finishes arriving.
-const GALLERY_ENTRANCE_FROM = 0.5;
+// How far in the gallery has to be before its row plays its entrance: barely
+// there. The row comes in the way it always did - rising with its box as the
+// page scrolls - and its own entrance is only held back until that has
+// started. At half shown the cards arrived late, into a box already up.
+const GALLERY_ENTRANCE_FROM = 0.12;
 // Where a menu link lands: just past that, with everything settled.
 const LANDING_PROGRESS = 0.95;
 

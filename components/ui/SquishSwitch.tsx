@@ -47,6 +47,10 @@ const MAX_STRETCH = 0.4;
 const STRETCH_SPEED = 600;
 // How far a press may wander and still be a tap, in px. A finger is less exact.
 const TAP_SLOP = { fine: 4, coarse: 8 };
+// How long after a drag a click still belongs to that drag. A phone sends it
+// late - up to a third of a second - so a flag cleared on the next tick is not
+// enough.
+const CLICK_AFTER_DRAG_MS = 500;
 
 interface Grip {
   id: number;
@@ -54,7 +58,6 @@ interface Grip {
   grab: number | null;
   moved: boolean;
   startX: number;
-  onAtPress: boolean;
   slop: number;
 }
 
@@ -119,9 +122,8 @@ export default function SquishSwitch({
   useLayoutEffect(() => {
     onRef.current = checked;
   }, [checked]);
-  // A pointer release is followed by a click. The release has already decided;
-  // this lets the click that belongs to it pass without deciding again.
-  const skipClick = useRef(false);
+  // When the last drag was let go: the click that follows it is not a tap.
+  const dragEndedAt = useRef(-Infinity);
   const autoId = useId();
 
   const x = useMotionValue(checked ? max : min);
@@ -173,7 +175,6 @@ export default function SquishSwitch({
       grab: null,
       moved: false,
       startX: event.clientX,
-      onAtPress: onRef.current,
       slop: event.pointerType === "touch" ? TAP_SLOP.coarse : TAP_SLOP.fine,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -190,9 +191,10 @@ export default function SquishSwitch({
     }
     if (!held.moved && Math.abs(event.clientX - held.startX) > held.slop) held.moved = true;
     if (!held.moved) return;
-    const next = clamp(at - held.grab, min, max);
-    x.set(next);
-    commit(next > mid);
+    // The thumb follows the finger; the switch itself changes when it is let
+    // go. Changing it mid-drag meant doing so on a move, and a move is not a
+    // press: a browser that only lets a press start sound would refuse it.
+    x.set(clamp(at - held.grab, min, max));
   };
 
   const release = (button: HTMLButtonElement, pointerId: number, cancelled: boolean) => {
@@ -200,23 +202,24 @@ export default function SquishSwitch({
     if (!held || held.id !== pointerId) return;
     grip.current = null;
     if (button.hasPointerCapture(pointerId)) button.releasePointerCapture(pointerId);
-    // Cancelled: back to where it was when it was taken hold of. A press that
-    // never moved is a tap, and a tap toggles.
-    if (cancelled) commit(held.onAtPress);
-    else if (!held.moved) commit(!onRef.current);
-    skipClick.current = true;
-    setTimeout(() => {
-      skipClick.current = false;
-    }, 0);
+    // A DRAG is decided here, by which half the thumb was left in. A TAP is
+    // not decided here at all: it is left to the click that follows it.
+    //
+    // It used to toggle on release and then swallow that click with a flag
+    // cleared on a zero timeout. An iPhone sends the click later than that, so
+    // the flag was already down, the click toggled a second time, and the
+    // switch went on and straight back off - half a second of sound and a
+    // thumb that never left "off".
+    if (held.moved) {
+      if (!cancelled) commit(x.get() > mid);
+      dragEndedAt.current = performance.now();
+    }
     setDragging(false);
   };
 
-  // Reached by the keyboard, and by a pointer whose release did not get here.
+  // Every tap, and the keyboard. The click a drag leaves behind is not one.
   const click = () => {
-    if (skipClick.current) {
-      skipClick.current = false;
-      return;
-    }
+    if (performance.now() - dragEndedAt.current < CLICK_AFTER_DRAG_MS) return;
     commit(!onRef.current);
   };
 
