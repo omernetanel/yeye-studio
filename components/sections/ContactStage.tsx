@@ -21,15 +21,15 @@ import { cn } from "@/lib/utils";
 import BalloonDrop, { type DropState } from "@/components/sections/about/BalloonDrop";
 
 // THE CLIP, WITH ITS SOUND. Thirty seconds at 1280x720 with a stereo track,
-// re-encoded from a 30MB master that stays out of git (crf 27, AAC at 128k:
-// 4.3MB). `v1` is in the name because /videos is served immutable for a year -
+// re-encoded from a 35MB master that stays out of git (crf 27, AAC at 128k:
+// 4.3MB). `v2` is in the name because /videos is served immutable for a year -
 // a re-export takes a new name, see next.config.ts.
 //
 // It starts muted, as any clip that plays by itself must, and the switch beside
 // it turns the sound on from wherever the clip has got to. Nothing about that
 // is remembered: a reload starts silent again. It loops always, with or without
 // sound.
-const VIDEO_SRC = "/videos/open-space-v1.mp4";
+const VIDEO_SRC = "/videos/open-space-v2.mp4";
 // The clip's own frame at half a second, for the one place it stands still
 // before it is played: the reduced-motion stage.
 const VIDEO_POSTER = "/images/open-space-poster.webp";
@@ -658,6 +658,29 @@ export default function ContactStage() {
     observer.observe(gate);
     return () => observer.disconnect();
   }, []);
+
+  // ON A PHONE THE CLIP BEGINS WHEN IT IS REACHED. It has to be playing
+  // already to be buffered at all - a phone loads nothing of a clip that is
+  // not - and the stretch above this one is slow reading, so by the time the
+  // screen came up the clip was half way through. On the desk the pin opens on
+  // it full-screen moments after it starts, which is the same thing for free.
+  // Once: scrolling back up to it is not a second arrival.
+  useEffect(() => {
+    if (!isMobile || prefersReducedMotion || !videoSrc) return;
+    const video = videoRef.current;
+    if (!video) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        video.currentTime = 0;
+        resumeRef.current();
+        observer.disconnect();
+      },
+      { threshold: 0.2 },
+    );
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, [isMobile, prefersReducedMotion, videoSrc]);
 
   const { scrollY } = useScroll();
 
