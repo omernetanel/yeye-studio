@@ -1,8 +1,7 @@
 "use client";
 
-import { Mail } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import Button from "@/components/ui/Button";
 import FluidInkReveal, {
   type CtaTarget,
@@ -13,7 +12,7 @@ import FluidInkReveal, {
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
 import { setDocked } from "@/lib/motion/heroDock";
-import { CONTACT_EMAIL, WHATSAPP_NUMBER } from "@/lib/site";
+import { CONTACT_EMAIL, INSTAGRAM_URL, WHATSAPP_NUMBER } from "@/lib/site";
 
 
 const TAGLINE_TEXT = "בואו נבנה לכם אתר שעובד ומוכר באמת.";
@@ -44,6 +43,75 @@ const SHOW_TAGLINE = true;
 // heavier neighbour needs the bigger gap or the button reads as crowding it.
 const CTA_DROP_PX = 40;
 
+// The three marks at the foot, as path data: the paper strokes these strings
+// and the links below draw the same ones, so the two cannot drift apart.
+const WHATSAPP_PATH =
+  "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z";
+// lucide's Mail, the same two shapes it draws.
+const MAIL_PATH =
+  "M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z M22 7l-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7";
+// Instagram as a line drawing, to sit beside the other two: the frame, the
+// lens and the dot. The filled glyph the menu and the footer use would be the
+// one solid shape in a row of outlines.
+const INSTAGRAM_PATH =
+  "M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5z M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z M17.5 6.5h.01";
+
+/**
+ * WhatsApp, mail and Instagram at the foot of the hero, on both layouts.
+ *
+ * Transparent while the ink runs, for the same reason the wordmark and the
+ * button are: the paper carries the copy that is seen, and these stay the real,
+ * clickable links underneath it.
+ */
+function FootMarks({
+  whatsAppRef,
+  mailRef,
+  instagramRef,
+  painted,
+  live,
+  touch = false,
+}: {
+  whatsAppRef: RefObject<HTMLAnchorElement | null>;
+  mailRef: RefObject<HTMLAnchorElement | null>;
+  instagramRef: RefObject<HTMLAnchorElement | null>;
+  painted: boolean;
+  /** The row around it lets touches through to the ink; these take them back. */
+  live: boolean;
+  /** A phone: a little larger, further apart, and a finger-sized area each. */
+  touch?: boolean;
+}) {
+  const size = touch ? 20 : 18;
+  // The area is a pseudo-element because the paper measures the link itself to
+  // know where to draw: padding would move the drawing.
+  const link = `${touch ? "relative after:absolute after:-inset-3 " : ""}${
+    painted ? "text-transparent" : "text-black/65 transition-colors hover:text-black"
+  }`;
+  const marks = [
+    { ref: whatsAppRef, href: `https://wa.me/${WHATSAPP_NUMBER}`, label: "WhatsApp", path: WHATSAPP_PATH, external: true },
+    { ref: mailRef, href: `mailto:${CONTACT_EMAIL}`, label: "Email", path: MAIL_PATH, external: false },
+    { ref: instagramRef, href: INSTAGRAM_URL, label: "Instagram", path: INSTAGRAM_PATH, external: true },
+  ];
+  return (
+    <div className={`${live ? "pointer-events-auto " : ""}flex items-end ${touch ? "gap-6" : "gap-4"}`}>
+      {marks.map((mark) => (
+        <Link
+          key={mark.label}
+          ref={mark.ref}
+          href={mark.href}
+          target={mark.external ? "_blank" : undefined}
+          rel={mark.external ? "noopener noreferrer" : undefined}
+          aria-label={mark.label}
+          className={link}
+        >
+          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d={mark.path} />
+          </svg>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 export default function HeroSection() {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
@@ -52,6 +120,7 @@ export default function HeroSection() {
   const studioLineRef = useRef<HTMLSpanElement>(null);
   const footWhatsAppRef = useRef<HTMLAnchorElement>(null);
   const footMailRef = useRef<HTMLAnchorElement>(null);
+  const footInstagramRef = useRef<HTMLAnchorElement>(null);
   // logoAreaRef is the flex-1/min-h-0 space left over once the tagline and
   // the CTA row have taken what they need; logoSlotRef is the actual
   // (cropped-view) logo box, explicitly sized in JS below to fit inside
@@ -97,7 +166,7 @@ export default function HeroSection() {
     borderColor: "#000000",
   };
   const taglineTarget: TextTarget = { ref: taglineRef, color: "#000000" };
-  // The foot row: the studio line and the two marks beside it. They were the
+  // The foot row: the studio line and the three marks beside it. They were the
   // only things on this screen the paper did not carry, so the ink simply
   // covered them - which is what "they vanish when the cursor is on them"
   // was. Painted here, they invert with everything else.
@@ -105,15 +174,21 @@ export default function HeroSection() {
   const footIcons: IconTarget[] = [
     {
       ref: footWhatsAppRef,
-      path: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z",
+      path: WHATSAPP_PATH,
       viewBox: 24,
       strokeWidth: 1.5,
       color: "rgba(0,0,0,0.65)",
     },
     {
-      // lucide's Mail, the same two shapes it draws.
       ref: footMailRef,
-      path: "M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z M22 7l-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7",
+      path: MAIL_PATH,
+      viewBox: 24,
+      strokeWidth: 1.5,
+      color: "rgba(0,0,0,0.65)",
+    },
+    {
+      ref: footInstagramRef,
+      path: INSTAGRAM_PATH,
       viewBox: 24,
       strokeWidth: 1.5,
       color: "rgba(0,0,0,0.65)",
@@ -258,6 +333,7 @@ export default function HeroSection() {
               ]}
               logoSlotRef={logoSlotRef}
               ctas={[contactCta]}
+              icons={footIcons}
               className="relative h-full w-full select-none"
             />
           </div>
@@ -317,13 +393,21 @@ export default function HeroSection() {
               screens this is modelled on all have and this did not. */}
           <div
             ref={footRowRef}
-            // Centred: the studio line stands here alone now. It shared the row
-            // with the works link, one at either end.
-            className="pointer-events-auto flex w-full items-baseline justify-center font-display text-m-small"
+            // The studio line at the right, the three marks at the left: the row the
+            // desk has, on the same paper, so the ink turns them over the same way.
+            className="pointer-events-auto flex w-full items-center justify-between font-display text-m-small"
           >
             <span ref={footStudioRef} className={painted ? "text-transparent" : "text-black/60"}>
               סטודיו דיגיטלי עצמאי
             </span>
+            <FootMarks
+              whatsAppRef={footWhatsAppRef}
+              mailRef={footMailRef}
+              instagramRef={footInstagramRef}
+              painted={painted}
+              live
+              touch
+            />
           </div>
         </div>
 
@@ -613,31 +697,7 @@ export default function HeroSection() {
             )}
           </div>
 
-          <div className={prefersReducedMotion ? "flex items-end gap-4" : "pointer-events-auto flex items-end gap-4"}>
-            {/* Transparent while the ink runs, for the same reason the wordmark
-                and the buttons are: the paper carries the copy that is seen,
-                and these stay the real, clickable links underneath it. */}
-            <Link
-              ref={footWhatsAppRef}
-              href={`https://wa.me/${WHATSAPP_NUMBER}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="WhatsApp"
-              className={painted ? "text-transparent" : "text-black/65 transition-colors hover:text-black"}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-              </svg>
-            </Link>
-            <Link
-              ref={footMailRef}
-              href={`mailto:${CONTACT_EMAIL}`}
-              aria-label="Email"
-              className={painted ? "text-transparent" : "text-black/65 transition-colors hover:text-black"}
-            >
-              <Mail size={18} strokeWidth={1.5} />
-            </Link>
-          </div>
+          <FootMarks whatsAppRef={footWhatsAppRef} mailRef={footMailRef} instagramRef={footInstagramRef} painted={painted} live={!prefersReducedMotion} />
         </div>
       </div>
 
