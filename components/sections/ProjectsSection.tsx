@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { registerLanding } from "@/lib/nav/landings";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import ProjectsCarousel from "@/components/ui/ProjectsCarousel";
@@ -45,11 +45,6 @@ const GALLERY = [0.45, 0.8] as const;
 // cover most of the panel, so leaving them live from the top of the section
 // means a reader can click a project that is not on screen yet.
 const GALLERY_LIVE_FROM = 0.9;
-// How far in the gallery has to be before its row plays its entrance: barely
-// there. The row comes in the way it always did - rising with its box as the
-// page scrolls - and its own entrance is only held back until that has
-// started. At half shown the cards arrived late, into a box already up.
-const GALLERY_ENTRANCE_FROM = 0.12;
 // Where a menu link lands: just past that, with everything settled.
 const LANDING_PROGRESS = 0.95;
 
@@ -104,10 +99,6 @@ export default function ProjectsSection() {
   const slotRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const galleryRef = useRef<HTMLDivElement>(null);
-  // Whether the row has been brought into view - see update(). The ref is what
-  // update reads on every scroll tick; the state is what tells the row.
-  const revealedRef = useRef(false);
-  const [revealed, setRevealed] = useState(false);
   const prefersReducedMotion = usePrefersReducedMotion();
   const { scrollY } = useScroll();
 
@@ -154,17 +145,6 @@ export default function ProjectsSection() {
     gallery.style.opacity = String(galleryIn);
     gallery.style.transform = `translateY(${lerp(GALLERY_RISE_PX, 0, galleryIn).toFixed(1)}px)`;
     gallery.style.pointerEvents = galleryIn > GALLERY_LIVE_FROM ? "auto" : "none";
-
-    // THE ROW'S OWN ENTRANCE WAITS FOR THIS. It used to start as soon as the
-    // pictures had loaded, which is while this wrapper is still at nothing -
-    // two seconds of the cards rising into place, played behind an invisible
-    // box, and over by the time a reader scrolling down could see the row at
-    // all. Only someone landing here from the menu ever caught it. Once: an
-    // entrance is an arrival, and arrivals on this page do not replay.
-    if (galleryIn >= GALLERY_ENTRANCE_FROM && !revealedRef.current) {
-      revealedRef.current = true;
-      setRevealed(true);
-    }
   };
 
   useLayoutEffect(() => {
@@ -284,7 +264,6 @@ export default function ProjectsSection() {
               sideOpacity={0.45}
               edgeDim={0.6}
               overdraw={0.45}
-              revealed={revealed}
             />
           </div>
         </div>

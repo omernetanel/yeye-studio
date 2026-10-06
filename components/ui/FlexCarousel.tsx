@@ -238,7 +238,6 @@ interface Settings extends Lens {
   overdraw: number;
   rtl: boolean;
   reducedMotion: boolean;
-  holdIntro: boolean;
 }
 
 export interface FlexCarouselHandle {
@@ -324,13 +323,6 @@ export interface FlexCarouselProps extends Partial<Lens> {
   /** Lay the row right to left: the next card enters from the left. */
   rtl?: boolean;
   reducedMotion?: boolean;
-  /**
-   * Keep the entrance back. The row is loaded and laid out but not shown, and
-   * its entrance starts the moment this turns false - for a row that sits
-   * behind something else until the page reveals it, so the entrance is not
-   * played to nobody.
-   */
-  holdIntro?: boolean;
   /** Buttons outside the row move it through this: `ref.current.step(1)`. */
   ref?: Ref<FlexCarouselHandle>;
   /** Called whenever a different card reaches the centre. */
@@ -370,7 +362,6 @@ export default function FlexCarousel({
   overdraw = 0,
   rtl = false,
   reducedMotion = false,
-  holdIntro = false,
   ref,
   onChange,
   onSelect,
@@ -421,7 +412,6 @@ export default function FlexCarousel({
       overdraw,
       rtl,
       reducedMotion,
-      holdIntro,
     };
     engineRef.current?.wake();
   });
@@ -816,7 +806,7 @@ export default function FlexCarousel({
 
       if (!introState.running && !introState.done) {
         const allSettled = slots.every((slot) => slot.loaded || slot.failed);
-        if (!s.holdIntro && (allSettled || now - introState.readyAt > 3500)) {
+        if (allSettled || now - introState.readyAt > 3500) {
           goal = snapPoint(m, goal);
           pos = goal;
           beginIntro(s, m);

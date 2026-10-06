@@ -43,7 +43,6 @@ export default function ProjectsCarousel({
   sideOpacity,
   edgeDim,
   overdraw,
-  revealed = true,
 }: {
   stageClassName: string;
   cardHeight?: number;
@@ -55,13 +54,6 @@ export default function ProjectsCarousel({
   sideOpacity?: number;
   edgeDim?: number;
   overdraw?: number;
-  /**
-   * Whether the page has brought the row into view yet. Until it has, the
-   * entrance is held: the sections fade this in on scroll, and an entrance that
-   * starts when the pictures have loaded has run its two seconds behind a
-   * wrapper nobody can see yet.
-   */
-  revealed?: boolean;
 }) {
   const router = useRouter();
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -138,7 +130,6 @@ export default function ProjectsCarousel({
         flatMargin={12}
         rtl
         reducedMotion={prefersReducedMotion}
-        holdIntro={!revealed}
         ref={carouselRef}
         onChange={setActive}
         onSelect={open}
