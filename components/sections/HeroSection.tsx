@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import Button from "@/components/ui/Button";
 import FluidInkReveal, {
   type CtaTarget,
@@ -156,6 +156,8 @@ export default function HeroSection() {
   const ctaContactLabelRef = useRef<HTMLSpanElement>(null);
   const ctaContactArrowRef = useRef<HTMLSpanElement>(null);
   const footStudioRef = useRef<HTMLSpanElement>(null);
+  // Phone only: how much of the foot of the screen takes no new ink.
+  const [inkFloor, setInkFloor] = useState(0);
 
   const contactCta: CtaTarget = {
     ref: ctaContactRef,
@@ -291,6 +293,14 @@ export default function HeroSection() {
         // button is positioned inside the mark's own box. Subtracting the wrong
         // edge put it a mark's height too high.
         cta.style.top = `${middle - ctaBox.height / 2 - slotBox.top + CTA_DROP_PX}px`;
+        // And where the ink stops taking new strokes: half way between the
+        // button's bottom edge and the row at the foot, as a distance up from
+        // the bottom of the screen the canvas fills. See where it is passed.
+        const ctaBottom = middle + CTA_DROP_PX + ctaBox.height / 2;
+        const section = sectionRef.current;
+        if (section) {
+          setInkFloor(Math.round(section.getBoundingClientRect().bottom - (ctaBottom + footBox.top) / 2));
+        }
       }
 
       // Last, and not optional. The ink paints the wordmark, the type and the
@@ -320,19 +330,9 @@ export default function HeroSection() {
   // which is what made the white flicker and show the clip underneath.
   if (isMobile) {
     return (
-      // No overflow-hidden, and z-[1]: the ink's canvas hangs below this section,
-      // over the top of the next one - see the wrapper just below.
-      <section ref={sectionRef} id="hero" className="relative z-[1] flex h-[100svh] min-h-[560px] flex-col bg-white">
+      <section ref={sectionRef} id="hero" className="relative flex h-[100svh] min-h-[560px] flex-col overflow-hidden bg-white">
         {painted && (
-          // ROOM FOR THE INK TO END IN, WITHOUT MOVING ANYTHING. The foot row
-          // sits twelve pixels off the bottom of the screen, so ink made on it
-          // was cut straight across by the section's edge. The desk answers
-          // that with a strip of empty page under its hero; here the distance
-          // to the next section is exact and stays as it is, so the canvas
-          // overhangs instead: 64px down over the top of that section, which
-          // is white there (its first words start at 75) and so cannot tell
-          // this white from its own. The section's height is untouched.
-          <div className="absolute inset-x-0 top-0 -bottom-16 overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden">
             <FluidInkReveal
               ref={inkRef}
               logoSrc="/images/logo.png"
@@ -344,10 +344,14 @@ export default function HeroSection() {
               logoSlotRef={logoSlotRef}
               ctas={[contactCta]}
               icons={footIcons}
-              // Of the 64px overhang, the last 54 take no new ink: it stops
-              // answering ten pixels under the screen's edge, just below the
-              // marks at the foot, and thins out over the rest.
-              bottomMargin={54}
+              // THE INK STOPS HALF WAY BETWEEN THE BUTTON AND THE ROW AT THE FOOT.
+              // The row is twelve pixels off the bottom of the screen: ink made
+              // on it had nowhere to thin out and was cut across by the edge,
+              // and room hung below the section for it fell under the phone's
+              // address bar. So new ink ends above the row, and what drifts
+              // down has the rest of the screen to fade in. The row is still
+              // on the paper, and turns over under whatever reaches it.
+              bottomMargin={inkFloor}
               className="relative h-full w-full select-none"
             />
           </div>
