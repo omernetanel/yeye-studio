@@ -48,26 +48,33 @@ const SOUND_FADE_MS = 600;
 // volume, and on an iPhone a page cannot set a video's level at all (there
 // this is ignored and the clip plays at the phone's volume).
 const SOUND_LEVEL = 0.85;
+// On the desk, how much of the screen the section has to fill for the clip to
+// be at that level, and how little for it to be silent. Between the two the
+// sound follows the scroll.
+const NEAR_FULL = 0.9;
+const NEAR_SILENT = 0.1;
 // How long the clip is given to move after the page comes back, before it is
 // taken to be stuck.
 const STALL_CHECK_MS = 450;
 
 /**
- * Brings the clip's sound up, or takes it down, over SOUND_FADE_MS.
+ * Brings the clip's sound to a level, over SOUND_FADE_MS. Called again before
+ * it has finished, it carries on from wherever the sound has got to - which is
+ * how the desk's sound follows the scroll (see hear).
  *
  * Silence is `muted`, not a volume of zero: the clip is muted when the ramp
  * down ends and unmuted before the ramp up begins. That is what makes it work
  * on an iPhone, where the volume of a video cannot be set from a page at all -
  * there the ramp does nothing and the sound simply goes or comes at its end.
  */
-function fadeSound(video: HTMLVideoElement, audible: boolean, timer: { current: number | null }) {
+function fadeSound(video: HTMLVideoElement, level: number, timer: { current: number | null }) {
   if (timer.current !== null) window.clearInterval(timer.current);
-  if (audible && video.muted) {
+  if (level > 0 && video.muted) {
     video.volume = 0;
     video.muted = false;
   }
   const from = video.volume;
-  const to = audible ? SOUND_LEVEL : 0;
+  const to = clamp01(level);
   const start = performance.now();
   // A timer, not animation frames: frames stop when the page is not being
   // drawn, and a ramp down that never finishes is a clip that never goes quiet.
@@ -79,7 +86,7 @@ function fadeSound(video: HTMLVideoElement, audible: boolean, timer: { current: 
     if (t < 1) return;
     if (timer.current !== null) window.clearInterval(timer.current);
     timer.current = null;
-    if (!audible) video.muted = true;
+    if (to === 0) video.muted = true;
   }, 16);
 }
 // The room: a dark office front with a wall-mounted screen, and the screen is a
@@ -555,7 +562,10 @@ export default function ContactStage() {
   const [soundOn, setSoundOn] = useState(false);
   // What the observer below reads: it outlives the render that made it.
   const soundOnRef = useRef(false);
-  const inViewRef = useRef(false);
+  // How near the clip is, 0 to 1: what its sound is scaled by. On a phone and
+  // with less motion it is all or nothing - on screen or not. On the desk it is
+  // a distance (see hear).
+  const nearRef = useRef(0);
   const fadeTimerRef = useRef<number | null>(null);
   // Only the reduced-motion stage has this: there the clip waits to be played.
   const [playing, setPlaying] = useState(false);
@@ -564,7 +574,7 @@ export default function ContactStage() {
     const video = videoRef.current;
     soundOnRef.current = next;
     setSoundOn(next);
-    if (video) fadeSound(video, next && inViewRef.current, fadeTimerRef);
+    if (video) fadeSound(video, next ? SOUND_LEVEL * nearRef.current : 0, fadeTimerRef);
   };
 
   // Whether the clip is meant to be running. Always, except on the
@@ -653,6 +663,32 @@ export default function ContactStage() {
     };
   }, []);
 
+  // ON THE DESK THE SOUND IS A DISTANCE. Scrolling away from the clip turns it
+  // down as steadily as walking away from it would, and scrolling back brings
+  // it up again, where it used to hold at full and drop once the section had
+  // left. How near is how much of the screen the section fills: all of it for
+  // the whole of the pin, and less only on the way in and the way out.
+  //
+  // Not on a phone, and not for want of trying to decide it: a page cannot set
+  // a video's volume on an iPhone at all, and the one way round that sends the
+  // sound through a path the phone's silent switch mutes outright.
+  const hear = () => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const box = wrapper.getBoundingClientRect();
+    const screen = window.innerHeight;
+    const shown = clamp01((Math.min(box.bottom, screen) - Math.max(box.top, 0)) / screen);
+    const near = smoothstep(clamp01((shown - NEAR_SILENT) / (NEAR_FULL - NEAR_SILENT)));
+    if (near === nearRef.current) return;
+    nearRef.current = near;
+    const video = videoRef.current;
+    if (video && soundOnRef.current) fadeSound(video, SOUND_LEVEL * near, fadeTimerRef);
+  };
+  const hearRef = useRef(hear);
+  useEffect(() => {
+    hearRef.current = hear;
+  });
+
   // A READER WHO LEFT THE SOUND ON AND SCROLLED AWAY does not go on hearing a
   // clip they can no longer see for the rest of the page. It fades out as the
   // section leaves the screen and back in when it returns. The clip itself
@@ -661,10 +697,16 @@ export default function ContactStage() {
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
     const observer = new IntersectionObserver(([entry]) => {
-      inViewRef.current = entry.isIntersecting;
+      // On the desk the sound follows the scroll itself; this only tells it
+      // where things stand before the first scroll.
+      if (!skipPin) {
+        hearRef.current();
+        return;
+      }
+      nearRef.current = entry.isIntersecting ? 1 : 0;
       const video = videoRef.current;
       if (!video || !soundOnRef.current) return;
-      fadeSound(video, entry.isIntersecting, fadeTimerRef);
+      fadeSound(video, SOUND_LEVEL * nearRef.current, fadeTimerRef);
       // Coming back, the sound is turned on with no press behind it. A phone
       // may answer that by pausing the clip - see resume.
       if (entry.isIntersecting) window.setTimeout(() => resumeRef.current(), 150);
@@ -829,7 +871,10 @@ export default function ContactStage() {
   }, [skipPin]);
 
   useMotionValueEvent(scrollY, "change", () => {
-    if (!skipPin) update();
+    if (!skipPin) {
+      update();
+      hear();
+    }
     const gate = gateRef.current;
     if (balloons && gate) dropStateRef.current.armed = gate.getBoundingClientRect().top < 0;
   });
