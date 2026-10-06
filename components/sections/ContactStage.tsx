@@ -47,7 +47,7 @@ const SOUND_FADE_MS = 600;
 // is not a jolt. There is no slider, on purpose - every device has its own
 // volume, and on an iPhone a page cannot set a video's level at all (there
 // this is ignored and the clip plays at the phone's volume).
-const SOUND_LEVEL = 0.85;
+const SOUND_LEVEL = 0.75;
 // On the desk, how much of the screen the section has to fill for the clip to
 // be at that level, and how little for it to be silent. Between the two the
 // sound follows the scroll.
