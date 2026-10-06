@@ -320,9 +320,19 @@ export default function HeroSection() {
   // which is what made the white flicker and show the clip underneath.
   if (isMobile) {
     return (
-      <section ref={sectionRef} id="hero" className="relative overflow-hidden bg-white">
+      // No overflow-hidden, and z-[1]: the ink's canvas hangs below this section,
+      // over the top of the next one - see the wrapper just below.
+      <section ref={sectionRef} id="hero" className="relative z-[1] flex h-[100svh] min-h-[560px] flex-col bg-white">
         {painted && (
-          <div className="absolute inset-0 overflow-hidden">
+          // ROOM FOR THE INK TO END IN, WITHOUT MOVING ANYTHING. The foot row
+          // sits twelve pixels off the bottom of the screen, so ink made on it
+          // was cut straight across by the section's edge. The desk answers
+          // that with a strip of empty page under its hero; here the distance
+          // to the next section is exact and stays as it is, so the canvas
+          // overhangs instead: 64px down over the top of that section, which
+          // is white there (its first words start at 75) and so cannot tell
+          // this white from its own. The section's height is untouched.
+          <div className="absolute inset-x-0 top-0 -bottom-16 overflow-hidden">
             <FluidInkReveal
               ref={inkRef}
               logoSrc="/images/logo.png"
@@ -334,169 +344,156 @@ export default function HeroSection() {
               logoSlotRef={logoSlotRef}
               ctas={[contactCta]}
               icons={footIcons}
-              // The run-off strip under the first screen is 150px (see the end
-              // of this section). The ink stops answering ten pixels into it:
-              // just under the marks at the foot, so they are reached, and
-              // with the rest of the strip left for it to thin out in.
-              bottomMargin={140}
+              // Of the 64px overhang, the last 54 take no new ink: it stops
+              // answering ten pixels under the screen's edge, just below the
+              // marks at the foot, and thins out over the rest.
+              bottomMargin={54}
               className="relative h-full w-full select-none"
             />
           </div>
         )}
 
-        {/* The first screen itself. Everything in it is placed against this box
-            and not the section, which runs on below it for the ink. */}
-        <div className="relative flex h-[100svh] min-h-[560px] flex-col">
-          {/* THE SAME MECHANISM AS THE DESKTOP, and it took three rounds to get
-              here. Every piece of type and the button are painted onto the ink's
-              paper and inverted in its shader, so under the ink they turn white
-              on black instead of disappearing into it. What stays in the DOM is
-              the real thing — text for screen readers and search, links you can
-              tap and tab to — laid out exactly as before and made transparent.
-              The two rounds before this are why it has to be the canvas:
-              mix-blend-mode, which phones do not apply over a WebGL canvas, left
-              white type on a white page; plain black type then drowned wherever
-              the ink crossed it.
-              With reduced motion there is no ink and no canvas, so the same
-              elements simply show in their own colours.
-              pointer-events-none so a touch anywhere in the empty space still
-              reaches the ink canvas underneath; the controls opt back in. */}
-          {/* pt-[18px] follows the menu row at 20 — the line sits beside that
-              row, and the two move as one. pb-3 holds the foot row close to the
-              bottom edge. */}
-          <div className="pointer-events-none relative flex h-full flex-col px-6 pt-[18px] pb-3">
-            <h1 className="sr-only">YEYE</h1>
+        {/* THE SAME MECHANISM AS THE DESKTOP, and it took three rounds to get
+            here. Every piece of type and the button are painted onto the ink's
+            paper and inverted in its shader, so under the ink they turn white
+            on black instead of disappearing into it. What stays in the DOM is
+            the real thing — text for screen readers and search, links you can
+            tap and tab to — laid out exactly as before and made transparent.
+            The two rounds before this are why it has to be the canvas:
+            mix-blend-mode, which phones do not apply over a WebGL canvas, left
+            white type on a white page; plain black type then drowned wherever
+            the ink crossed it.
+            With reduced motion there is no ink and no canvas, so the same
+            elements simply show in their own colours.
+            pointer-events-none so a touch anywhere in the empty space still
+            reaches the ink canvas underneath; the controls opt back in. */}
+        {/* pt-[18px] follows the menu row at 20 — the line sits beside that
+            row, and the two move as one. pb-3 holds the foot row close to the
+            bottom edge. */}
+        <div className="pointer-events-none relative flex h-full flex-col px-6 pt-[18px] pb-3">
+          <h1 className="sr-only">YEYE</h1>
 
-            {SHOW_TAGLINE && (
-              // Two lines now, not one, and no longer nowrap: at 18px on a single
-              // line it was a caption. Broken and set larger it carries the
-              // weight of being the only sentence on the screen. Balanced rather
-              // than hand-broken — a manual break is only ever right at one width;
-              // the paper copies whatever break the browser chose.
-              <p
-                ref={taglineRef}
-                // font-medium, the weight of the two links under the wordmark: at
-                // semibold the line read as a second headline competing with it.
-                className={`text-right font-display text-[21px] leading-[1.3] font-medium text-balance ${
-                  painted ? "text-transparent" : "text-black"
-                }`}
-              >
-                {TAGLINE_TEXT}
-              </p>
-            )}
-
-            {/* The space the wordmark is SIZED from — it is still the leftover
-                between the line above and the row below, which is what keeps the
-                mark from ever colliding with either. It holds nothing: the mark
-                itself is drawn in the centred layer further down, because being
-                sized by this column and being centred in it are two different
-                things, and only the first is wanted. */}
-            <div ref={logoAreaRef} className="min-h-0 w-full flex-1" />
-
-            {/* ONE LINE at the foot of the screen, where three stacked blocks
-                used to be. Those three came to a hundred pixels of content and
-                took the bottom third of the hero with them; this is twenty, and
-                the difference goes to the wordmark, which is sized from whatever
-                is left over. The empty middle is the point — it is what the
-                screens this is modelled on all have and this did not. */}
-            <div
-              ref={footRowRef}
-              // The studio line at the right, the three marks at the left: the row the
-              // desk has, on the same paper, so the ink turns them over the same way.
-              className="pointer-events-auto flex w-full items-center justify-between font-display text-m-small"
+          {SHOW_TAGLINE && (
+            // Two lines now, not one, and no longer nowrap: at 18px on a single
+            // line it was a caption. Broken and set larger it carries the
+            // weight of being the only sentence on the screen. Balanced rather
+            // than hand-broken — a manual break is only ever right at one width;
+            // the paper copies whatever break the browser chose.
+            <p
+              ref={taglineRef}
+              // font-medium, the weight of the two links under the wordmark: at
+              // semibold the line read as a second headline competing with it.
+              className={`text-right font-display text-[21px] leading-[1.3] font-medium text-balance ${
+                painted ? "text-transparent" : "text-black"
+              }`}
             >
-              <span ref={footStudioRef} className={painted ? "text-transparent" : "text-black/60"}>
-                סטודיו דיגיטלי עצמאי
-              </span>
-              <FootMarks
-                whatsAppRef={footWhatsAppRef}
-                mailRef={footMailRef}
-                instagramRef={footInstagramRef}
-                painted={painted}
-                live
-                touch
-              />
-            </div>
-          </div>
+              {TAGLINE_TEXT}
+            </p>
+          )}
 
-          {/* THE WORDMARK, ON THE SCREEN'S OWN CENTRE — not on the centre of the
-              column above it. Those two are not the same point: the line at the
-              top is taller than the row at the bottom, so a mark centred in what
-              is left over sits some forty pixels low. This layer spans the whole
-              section, so its middle is the middle.
-              The button hangs off the mark rather than off the screen, so it
-              keeps its distance from the letters at any size — `top-full` is the
-              wordmark's own bottom edge. */}
-          {/* pb-[10svh] lifts the pair by half of it — five percent of the screen
-              (it was ten; the mark sat too high over the empty half below, and it
-              came down again when the rows at the top and bottom moved outward).
-              Not centred any more, and that is the point: the button hangs under
-              the wordmark here rather than sitting under the line at the top the
-              way the screens this is modelled on do, so a centred mark pushed the
-              lowest thing on the page down to 72% and split the empty half of the
-              screen in two. Theirs ends at 57% and leaves one unbroken void below
-              it, which is what reads as calm. Raising the pair buys that void
-              back without moving the button off the mark. */}
-          {/* pt-[20px] moves the pair down 10px with the rest of the hero: flex
-              centring splits padding evenly, so half of it lands as the shift. */}
-          <div className="pointer-events-none absolute inset-0 flex select-none items-center justify-center px-6 pt-[20px] pb-[10svh]">
-            {/* One slot for both modes now. With reduced motion it used to be an
-                overflow-hidden box holding only the image, which clipped anything
-                hung below it — so that mode had no button at all. The crop lives
-                on an inner box instead, and the button hangs off the slot in
-                either case. */}
-            <div ref={logoSlotRef} className="relative">
-              {!painted && (
-                <div className="absolute inset-0 overflow-hidden">
-                  <div className="absolute inset-x-0" style={{ top: "-23.0074%", height: "143.7962%" }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/images/logo.png"
-                      alt="YEYE"
-                      className="h-full w-full object-contain"
-                      style={{ filter: "brightness(0)" }}
-                      draggable={false}
-                    />
-                  </div>
-                </div>
-              )}
-              <div ref={ctaSlotRef} className="pointer-events-auto absolute inset-x-0 top-full flex justify-center">
-                {painted ? (
-                  /* The box of the site's Button to the pixel — the same padding,
-                     line height, 1px border and gap to its arrow, measured against
-                     the Button that stood here — so the paper paints a pill the
-                     exact size of the one it replaces. Transparent, like the
-                     desktop's: no shimmer and no hover scale, because the paper
-                     only repaints on layout changes. */
-                  <Link
-                    ref={ctaContactRef}
-                    href="/#cta"
-                    className="inline-flex items-center gap-2 rounded-full border border-transparent px-8 py-3.5 font-display text-[16px] leading-6 font-medium whitespace-nowrap text-transparent"
-                  >
-                    <span ref={ctaContactLabelRef}>קבעו פגישה</span>
-                    <span ref={ctaContactArrowRef} aria-hidden="true" className="block h-[14px] w-[14px] shrink-0" />
-                  </Link>
-                ) : (
-                  <Button
-                    href="/#cta"
-                    variant="primary"
-                    className="!border-black !bg-none !bg-black !text-white !shadow-none py-3.5 text-[16px]"
-                  >
-                    קבעו פגישה
-                  </Button>
-                )}
-              </div>
-            </div>
+          {/* The space the wordmark is SIZED from — it is still the leftover
+              between the line above and the row below, which is what keeps the
+              mark from ever colliding with either. It holds nothing: the mark
+              itself is drawn in the centred layer further down, because being
+              sized by this column and being centred in it are two different
+              things, and only the first is wanted. */}
+          <div ref={logoAreaRef} className="min-h-0 w-full flex-1" />
+
+          {/* ONE LINE at the foot of the screen, where three stacked blocks
+              used to be. Those three came to a hundred pixels of content and
+              took the bottom third of the hero with them; this is twenty, and
+              the difference goes to the wordmark, which is sized from whatever
+              is left over. The empty middle is the point — it is what the
+              screens this is modelled on all have and this did not. */}
+          <div
+            ref={footRowRef}
+            // The studio line at the right, the three marks at the left: the row the
+            // desk has, on the same paper, so the ink turns them over the same way.
+            className="pointer-events-auto flex w-full items-center justify-between font-display text-m-small"
+          >
+            <span ref={footStudioRef} className={painted ? "text-transparent" : "text-black/60"}>
+              סטודיו דיגיטלי עצמאי
+            </span>
+            <FootMarks
+              whatsAppRef={footWhatsAppRef}
+              mailRef={footMailRef}
+              instagramRef={footInstagramRef}
+              painted={painted}
+              live
+              touch
+            />
           </div>
         </div>
 
-        {/* ROOM FOR THE INK TO END IN, as the desk has. The foot row sits twelve
-            pixels off the bottom of the screen, and ink made there was cut
-            straight across by the section's edge. This is white on a white
-            page under the first screen: the canvas runs on through it, takes
-            no new ink in it (see bottomMargin above), and what drifts down
-            thins out before it reaches the end. */}
-        {painted && <div aria-hidden="true" className="h-[150px] w-full" />}
+        {/* THE WORDMARK, ON THE SCREEN'S OWN CENTRE — not on the centre of the
+            column above it. Those two are not the same point: the line at the
+            top is taller than the row at the bottom, so a mark centred in what
+            is left over sits some forty pixels low. This layer spans the whole
+            section, so its middle is the middle.
+            The button hangs off the mark rather than off the screen, so it
+            keeps its distance from the letters at any size — `top-full` is the
+            wordmark's own bottom edge. */}
+        {/* pb-[10svh] lifts the pair by half of it — five percent of the screen
+            (it was ten; the mark sat too high over the empty half below, and it
+            came down again when the rows at the top and bottom moved outward).
+            Not centred any more, and that is the point: the button hangs under
+            the wordmark here rather than sitting under the line at the top the
+            way the screens this is modelled on do, so a centred mark pushed the
+            lowest thing on the page down to 72% and split the empty half of the
+            screen in two. Theirs ends at 57% and leaves one unbroken void below
+            it, which is what reads as calm. Raising the pair buys that void
+            back without moving the button off the mark. */}
+        {/* pt-[20px] moves the pair down 10px with the rest of the hero: flex
+            centring splits padding evenly, so half of it lands as the shift. */}
+        <div className="pointer-events-none absolute inset-0 flex select-none items-center justify-center px-6 pt-[20px] pb-[10svh]">
+          {/* One slot for both modes now. With reduced motion it used to be an
+              overflow-hidden box holding only the image, which clipped anything
+              hung below it — so that mode had no button at all. The crop lives
+              on an inner box instead, and the button hangs off the slot in
+              either case. */}
+          <div ref={logoSlotRef} className="relative">
+            {!painted && (
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute inset-x-0" style={{ top: "-23.0074%", height: "143.7962%" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/images/logo.png"
+                    alt="YEYE"
+                    className="h-full w-full object-contain"
+                    style={{ filter: "brightness(0)" }}
+                    draggable={false}
+                  />
+                </div>
+              </div>
+            )}
+            <div ref={ctaSlotRef} className="pointer-events-auto absolute inset-x-0 top-full flex justify-center">
+              {painted ? (
+                /* The box of the site's Button to the pixel — the same padding,
+                   line height, 1px border and gap to its arrow, measured against
+                   the Button that stood here — so the paper paints a pill the
+                   exact size of the one it replaces. Transparent, like the
+                   desktop's: no shimmer and no hover scale, because the paper
+                   only repaints on layout changes. */
+                <Link
+                  ref={ctaContactRef}
+                  href="/#cta"
+                  className="inline-flex items-center gap-2 rounded-full border border-transparent px-8 py-3.5 font-display text-[16px] leading-6 font-medium whitespace-nowrap text-transparent"
+                >
+                  <span ref={ctaContactLabelRef}>קבעו פגישה</span>
+                  <span ref={ctaContactArrowRef} aria-hidden="true" className="block h-[14px] w-[14px] shrink-0" />
+                </Link>
+              ) : (
+                <Button
+                  href="/#cta"
+                  variant="primary"
+                  className="!border-black !bg-none !bg-black !text-white !shadow-none py-3.5 text-[16px]"
+                >
+                  קבעו פגישה
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
       </section>
     );
   }
