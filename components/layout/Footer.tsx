@@ -25,8 +25,7 @@ export default function Footer({ light = false }: FooterProps) {
           middle, the line at the end. Both text blocks used to share the end
           column with an empty spacer opposite them, which left the row weighted
           to one side and the mark not actually centred between anything.
-          On a phone it stacks, and the mark goes first - there it leads rather
-          than separates. */}
+          On a phone it stacks, and the mark is left out (see below). */}
       <div className="mx-auto flex max-w-[1200px] flex-col items-center gap-5 px-6 py-10 text-center md:grid md:h-20 md:grid-cols-3 md:items-center md:gap-6 md:py-0 md:text-inherit">
         {/* The three pages that have to be reachable from every page of the
             site. One quiet line rather than a column of links: the footer's job
@@ -67,7 +66,9 @@ export default function Footer({ light = false }: FooterProps) {
         </div>
 
         {/* Logo — center */}
-        <div className="order-first flex flex-col items-center gap-1 md:order-none">
+        {/* Not on a phone: there the mark is already fixed in the corner of the
+            screen, and stacked over the links it was the same thing twice. */}
+        <div className="hidden flex-col items-center gap-1 md:flex">
           <Image
             src="/images/logo.png"
             alt="YEYE"

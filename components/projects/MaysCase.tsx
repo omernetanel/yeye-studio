@@ -138,8 +138,30 @@ export default function MaysCase() {
           />
         </div>
 
-        {/* Four plain facts, the way a studio heads a piece of work. */}
-        <dl className="mx-auto mt-14 grid max-w-[1100px] gap-8 font-display md:mt-20 md:grid-cols-4 md:gap-6">
+        {/* ON A PHONE, TWO LINES. The facts stood there as four stacked rows
+            with a label over each, and the opening screen was a form to read
+            before anything had been seen. What they say fits in a line and a
+            link. */}
+        <div className="mx-auto mt-12 max-w-[1100px] font-display md:hidden">
+          <p className="text-m-sub font-bold">קונדיטוריה / מיתוג מלא</p>
+          <p className="mt-2 text-m-body text-white/70">
+            <a
+              href={INSTAGRAM}
+              target="_blank"
+              rel="noopener noreferrer"
+              dir="ltr"
+              className="underline-offset-4 hover:underline"
+            >
+              @mays_cinnabon
+            </a>
+          </p>
+        </div>
+
+        {/* On the desk, three plain facts in a row, the way a studio heads a
+            piece of work. NO CREDIT LINE: studios list who shot, wrote and
+            drew because several people did; here it is one name on a site
+            that already says so, and it was a row with nothing to add. */}
+        <dl className="mx-auto mt-20 hidden max-w-[1100px] gap-6 font-display md:grid md:grid-cols-3">
           <div>
             <dt className="text-m-small text-white/55">העסק</dt>
             <dd className="mt-1 text-m-sub font-bold">קונדיטוריה</dd>
@@ -164,13 +186,6 @@ export default function MaysCase() {
                 אינסטגרם, נפתח בכרטיסייה חדשה
               </span>
             </dd>
-          </div>
-          {/* Who made it. A studio lists a photographer, a writer, an
-              illustrator; here it is one name, which is the point of the
-              studio and worth saying on the work itself. */}
-          <div>
-            <dt className="text-m-small text-white/55">קרדיט</dt>
-            <dd className="mt-1 text-m-sub font-bold">עיצוב, סלוגן והדמיות: עומר</dd>
           </div>
         </dl>
       </section>
