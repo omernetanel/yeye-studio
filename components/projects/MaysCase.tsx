@@ -225,9 +225,9 @@ export default function MaysCase() {
               אז כל המותג נבנה סביבו.
             </p>
             <p>
-              הזיגוג הלבן שנוזל על סינבון הוא <strong className={EMPHASIS}>הדבר הכי אייקוני בו</strong>:
+              הזיגוג הלבן שנוזל על סינבון הוא הדבר הכי אייקוני בו:
               רואים אותו, ויודעים מיד מה זה. אז
-              הוא הפך לסימן של המותג, והאותיות של הלוגו נוזלות בדיוק כמוהו.
+              הוא הפך לסימן של המותג, ו<strong className={EMPHASIS}>האותיות של הלוגו נוזלות בדיוק כמוהו</strong>.
             </p>
           </div>
         </div>
@@ -277,7 +277,12 @@ export default function MaysCase() {
             change; it says only what happened. */}
         <figure className="mx-auto mt-24 max-w-[900px] text-center md:mt-40">
           <blockquote className="font-display text-m-lead leading-[1.35] font-bold tracking-tight text-black md:text-[clamp(32px,3.6vw,52px)] md:leading-[1.25]">
-            &quot;לא ידעתי מה אני רוצה, רק אמרתי לו שאני רוצה ורוד. ופתאום יש לי מותג.&quot;
+            &quot;לא ידעתי מה אני רוצה, רק אמרתי לו שאני רוצה ורוד.{" "}
+            {/* Marked in the pink she asked for - the site's highlighter, not pink
+                type: the brand's pink is too light to read as letters on
+                white. */}
+            <span className="text-marker [--marker-color:var(--color-mays-pink)]">ופתאום יש לי מותג.</span>
+            &quot;
           </blockquote>
           <figcaption className="mt-6 font-display text-m-body text-black/60 md:text-[17px]">
             מאי, הבעלים של MAY&apos;S

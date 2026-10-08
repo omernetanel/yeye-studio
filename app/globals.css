@@ -1039,9 +1039,15 @@ video {
 
 /* A highlighter stroke behind a phrase: the lower part of the line, in the
    text's own colour at low strength, so it works on white and on black.
-   clone keeps the stroke on every line a phrase wraps onto. */
+   clone keeps the stroke on every line a phrase wraps onto.
+   --marker-color gives the stroke a colour of its own where one is called
+   for (the MAY'S page marks a line in the brand's pink); without it the
+   stroke is the text's colour, as above. */
 .text-marker {
-  background-image: linear-gradient(transparent 55%, color-mix(in srgb, currentColor 16%, transparent) 55%);
+  background-image: linear-gradient(
+    transparent 55%,
+    var(--marker-color, color-mix(in srgb, currentColor 16%, transparent)) 55%
+  );
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
