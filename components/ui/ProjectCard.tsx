@@ -16,13 +16,9 @@ export default function ProjectCard({ title, category, imageSrc, href, external 
   // A piece can be marked external and still point at an address on this
   // site. Only one that really goes elsewhere opens a new tab and says so.
   const leavesSite = Boolean(external) && href.startsWith("http");
-  return (
-    <Link
-      href={href}
-      target={leavesSite ? "_blank" : undefined}
-      rel={leavesSite ? "noopener noreferrer" : undefined}
-      className="group block transition-transform duration-200 ease-out hover:scale-[1.02]"
-    >
+  const opens = leavesSite || !external;
+  const card = (
+    <>
       {/* The benefit cards from the home page, with the screenshot inside. */}
       <BorderGlowCard className="p-3">
         <div className="relative mb-3.5 aspect-[1672/941] w-full overflow-hidden rounded-[14px] bg-white/[0.04]">
@@ -42,6 +38,19 @@ export default function ProjectCard({ title, category, imageSrc, href, external 
           )}
         </div>
       </BorderGlowCard>
+    </>
+  );
+  // A piece with nowhere to open - marked external, with no live address - is
+  // a card and not a link: pressed, it led to a page that does not exist.
+  if (!opens) return <div>{card}</div>;
+  return (
+    <Link
+      href={href}
+      target={leavesSite ? "_blank" : undefined}
+      rel={leavesSite ? "noopener noreferrer" : undefined}
+      className="group block transition-transform duration-200 ease-out hover:scale-[1.02]"
+    >
+      {card}
     </Link>
   );
 }

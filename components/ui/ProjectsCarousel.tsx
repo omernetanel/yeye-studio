@@ -11,6 +11,10 @@ import { projects } from "@/lib/projects";
 import { PROJECTS_HEADING } from "@/lib/content";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
+// The name of a piece, wherever it is printed: as a link where the piece opens
+// something, as plain type where it does not.
+const TITLE_CLASS = "font-display text-m-sub font-bold text-black md:text-[22px]";
+
 // Four real projects today, and nothing here is written for four: the row takes
 // its count from this array and wraps by it, and the project pages are built
 // from the same file. Adding work is adding an entry to lib/projects.
@@ -26,6 +30,10 @@ const entries = projects.map((project) => ({
   // And whether it has a page of its own here. Neither is true of a piece that
   // is marked external but has no live address yet: it gets no note at all.
   hasPage: !project.external,
+  // And so, whether there is anywhere to go at all. A piece that neither
+  // leaves the site nor has a page here is shown and is not a link: pressed,
+  // it led to a page that does not exist.
+  opens: !project.external || project.url.startsWith("http"),
 }));
 
 /**
@@ -66,6 +74,7 @@ export default function ProjectsCarousel({
 
   const open = (index: number) => {
     const entry = entries[index];
+    if (!entry.opens) return;
     if (entry.leavesSite) window.open(entry.href, "_blank", "noopener,noreferrer");
     else router.push(entry.href);
   };
@@ -77,14 +86,9 @@ export default function ProjectsCarousel({
   if (prefersReducedMotion) {
     return (
       <ul className="mx-auto grid w-full max-w-[1100px] grid-cols-1 gap-8 px-6 md:grid-cols-2 md:gap-10">
-        {entries.map((entry) => (
-          <li key={entry.href}>
-            <Link
-              href={entry.href}
-              target={entry.leavesSite ? "_blank" : undefined}
-              rel={entry.leavesSite ? "noopener noreferrer" : undefined}
-              className="group block text-right"
-            >
+        {entries.map((entry) => {
+          const card = (
+            <>
               <Image
                 src={entry.src}
                 alt={entry.alt}
@@ -93,16 +97,35 @@ export default function ProjectsCarousel({
                 sizes="(min-width: 768px) 540px, 100vw"
                 className="block aspect-[1672/941] w-full rounded-2xl object-cover"
               />
-              <span className="mt-4 block font-display text-m-sub font-bold text-black underline-offset-4 group-hover:underline md:text-[22px]">
+              <span
+                className={`mt-4 block ${TITLE_CLASS} ${entry.opens ? "underline-offset-4 group-hover:underline" : ""}`}
+              >
                 {entry.title}
               </span>
               <span className="mt-1 block font-body text-m-small text-black/55 md:text-[15px]">{entry.category}</span>
               {(entry.leavesSite || entry.hasPage) && (
                 <ExternalNote inSite={entry.hasPage} className="mt-1.5 text-black/50" />
               )}
-            </Link>
-          </li>
-        ))}
+            </>
+          );
+          return (
+            <li key={entry.href}>
+              {entry.opens ? (
+                <Link
+                  href={entry.href}
+                  target={entry.leavesSite ? "_blank" : undefined}
+                  rel={entry.leavesSite ? "noopener noreferrer" : undefined}
+                  className="group block text-right"
+                >
+                  {card}
+                </Link>
+              ) : (
+                // Shown, with nowhere to open: a card and not a link.
+                <div className="text-right">{card}</div>
+              )}
+            </li>
+          );
+        })}
       </ul>
     );
   }
@@ -152,14 +175,19 @@ export default function ProjectsCarousel({
           href={current.href}
           className="absolute -top-[21px] left-1/2 -translate-x-1/2 whitespace-nowrap text-black/50"
         />
-        <Link
-          href={current.href}
-          target={current.leavesSite ? "_blank" : undefined}
-          rel={current.leavesSite ? "noopener noreferrer" : undefined}
-          className="font-display text-m-sub font-bold text-black underline-offset-4 hover:underline md:text-[22px]"
-        >
-          {current.title}
-        </Link>
+        {current.opens ? (
+          <Link
+            href={current.href}
+            target={current.leavesSite ? "_blank" : undefined}
+            rel={current.leavesSite ? "noopener noreferrer" : undefined}
+            className={`${TITLE_CLASS} underline-offset-4 hover:underline`}
+          >
+            {current.title}
+          </Link>
+        ) : (
+          // Shown, with nowhere to open: its name is a name and not a link.
+          <span className={TITLE_CLASS}>{current.title}</span>
+        )}
         <span className="mt-1 font-body text-m-small text-black/55 md:text-[15px]">{current.category}</span>
 
         {/* Previous, where you are, next. The arrows are real buttons, for
