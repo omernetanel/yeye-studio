@@ -255,9 +255,11 @@ export default function MaysCase() {
       {/* THE CLOSE: back to black, and one thing to press. */}
       <section
         data-nav-dark="true"
-        className="relative bg-black px-6 pt-48 pb-24 text-center text-white md:pt-64 md:pb-32"
+        // More room at the head than the other sections leave: the last seam
+        // is the heavy one, and it runs well down into this.
+        className="relative bg-black px-6 pt-64 pb-24 text-center text-white md:pt-80 md:pb-32"
       >
-        <GlazeDrips className="fill-white" variant={3} />
+        <GlazeDrips className="fill-white" variant={3} heavy />
         <h2 className="mx-auto max-w-[900px] font-display text-m-title font-extrabold tracking-tight md:text-[clamp(44px,5.4vw,80px)] md:leading-[1.05]">
           רוצים מותג שמתחיל מהמוצר שלכם?
         </h2>

@@ -59,6 +59,7 @@ const BAND = 5;
 const SAGS = [7, 2, 9, 4, 6, 1, 8, 3, 5, 2, 7, 4];
 // The room the longest drip needs, bead included.
 const HEIGHT = 230;
+const HEIGHT_HEAVY = 300;
 // Under this width every other drip is left out, so they do not crowd.
 const NARROW_PX = 640;
 // How short a drip starts, as a share of its length, and where the edge is on
@@ -71,8 +72,11 @@ const RUN = [1, 0.08] as const;
 // phone leaves less room above the words under the edge, so less there.
 const REACH = 1.4;
 const REACH_NARROW = 1.1;
+// The heavy seam: how much further it runs and how much thicker each drip is,
+// on the desk and on a phone.
+const HEAVY = { reach: 1.9, reachNarrow: 1.45, girth: 1.25, girthNarrow: 0.8 };
 
-function pathFor(width: number, grown: number, variant: number) {
+function pathFor(width: number, grown: number, variant: number, heavy: boolean) {
   // The same eleven places along the edge, with the runs dealt to them from a
   // different start for each variant - and every other variant the other way
   // round - so no two seams hang alike.
@@ -81,18 +85,28 @@ function pathFor(width: number, grown: number, variant: number) {
     return { at: drip.at, neck: from.neck, length: from.length };
   });
   const narrow = width < NARROW_PX;
-  const drips = narrow ? dealt.filter((_, index) => index % 2 === variant % 2) : dealt;
-  const reach = narrow ? REACH_NARROW : REACH;
+  // Heavy keeps every drip even on a phone, a little thinner there so that
+  // eleven roots still fit side by side.
+  const drips = narrow && !heavy ? dealt.filter((_, index) => index % 2 === variant % 2) : dealt;
+  const reach = heavy ? (narrow ? HEAVY.reachNarrow : HEAVY.reach) : narrow ? REACH_NARROW : REACH;
+  const girth = heavy ? (narrow ? HEAVY.girthNarrow : HEAVY.girth) : 1;
   const n = (value: number) => value.toFixed(1);
   // A pixel above the edge, so no hairline shows between it and the section
   // it hangs from.
   let d = `M0,-1 H${n(width)} V${BAND}`;
   let from = width;
   // Right to left along the bottom of the edge, a drip at a time.
+  // How far each drip, right to left, is from its nearer neighbour, in px.
+  const places = [...drips].reverse().map((drip) => drip.at * width);
+  const room = places.map((x, index) =>
+    Math.min(index > 0 ? places[index - 1] - x : Infinity, index < places.length - 1 ? x - places[index + 1] : Infinity),
+  );
   [...drips].reverse().forEach((drip, index) => {
     const x = drip.at * width;
-    const neck = drip.neck;
-    const root = neck * ROOT;
+    const neck = drip.neck * girth;
+    // Never so wide that it runs into the drip beside it: half the gap to the
+    // nearer neighbour is all the root may take.
+    const root = Math.max(neck * 1.4, Math.min(neck * ROOT, room[index] / 2 - 1));
     const bead = neck * BEAD;
     // Never shorter than its own root and bead need to be told apart.
     const length = Math.max(root + bead * 3, drip.length * reach * (START_AT + (1 - START_AT) * grown));
@@ -120,11 +134,16 @@ function pathFor(width: number, grown: number, variant: number) {
 export default function GlazeDrips({
   className,
   variant = 0,
+  heavy = false,
 }: {
   className?: string;
   /** Which arrangement of the drips. Each seam on a page takes its own, so
    *  the long one is not in the same place every time. */
   variant?: number;
+  /** More of it, and running further: every drip on a phone too, thicker, and
+   *  nearly twice as long. For a seam that has room under it and should fill
+   *  it. The section it hangs over has to leave that room. */
+  heavy?: boolean;
 }) {
   const reduce = usePrefersReducedMotion();
   const svgRef = useRef<SVGSVGElement>(null);
@@ -146,7 +165,7 @@ export default function GlazeDrips({
     if (!svg || !path || width <= 0) return;
     const at = svg.getBoundingClientRect().top / window.innerHeight;
     const grown = reduce ? 1 : Math.min(1, Math.max(0, (RUN[0] - at) / (RUN[0] - RUN[1])));
-    path.setAttribute("d", pathFor(width, grown, variant));
+    path.setAttribute("d", pathFor(width, grown, variant, heavy));
   };
 
   useLayoutEffect(draw);
@@ -160,7 +179,7 @@ export default function GlazeDrips({
       ref={svgRef}
       aria-hidden="true"
       className={cn("pointer-events-none absolute inset-x-0 top-0 block w-full", className)}
-      height={HEIGHT}
+      height={heavy ? HEIGHT_HEAVY : HEIGHT}
     >
       <path ref={pathRef} />
     </svg>
