@@ -727,6 +727,19 @@ body {
   backface-visibility: hidden;
 }
 
+/* The letter itself: printed from the box's attribute rather than written in
+   it, so it is not in the page's text a second time. See FoldText. */
+.fold-piece::before {
+  content: attr(data-char);
+}
+
+/* The same, for a whole phrase: a box that shows a second copy of words that
+   are already written elsewhere on the page - a slot that reserves their room,
+   say - prints them from data-text instead of holding them as text. */
+.text-from-attr::before {
+  content: attr(data-text);
+}
+
 /* THE READER'S OWN SWITCHES — see lib/a11y/preferences.ts and the panel in
    components/layout/AccessibilityMenu.tsx. Nothing here applies to anyone who
    has not asked for it: the attributes only exist on <html> once a switch is

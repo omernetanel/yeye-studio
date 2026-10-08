@@ -222,18 +222,20 @@ export default function DesignWorkSection() {
           id="design-heading"
           lang="en"
           dir="ltr"
-          // The letters are split for the fold, so the line is named whole.
-          aria-label="Yes, that too."
+          // The line is cut in three for its two colours, and each piece's own
+          // copy for a screen reader would be a fragment ("YE", then "S,"). So
+          // the pieces are silent and the sentence is here once, whole.
           className="text-center font-display text-m-display font-extrabold tracking-tight text-heading-soft md:text-[clamp(48px,6.4vw,96px)] md:leading-[1.05]"
         >
+          <span className="sr-only">Yes, that too.</span>
           <span className="block md:inline">
             <span className="text-black">
-              <FoldText text="YE" />
+              <FoldText text="YE" silent />
             </span>
-            <FoldText text="S," />
+            <FoldText text="S," silent />
           </span>{" "}
           <span className="block md:inline">
-            <FoldText text="THAT TOO." />
+            <FoldText text="THAT TOO." silent />
           </span>
         </h2>
 

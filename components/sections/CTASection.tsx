@@ -144,7 +144,9 @@ export default function CTASection() {
             onViewportEnter={() => setShine((s) => (s === "idle" ? "shining" : s))}
             className="mb-6 font-display text-[clamp(40px,5vw,72px)] leading-[1.1] font-extrabold tracking-tight"
           >
-            <span className="text-black">בואו נבנה משהו</span>
+            {/* The space is for anything that reads the page as text: a line
+                break alone ran the two lines' words together. */}
+            <span className="text-black">בואו נבנה משהו</span>{" "}
             <br />
             {/* The glint is fired from the viewport enter above rather than on
                 mount: this is the bottom of the page, and an animation on its

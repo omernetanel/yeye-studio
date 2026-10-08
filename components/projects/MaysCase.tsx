@@ -66,14 +66,15 @@ const MARK_SETTLE = 0.5;
 /**
  * A line that folds in, cut into words that do not break. FoldText sets every
  * letter as a box of its own, and a line of such boxes wraps wherever it runs
- * out of room - in the middle of a word.
+ * out of room - in the middle of a word. The words are silent: the heading
+ * that uses this says its sentence once itself, in an sr-only span.
  */
 function FoldWords({ text }: { text: string }) {
   return text.split(" ").map((word, index) => (
     <Fragment key={index}>
       {index > 0 && " "}
       <span className="inline-block whitespace-nowrap">
-        <FoldText text={word} />
+        <FoldText text={word} silent />
       </span>
     </Fragment>
   ));
@@ -209,9 +210,9 @@ export default function MaysCase() {
         <GlazeDrips className="fill-black" />
         <div className="mx-auto max-w-[1100px]">
           <h2
-            aria-label="אם הסינבון הוא המרכז, הוא יהיה הלוגו."
             className="font-display text-m-display font-extrabold tracking-tight text-black md:text-[clamp(56px,7.4vw,112px)] md:leading-[1.02]"
           >
+            <span className="sr-only">אם הסינבון הוא המרכז, הוא יהיה הלוגו.</span>
             <span data-fold-line className="block text-heading-soft">
               <FoldWords text="אם הסינבון הוא המרכז," />
             </span>
@@ -242,9 +243,9 @@ export default function MaysCase() {
               sentence under it says what the line is. */}
           <h2
             data-fold-line
-            aria-label="זה באמת ממכר."
             className="font-display text-[19vw] leading-[0.95] font-extrabold tracking-tight text-black md:text-[clamp(96px,13vw,200px)]"
           >
+            <span className="sr-only">זה באמת ממכר.</span>
             <FoldWords text="זה באמת ממכר." />
           </h2>
           <p className="mt-10 max-w-[560px] font-body text-m-body text-black/75 md:mt-14 md:text-[19px] md:leading-[1.7]">

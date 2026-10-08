@@ -20,15 +20,39 @@
 const DURATION = 0.65;
 const STAGGER = 0.045;
 const FOLDED_DEG = -92;
+// A plain space in a box of its own has no width; this one keeps it.
+const NO_BREAK_SPACE = " ";
 
-export default function FoldText({ text }: { text: string }) {
+// THE LETTERS ARE DRAWN, NOT WRITTEN. Each box carries its letter in an
+// attribute and CSS prints it (.fold-piece::before in globals.css), so the
+// page's text holds every heading ONCE - the copy for screen readers - and not
+// a second time as a run of single letters. Written into the boxes as text,
+// anything that reads the page as text (a search engine, a link preview, a
+// reader mode) got each word twice and run together: "חלקחלקמהעבודותמהעבודות".
+
+export default function FoldText({
+  text,
+  silent = false,
+}: {
+  text: string;
+  /**
+   * Leave out the copy for screen readers. For a heading cut into several
+   * FoldTexts - by colour, or a word at a time - where each piece's own copy
+   * would be read as a fragment ("YE", then "S,"): the heading then carries
+   * the whole sentence once itself, in an sr-only span, and its pieces are
+   * silent.
+   */
+  silent?: boolean;
+}) {
   return (
     <>
-      <span className="sr-only">{text}</span>
+      {/* With a space after it: a heading set a word to a box would otherwise
+          read, as text, with its words run together. */}
+      {!silent && <span className="sr-only">{text} </span>}
       <span aria-hidden="true">
         {Array.from(text).map((char, index) => (
           <span key={index} className="fold-segment">
-            <span className="fold-piece">{char === " " ? " " : char}</span>
+            <span className="fold-piece" data-char={char === " " ? NO_BREAK_SPACE : char} />
           </span>
         ))}
       </span>

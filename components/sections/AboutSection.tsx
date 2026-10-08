@@ -597,8 +597,11 @@ export default function AboutSection() {
                   >
                     {/* The floating copy's colours too: with less motion this
                         slot is the heading that is seen. */}
-                    <span className="block text-[0.4em] text-white/70">נעים מאוד,</span>
-                    <span className="block text-[1.34em]">אני עומר.</span>
+                    {/* Printed from an attribute, like the folding letters: this box
+                        is a second copy of the greeting, and written as text it
+                        put the greeting in the page twice. */}
+                    <span className="text-from-attr block text-[0.4em] text-white/70" data-text="נעים מאוד," />
+                    <span className="text-from-attr block text-[1.34em]" data-text="אני עומר." />
                   </div>
 
                   <div ref={claimRef} className="will-change-transform" style={{ opacity: 0 }}>
