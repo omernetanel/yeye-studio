@@ -123,10 +123,10 @@ export default function MaysCase() {
           it would be a ghost. */}
       <section
         data-nav-dark="true"
-        className="relative overflow-hidden bg-black px-6 pt-32 pb-16 text-white md:pt-36 md:pb-20"
+        className="relative overflow-hidden bg-black px-6 pt-32 pb-16 text-white md:pt-24 md:pb-24"
       >
         <h1 className="sr-only">MAY&apos;S</h1>
-        <div ref={markRef} className="mx-auto w-[78%] max-w-[640px] will-change-transform">
+        <div ref={markRef} className="mx-auto w-[78%] max-w-[640px] will-change-transform md:max-w-[min(640px,78svh)]">
           <Image
             src="/images/projects/mayslogo.webp"
             alt="הלוגו של MAY'S: אותיות שזיגוג נוזל מהן"
@@ -164,7 +164,7 @@ export default function MaysCase() {
             as untidy. NO CREDIT LINE: studios list who shot, wrote and
             drew because several people did; here it is one name on a site
             that already says so, and it was a row with nothing to add. */}
-        <dl className="mx-auto mt-20 hidden max-w-[980px] gap-10 text-center font-display md:grid md:grid-cols-3">
+        <dl className="mx-auto mt-14 hidden max-w-[980px] gap-10 text-center font-display md:grid md:grid-cols-3">
           <div>
             <dt className="text-m-small text-white/55">העסק</dt>
             <dd className="mt-1 text-m-sub font-bold">קונדיטוריה</dd>
