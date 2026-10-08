@@ -330,13 +330,15 @@ export default function DesignWorkSection() {
           white, the rest of the line in a SOLID grey - never a see-through
           white: on a curve the letters lap over one another, and where two
           see-through shapes cross they add up, so the dimmed type looked
-          printed twice on a phone. It is the heading's own emphasis, turned over for a dark
+          printed twice on a phone. The desk keeps the see-through white it was
+          approved in: its curve is shallower, the letters do not lap, and the
+          lighter grey was right there. It is the heading's own emphasis, turned over for a dark
           ground. The mark in grey read as switched off and broke YEP in two.
           All in grey on white it was faint; a straight black band would
           have put a rectangle where the curve was chosen to avoid one.
           The phone draws it in a narrower box, which is what brings the type
           up to a size worth reading there. */}
-      <div className="-mx-6 mt-16 overflow-x-clip text-neutral-400 md:mt-24">
+      <div className="-mx-6 mt-16 overflow-x-clip text-neutral-400 md:mt-24 md:text-white/75">
         <CurvedLoop
           text={DESIGN_LOOP_TEXT}
           highlight={DESIGN_LOOP_MARKS}
