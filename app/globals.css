@@ -18,6 +18,11 @@
   --color-primary-light: #9a9a9a;
   --color-accent: #4a4a4a;
   --color-accent-light: #9a9a9a;
+  /* The dimmed type on the black tape under the design work (CurvedLoop), on
+     the desk: white at 75% over black, written out as the one solid colour
+     that comes to. Solid on purpose - letters on a curve can lap over one
+     another, and a see-through fill adds up where they do. */
+  --color-tape-dim: #bfbfbf;
 
   --font-display: var(--font-google-sans), Arial, sans-serif;
   --font-body: var(--font-assistant), Arial, sans-serif;
