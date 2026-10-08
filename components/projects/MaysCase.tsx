@@ -281,7 +281,7 @@ export default function MaysCase() {
             {/* Marked in the pink she asked for - the site's highlighter, not pink
                 type: the brand's pink is too light to read as letters on
                 white. */}
-            <span className="text-marker [--marker-color:var(--color-mays-pink)]">ופתאום יש לי מותג.</span>
+            <span className="text-marker [--marker-color:var(--color-mays-pink-deep)]">ופתאום יש לי מותג.</span>
             &quot;
           </blockquote>
           <figcaption className="mt-6 font-display text-m-body text-black/60 md:text-[17px]">
