@@ -138,8 +138,8 @@ export default function MaysCase() {
           />
         </div>
 
-        {/* Three plain facts, the way a studio heads a piece of work. */}
-        <dl className="mx-auto mt-14 grid max-w-[1100px] gap-8 font-display md:mt-20 md:grid-cols-3 md:gap-6">
+        {/* Four plain facts, the way a studio heads a piece of work. */}
+        <dl className="mx-auto mt-14 grid max-w-[1100px] gap-8 font-display md:mt-20 md:grid-cols-4 md:gap-6">
           <div>
             <dt className="text-m-small text-white/55">העסק</dt>
             <dd className="mt-1 text-m-sub font-bold">קונדיטוריה</dd>
@@ -164,6 +164,13 @@ export default function MaysCase() {
                 אינסטגרם, נפתח בכרטיסייה חדשה
               </span>
             </dd>
+          </div>
+          {/* Who made it. A studio lists a photographer, a writer, an
+              illustrator; here it is one name, which is the point of the
+              studio and worth saying on the work itself. */}
+          <div>
+            <dt className="text-m-small text-white/55">קרדיט</dt>
+            <dd className="mt-1 text-m-sub font-bold">עיצוב, סלוגן והדמיות: עומר</dd>
           </div>
         </dl>
       </section>
