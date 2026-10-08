@@ -23,6 +23,9 @@ const entries = projects.map((project) => ({
   // Really another site, and not merely "has no page here": one piece is marked
   // external and still points at an address on this one.
   leavesSite: Boolean(project.external) && project.url.startsWith("http"),
+  // And whether it has a page of its own here. Neither is true of a piece that
+  // is marked external but has no live address yet: it gets no note at all.
+  hasPage: !project.external,
 }));
 
 /**
@@ -94,7 +97,9 @@ export default function ProjectsCarousel({
                 {entry.title}
               </span>
               <span className="mt-1 block font-body text-m-small text-black/55 md:text-[15px]">{entry.category}</span>
-              {entry.leavesSite && <ExternalNote className="mt-1.5 text-black/50" />}
+              {(entry.leavesSite || entry.hasPage) && (
+                <ExternalNote inSite={entry.hasPage} className="mt-1.5 text-black/50" />
+              )}
             </Link>
           </li>
         ))}
@@ -142,7 +147,8 @@ export default function ProjectsCarousel({
             out of the flow: as a line of its own under the category it pushed
             the arrows down, and the caption was right as it stood. */}
         <ExternalNote
-          shown={current.leavesSite}
+          shown={current.leavesSite || current.hasPage}
+          inSite={current.hasPage}
           className="absolute -top-[21px] left-1/2 -translate-x-1/2 whitespace-nowrap text-black/50"
         />
         <Link

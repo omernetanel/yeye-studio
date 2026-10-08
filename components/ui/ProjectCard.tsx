@@ -34,8 +34,11 @@ export default function ProjectCard({ title, category, imageSrc, href, external 
           {/* Under the picture, in the gap above this row, and out of the flow,
               so a card that leaves the site is the same height as one that
               does not. */}
-          {leavesSite && (
-            <ExternalNote className="absolute -top-[13px] left-1/2 -translate-x-1/2 whitespace-nowrap text-white/55" />
+          {(leavesSite || !external) && (
+            <ExternalNote
+              inSite={!external}
+              className="absolute -top-[13px] left-1/2 -translate-x-1/2 whitespace-nowrap text-white/55"
+            />
           )}
         </div>
       </BorderGlowCard>
