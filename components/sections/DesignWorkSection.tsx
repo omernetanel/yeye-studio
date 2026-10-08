@@ -260,9 +260,9 @@ export default function DesignWorkSection() {
         </h2>
 
         {/* On a phone the first brand stands as far under the heading as the
-            gallery's arrows stand over it: 100px, measured on the screen. */}
+            gallery's arrows stand over it, letter to letter. */}
         {designWork.map((brand, index) => (
-          <div key={brand.name} className={index === 0 ? "mt-25 md:mt-28" : "mt-28 md:mt-48"}>
+          <div key={brand.name} className={index === 0 ? "mt-26 md:mt-28" : "mt-28 md:mt-48"}>
             <BrandBlock brand={brand} drifts={!isMobile && !prefersReducedMotion} />
           </div>
         ))}
