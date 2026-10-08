@@ -334,7 +334,7 @@ export default function DesignWorkSection() {
           text={DESIGN_LOOP_TEXT}
           highlight={DESIGN_LOOP_MARK}
           highlightClassName="fill-black"
-          className="font-display font-extrabold tracking-tight"
+          className="font-display font-extrabold [word-spacing:0.12em]"
           // Not to be taken hold of: it is a line running in the background,
           // and a line that can be dragged is a control.
           interactive={false}
