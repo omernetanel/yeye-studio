@@ -279,7 +279,7 @@ export default function DesignWorkSection() {
       ref={sectionRef}
       id="design"
       aria-labelledby="design-heading"
-      className="relative bg-white px-6 pt-24 pb-6 md:pt-16 md:pb-4"
+      className="relative bg-white px-6 pt-24 pb-6 md:pt-16 md:pb-16"
     >
       <div className="mx-auto max-w-[1400px]">
         {/* The one heading on the site in English, and the mark is in it: the
@@ -335,7 +335,7 @@ export default function DesignWorkSection() {
           className="font-display font-extrabold tracking-tight"
           {...(isMobile
             ? { span: 560, fontSize: 84, curveAmount: 220, speed: 70 }
-            : { fontSize: 52, curveAmount: 200, speed: 80 })}
+            : { fontSize: 62, curveAmount: 200, speed: 80 })}
         />
       </div>
     </section>
