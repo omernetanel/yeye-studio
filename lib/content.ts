@@ -84,5 +84,6 @@ export const aboutFacts = [
 // again what the services section already had. English, like that heading,
 // and each phrase followed by the star that joins the loop.
 export const DESIGN_LOOP_TEXT = "YEP, I DESIGNED IT ✦ YEP, I BUILT IT ✦ YEP, I BRANDED IT ✦ YEP, I LAUNCHED IT ✦";
-// The mark, wherever the line says it: set apart in black, as in the heading.
-export const DESIGN_LOOP_MARK = "YE";
+// What stands out of the line wherever it comes up: the mark, as in the
+// heading, and the star between the phrases.
+export const DESIGN_LOOP_MARKS = ["YE", "✦"];

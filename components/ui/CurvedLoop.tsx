@@ -48,8 +48,8 @@ interface CurvedLoopProps {
   fontSize?: number;
   /** On the type: its font, weight and colour. */
   className?: string;
-  /** A run of letters to set apart wherever it comes up in the line... */
-  highlight?: string;
+  /** Runs of letters to set apart wherever they come up in the line... */
+  highlight?: string | string[];
   /** ...and the class that does it, a fill for one. */
   highlightClassName?: string;
   /** Draws a tape under the line, along the same curve. The class gives it its
@@ -90,8 +90,16 @@ export default function CurvedLoop({
   // One trailing no-break space, so the join between two copies is a gap.
   const unit = `${text.trim()} `;
   // The line cut at every highlighted run, the runs kept as pieces of their
-  // own. A plain split, not a pattern: the run is letters, taken as written.
-  const parts = highlight ? unit.split(highlight).flatMap((piece, index) => (index ? [highlight, piece] : [piece])) : [unit];
+  // own. Plain splits, one run after another, not a pattern: the runs are
+  // letters and marks, taken as written.
+  const marks = highlight === undefined ? [] : [highlight].flat();
+  const parts = marks.reduce(
+    (pieces, mark) =>
+      pieces.flatMap((piece) =>
+        marks.includes(piece) ? [piece] : piece.split(mark).flatMap((rest, index) => (index ? [mark, rest] : [rest])),
+      ),
+    [unit],
+  );
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<SVGTextElement>(null);
@@ -238,7 +246,7 @@ export default function CurvedLoop({
           <textPath ref={textPathRef} href={`#${pathId}`} xmlSpace="preserve">
             {Array.from({ length: copies }, (_, copy) =>
               parts.map((part, index) =>
-                part === highlight ? (
+                marks.includes(part) ? (
                   <tspan key={`${copy}-${index}`} className={highlightClassName}>
                     {part}
                   </tspan>

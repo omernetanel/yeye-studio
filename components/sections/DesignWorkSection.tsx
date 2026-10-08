@@ -8,7 +8,7 @@ import ArrowIcon from "@/components/ui/ArrowIcon";
 import CurvedLoop from "@/components/ui/CurvedLoop";
 import ExternalNote from "@/components/ui/ExternalNote";
 import FoldText, { setFold } from "@/components/ui/FoldText";
-import { DESIGN_LOOP_MARK, DESIGN_LOOP_TEXT } from "@/lib/content";
+import { DESIGN_LOOP_MARKS, DESIGN_LOOP_TEXT } from "@/lib/content";
 import { designWork, type DesignBrand, type DesignPiece } from "@/lib/design-work";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
@@ -326,17 +326,18 @@ export default function DesignWorkSection() {
           came in - type a hundred pixels tall on a curve most of a screen deep
           - it was the loudest thing down here and stood over the heading of
           the form it is meant to lead to. It is a passage, not an event.
-          A BLACK TAPE WITH THE LINE ON IT: the mark in full white, the rest of
+          A BLACK TAPE WITH THE LINE ON IT: the mark and the stars in full
+          white, the rest of
           the line dimmed - the heading's own emphasis, turned over for a dark
           ground. The mark in grey read as switched off and broke YEP in two.
           All in grey on white it was faint; a straight black band would
           have put a rectangle where the curve was chosen to avoid one.
           The phone draws it in a narrower box, which is what brings the type
           up to a size worth reading there. */}
-      <div className="-mx-6 mt-16 overflow-x-clip text-white/55 md:mt-24">
+      <div className="-mx-6 mt-16 overflow-x-clip text-white/75 md:mt-24">
         <CurvedLoop
           text={DESIGN_LOOP_TEXT}
-          highlight={DESIGN_LOOP_MARK}
+          highlight={DESIGN_LOOP_MARKS}
           highlightClassName="fill-white"
           ribbonClassName="stroke-black"
           className="font-display font-extrabold [word-spacing:0.12em]"
