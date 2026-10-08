@@ -144,7 +144,7 @@ export default function MaysCase() {
             link. */}
         <div className="mx-auto mt-12 max-w-[1100px] font-display md:hidden">
           <p className="text-m-sub font-bold">קונדיטוריה / מיתוג מלא</p>
-          <p className="mt-2 text-m-body text-white/70">
+          <p className="mt-0.5 text-m-body text-white/70">
             <a
               href={INSTAGRAM}
               target="_blank"
@@ -158,10 +158,13 @@ export default function MaysCase() {
         </div>
 
         {/* On the desk, three plain facts in a row, the way a studio heads a
-            piece of work. NO CREDIT LINE: studios list who shot, wrote and
+            piece of work. EACH CENTRED IN ITS COLUMN, under a mark that is
+            centred: set to the right of their columns, as the rest of the
+            page is, the three leaned to one side of it and the screen read
+            as untidy. NO CREDIT LINE: studios list who shot, wrote and
             drew because several people did; here it is one name on a site
             that already says so, and it was a row with nothing to add. */}
-        <dl className="mx-auto mt-20 hidden max-w-[1100px] gap-6 font-display md:grid md:grid-cols-3">
+        <dl className="mx-auto mt-20 hidden max-w-[980px] gap-10 text-center font-display md:grid md:grid-cols-3">
           <div>
             <dt className="text-m-small text-white/55">העסק</dt>
             <dd className="mt-1 text-m-sub font-bold">קונדיטוריה</dd>
