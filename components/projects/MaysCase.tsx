@@ -221,18 +221,18 @@ export default function MaysCase() {
       <section className="relative bg-linear-to-b from-mays-pink to-mays-pink-deep px-6 pt-48 pb-24 md:pt-64 md:pb-36">
         <GlazeDrips className="fill-white" />
         <div className="mx-auto max-w-[1100px]">
-          {/* A plain label, medium-small. It was a round white sticker for a
-              round: it read as a prop stuck on the page, not as part of it. */}
-          <p className="font-display text-m-sub font-bold text-black/70 md:text-[24px]">הסלוגן</p>
+          {/* No label over the line. It had one - a small grey word, then a
+              sticker, then plain type - and none of them earned the place: the
+              sentence under it says what the line is. */}
           <h2
             data-fold-line
             aria-label="זה באמת ממכר."
-            className="mt-3 font-display text-[19vw] leading-[0.95] font-extrabold tracking-tight text-black md:text-[clamp(96px,13vw,200px)]"
+            className="font-display text-[19vw] leading-[0.95] font-extrabold tracking-tight text-black md:text-[clamp(96px,13vw,200px)]"
           >
             <FoldWords text="זה באמת ממכר." />
           </h2>
           <p className="mt-10 max-w-[560px] font-body text-m-body text-black/75 md:mt-14 md:text-[19px] md:leading-[1.7]">
-            הוא בא מהמוצר עצמו. הסינבון שלה רך, מתוק במידה ומדויק, ואחרי אחד רוצים עוד. לא היה צריך
+            הסלוגן הגיע מהמוצר עצמו. הסינבון שלה רך, מתוק במידה ומדויק, ואחרי אחד רוצים עוד. לא היה צריך
             להמציא כלום.
           </p>
         </div>
