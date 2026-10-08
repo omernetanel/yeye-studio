@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import ArrowIcon from "@/components/ui/ArrowIcon";
 import ExternalNote from "@/components/ui/ExternalNote";
+import FoldText, { setFold } from "@/components/ui/FoldText";
 import { designWork, type DesignBrand, type DesignPiece } from "@/lib/design-work";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
@@ -34,6 +35,10 @@ import { cn } from "@/lib/utils";
 // the screen, in px. Enough to be felt, not enough to open a gap.
 const DRIFT_PX = 70;
 
+// Where the heading's top is on the screen, as a share of its height, while
+// its letters fold in: from just inside the bottom edge to past the middle.
+const HEADING_FOLD = [0.95, 0.55] as const;
+
 // The order each piece takes in the phone's single column. The desk deals them
 // into two columns (see BrandBlock) and these are what puts them back in the
 // order they were listed.
@@ -48,7 +53,7 @@ function Piece({ piece, sizes, className }: { piece: DesignPiece; sizes: string;
         width={piece.width}
         height={piece.height}
         sizes={sizes}
-        className="h-auto w-full rounded-[14px]"
+        className="h-auto w-full"
       />
     </figure>
   );
@@ -60,7 +65,7 @@ function BrandHeader({ brand, className }: { brand: DesignBrand; className?: str
       <h3 className="font-display text-m-title font-extrabold tracking-tight text-black md:text-[44px] md:leading-[1.1]">
         {brand.name}
       </h3>
-      <p className="mt-2 font-body text-m-body text-black/55 md:text-[17px]">{brand.line}</p>
+      <p className="mt-0.5 font-body text-m-body text-black/55 md:text-[17px]">{brand.line}</p>
       {brand.link && (
         <p className="mt-5 flex flex-col items-start gap-1.5">
           <Link
@@ -104,8 +109,8 @@ function BrandBlock({ brand, drifts }: { brand: DesignBrand; drifts: boolean }) 
   // ONE PICTURE: the name beside it, the picture wide.
   if (brand.pieces.length === 1) {
     return (
-      <div ref={blockRef} className="md:grid md:grid-cols-12 md:items-end md:gap-x-10">
-        <BrandHeader brand={brand} className="md:col-span-4 md:pb-2" />
+      <div ref={blockRef} className="md:grid md:grid-cols-12 md:items-start md:gap-x-10">
+        <BrandHeader brand={brand} className="md:col-span-4" />
         <Piece
           piece={brand.pieces[0]}
           sizes="(max-width: 768px) 100vw, 58vw"
@@ -169,6 +174,32 @@ export default function DesignWorkSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const { scrollY } = useScroll();
+
+  // Read off where the heading is on the screen. Only its letters move, so its
+  // own box is an honest reading.
+  const foldHeading = () => {
+    const heading = headingRef.current;
+    if (!heading) return;
+    const at = heading.getBoundingClientRect().top / window.innerHeight;
+    setFold(heading, (HEADING_FOLD[0] - at) / (HEADING_FOLD[0] - HEADING_FOLD[1]));
+  };
+
+  useLayoutEffect(() => {
+    // With less motion the letters are simply open: no scroll does it there.
+    if (prefersReducedMotion) {
+      if (headingRef.current) setFold(headingRef.current, 1);
+      return;
+    }
+    foldHeading();
+    window.addEventListener("resize", foldHeading);
+    return () => window.removeEventListener("resize", foldHeading);
+  }, [prefersReducedMotion]);
+
+  useMotionValueEvent(scrollY, "change", () => {
+    if (!prefersReducedMotion) foldHeading();
+  });
 
   // EACH PICTURE ARRIVES ONCE, as it comes up, and then it is simply there.
   // With less motion nothing is hidden to begin with: the site's calm fade
@@ -196,7 +227,7 @@ export default function DesignWorkSection() {
       id="design"
       aria-labelledby="design-heading"
       className={cn(
-        "relative bg-white px-6 pt-24 pb-16 md:pt-40 md:pb-32",
+        "relative bg-white px-6 pt-24 pb-16 md:pt-16 md:pb-32",
         !prefersReducedMotion &&
           "[&_[data-design-piece]]:translate-y-6 [&_[data-design-piece]]:opacity-0 [&_[data-design-piece]]:transition-[opacity,translate] [&_[data-design-piece]]:duration-700 [&_[data-design-piece]]:ease-out [&_[data-design-piece][data-seen]]:translate-y-0 [&_[data-design-piece][data-seen]]:opacity-100",
       )}
@@ -204,17 +235,28 @@ export default function DesignWorkSection() {
       <div className="mx-auto max-w-[1400px]">
         {/* The one heading on the site in English, and the mark is in it: the
             YE of YES in black, the rest of the line stepped back to grey. Two
-            lines on a phone, where one would not fit at this size. */}
+            lines on a phone, where one would not fit at this size.
+            It folds in a letter at a time as it comes up the screen, the way
+            the heading over the sites does, and unfolds again on the way back
+            down - it follows the scroll, it does not play. */}
         <h2
+          ref={headingRef}
           id="design-heading"
           lang="en"
           dir="ltr"
-          className="text-center font-display text-m-display font-extrabold tracking-tight text-black/30 md:text-[clamp(40px,5.2vw,78px)] md:leading-[1.05]"
+          // The letters are split for the fold, so the line is named whole.
+          aria-label="Yes, that too."
+          className="text-center font-display text-m-display font-extrabold tracking-tight text-black/30 md:text-[clamp(48px,6.4vw,96px)] md:leading-[1.05]"
         >
           <span className="block md:inline">
-            <span className="text-black">YE</span>S,
+            <span className="text-black">
+              <FoldText text="YE" />
+            </span>
+            <FoldText text="S," />
           </span>{" "}
-          <span className="block md:inline">THAT TOO.</span>
+          <span className="block md:inline">
+            <FoldText text="THAT TOO." />
+          </span>
         </h2>
 
         {designWork.map((brand, index) => (

@@ -23,7 +23,7 @@ export interface DesignPiece {
 
 export interface DesignBrand {
   name: string;
-  /** What was made / for what kind of business, on one line. */
+  /** The kind of business / what was made for it, on one line. */
   line: string;
   pieces: DesignPiece[];
   /** A site that goes with the brand, when there is one. */
@@ -36,7 +36,7 @@ const sorozinSite = projects.find((project) => project.slug === "sorozin-chef");
 export const designWork: DesignBrand[] = [
   {
     name: "MAY'S",
-    line: "מיתוג מלא / קונדיטוריה",
+    line: "קונדיטוריה / מיתוג מלא",
     pieces: [
       {
         src: "/images/projects/mays1.webp",
@@ -62,7 +62,7 @@ export const designWork: DesignBrand[] = [
   },
   {
     name: "Sorozin Chef",
-    line: "לוגו, כרטיסי ביקור ודף נחיתה / שף פרטי",
+    line: "שף פרטי / לוגו, כרטיסי ביקור ודף נחיתה",
     pieces: [
       {
         src: "/images/projects/sorozin1.webp",
