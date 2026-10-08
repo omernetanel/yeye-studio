@@ -253,6 +253,21 @@ export default function MaysCase() {
           home page; one column on a phone. */}
       <section className="relative bg-white px-6 pt-48 pb-24 md:pt-64 md:pb-40">
         <GlazeDrips className="fill-mays-pink-deep" variant={2} />
+        {/* WHY THE PIECES ARE THE PIECES THEY ARE, once, over all of them -
+            not a line under each. Every sentence is something that is true of
+            the business: she bakes at home and sells to order, so nothing here
+            was made for a shop front. */}
+        <div className="mx-auto mb-16 max-w-[1400px] md:mb-24">
+          <p className="max-w-[820px] font-display text-m-sub leading-[1.45] font-medium text-black md:text-[30px] md:leading-[1.4]">
+            זו קונדיטוריה ביתית: היא אופה בבית, מוכרת מהבית, והכול לפי הזמנה. אז המותג נבנה למקומות
+            שבהם באמת פוגשים אותה.
+          </p>
+          <p className="mt-6 max-w-[620px] font-body text-m-body text-black/70 md:text-[19px] md:leading-[1.7]">
+            התפריט חי בוואטסאפ ובאינסטגרם, לא על קיר. המדבקות נדבקות על השקיות ועל הקופסאות. ועל כרטיס
+            הביקור יש קוד לאינסטגרם, כדי שמי שנתקל בו בלי להכיר אותה יוכל לראות את האפייה לפני שהוא
+            מזמין.
+          </p>
+        </div>
         <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-6">
           {PIECES.map((piece, index) => (
             <div key={piece.src} className={index % 2 === 0 ? "md:col-span-5" : "md:col-span-7 md:mt-48"}>
