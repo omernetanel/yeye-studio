@@ -66,7 +66,7 @@ export default function SubPageNav({
       {/* Under the bar, in the top padding every sub-page leaves. Absolute, not
           fixed: pinned to the screen it floated over the text once the page
           scrolled under it. */}
-      <div className={bare ? "pointer-events-none fixed inset-x-0 top-[56px] z-30" : "absolute inset-x-0 top-[72px] z-30"}>
+      <div className={bare ? "pointer-events-none fixed inset-x-0 top-[40px] z-30" : "absolute inset-x-0 top-[72px] z-30"}>
         {/* Bare, it stands on the menu's own edge - 24px in from the side of the
             screen, however wide - and not on the page column's. */}
         <div
