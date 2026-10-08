@@ -149,6 +149,7 @@ export default function ProjectsCarousel({
         <ExternalNote
           shown={current.leavesSite || current.hasPage}
           inSite={current.hasPage}
+          href={current.href}
           className="absolute -top-[21px] left-1/2 -translate-x-1/2 whitespace-nowrap text-black/50"
         />
         <Link
