@@ -219,7 +219,7 @@ export default function MaysCase() {
 
       {/* THE LINE, IN THE BRAND'S OWN COLOUR. */}
       <section className="relative bg-linear-to-b from-mays-pink to-mays-pink-deep px-6 pt-48 pb-24 md:pt-64 md:pb-36">
-        <GlazeDrips className="fill-white" />
+        <GlazeDrips className="fill-white" variant={1} />
         <div className="mx-auto max-w-[1100px]">
           {/* No label over the line. It had one - a small grey word, then a
               sticker, then plain type - and none of them earned the place: the
@@ -241,7 +241,7 @@ export default function MaysCase() {
       {/* WHAT IT WAS PRINTED ON. Two columns that do not line up, as on the
           home page; one column on a phone. */}
       <section className="relative bg-white px-6 pt-48 pb-24 md:pt-64 md:pb-40">
-        <GlazeDrips className="fill-mays-pink-deep" />
+        <GlazeDrips className="fill-mays-pink-deep" variant={2} />
         <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-6">
           {PIECES.map((piece, index) => (
             <div key={piece.src} className={index % 2 === 0 ? "md:col-span-5" : "md:col-span-7 md:mt-48"}>
@@ -257,7 +257,7 @@ export default function MaysCase() {
         data-nav-dark="true"
         className="relative bg-black px-6 pt-48 pb-24 text-center text-white md:pt-64 md:pb-32"
       >
-        <GlazeDrips className="fill-white" />
+        <GlazeDrips className="fill-white" variant={3} />
         <h2 className="mx-auto max-w-[900px] font-display text-m-title font-extrabold tracking-tight md:text-[clamp(44px,5.4vw,80px)] md:leading-[1.05]">
           רוצים מותג שמתחיל מהמוצר שלכם?
         </h2>

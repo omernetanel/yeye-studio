@@ -58,16 +58,31 @@ const BEAD = 1.75;
 const BAND = 5;
 const SAGS = [7, 2, 9, 4, 6, 1, 8, 3, 5, 2, 7, 4];
 // The room the longest drip needs, bead included.
-const HEIGHT = 160;
+const HEIGHT = 230;
 // Under this width every other drip is left out, so they do not crowd.
 const NARROW_PX = 640;
 // How short a drip starts, as a share of its length, and where the edge is on
 // the screen (0 top, 1 bottom) when it starts to run and when it has run out.
-const START_AT = 0.3;
-const RUN = [1, 0.45] as const;
+const START_AT = 0.22;
+// It goes on running nearly until the edge has left the top of the screen: the
+// drips smear down the page with the scroll rather than stopping half way.
+const RUN = [1, 0.08] as const;
+// How much further than its listed length a drip runs when it has run out. A
+// phone leaves less room above the words under the edge, so less there.
+const REACH = 1.4;
+const REACH_NARROW = 1.1;
 
-function pathFor(width: number, grown: number) {
-  const drips = width < NARROW_PX ? DRIPS.filter((_, index) => index % 2 === 1) : DRIPS;
+function pathFor(width: number, grown: number, variant: number) {
+  // The same eleven places along the edge, with the runs dealt to them from a
+  // different start for each variant - and every other variant the other way
+  // round - so no two seams hang alike.
+  const dealt = DRIPS.map((drip, index) => {
+    const from = DRIPS[(index * (variant % 2 ? -1 : 1) + variant * 4 + DRIPS.length * 8) % DRIPS.length];
+    return { at: drip.at, neck: from.neck, length: from.length };
+  });
+  const narrow = width < NARROW_PX;
+  const drips = narrow ? dealt.filter((_, index) => index % 2 === variant % 2) : dealt;
+  const reach = narrow ? REACH_NARROW : REACH;
   const n = (value: number) => value.toFixed(1);
   // A pixel above the edge, so no hairline shows between it and the section
   // it hangs from.
@@ -80,7 +95,7 @@ function pathFor(width: number, grown: number) {
     const root = neck * ROOT;
     const bead = neck * BEAD;
     // Never shorter than its own root and bead need to be told apart.
-    const length = Math.max(root + bead * 3, drip.length * (START_AT + (1 - START_AT) * grown));
+    const length = Math.max(root + bead * 3, drip.length * reach * (START_AT + (1 - START_AT) * grown));
     const taper = BAND + (length - bead * 2) * TAPER;
     const beadTop = length - bead * 2.2;
     const beadMid = length - bead;
@@ -102,7 +117,15 @@ function pathFor(width: number, grown: number) {
   return `${d} L0,-1 Z`;
 }
 
-export default function GlazeDrips({ className }: { className?: string }) {
+export default function GlazeDrips({
+  className,
+  variant = 0,
+}: {
+  className?: string;
+  /** Which arrangement of the drips. Each seam on a page takes its own, so
+   *  the long one is not in the same place every time. */
+  variant?: number;
+}) {
   const reduce = usePrefersReducedMotion();
   const svgRef = useRef<SVGSVGElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
@@ -123,7 +146,7 @@ export default function GlazeDrips({ className }: { className?: string }) {
     if (!svg || !path || width <= 0) return;
     const at = svg.getBoundingClientRect().top / window.innerHeight;
     const grown = reduce ? 1 : Math.min(1, Math.max(0, (RUN[0] - at) / (RUN[0] - RUN[1])));
-    path.setAttribute("d", pathFor(width, grown));
+    path.setAttribute("d", pathFor(width, grown, variant));
   };
 
   useLayoutEffect(draw);
