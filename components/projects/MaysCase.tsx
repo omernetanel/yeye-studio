@@ -54,6 +54,10 @@ const PIECES = [
 // Where a folding line's top is on the screen, as a share of its height, while
 // its letters fold in.
 const FOLD = [0.92, 0.5] as const;
+// A phrase that carries its sentence, set a little heavier and in full black:
+// what a reader skimming the page comes away with. The weight the "about" page
+// uses for the same job - medium, not bold.
+const EMPHASIS = "font-medium text-black";
 // The mark in the opening: how much larger it starts, and how far it has
 // settled by the time the page has scrolled this share of a screen.
 const MARK_ZOOM = 0.05;
@@ -217,10 +221,12 @@ export default function MaysCase() {
           </h2>
           <div className="mt-12 grid gap-6 font-body text-m-body text-black/70 md:mt-16 md:grid-cols-2 md:gap-10 md:text-[19px] md:leading-[1.7]">
             <p>
-              MAY&apos;S היא קונדיטוריה חדשה, והסינבון הוא הלב שלה. אז כל המותג נבנה סביבו.
+              MAY&apos;S היא קונדיטוריה חדשה, ו<strong className={EMPHASIS}>הסינבון הוא הלב שלה</strong>.
+              אז כל המותג נבנה סביבו.
             </p>
             <p>
-              הזיגוג הלבן שנוזל על סינבון הוא הדבר הכי אייקוני בו: רואים אותו, ויודעים מיד מה זה. אז
+              הזיגוג הלבן שנוזל על סינבון הוא <strong className={EMPHASIS}>הדבר הכי אייקוני בו</strong>:
+              רואים אותו, ויודעים מיד מה זה. אז
               הוא הפך לסימן של המותג, והאותיות של הלוגו נוזלות בדיוק כמוהו.
             </p>
           </div>
@@ -242,7 +248,8 @@ export default function MaysCase() {
             <FoldWords text="זה באמת ממכר." />
           </h2>
           <p className="mt-10 max-w-[560px] font-body text-m-body text-black/75 md:mt-14 md:text-[19px] md:leading-[1.7]">
-            הסלוגן הגיע מהמוצר עצמו. הסינבון שלה רך, מתוק במידה ומדויק, ואחרי אחד רוצים עוד. לא היה צריך
+            <strong className={EMPHASIS}>הסלוגן הגיע מהמוצר עצמו.</strong> הסינבון שלה רך, מתוק במידה
+            ומדויק, ואחרי אחד רוצים עוד. לא היה צריך
             להמציא כלום.
           </p>
         </div>
@@ -260,6 +267,22 @@ export default function MaysCase() {
             </div>
           ))}
         </div>
+
+        {/* ONE LINE FROM HER, after the work has been seen and before the
+            close - where the studios this page was measured against put
+            theirs: one quote, a name, and what she is to the business.
+            "The owner", not "the founder": it is a small new bakery, and the
+            larger word would have been the page puffing her up.
+            The wording was written with her leave and is hers to approve or
+            change; it says only what happened. */}
+        <figure className="mx-auto mt-24 max-w-[900px] text-center md:mt-40">
+          <blockquote className="font-display text-m-lead leading-[1.35] font-bold tracking-tight text-black md:text-[clamp(32px,3.6vw,52px)] md:leading-[1.25]">
+            &quot;לא ידעתי מה אני רוצה, רק אמרתי לו שאני רוצה ורוד. ופתאום יש לי מותג.&quot;
+          </blockquote>
+          <figcaption className="mt-6 font-display text-m-body text-black/60 md:text-[17px]">
+            מאי, הבעלים של MAY&apos;S
+          </figcaption>
+        </figure>
       </section>
 
       {/* THE CLOSE: back to black, and one thing to press. */}
