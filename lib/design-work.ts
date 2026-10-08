@@ -26,6 +26,8 @@ export interface DesignBrand {
   /** The kind of business / what was made for it, on one line. */
   line: string;
   pieces: DesignPiece[];
+  /** The brand's own page on this site, when it has one: its name links there. */
+  page?: string;
   /** A site that goes with the brand, when there is one. */
   link?: { label: string; href: string };
 }
@@ -37,6 +39,7 @@ export const designWork: DesignBrand[] = [
   {
     name: "MAY'S",
     line: "קונדיטוריה / מיתוג מלא",
+    page: "/projects/mays",
     pieces: [
       {
         src: "/images/projects/mays1.webp",

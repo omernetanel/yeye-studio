@@ -23,6 +23,10 @@
      that comes to. Solid on purpose - letters on a curve can lap over one
      another, and a see-through fill adds up where they do. */
   --color-tape-dim: #bfbfbf;
+  /* MAY'S, on its own page only: the pink of the brand as it is printed on
+     the cards and the menu. The one colour on the site that is not the
+     site's, because the page is about a brand that has one. */
+  --color-mays-pink: #f4b6cc;
 
   --font-display: var(--font-google-sans), Arial, sans-serif;
   --font-body: var(--font-assistant), Arial, sans-serif;
