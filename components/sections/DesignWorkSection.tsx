@@ -350,7 +350,7 @@ export default function DesignWorkSection() {
           interactive={false}
           {...(isMobile
             ? { span: 560, fontSize: 68, curveAmount: 220, speed: 115 }
-            : { fontSize: 62, curveAmount: 200, speed: 72 })}
+            : { fontSize: 62, curveAmount: 200, speed: 80 })}
         />
       </div>
     </section>
