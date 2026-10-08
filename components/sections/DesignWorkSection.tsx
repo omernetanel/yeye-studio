@@ -39,6 +39,19 @@ const DRIFT_PX = 70;
 // its letters fold in: from just inside the bottom edge to past the middle.
 const HEADING_FOLD = [0.95, 0.55] as const;
 
+// The pictures inside their frames. At rest each is 8% larger than its frame,
+// which is the room it has to ride in; it comes in a further 14% larger and
+// settles over the first PIECE_SETTLE of a screen. The ride is 3% of its own
+// height either way, inside that 8%, so the frame never shows an edge.
+const PIECE_REST_SCALE = 1.08;
+const PIECE_ZOOM = 0.14;
+const PIECE_SETTLE = 0.7;
+const PIECE_RIDE_PERCENT = 3;
+
+function clamp01(value: number) {
+  return Math.min(1, Math.max(0, value));
+}
+
 // The order each piece takes in the phone's single column. The desk deals them
 // into two columns (see BrandBlock) and these are what puts them back in the
 // order they were listed.
@@ -46,14 +59,16 @@ const PHONE_ORDER = ["order-1", "order-2", "order-3", "order-4", "order-5", "ord
 
 function Piece({ piece, sizes, className }: { piece: DesignPiece; sizes: string; className?: string }) {
   return (
-    <figure data-design-piece className={className}>
+    // The frame cuts what is inside it: the picture is drawn a little larger
+    // than the frame and moves within it (see movePieces).
+    <figure data-design-piece className={cn("overflow-hidden", className)}>
       <Image
         src={piece.src}
         alt={piece.alt}
         width={piece.width}
         height={piece.height}
         sizes={sizes}
-        className="h-auto w-full"
+        className="h-auto w-full will-change-transform"
       />
     </figure>
   );
@@ -109,12 +124,12 @@ function BrandBlock({ brand, drifts }: { brand: DesignBrand; drifts: boolean }) 
   // ONE PICTURE: the name beside it, the picture wide.
   if (brand.pieces.length === 1) {
     return (
-      <div ref={blockRef} className="md:grid md:grid-cols-12 md:items-start md:gap-x-10">
+      <div ref={blockRef} className="md:grid md:grid-cols-12 md:items-start md:gap-x-6">
         <BrandHeader brand={brand} className="md:col-span-4" />
         <Piece
           piece={brand.pieces[0]}
           sizes="(max-width: 768px) 100vw, 58vw"
-          className="mt-8 md:col-span-8 md:mt-0"
+          className="mt-5 md:col-span-8 md:mt-0"
         />
       </div>
     );
@@ -129,38 +144,38 @@ function BrandBlock({ brand, drifts }: { brand: DesignBrand; drifts: boolean }) 
   );
 
   return (
-    <div ref={blockRef} className="flex flex-col md:grid md:grid-cols-12 md:gap-x-10">
-      <div className="contents md:col-span-5 md:block">
+    <div ref={blockRef} className="flex flex-col md:grid md:grid-cols-12 md:gap-x-6">
+      <div className="contents md:col-span-6 md:block">
         <BrandHeader brand={brand} className="order-0" />
         {columns[0].map(({ piece, index }) => (
           <Piece
             key={piece.src}
             piece={piece}
-            sizes="(max-width: 768px) 90vw, 38vw"
+            sizes="(max-width: 768px) 90vw, 46vw"
             className={cn(
               PHONE_ORDER[index],
-              "mt-8 md:mt-20",
+              "mt-5 md:mt-6",
               // A square is stepped to one side on a phone; a wide one runs
               // the full width.
-              piece.width === piece.height && (index % 2 === 0 ? "w-[86%] self-start" : "w-[86%] self-end"),
+              piece.width === piece.height && (index % 2 === 0 ? "w-[90%] self-start" : "w-[90%] self-end"),
               "md:w-full",
             )}
           />
         ))}
       </div>
       {/* Starts lower than the first column and never lines up with it. */}
-      <div ref={driftRef} className="contents will-change-transform md:col-span-6 md:col-start-7 md:mt-56 md:block">
+      <div ref={driftRef} className="contents will-change-transform md:col-span-6 md:mt-28 md:block">
         {columns[1].map(({ piece, index }, place) => (
           <Piece
             key={piece.src}
             piece={piece}
-            sizes="(max-width: 768px) 90vw, 44vw"
+            sizes="(max-width: 768px) 90vw, 46vw"
             className={cn(
               PHONE_ORDER[index],
-              "mt-8",
-              place > 0 && "md:mt-20",
+              "mt-5",
+              place > 0 && "md:mt-6",
               place === 0 && "md:mt-0",
-              piece.width === piece.height && (index % 2 === 0 ? "w-[86%] self-start" : "w-[86%] self-end"),
+              piece.width === piece.height && (index % 2 === 0 ? "w-[90%] self-start" : "w-[90%] self-end"),
               "md:w-full",
             )}
           />
@@ -197,40 +212,59 @@ export default function DesignWorkSection() {
     return () => window.removeEventListener("resize", foldHeading);
   }, [prefersReducedMotion]);
 
-  useMotionValueEvent(scrollY, "change", () => {
-    if (!prefersReducedMotion) foldHeading();
-  });
-
-  // EACH PICTURE ARRIVES ONCE, as it comes up, and then it is simply there.
-  // With less motion nothing is hidden to begin with: the site's calm fade
-  // takes pictures by itself (CalmMotion).
-  useEffect(() => {
+  // THE PICTURES MOVE WITH THE SCROLL, every one of them, the whole way
+  // through. Standing still in their frames they made this the one stretch of
+  // the page that only went past. Each is drawn larger than its frame: it
+  // settles back to size as the frame comes up the screen, and then rides a
+  // little slower than the frame does, so the frame is a window and not a
+  // print. Nothing is on a clock - stop scrolling and it stops; scroll back
+  // and it undoes itself.
+  const movePieces = () => {
     const section = sectionRef.current;
-    if (!section || prefersReducedMotion) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          entry.target.setAttribute("data-seen", "");
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.15 },
-    );
-    for (const piece of section.querySelectorAll("[data-design-piece]")) observer.observe(piece);
-    return () => observer.disconnect();
+    if (!section) return;
+    const screen = window.innerHeight;
+    const frames = Array.from(section.querySelectorAll<HTMLElement>("[data-design-piece]"));
+    // Every box read before any style is written.
+    const boxes = frames.map((frame) => frame.getBoundingClientRect());
+    frames.forEach((frame, index) => {
+      const picture = frame.firstElementChild as HTMLElement | null;
+      if (!picture) return;
+      const box = boxes[index];
+      if (box.bottom < -screen || box.top > screen * 2) return;
+      const arrived = clamp01((screen - box.top) / (screen * PIECE_SETTLE));
+      const eased = 1 - (1 - arrived) ** 3;
+      const through = Math.min(1, Math.max(-1, (screen / 2 - (box.top + box.height / 2)) / screen));
+      const scale = PIECE_REST_SCALE + PIECE_ZOOM * (1 - eased);
+      picture.style.transform = `translateY(${(through * PIECE_RIDE_PERCENT).toFixed(2)}%) scale(${scale.toFixed(4)})`;
+    });
+  };
+
+  useLayoutEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    if (prefersReducedMotion) {
+      for (const frame of section.querySelectorAll<HTMLElement>("[data-design-piece]")) {
+        (frame.firstElementChild as HTMLElement | null)?.style.removeProperty("transform");
+      }
+      return;
+    }
+    movePieces();
+    window.addEventListener("resize", movePieces);
+    return () => window.removeEventListener("resize", movePieces);
   }, [prefersReducedMotion]);
+
+  useMotionValueEvent(scrollY, "change", () => {
+    if (prefersReducedMotion) return;
+    foldHeading();
+    movePieces();
+  });
 
   return (
     <section
       ref={sectionRef}
       id="design"
       aria-labelledby="design-heading"
-      className={cn(
-        "relative bg-white px-6 pt-24 pb-16 md:pt-16 md:pb-32",
-        !prefersReducedMotion &&
-          "[&_[data-design-piece]]:translate-y-6 [&_[data-design-piece]]:opacity-0 [&_[data-design-piece]]:transition-[opacity,translate] [&_[data-design-piece]]:duration-700 [&_[data-design-piece]]:ease-out [&_[data-design-piece][data-seen]]:translate-y-0 [&_[data-design-piece][data-seen]]:opacity-100",
-      )}
+      className="relative bg-white px-6 pt-24 pb-10 md:pt-16 md:pb-20"
     >
       <div className="mx-auto max-w-[1400px]">
         {/* The one heading on the site in English, and the mark is in it: the
@@ -262,7 +296,7 @@ export default function DesignWorkSection() {
         {/* On a phone the first brand stands as far under the heading as the
             gallery's arrows stand over it, letter to letter. */}
         {designWork.map((brand, index) => (
-          <div key={brand.name} className={index === 0 ? "mt-26 md:mt-28" : "mt-28 md:mt-48"}>
+          <div key={brand.name} className={index === 0 ? "mt-26 md:mt-16" : "mt-16 md:mt-24"}>
             <BrandBlock brand={brand} drifts={!isMobile && !prefersReducedMotion} />
           </div>
         ))}
