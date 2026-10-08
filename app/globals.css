@@ -23,6 +23,13 @@
      that comes to. Solid on purpose - letters on a curve can lap over one
      another, and a see-through fill adds up where they do. */
   --color-tape-dim: #bfbfbf;
+  /* The grey half of a two-tone heading ("YES, THAT TOO."), on white: black at
+     30%, written out as the one solid colour that comes to. Solid for the same
+     reason as the tape above - these headings are set a letter to a box
+     (FoldText), and on an iPhone the see-through black came out far darker
+     than it was set, close enough to the black beside it that the two tones
+     read as one. */
+  --color-heading-soft: #b3b3b3;
   /* MAY'S, on its own page only: the pink of the brand as it is printed on
      the cards and the menu. The one colour on the site that is not the
      site's, because the page is about a brand that has one. */
@@ -732,6 +739,7 @@ body {
    hard to read; those are what change.
    #595959 on white and #d6d6d6 on black both clear the contrast ratio for body
    text with room to spare. */
+[data-a11y-contrast] .text-heading-soft,
 [data-a11y-contrast] .text-black\/30,
 [data-a11y-contrast] .text-black\/35,
 [data-a11y-contrast] .text-black\/40,

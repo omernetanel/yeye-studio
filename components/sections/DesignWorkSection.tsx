@@ -224,7 +224,7 @@ export default function DesignWorkSection() {
           dir="ltr"
           // The letters are split for the fold, so the line is named whole.
           aria-label="Yes, that too."
-          className="text-center font-display text-m-display font-extrabold tracking-tight text-black/30 md:text-[clamp(48px,6.4vw,96px)] md:leading-[1.05]"
+          className="text-center font-display text-m-display font-extrabold tracking-tight text-heading-soft md:text-[clamp(48px,6.4vw,96px)] md:leading-[1.05]"
         >
           <span className="block md:inline">
             <span className="text-black">

@@ -198,7 +198,7 @@ export default function MaysCase() {
             aria-label="אם הסינבון הוא המרכז, הוא יהיה הלוגו."
             className="font-display text-m-display font-extrabold tracking-tight text-black md:text-[clamp(56px,7.4vw,112px)] md:leading-[1.02]"
           >
-            <span data-fold-line className="block text-black/30">
+            <span data-fold-line className="block text-heading-soft">
               <FoldWords text="אם הסינבון הוא המרכז," />
             </span>
             <span data-fold-line className="block">
