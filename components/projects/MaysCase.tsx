@@ -199,7 +199,9 @@ export default function MaysCase() {
       <section className="relative bg-linear-to-b from-mays-pink to-mays-pink-deep px-6 pt-48 pb-24 md:pt-64 md:pb-36">
         <GlazeDrips className="fill-white" />
         <div className="mx-auto max-w-[1100px]">
-          {/* A plain label, medium-small. It was a round white sticker for a              round: it read as a prop stuck on the page, not as part of it. */}          <p className="font-display text-m-sub font-bold text-black/70 md:text-[24px]">הסלוגן</p>
+          {/* A plain label, medium-small. It was a round white sticker for a
+              round: it read as a prop stuck on the page, not as part of it. */}
+          <p className="font-display text-m-sub font-bold text-black/70 md:text-[24px]">הסלוגן</p>
           <h2
             data-fold-line
             aria-label="זה באמת ממכר."
