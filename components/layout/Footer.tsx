@@ -55,6 +55,15 @@ export default function Footer({ light = false }: FooterProps) {
               )}
             </span>
           ))}
+          {/* The studio's Instagram closes the row - the one outward link the
+              footer carries (see NO CONTACT ICONS above: WhatsApp is already in
+              the corner of every screen, Instagram is not). It stood beside the
+              copyright line at the other end, alone; here it is with the rest of
+              what can be pressed. */}
+          <span aria-hidden="true" className={light ? "text-black/25" : "text-white/25"}>
+            ·
+          </span>
+          <InstagramLink size={16} className={light ? "hover:text-black" : "hover:text-white"} />
         </div>
 
         {/* Logo — center */}
@@ -89,17 +98,11 @@ export default function Footer({ light = false }: FooterProps) {
           </span>
         </div>
 
-        {/* The line, and the studio's Instagram beside it - the one outward
-            link the footer carries (see NO CONTACT ICONS above: WhatsApp is
-            already in the corner of every screen, Instagram is not). */}
+        {/* The line. */}
         <div
-          className={cn(
-            "flex items-center gap-4 font-display text-[12px] md:justify-self-end",
-            light ? "text-black/60" : "text-white/60"
-          )}
+          className={cn("font-display text-[12px] md:justify-self-end", light ? "text-black/60" : "text-white/60")}
         >
           <span>© 2026 YEYE Digital. כל הזכויות שמורות.</span>
-          <InstagramLink size={18} className={light ? "hover:text-black" : "hover:text-white"} />
         </div>
       </div>
     </footer>
