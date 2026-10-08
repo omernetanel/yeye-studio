@@ -279,7 +279,7 @@ export default function DesignWorkSection() {
       ref={sectionRef}
       id="design"
       aria-labelledby="design-heading"
-      className="relative bg-white px-6 pt-24 pb-6 text-black md:pt-16 md:pb-10"
+      className="relative bg-white px-6 pt-24 pb-6 md:pt-16 md:pb-4"
     >
       <div className="mx-auto max-w-[1400px]">
         {/* The one heading on the site in English, and the mark is in it: the
@@ -322,13 +322,20 @@ export default function DesignWorkSection() {
           nothing in it. This runs on its own, not with the scroll, and it is
           the one shape down here that is not a rectangle. Full width: it
           steps out of the section's side padding.
+          ON THE DESK IT IS SMALL AND SHALLOW ON PURPOSE. At the size it first
+          came in - type a hundred pixels tall on a curve most of a screen deep
+          - it was the loudest thing down here and stood over the heading of
+          the form it is meant to lead to. It is a passage, in the grey of the
+          heading above, not an event.
           The phone draws it in a narrower box, which is what brings the type
           up to a size worth reading there. */}
-      <div className="-mx-6 mt-16 overflow-x-clip md:mt-24">
+      <div className="-mx-6 mt-16 overflow-x-clip text-black/30 md:mt-14">
         <CurvedLoop
           text={DESIGN_LOOP_TEXT}
           className="font-display font-extrabold tracking-tight"
-          {...(isMobile ? { span: 560, fontSize: 84, curveAmount: 220, speed: 70 } : { speed: 110 })}
+          {...(isMobile
+            ? { span: 560, fontSize: 84, curveAmount: 220, speed: 70 }
+            : { fontSize: 52, curveAmount: 200, speed: 80 })}
         />
       </div>
     </section>
