@@ -327,14 +327,16 @@ export default function DesignWorkSection() {
           - it was the loudest thing down here and stood over the heading of
           the form it is meant to lead to. It is a passage, not an event.
           A BLACK TAPE WITH THE LINE ON IT: the mark and the stars in full
-          white, the rest of
-          the line dimmed - the heading's own emphasis, turned over for a dark
+          white, the rest of the line in a SOLID grey - never a see-through
+          white: on a curve the letters lap over one another, and where two
+          see-through shapes cross they add up, so the dimmed type looked
+          printed twice on a phone. It is the heading's own emphasis, turned over for a dark
           ground. The mark in grey read as switched off and broke YEP in two.
           All in grey on white it was faint; a straight black band would
           have put a rectangle where the curve was chosen to avoid one.
           The phone draws it in a narrower box, which is what brings the type
           up to a size worth reading there. */}
-      <div className="-mx-6 mt-16 overflow-x-clip text-white/75 md:mt-24">
+      <div className="-mx-6 mt-16 overflow-x-clip text-neutral-400 md:mt-24">
         <CurvedLoop
           text={DESIGN_LOOP_TEXT}
           highlight={DESIGN_LOOP_MARKS}
@@ -345,7 +347,7 @@ export default function DesignWorkSection() {
           // and a line that can be dragged is a control.
           interactive={false}
           {...(isMobile
-            ? { span: 560, fontSize: 84, curveAmount: 220, speed: 70 }
+            ? { span: 560, fontSize: 84, curveAmount: 220, speed: 130 }
             : { fontSize: 62, curveAmount: 200, speed: 80 })}
         />
       </div>
