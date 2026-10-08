@@ -24,3 +24,11 @@
   fill: currentColor;
   text-transform: uppercase;
 }
+
+/* Not draggable: no hand over it, and the pointer goes straight through to
+   the page, so a touch that starts on it scrolls like any other. */
+.curved-loop[data-fixed] {
+  cursor: auto;
+  touch-action: auto;
+  pointer-events: none;
+}

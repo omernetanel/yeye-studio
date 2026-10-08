@@ -184,6 +184,7 @@ export default function CurvedLoop({
       ref={wrapperRef}
       aria-hidden="true"
       className={cn("curved-loop", spacing <= 0 && "invisible")}
+      data-fixed={interactive ? undefined : ""}
       data-held={held ? "" : undefined}
       onPointerDown={down}
       onPointerMove={move}

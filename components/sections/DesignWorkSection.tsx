@@ -333,6 +333,9 @@ export default function DesignWorkSection() {
         <CurvedLoop
           text={DESIGN_LOOP_TEXT}
           className="font-display font-extrabold tracking-tight"
+          // Not to be taken hold of: it is a line running in the background,
+          // and a line that can be dragged is a control.
+          interactive={false}
           {...(isMobile
             ? { span: 560, fontSize: 84, curveAmount: 220, speed: 70 }
             : { fontSize: 62, curveAmount: 200, speed: 80 })}
