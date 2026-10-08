@@ -11,6 +11,7 @@ import ServicesSection from "@/components/sections/ServicesSection";
 import ContactStage from "@/components/sections/ContactStage";
 import AboutSection from "@/components/sections/AboutSection";
 import ProjectsSection from "@/components/sections/ProjectsSection";
+import DesignWorkSection from "@/components/sections/DesignWorkSection";
 import CTASection from "@/components/sections/CTASection";
 import StructuredData from "@/components/seo/StructuredData";
 
@@ -68,6 +69,9 @@ export default async function Home() {
               white room it ends in hands to the white of the work. */}
           <ContactStage />
           <ProjectsSection />
+          {/* The work that is not a website. Readers said the page simply
+              stopped after the gallery; this is what it runs on into. */}
+          <DesignWorkSection />
           <CTASection />
           <Footer light />
         </HomeSwitch>

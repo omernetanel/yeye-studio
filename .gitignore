@@ -50,3 +50,8 @@ _shot.mjs
 /public/videos/herobg.mp4
 /public/images/logo-master.png
 /public/videos/open_space.mp4
+
+# The design work shown on the site: only the WebP files it serves are
+# committed. The PSDs and the PNG exports they came from stay on disk.
+/public/images/projects/*.psd
+/public/images/projects/*.png

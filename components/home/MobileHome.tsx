@@ -6,6 +6,7 @@ import MobileServices from "@/components/sections/mobile/MobileServices";
 import ContactStage from "@/components/sections/ContactStage";
 import MobileAbout from "@/components/sections/mobile/MobileAbout";
 import MobileProjects from "@/components/sections/mobile/MobileProjects";
+import DesignWorkSection from "@/components/sections/DesignWorkSection";
 import CTASection from "@/components/sections/CTASection";
 
 /**
@@ -31,6 +32,7 @@ export default function MobileHome() {
           app/page.tsx. */}
       <ContactStage />
       <MobileProjects />
+      <DesignWorkSection />
       <CTASection />
       <Footer light />
     </>
