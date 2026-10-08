@@ -347,7 +347,7 @@ export default function DesignWorkSection() {
           // and a line that can be dragged is a control.
           interactive={false}
           {...(isMobile
-            ? { span: 560, fontSize: 84, curveAmount: 220, speed: 130 }
+            ? { span: 560, fontSize: 68, curveAmount: 220, speed: 130 }
             : { fontSize: 62, curveAmount: 200, speed: 80 })}
         />
       </div>
