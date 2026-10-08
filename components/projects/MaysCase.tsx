@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { Fragment, useLayoutEffect, useRef } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
+import Link from "next/link";
+import ArrowIcon from "@/components/ui/ArrowIcon";
 import Button from "@/components/ui/Button";
 import FoldText, { setFold } from "@/components/ui/FoldText";
 import GlazeDrips from "@/components/ui/GlazeDrips";
@@ -34,7 +36,6 @@ const INSTAGRAM = "https://www.instagram.com/mays_cinnabon/";
 
 const PIECES = [
   {
-    label: "כרטיסי ביקור ומדבקות",
     src: "/images/projects/mays2.webp",
     alt: "כרטיסי ביקור וגיליון מדבקות של MAY'S",
     width: 1254,
@@ -43,7 +44,6 @@ const PIECES = [
   // THE PACKAGING GOES HERE once its 3D model exists, and after it whatever
   // else is made: the brand sheet, the posts, the adverts.
   {
-    label: "פוסטר ותפריט",
     src: "/images/projects/mays3.webp",
     alt: "פוסטר ותפריט של MAY'S",
     width: 1448,
@@ -241,7 +241,8 @@ export default function MaysCase() {
         </div>
       </section>
 
-      {/* WHAT IT WAS PRINTED ON. Two columns that do not line up, as on the
+      {/* WHAT IT WAS PRINTED ON, WITH NOTHING WRITTEN UNDER IT - what each
+          picture shows is its alt. Two columns that do not line up, as on the
           home page; one column on a phone. */}
       <section className="relative bg-white px-6 pt-48 pb-24 md:pt-64 md:pb-40">
         <GlazeDrips className="fill-mays-pink-deep" variant={2} />
@@ -249,7 +250,6 @@ export default function MaysCase() {
           {PIECES.map((piece, index) => (
             <div key={piece.src} className={index % 2 === 0 ? "md:col-span-5" : "md:col-span-7 md:mt-48"}>
               <ScrollPiece piece={piece} sizes="(max-width: 768px) 100vw, 55vw" />
-              <p className="mt-3 font-display text-m-small text-black/60">{piece.label}</p>
             </div>
           ))}
         </div>
@@ -271,6 +271,7 @@ export default function MaysCase() {
             בואו נדבר
           </Button>
         </div>
+{/* And a way on for a reader who is not ready to talk: back to the rest            of the work. Quiet, under the button, so it does not compete with            it. When another brand has a page, this leads there instead. */}        <p className="mt-8">          <Link            href="/#projects"            className="inline-flex items-center gap-2 font-display text-m-body text-white/70 underline-offset-4 transition-colors hover:text-white hover:underline"          >            לעבודות נוספות            <ArrowIcon />          </Link>        </p>
       </section>
     </div>
   );
