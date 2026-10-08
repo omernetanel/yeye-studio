@@ -123,7 +123,14 @@ export default function MaysCase() {
           it would be a ghost. */}
       <section
         data-nav-dark="true"
-        className="relative overflow-hidden bg-black px-6 pt-32 pb-16 text-white md:pt-24 md:pb-24"
+        // ON A PHONE THE SEAM SITS AT 78% OF THE FIRST SCREEN, whatever the
+        // phone: the black holds the mark and its two lines in its middle, and
+        // the last fifth of the screen is white with the icing running into
+        // it. Sized by its content, the black ended wherever it ended, and the
+        // first words of the next section showed half folded at the foot of
+        // the screen, like something that had failed to load. They start just
+        // under the fold now, and the drips are what says there is more.
+        className="relative flex min-h-[78svh] flex-col justify-center overflow-hidden bg-black px-6 pt-28 pb-12 text-white md:block md:min-h-0 md:pt-24 md:pb-24"
       >
         <h1 className="sr-only">MAY&apos;S</h1>
         <div ref={markRef} className="mx-auto w-[78%] max-w-[640px] will-change-transform md:max-w-[min(640px,78svh)]">
