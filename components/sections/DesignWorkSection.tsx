@@ -135,8 +135,8 @@ function BrandBlock({ brand, drifts }: { brand: DesignBrand; drifts: boolean }) 
         <BrandHeader brand={brand} className="md:col-span-4" />
         <Piece
           piece={brand.pieces[0]}
-          sizes="(max-width: 768px) 100vw, 58vw"
-          className="mt-5 md:col-span-8 md:mt-0"
+          sizes="(max-width: 768px) 100vw, 52vw"
+          className="mt-5 md:col-span-7 md:mt-0"
         />
       </div>
     );
