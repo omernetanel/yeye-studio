@@ -326,16 +326,18 @@ export default function DesignWorkSection() {
           came in - type a hundred pixels tall on a curve most of a screen deep
           - it was the loudest thing down here and stood over the heading of
           the form it is meant to lead to. It is a passage, not an event.
-          A BLACK TAPE WITH THE LINE IN WHITE ON IT, the mark stepped back to
-          grey. All in grey on white it was faint; a straight black band would
+          A BLACK TAPE WITH THE LINE ON IT: the mark in full white, the rest of
+          the line dimmed - the heading's own emphasis, turned over for a dark
+          ground. The mark in grey read as switched off and broke YEP in two.
+          All in grey on white it was faint; a straight black band would
           have put a rectangle where the curve was chosen to avoid one.
           The phone draws it in a narrower box, which is what brings the type
           up to a size worth reading there. */}
-      <div className="-mx-6 mt-16 overflow-x-clip text-white md:mt-14">
+      <div className="-mx-6 mt-16 overflow-x-clip text-white/55 md:mt-24">
         <CurvedLoop
           text={DESIGN_LOOP_TEXT}
           highlight={DESIGN_LOOP_MARK}
-          highlightClassName="fill-white/45"
+          highlightClassName="fill-white"
           ribbonClassName="stroke-black"
           className="font-display font-extrabold [word-spacing:0.12em]"
           // Not to be taken hold of: it is a line running in the background,

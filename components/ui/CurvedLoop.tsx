@@ -69,7 +69,7 @@ const DESCENT = 0.3;
 // middle of a capital letter is above the baseline; and how far the tape
 // reaches from that middle - half its width and a tenth more, because it is
 // measured across the curve and the curve is not level at its ends.
-const RIBBON_WIDTH = 1.7;
+const RIBBON_WIDTH = 1.38;
 const CAP_CENTRE = 0.36;
 const RIBBON_REACH = (RIBBON_WIDTH / 2) * 1.1;
 
