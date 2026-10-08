@@ -28,7 +28,8 @@ export default function MaysPage() {
   return (
     <main id="main" className="relative min-h-screen bg-white">
       <Navbar />
-      <SubPageNav />
+      {/* No bar: the page is black from the very top. */}
+      <SubPageNav bare />
       <MaysCase />
       {/* The dark footer: the page closes on black. */}
       <div className="bg-black">

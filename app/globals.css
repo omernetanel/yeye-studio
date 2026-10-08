@@ -27,6 +27,9 @@
      the cards and the menu. The one colour on the site that is not the
      site's, because the page is about a brand that has one. */
   --color-mays-pink: #f4b6cc;
+  /* A little deeper, for the foot of the same section: the pink runs from the
+     one to the other, and what drips off its lower edge is this one. */
+  --color-mays-pink-deep: #ee9dbb;
 
   --font-display: var(--font-google-sans), Arial, sans-serif;
   --font-body: var(--font-assistant), Arial, sans-serif;

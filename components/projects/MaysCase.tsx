@@ -116,26 +116,30 @@ export default function MaysCase() {
   });
 
   return (
-    // pt: the room every sub-page leaves at its head for the bar and "back".
-    <div ref={rootRef} className="pt-[112px] md:pt-[120px]">
+    // No room left at the head: this page has no bar (SubPageNav bare), and its
+    // black opening runs to the very top of the screen.
+    <div ref={rootRef}>
       {/* THE MARK, ON BLACK. It is cream, and on the white of the other pages
           it would be a ghost. */}
-      <section className="relative overflow-hidden bg-black px-6 pt-20 pb-16 text-white md:pt-28 md:pb-20">
+      <section
+        data-nav-dark="true"
+        className="relative overflow-hidden bg-black px-6 pt-32 pb-16 text-white md:pt-36 md:pb-20"
+      >
         <h1 className="sr-only">MAY&apos;S</h1>
-        <div ref={markRef} className="mx-auto w-full max-w-[1100px] will-change-transform">
+        <div ref={markRef} className="mx-auto w-[78%] max-w-[640px] will-change-transform">
           <Image
             src="/images/projects/mayslogo.webp"
             alt="הלוגו של MAY'S: אותיות שזיגוג נוזל מהן"
             width={2400}
             height={1412}
             priority
-            sizes="(max-width: 1100px) 90vw, 1100px"
+            sizes="(max-width: 820px) 78vw, 640px"
             className="h-auto w-full"
           />
         </div>
 
         {/* Three plain facts, the way a studio heads a piece of work. */}
-        <dl className="mx-auto mt-16 grid max-w-[1100px] gap-8 font-display md:mt-24 md:grid-cols-3 md:gap-6">
+        <dl className="mx-auto mt-14 grid max-w-[1100px] gap-8 font-display md:mt-20 md:grid-cols-3 md:gap-6">
           <div>
             <dt className="text-m-small text-white/55">העסק</dt>
             <dd className="mt-1 text-m-sub font-bold">קונדיטוריה</dd>
@@ -181,26 +185,30 @@ export default function MaysCase() {
           </h2>
           <div className="mt-12 grid gap-6 font-body text-m-body text-black/70 md:mt-16 md:grid-cols-2 md:gap-10 md:text-[19px] md:leading-[1.7]">
             <p>
-              MAY&apos;S היא קונדיטוריה חדשה, והסינבון הוא הלב שלה. קיבלתי יד חופשית, ובניתי לה מותג שלם
-              מאפס.
+              MAY&apos;S היא קונדיטוריה חדשה, והסינבון הוא הלב שלה. אז כל המותג נבנה סביבו.
             </p>
             <p>
-              הזיגוג הוא הסימן של הסינבון, אז הוא הפך לסימן של המותג: האותיות של הלוגו נוזלות בדיוק
-              כמוהו.
+              הזיגוג הלבן שנוזל על סינבון הוא הדבר הכי מזוהה איתו: רואים אותו, ויודעים מיד מה זה. אז
+              הוא הפך לסימן של המותג, והאותיות של הלוגו נוזלות בדיוק כמוהו.
             </p>
           </div>
         </div>
       </section>
 
       {/* THE LINE, IN THE BRAND'S OWN COLOUR. */}
-      <section className="relative bg-mays-pink px-6 pt-48 pb-24 md:pt-64 md:pb-36">
+      <section className="relative bg-linear-to-b from-mays-pink to-mays-pink-deep px-6 pt-48 pb-24 md:pt-64 md:pb-36">
         <GlazeDrips className="fill-white" />
         <div className="mx-auto max-w-[1100px]">
-          <p className="font-display text-m-small font-bold text-black/60">הסלוגן</p>
+          {/* A sticker, like the ones that were printed for her: round, white,
+              stuck on a little crooked. As a small grey label over the line
+              it was the one timid thing on the loudest part of the page. */}
+          <p className="flex h-24 w-24 -rotate-12 items-center justify-center rounded-full bg-white font-display text-m-body font-extrabold text-black md:h-32 md:w-32 md:text-[22px]">
+            הסלוגן
+          </p>
           <h2
             data-fold-line
             aria-label="זה באמת ממכר."
-            className="mt-3 font-display text-[19vw] leading-[0.95] font-extrabold tracking-tight text-black md:text-[clamp(96px,13vw,200px)]"
+            className="mt-6 font-display text-[19vw] leading-[0.95] font-extrabold tracking-tight text-black md:text-[clamp(96px,13vw,200px)]"
           >
             <FoldWords text="זה באמת ממכר." />
           </h2>
@@ -214,7 +222,7 @@ export default function MaysCase() {
       {/* WHAT IT WAS PRINTED ON. Two columns that do not line up, as on the
           home page; one column on a phone. */}
       <section className="relative bg-white px-6 pt-48 pb-24 md:pt-64 md:pb-40">
-        <GlazeDrips className="fill-mays-pink" />
+        <GlazeDrips className="fill-mays-pink-deep" />
         <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-6">
           {PIECES.map((piece, index) => (
             <div key={piece.src} className={index % 2 === 0 ? "md:col-span-5" : "md:col-span-7 md:mt-48"}>
@@ -226,7 +234,10 @@ export default function MaysCase() {
       </section>
 
       {/* THE CLOSE: back to black, and one thing to press. */}
-      <section className="relative bg-black px-6 pt-48 pb-24 text-center text-white md:pt-64 md:pb-32">
+      <section
+        data-nav-dark="true"
+        className="relative bg-black px-6 pt-48 pb-24 text-center text-white md:pt-64 md:pb-32"
+      >
         <GlazeDrips className="fill-white" />
         <h2 className="mx-auto max-w-[900px] font-display text-m-title font-extrabold tracking-tight md:text-[clamp(44px,5.4vw,80px)] md:leading-[1.05]">
           רוצים מותג שמתחיל מהמוצר שלכם?
