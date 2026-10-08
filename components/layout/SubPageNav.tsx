@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { hasInSiteHistory, subscribeInSiteHistory } from "@/lib/nav/in-site-history";
 import NavMenu from "@/components/layout/NavMenu";
 import { useOverDark } from "@/lib/use-over-dark";
+import { cn } from "@/lib/utils";
 
 /**
  * The header of a sub-page: the site's own menu, the same button and panel as
@@ -66,7 +67,12 @@ export default function SubPageNav({
           fixed: pinned to the screen it floated over the text once the page
           scrolled under it. */}
       <div className={bare ? "pointer-events-none fixed inset-x-0 top-[56px] z-30" : "absolute inset-x-0 top-[72px] z-30"}>
-        <div ref={backRef} className="mx-auto flex max-w-[1400px] justify-start px-6 pt-4 [&>*]:pointer-events-auto">
+        {/* Bare, it stands on the menu's own edge - 24px in from the side of the
+            screen, however wide - and not on the page column's. */}
+        <div
+          ref={backRef}
+          className={cn("flex justify-start px-6 pt-4 [&>*]:pointer-events-auto", !bare && "mx-auto max-w-[1400px]")}
+        >
           {canGoBack ? (
             <button type="button" onClick={() => router.back()} className={backClass}>
               <span>חזור</span>
