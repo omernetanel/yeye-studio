@@ -8,7 +8,7 @@ import ArrowIcon from "@/components/ui/ArrowIcon";
 import CurvedLoop from "@/components/ui/CurvedLoop";
 import ExternalNote from "@/components/ui/ExternalNote";
 import FoldText, { setFold } from "@/components/ui/FoldText";
-import { DESIGN_LOOP_TEXT } from "@/lib/content";
+import { DESIGN_LOOP_MARK, DESIGN_LOOP_TEXT } from "@/lib/content";
 import { designWork, type DesignBrand, type DesignPiece } from "@/lib/design-work";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
@@ -332,7 +332,9 @@ export default function DesignWorkSection() {
       <div className="-mx-6 mt-16 overflow-x-clip text-black/30 md:mt-14">
         <CurvedLoop
           text={DESIGN_LOOP_TEXT}
-          className="font-display font-extrabold tracking-tight"
+          highlight={DESIGN_LOOP_MARK}
+          highlightClassName="fill-black"
+          className="font-display font-extrabold [word-spacing:0.22em]"
           // Not to be taken hold of: it is a line running in the background,
           // and a line that can be dragged is a control.
           interactive={false}

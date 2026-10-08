@@ -78,7 +78,11 @@ export const aboutFacts = [
   },
 ];
 
-// The line that runs on a curve between the design work and the closing form:
-// what is made here, said once more in passing. English, like the heading over
-// that section, and each word followed by the mark that joins the loop.
-export const DESIGN_LOOP_TEXT = "Websites ✦ Branding ✦ Online stores ✦ Dashboards ✦ Landing pages ✦";
+// The line that runs on a curve between the design work and the closing form.
+// It answers the heading over that section ("YES, THAT TOO."): a list of the
+// services was the most expected thing a line like this could say, and said
+// again what the services section already had. English, like that heading,
+// and each phrase followed by the star that joins the loop.
+export const DESIGN_LOOP_TEXT = "YEP, DESIGNED IT ✦ YEP, BUILT IT ✦ YEP, BRANDED IT ✦ YEP, SHIPPED IT ✦";
+// The mark, wherever the line says it: set apart in black, as in the heading.
+export const DESIGN_LOOP_MARK = "YE";

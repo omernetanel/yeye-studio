@@ -48,6 +48,10 @@ interface CurvedLoopProps {
   fontSize?: number;
   /** On the type: its font, weight and colour. */
   className?: string;
+  /** A run of letters to set apart wherever it comes up in the line... */
+  highlight?: string;
+  /** ...and the class that does it, a fill for one. */
+  highlightClassName?: string;
 }
 
 // Their path, in proportion: it starts and ends this far outside the box, and
@@ -68,10 +72,15 @@ export default function CurvedLoop({
   span = 1440,
   fontSize = 96,
   className,
+  highlight,
+  highlightClassName,
 }: CurvedLoopProps) {
   const reduce = usePrefersReducedMotion();
   // One trailing no-break space, so the join between two copies is a gap.
   const unit = `${text.trim()} `;
+  // The line cut at every highlighted run, the runs kept as pieces of their
+  // own. A plain split, not a pattern: the run is letters, taken as written.
+  const parts = highlight ? unit.split(highlight).flatMap((piece, index) => (index ? [highlight, piece] : [piece])) : [unit];
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<SVGTextElement>(null);
@@ -201,7 +210,17 @@ export default function CurvedLoop({
         </defs>
         <text xmlSpace="preserve" className={className}>
           <textPath ref={textPathRef} href={`#${pathId}`} xmlSpace="preserve">
-            {unit.repeat(copies)}
+            {Array.from({ length: copies }, (_, copy) =>
+              parts.map((part, index) =>
+                part === highlight ? (
+                  <tspan key={`${copy}-${index}`} className={highlightClassName}>
+                    {part}
+                  </tspan>
+                ) : (
+                  part
+                ),
+              ),
+            )}
           </textPath>
         </text>
       </svg>
