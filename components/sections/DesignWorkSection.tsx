@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import ArrowIcon from "@/components/ui/ArrowIcon";
+import CurvedLoop from "@/components/ui/CurvedLoop";
 import ExternalNote from "@/components/ui/ExternalNote";
 import FoldText, { setFold } from "@/components/ui/FoldText";
+import { DESIGN_LOOP_TEXT } from "@/lib/content";
 import { designWork, type DesignBrand, type DesignPiece } from "@/lib/design-work";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
@@ -277,7 +279,7 @@ export default function DesignWorkSection() {
       ref={sectionRef}
       id="design"
       aria-labelledby="design-heading"
-      className="relative bg-white px-6 pt-24 pb-10 md:pt-16 md:pb-20"
+      className="relative bg-white px-6 pt-24 pb-6 text-black md:pt-16 md:pb-10"
     >
       <div className="mx-auto max-w-[1400px]">
         {/* The one heading on the site in English, and the mark is in it: the
@@ -313,6 +315,21 @@ export default function DesignWorkSection() {
             <BrandBlock brand={brand} drifts={!isMobile && !prefersReducedMotion} />
           </div>
         ))}
+      </div>
+
+      {/* BETWEEN THE WORK AND THE FORM. The section used to end on a picture,
+          then white, then the form starting from nothing - a hard cut with
+          nothing in it. This runs on its own, not with the scroll, and it is
+          the one shape down here that is not a rectangle. Full width: it
+          steps out of the section's side padding.
+          The phone draws it in a narrower box, which is what brings the type
+          up to a size worth reading there. */}
+      <div className="-mx-6 mt-16 overflow-x-clip md:mt-24">
+        <CurvedLoop
+          text={DESIGN_LOOP_TEXT}
+          className="font-display font-extrabold tracking-tight"
+          {...(isMobile ? { span: 560, fontSize: 84, curveAmount: 220, speed: 70 } : { speed: 110 })}
+        />
       </div>
     </section>
   );

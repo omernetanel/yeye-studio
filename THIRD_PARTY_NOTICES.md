@@ -33,6 +33,10 @@ React Bits:
   uncontrolled mode, built-in label, disabled state and radius option removed,
   the motion functions taken from framer-motion, reduced motion left to the
   site's own setting, and every colour passed in rather than written in.
+- `components/ui/CurvedLoop.tsx` and `CurvedLoop.css`, from **CurvedLoop** —
+  ported to TypeScript; the drawing sized from its own type and curve instead
+  of a fixed box, the speed made per second, the per-frame React state
+  removed, and it rests off screen and stands still with reduced motion.
 
 Source: https://github.com/DavidHDev/react-bits
 

@@ -1,0 +1,26 @@
+/* The colour is the caller's (currentColor) and so is the font - both arrive
+   on the text's own class. What is decided here is only what the loop needs to
+   be a loop. */
+.curved-loop {
+  width: 100%;
+  /* The page is right to left; a line of Latin type on a path is not. */
+  direction: ltr;
+  /* A sideways drag is the loop's; an up-and-down one still scrolls the page. */
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  cursor: grab;
+}
+
+.curved-loop[data-held] {
+  cursor: grabbing;
+}
+
+.curved-loop__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  fill: currentColor;
+  text-transform: uppercase;
+}

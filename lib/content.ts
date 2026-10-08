@@ -77,3 +77,8 @@ export const aboutFacts = [
       "כל פרויקט מתחיל מהעסק, מהמטרה ומהבעיה שצריך לפתור, ורק משם מגיעים לעיצוב.",
   },
 ];
+
+// The line that runs on a curve between the design work and the closing form:
+// what is made here, said once more in passing. English, like the heading over
+// that section, and each word followed by the mark that joins the loop.
+export const DESIGN_LOOP_TEXT = "Websites ✦ Branding ✦ Online stores ✦ Dashboards ✦ Landing pages ✦";
