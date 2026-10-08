@@ -199,16 +199,11 @@ export default function MaysCase() {
       <section className="relative bg-linear-to-b from-mays-pink to-mays-pink-deep px-6 pt-48 pb-24 md:pt-64 md:pb-36">
         <GlazeDrips className="fill-white" />
         <div className="mx-auto max-w-[1100px]">
-          {/* A sticker, like the ones that were printed for her: round, white,
-              stuck on a little crooked. As a small grey label over the line
-              it was the one timid thing on the loudest part of the page. */}
-          <p className="flex h-24 w-24 -rotate-12 items-center justify-center rounded-full bg-white font-display text-m-body font-extrabold text-black md:h-32 md:w-32 md:text-[22px]">
-            הסלוגן
-          </p>
+          {/* A plain label, medium-small. It was a round white sticker for a              round: it read as a prop stuck on the page, not as part of it. */}          <p className="font-display text-m-sub font-bold text-black/70 md:text-[24px]">הסלוגן</p>
           <h2
             data-fold-line
             aria-label="זה באמת ממכר."
-            className="mt-6 font-display text-[19vw] leading-[0.95] font-extrabold tracking-tight text-black md:text-[clamp(96px,13vw,200px)]"
+            className="mt-3 font-display text-[19vw] leading-[0.95] font-extrabold tracking-tight text-black md:text-[clamp(96px,13vw,200px)]"
           >
             <FoldWords text="זה באמת ממכר." />
           </h2>
