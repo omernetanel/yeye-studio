@@ -39,14 +39,14 @@ const DRIFT_PX = 70;
 // its letters fold in: from just inside the bottom edge to past the middle.
 const HEADING_FOLD = [0.95, 0.55] as const;
 
-// The pictures inside their frames. At rest each is 8% larger than its frame,
-// which is the room it has to ride in; it comes in a further 14% larger and
-// settles over the first PIECE_SETTLE of a screen. The ride is 3% of its own
-// height either way, inside that 8%, so the frame never shows an edge.
-const PIECE_REST_SCALE = 1.08;
-const PIECE_ZOOM = 0.14;
+// The pictures against their places. Each comes in at PIECE_FROM_SCALE of its
+// size and reaches it over the first PIECE_SETTLE of a screen. The ride is how
+// far, in px, each is carried ahead of the scroll while it crosses the screen:
+// alternating, and the difference between the two is less than the gap
+// between neighbours, so they never touch.
+const PIECE_FROM_SCALE = 0.92;
 const PIECE_SETTLE = 0.7;
-const PIECE_RIDE_PERCENT = 3;
+const PIECE_RIDE_PX = [8, 18];
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -59,9 +59,11 @@ const PHONE_ORDER = ["order-1", "order-2", "order-3", "order-4", "order-5", "ord
 
 function Piece({ piece, sizes, className }: { piece: DesignPiece; sizes: string; className?: string }) {
   return (
-    // The frame cuts what is inside it: the picture is drawn a little larger
-    // than the frame and moves within it (see movePieces).
-    <figure data-design-piece className={cn("overflow-hidden", className)}>
+    // The figure is the place the picture stands in, and it is what is
+    // measured; the picture moves against it (see movePieces). NOT CUT BY IT:
+    // a frame with the picture drawn larger inside cropped the edges off, and
+    // these are pictures of whole things - a sheet of stickers, two cards.
+    <figure data-design-piece className={className}>
       <Image
         src={piece.src}
         alt={piece.alt}
@@ -214,10 +216,10 @@ export default function DesignWorkSection() {
 
   // THE PICTURES MOVE WITH THE SCROLL, every one of them, the whole way
   // through. Standing still in their frames they made this the one stretch of
-  // the page that only went past. Each is drawn larger than its frame: it
-  // settles back to size as the frame comes up the screen, and then rides a
-  // little slower than the frame does, so the frame is a window and not a
-  // print. Nothing is on a clock - stop scrolling and it stops; scroll back
+  // the page that only went past. Each comes up a little small and faint and
+  // grows to its size as its place comes up the screen, and then rides a
+  // little ahead of the scroll, each by its own amount, so no two pass at the
+  // same pace. Nothing is on a clock - stop scrolling and it stops; scroll back
   // and it undoes itself.
   const movePieces = () => {
     const section = sectionRef.current;
@@ -234,8 +236,10 @@ export default function DesignWorkSection() {
       const arrived = clamp01((screen - box.top) / (screen * PIECE_SETTLE));
       const eased = 1 - (1 - arrived) ** 3;
       const through = Math.min(1, Math.max(-1, (screen / 2 - (box.top + box.height / 2)) / screen));
-      const scale = PIECE_REST_SCALE + PIECE_ZOOM * (1 - eased);
-      picture.style.transform = `translateY(${(through * PIECE_RIDE_PERCENT).toFixed(2)}%) scale(${scale.toFixed(4)})`;
+      const scale = PIECE_FROM_SCALE + (1 - PIECE_FROM_SCALE) * eased;
+      const ride = -through * PIECE_RIDE_PX[index % PIECE_RIDE_PX.length];
+      picture.style.opacity = eased.toFixed(3);
+      picture.style.transform = `translateY(${ride.toFixed(1)}px) scale(${scale.toFixed(4)})`;
     });
   };
 
@@ -244,7 +248,9 @@ export default function DesignWorkSection() {
     if (!section) return;
     if (prefersReducedMotion) {
       for (const frame of section.querySelectorAll<HTMLElement>("[data-design-piece]")) {
-        (frame.firstElementChild as HTMLElement | null)?.style.removeProperty("transform");
+        const picture = frame.firstElementChild as HTMLElement | null;
+        picture?.style.removeProperty("transform");
+        picture?.style.removeProperty("opacity");
       }
       return;
     }
