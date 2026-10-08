@@ -220,7 +220,7 @@ export default function MaysCase() {
               MAY&apos;S היא קונדיטוריה חדשה, והסינבון הוא הלב שלה. אז כל המותג נבנה סביבו.
             </p>
             <p>
-              הזיגוג הלבן שנוזל על סינבון הוא הדבר הכי מזוהה איתו: רואים אותו, ויודעים מיד מה זה. אז
+              הזיגוג הלבן שנוזל על סינבון הוא הדבר הכי אייקוני בו: רואים אותו, ויודעים מיד מה זה. אז
               הוא הפך לסימן של המותג, והאותיות של הלוגו נוזלות בדיוק כמוהו.
             </p>
           </div>
@@ -253,17 +253,6 @@ export default function MaysCase() {
           home page; one column on a phone. */}
       <section className="relative bg-white px-6 pt-48 pb-24 md:pt-64 md:pb-40">
         <GlazeDrips className="fill-mays-pink-deep" variant={2} />
-        {/* WHERE THE PIECES ARE MET, in one sentence over all of them - not a
-            line under each. It says where the brand is used and nothing about
-            how or where she works: that she bakes and sells from home was
-            written here for a round and taken out, as hers to tell and not
-            this page's. */}
-        <p className="mx-auto mb-16 max-w-[1400px] md:mb-24">
-          <span className="block max-w-[820px] font-display text-m-sub leading-[1.45] font-medium text-black md:text-[30px] md:leading-[1.4]">
-            הכול נבנה למקומות שבהם באמת פוגשים אותה: התפריט נשלח בוואטסאפ ובאינסטגרם, המדבקות נדבקות
-            על השקיות ועל הקופסאות, והכרטיס מוביל לאינסטגרם.
-          </span>
-        </p>
         <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-6">
           {PIECES.map((piece, index) => (
             <div key={piece.src} className={index % 2 === 0 ? "md:col-span-5" : "md:col-span-7 md:mt-48"}>
