@@ -325,15 +325,18 @@ export default function DesignWorkSection() {
           ON THE DESK IT IS SMALL AND SHALLOW ON PURPOSE. At the size it first
           came in - type a hundred pixels tall on a curve most of a screen deep
           - it was the loudest thing down here and stood over the heading of
-          the form it is meant to lead to. It is a passage, in the grey of the
-          heading above, not an event.
+          the form it is meant to lead to. It is a passage, not an event.
+          A BLACK TAPE WITH THE LINE IN WHITE ON IT, the mark stepped back to
+          grey. All in grey on white it was faint; a straight black band would
+          have put a rectangle where the curve was chosen to avoid one.
           The phone draws it in a narrower box, which is what brings the type
           up to a size worth reading there. */}
-      <div className="-mx-6 mt-16 overflow-x-clip text-black/30 md:mt-14">
+      <div className="-mx-6 mt-16 overflow-x-clip text-white md:mt-14">
         <CurvedLoop
           text={DESIGN_LOOP_TEXT}
           highlight={DESIGN_LOOP_MARK}
-          highlightClassName="fill-black"
+          highlightClassName="fill-white/45"
+          ribbonClassName="stroke-black"
           className="font-display font-extrabold [word-spacing:0.12em]"
           // Not to be taken hold of: it is a line running in the background,
           // and a line that can be dragged is a control.

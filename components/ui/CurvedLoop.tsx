@@ -52,6 +52,9 @@ interface CurvedLoopProps {
   highlight?: string;
   /** ...and the class that does it, a fill for one. */
   highlightClassName?: string;
+  /** Draws a tape under the line, along the same curve. The class gives it its
+   *  colour, as a stroke. */
+  ribbonClassName?: string;
 }
 
 // Their path, in proportion: it starts and ends this far outside the box, and
@@ -62,6 +65,13 @@ const CONTROL_AT = 500 / 1440;
 // Room under the baseline for the letters that hang below it, as a share of
 // the type size.
 const DESCENT = 0.3;
+// The tape the line can run on. Its width against the type size; where the
+// middle of a capital letter is above the baseline; and how far the tape
+// reaches from that middle - half its width and a tenth more, because it is
+// measured across the curve and the curve is not level at its ends.
+const RIBBON_WIDTH = 1.7;
+const CAP_CENTRE = 0.36;
+const RIBBON_REACH = (RIBBON_WIDTH / 2) * 1.1;
 
 export default function CurvedLoop({
   text,
@@ -74,6 +84,7 @@ export default function CurvedLoop({
   className,
   highlight,
   highlightClassName,
+  ribbonClassName,
 }: CurvedLoopProps) {
   const reduce = usePrefersReducedMotion();
   // One trailing no-break space, so the join between two copies is a gap.
@@ -96,7 +107,11 @@ export default function CurvedLoop({
   // The baseline runs from y=0 down to half the pull and back. The box starts
   // a type size above it and ends a descender below its lowest point.
   const dip = curveAmount / 2;
-  const viewBox = `0 ${-fontSize} ${span} ${fontSize + dip + fontSize * DESCENT}`;
+  // With a tape the box has to hold the tape, which is taller than the type
+  // and stands out further above and below it.
+  const above = ribbonClassName ? fontSize * (CAP_CENTRE + RIBBON_REACH) : fontSize;
+  const below = ribbonClassName ? fontSize * (RIBBON_REACH - CAP_CENTRE) : fontSize * DESCENT;
+  const viewBox = `0 ${-above} ${span} ${above + dip + below}`;
   const pathD = `M${-OVERHANG},0 Q${span * CONTROL_AT},${curveAmount} ${span + OVERHANG},0`;
   const copies = spacing > 0 ? Math.ceil((span + OVERHANG * 2 + 160) / spacing) + 2 : 1;
 
@@ -208,6 +223,17 @@ export default function CurvedLoop({
         <defs>
           <path id={pathId} d={pathD} fill="none" />
         </defs>
+        {/* The tape, under the type: the same curve, lifted so that the
+            capitals sit in the middle of it. */}
+        {ribbonClassName && (
+          <path
+            d={pathD}
+            fill="none"
+            className={ribbonClassName}
+            strokeWidth={fontSize * RIBBON_WIDTH}
+            transform={`translate(0 ${-fontSize * CAP_CENTRE})`}
+          />
+        )}
         <text xmlSpace="preserve" className={className}>
           <textPath ref={textPathRef} href={`#${pathId}`} xmlSpace="preserve">
             {Array.from({ length: copies }, (_, copy) =>
