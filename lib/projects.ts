@@ -106,6 +106,19 @@ export const projects: Project[] = [
         "לינקו היא גם בסיס לעבודה. אפשר לקחת את מה שראיתם כאן ולהתאים אותו למותג, לתהליכים ולשירותים של העסק שלכם. מנהלים תורים בקליניקה, במספרה, בייעוץ או בסטודיו ורוצים גרסה משלכם? בואו נדבר.",
     },
   },
+  // Between the two Lynko pieces on purpose: both of those are dark and purple,
+  // and side by side in the gallery they read as one piece shown twice. The
+  // light one parts them.
+  {
+    slug: "sorozin-chef",
+    title: "Sorozin Chef",
+    cardCategory: "דף נחיתה",
+    category: "דף נחיתה",
+    description: "דף נחיתה שבניתי עבור Sorozin Chef.",
+    url: "https://sorozinchef.pages.dev/",
+    image: "/images/projects/sorozinchefweb.webp",
+    external: true,
+  },
   {
     slug: "lynko-landing",
     title: "דף נחיתה ל-LYNKO: עיצוב, תנועה וסיפור מוצר בגלילה",
@@ -162,16 +175,6 @@ export const projects: Project[] = [
       ctaText:
         "יש לכם מוצר טוב ודף שיווקי שעוד לא עושה לו צדק? אשמח לדבר. אני בונה דפי נחיתה שמספרים סיפור, במקום לפרט רשימת פיצ'רים.",
     },
-  },
-  {
-    slug: "sorozin-chef",
-    title: "Sorozin Chef",
-    cardCategory: "דף נחיתה",
-    category: "דף נחיתה",
-    description: "דף נחיתה שבניתי עבור Sorozin Chef.",
-    url: "https://sorozinchef.pages.dev/",
-    image: "/images/projects/sorozinchefweb.webp",
-    external: true,
   },
   {
     slug: "lby-studio",
