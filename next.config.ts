@@ -48,6 +48,23 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },
       {
+        // THE STUDIO'S MARK, FOR THE CREDIT ON SITES IT BUILDS ("Site by YEYE").
+        // Those sites do not show this file as a picture: they use its shape
+        // as a CSS mask and fill it with their own text colour, so the mark is
+        // light on a dark footer and dark on a light one with nobody choosing.
+        // A browser only lets a page use another site's image as a mask when
+        // that site says so, which is the first header. A day's cache, not a
+        // year's: if the mark is ever redrawn, every site that carries it
+        // should follow within the day.
+        // THIS ADDRESS IS LINKED FROM OTHER PEOPLE'S SITES. Do not move or
+        // rename /credit/yeye.png: the mark would vanish from all of them.
+        source: "/credit/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" },
+        ],
+      },
+      {
         // Everything the site serves. These are the cheap protections that
         // cost nothing to keep and are only noticed when they are missing.
         source: "/:path*",
