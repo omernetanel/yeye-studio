@@ -1,0 +1,30 @@
+/* The badge's stage. It is laid over a place the page already keeps for the
+   picture, and reaches past it - up to where the band comes from, and out to
+   the sides - so it never takes part in the layout itself. */
+.lanyard {
+  position: absolute;
+  overflow: hidden;
+  /* The stage lies over text and links it has no business with. Only the card
+     takes the pointer, through a handle that follows it. */
+  pointer-events: none;
+}
+
+/* What the pointer actually lands on: a box kept over the card, wherever it
+   has swung to. A sideways drag is the card's; an up-and-down one still
+   scrolls the page. */
+.lanyard-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: auto;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.lanyard-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

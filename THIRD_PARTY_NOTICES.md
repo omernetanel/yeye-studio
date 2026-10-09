@@ -37,6 +37,11 @@ React Bits:
   ported to TypeScript; the drawing sized from its own type and curve instead
   of a fixed box, the speed made per second, the per-frame React state
   removed, and it rests off screen and stands still with reduced motion.
+- `components/ui/Lanyard.tsx` and `Lanyard.css`, from **Lanyard** — ported to
+  TypeScript; the card framed to rest on a place the page keeps for it, a
+  second band added, the entrance changed to a drop from above, the pointer
+  taken by a handle over the card only, and the holographic and metallic
+  finishes removed.
 
 Source: https://github.com/DavidHDev/react-bits
 

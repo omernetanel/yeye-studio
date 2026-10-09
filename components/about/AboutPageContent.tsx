@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
-import CrumplePortrait from "@/components/about/CrumplePortrait";
+import LanyardPortrait from "@/components/about/LanyardPortrait";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { SITE_NAME } from "@/lib/site";
 
@@ -81,14 +81,16 @@ function Reveal({ children, className }: { children: ReactNode; className?: stri
 export default function AboutPageContent() {
   return (
     // Wide, but held in from the edges of the screen.
-    <article className="mx-auto max-w-[1400px] px-6 pt-[140px] pb-24 md:px-16 md:pt-[150px]">
+    <article className="mx-auto max-w-[1400px] px-6 pt-[120px] pb-24 md:px-16 md:pt-[104px]">
       {/* THE OPENING: the photograph beside the heading, and everything the
           page has to say about who this is under it. Nothing here animates, so
           it is there on the first frame. The text takes the row and the photo
           a fixed column beside it: no measure on the paragraphs, which is what
           made the page read as a narrow feature. */}
       <header className="grid grid-cols-1 items-start gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,340px)] md:gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:gap-20">
-        <div>
+        {/* z-10, like every block of text on this page: the badge is pulled
+            about over the whole screen and passes under the text. */}
+        <div className="relative z-10">
           <h1 className="font-display text-[44px] leading-[1.05] font-extrabold tracking-tight text-black md:text-[72px] lg:text-[84px]">
             נעים מאוד,
             <br />
@@ -134,17 +136,16 @@ export default function AboutPageContent() {
           </div>
         </div>
 
-        {/* Held in view beside the text on a desk while it scrolls. z-30: the
-            crumpled photograph is played with over the whole screen, so it
-            passes over the text - and under the bar and the corner buttons.
-            Under the text was tried, and turned down. */}
-        <figure className="relative z-30 m-0 w-full max-w-[400px] justify-self-center md:sticky md:top-[120px] md:justify-self-end">
-          <CrumplePortrait src="/images/portrait.webp" alt={`עומר, מייסד ${SITE_NAME}`} />
+        {/* Held in view beside the text on a desk while it scrolls. No z-index
+            of its own: the badge is thrown past its place, and goes under the
+            text when it does. */}
+        <figure className="relative m-0 w-full max-w-[400px] justify-self-center md:sticky md:top-[80px] md:justify-self-end">
+          <LanyardPortrait src="/images/portrait.webp" alt={`עומר, מייסד ${SITE_NAME}`} />
         </figure>
       </header>
 
       {/* THE QUESTIONS, in two columns on a desk. */}
-      <Reveal className="mt-24 border-t border-black/10 pt-16 md:mt-32 md:pt-20">
+      <Reveal className="relative z-10 mt-24 border-t border-black/10 pt-16 md:mt-32 md:pt-20">
         <h2 className={HEADING}>שאלות שכדאי לשאול</h2>
         <div className="mt-10 grid grid-cols-1 gap-x-16 gap-y-10 md:grid-cols-2 lg:gap-x-24">
           {QUESTIONS.map((item) => (
@@ -157,7 +158,7 @@ export default function AboutPageContent() {
       </Reveal>
 
       {/* THE CLOSE: one line and the page's one button, centred. */}
-      <Reveal className="mt-24 flex flex-col items-center gap-6 border-t border-black/10 pt-16 text-center md:mt-32 md:pt-20">
+      <Reveal className="relative z-10 mt-24 flex flex-col items-center gap-6 border-t border-black/10 pt-16 text-center md:mt-32 md:pt-20">
         <p className={HEADING}>יש לכם רעיון, או רק התחלה של רעיון?</p>
         <Button href="/#cta" className="!border-black !bg-none !bg-black !shadow-none">
           בואו נדבר על זה
