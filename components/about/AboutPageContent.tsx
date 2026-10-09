@@ -122,7 +122,7 @@ export default function AboutPageContent() {
                 story, and not after all of it. The same badge as the desk's,
                 a second time and shown by CSS alone: the one that is not
                 displayed never comes into view, so it never builds its scene. */}
-            <figure className="relative m-0 mx-auto w-full max-w-[400px] md:hidden">{portrait}</figure>
+            <figure className="relative mx-auto mt-0 mb-12 w-full max-w-[400px] md:hidden">{portrait}</figure>
             <section>
               <h2 className={HEADING}>למה YEYE</h2>
               <p className={`mt-3 ${BODY}`}>
