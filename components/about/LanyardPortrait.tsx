@@ -185,7 +185,9 @@ export default function LanyardPortrait({ src, alt }: { src: string; alt: string
       <p
         aria-hidden="true"
         className={cn(
-          "-mt-2 text-center font-body text-m-small text-black/45 transition-opacity duration-300 md:mt-0",
+          // On a desk only: on a phone the badge sits between two parts of
+          // the text, and a line under it read as part of them.
+          "hidden text-center font-body text-m-small text-black/45 transition-opacity duration-300 md:block",
           tried || unavailable ? "opacity-0" : "opacity-100",
         )}
       >
