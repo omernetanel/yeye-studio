@@ -131,7 +131,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
               <iframe
                 src={url}
                 title={title}
-// In the phone the site's own viewport is 410 x 797: an iPhone's
+                // In the phone the site's own viewport is 410 x 797: an iPhone's
                 // 393 across, and the 17 a desktop browser takes for its
                 // scrollbar, so the page itself still has the full 393; and as
                 // tall as the screen is less its two strips. The whole of it is
