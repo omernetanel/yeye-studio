@@ -17,12 +17,11 @@ import "./Lanyard.css";
  *   is laid over a slot in the page and told how far it reaches past that slot
  *   (`inset`), and the card is framed to hang exactly on the slot - so putting
  *   the badge on a page moves nothing on it.
- * - TWO BANDS, as well as one. `straps={2}` hangs the card from a pair that
- *   come in from either side and meet at the clip, the way a badge sits when
- *   it is worn - for a place where one band from the top would be a long line
- *   down the screen. The simulation holds any number of bands for it; theirs
- *   holds exactly one.
- * - It drops in from above. Theirs swings in from the side.
+ * - THE BAND CAN BE SHORT (`rise`): fixed at a point a little above the card,
+ *   where the caller draws a slot for it to come out of - for a place where a
+ *   band from the top of the stage would be a long line down the screen.
+ * - It drops in: out of the slot, or from above the stage. Theirs swings in
+ *   from the side.
  * - The card's shape follows the picture (`aspect`); theirs is one of two fixed
  *   sizes.
  * - Less of it: the holographic and metallic finishes, with the foil shader
@@ -474,8 +473,8 @@ const createChain = (): Chain => {
   };
 };
 
-const createSimulation = (straps: number): Simulation => ({
-  chains: Array.from({ length: straps }, createChain),
+const createSimulation = (): Simulation => ({
+  chains: [createChain()],
   body: {
     position: new THREE.Vector3(),
     previous: new THREE.Vector3(),
@@ -752,13 +751,10 @@ export interface LanyardProps {
    * exactly on what is left.
    */
   inset: { top: number; left: number; right: number; bottom: number };
-  /** One band from above the stage, or a pair coming in from its two sides. */
-  straps?: 1 | 2;
   /**
-   * How far above the top of the card, in px, the band is fixed. A pair leave
-   * the sides of the stage at that height. One band without it runs up off the
-   * top of the stage; with it, it ends at a point the caller draws something
-   * over - a slot it comes out of.
+   * How far above the top of the card, in px, the band is fixed. Without it
+   * the band runs up off the top of the stage; with it, it ends at a point the
+   * caller draws something over - a slot it comes out of.
    */
   rise?: number;
   finish?: keyof typeof FINISHES;
@@ -791,7 +787,6 @@ export default function Lanyard({
   strapColor,
   aspect,
   inset,
-  straps = 1,
   rise,
   finish = "glossy",
   cornerRadius = 0.3,
@@ -917,7 +912,7 @@ export default function Lanyard({
     clampGroup.add(clampMesh, eyelet);
     scene.add(clampGroup);
 
-    const sim = createSimulation(straps);
+    const sim = createSimulation();
     const bands: BandDrawing[] = sim.chains.map(() => {
       const mesh = new THREE.Mesh(buildBandGeometry(SAMPLES), bandMaterial);
       mesh.frustumCulled = false;
@@ -984,7 +979,6 @@ export default function Lanyard({
       const cardPx = Math.max(1, view.width - inset.left - inset.right);
       const unit = layout.width / cardPx;
       const viewHeight = view.height * unit;
-      const viewWidth = view.width * unit;
       // The card stands at the scene's middle; a stage that reaches further to
       // one side than the other is looked at from that much off centre.
       const centre = ((inset.right - inset.left) / 2) * unit;
@@ -997,19 +991,11 @@ export default function Lanyard({
       stageTop = viewHeight / 2;
       const cardTop = stageTop - inset.top * unit;
       sim.restHang.set(0, cardTop - layout.height / 2 + layout.hangY, 0);
-      if (straps === 1) {
-        sim.chains[0].anchor.set(0, rise === undefined ? stageTop + 0.2 : cardTop + rise * unit, 0);
-      } else {
-        const out = viewWidth / 2 + 0.15;
-        const up = cardTop + (rise ?? 120) * unit;
-        sim.chains[0].anchor.set(centre - out, up, 0);
-        sim.chains[1].anchor.set(centre + out, up, 0);
-      }
+      sim.chains[0].anchor.set(0, rise === undefined ? stageTop + 0.2 : cardTop + rise * unit, 0);
 
-      // A band gives a little under the card's weight, so each is cut short
+      // The band gives a little under the card's weight, so it is cut short
       // by what it will stretch: with that the card comes to rest on its
-      // place and not a few pixels under it. A pair shares the weight, and
-      // each of the two carries more of it the flatter it runs.
+      // place and not a few pixels under it.
       const p = physics();
       const { body } = sim;
       const t = THICKNESS + BEVEL * 2;
@@ -1021,8 +1007,7 @@ export default function Lanyard({
       );
       for (const chain of sim.chains) {
         const length = chain.anchor.distanceTo(sim.restHang);
-        const steepness = Math.max(0.2, (chain.anchor.y - sim.restHang.y) / length);
-        const tension = (p.gravity * body.mass) / (sim.chains.length * steepness);
+        const tension = p.gravity * body.mass;
         // Half of what the spring alone would give: measured, the solver's
         // two passes leave the card resting that much higher than the sum says.
         const give = (tension / (p.stiffness + p.spring)) * 0.5;
@@ -1093,9 +1078,7 @@ export default function Lanyard({
         const restLength = chain.cut * JOINTS;
         const repeats = restLength / (strapScale * tileRatio);
         const width = strapScale / Math.pow(Math.max(1, length / Math.max(restLength, 0.001)), 0.35);
-        // One band turns with the card it holds. A pair cannot: they would
-        // have to cross, so they stay flat and the card turns on its ring.
-        const twist = sim.chains.length === 1 ? sim.twist : 0;
+        const twist = sim.twist;
         for (let i = 0; i < SAMPLES; i++) {
           tangent.subVectors(points[Math.min(SAMPLES - 1, i + 1)], points[Math.max(0, i - 1)]);
           if (tangent.lengthSq() < 1e-12) tangent.set(0, -1, 0);
@@ -1130,16 +1113,14 @@ export default function Lanyard({
         uv.needsUpdate = true;
       });
 
-      // The clip: upright along the way the bands leave, its face to the
-      // camera - and for one band, turned with it.
+      // The clip: upright along the way the band leaves, its face to the
+      // camera, and turned with the band.
       toCamera.subVectors(camera.position, hang).normalize();
       across.crossVectors(bisector, toCamera);
       if (across.lengthSq() < 1e-8) across.set(1, 0, 0);
       across.normalize();
-      if (sim.chains.length === 1) {
-        facing.crossVectors(across, bisector);
-        across.multiplyScalar(Math.cos(-sim.twist)).addScaledVector(facing, Math.sin(-sim.twist));
-      }
+      facing.crossVectors(across, bisector);
+      across.multiplyScalar(Math.cos(-sim.twist)).addScaledVector(facing, Math.sin(-sim.twist));
       facing.crossVectors(across, bisector).normalize();
       work.basis.makeBasis(across, bisector, facing);
       clampGroup.quaternion.setFromRotationMatrix(work.basis);
@@ -1206,6 +1187,7 @@ export default function Lanyard({
       weave.repeat.set(2, 2 * tileRatio);
       strapTexture.needsUpdate = true;
       printed = true;
+      canvas.dataset.printed = "";
       render();
       settingsRef.current.onReady?.();
       start();
@@ -1312,9 +1294,10 @@ export default function Lanyard({
       renderer.setSize(view.width, view.height, false);
       frameView();
       if (!placed) {
-        // Above the top of the stage by the card's own height and a little:
-        // none of it shows until it falls.
-        placeHanging(sim, layout, stageTop + layout.height + 0.4);
+        // Out of the slot its band is fixed in, gathered up against it. With
+        // no slot, from above the top of the stage by the card's own height
+        // and a little: none of it shows until it falls.
+        placeHanging(sim, layout, rise === undefined ? stageTop + layout.height + 0.4 : sim.chains[0].anchor.y);
         placed = true;
       }
       if (printed) render();

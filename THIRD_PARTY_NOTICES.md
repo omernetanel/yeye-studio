@@ -20,10 +20,6 @@ React Bits:
   **FlexCarousel** — ported to TypeScript; sample images, click-to-zoom,
   autoplay and built-in captions removed, and the lens sized from the centred
   card.
-- `components/ui/PaperCrumple.tsx` and `PaperCrumple.css`, from
-  **PaperCrumple** — ported to TypeScript with Hebrew labels; the printed back,
-  reset key, disabled switch and error callback removed, and reduced motion left
-  to the page, which shows the plain photograph instead.
 - `components/ui/StaggeredMenu.tsx` and the `.sm-` styles in `app/globals.css`,
   from **StaggeredMenu** — ported to TypeScript and turned around for RTL; its
   own toggle, logo, text cycle and social links removed, the panel narrowed,
@@ -39,9 +35,9 @@ React Bits:
   removed, and it rests off screen and stands still with reduced motion.
 - `components/ui/Lanyard.tsx` and `Lanyard.css`, from **Lanyard** — ported to
   TypeScript; the card framed to rest on a place the page keeps for it, a
-  second band added, the entrance changed to a drop from above, the pointer
-  taken by a handle over the card only, and the holographic and metallic
-  finishes removed.
+  short band fixed at a slot added, the entrance changed to a drop, the
+  pointer taken by a handle over the card only, and the holographic and
+  metallic finishes removed.
 
 Source: https://github.com/DavidHDev/react-bits
 

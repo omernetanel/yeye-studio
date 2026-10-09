@@ -13,7 +13,9 @@ const PHOTO_H = 560;
 const MARGIN = 24;
 const BOX_RATIO = `${400 + MARGIN * 2} / ${Math.round((400 * PHOTO_H) / PHOTO_W) + MARGIN * 2}`;
 
-// The least the badge's stage reaches below the photograph, in px.
+// On a phone: how far the badge's stage reaches above the photograph, in px -
+// room for a badge thrown upward. And the least it reaches below, anywhere.
+const REACH_TOP = 360;
 const REACH_BOTTOM = 160;
 // On a phone: how far above the top of the badge the slot is that the band
 // comes out of. The band is 10% of the badge across, and the slot a little
@@ -36,13 +38,14 @@ interface Stage {
 }
 
 /**
- * The about page's photograph, as a name badge: it falls in from above on its
- * band and comes to rest exactly where the photograph stood, and can then be
- * pulled about, thrown and turned over. On a desk its band runs up off the
- * screen. On a phone that would be a long line down the whole screen, over the
- * text, so the band is short and comes out of a slot drawn in the page just
- * above the photograph. (A pair of bands in from the sides of the screen was
- * built first and turned down: two hoses across the text.)
+ * The about page's photograph, as a name badge: it drops in on its band and
+ * comes to rest exactly where the photograph stood, and can then be pulled
+ * about, thrown and turned over. On a desk its band runs up off the screen and
+ * it falls in from there. On a phone that would be a long line down the whole
+ * screen, over the text, so the band is short and comes out of a slot drawn in
+ * the page just above the photograph - and so does the badge. (A pair of bands
+ * in from the sides of the screen was built first and turned down: two hoses
+ * across the text. So was a fall from above the screen on a phone.)
  *
  * THE PLACE IS KEPT BY THE PHOTOGRAPH ITSELF, in the flow of the page and
  * unseen, so the badge changes nothing about the layout; the same image is
@@ -63,9 +66,9 @@ export default function LanyardPortrait({ src, alt }: { src: string; alt: string
   // THE STAGE IS THE WHOLE SCREEN, so the badge can be pulled anywhere on it
   // and is never cut off: out to the edges of the screen at the sides - and no
   // further, which would give the page somewhere to scroll sideways to - up to
-  // the top of the page, and down a screen's height. On a phone it is a
-  // screen's height up and a little down: enough for the badge to come down
-  // from above the screen and not from a line in the text.
+  // the top of the page, and down a screen's height. On a phone it is only as
+  // tall as a thrown badge needs: there it comes out of its slot, not from
+  // above the screen.
   useEffect(() => {
     if (prefersReducedMotion) return undefined;
     const slot = slotRef.current;
@@ -75,7 +78,7 @@ export default function LanyardPortrait({ src, alt }: { src: string; alt: string
       const screen = document.documentElement.clientWidth;
       const fromTop = rect.top + window.scrollY;
       const next: Stage = {
-        top: Math.round(Math.max(0, isMobile ? Math.min(fromTop, window.innerHeight) : fromTop)),
+        top: Math.round(Math.max(0, isMobile ? Math.min(fromTop, REACH_TOP) : fromTop)),
         left: Math.round(Math.max(0, rect.left)),
         right: Math.round(Math.max(0, screen - rect.right)),
         bottom: isMobile ? REACH_BOTTOM : Math.round(Math.max(REACH_BOTTOM, window.innerHeight - rect.height)),
