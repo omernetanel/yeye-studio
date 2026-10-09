@@ -21,7 +21,7 @@ export default function ProjectCard({ title, category, imageSrc, href, external 
     <>
       {/* The benefit cards from the home page, with the screenshot inside. */}
       <BorderGlowCard className="p-3">
-        <div className="relative mb-3.5 aspect-[1672/941] w-full overflow-hidden rounded-[14px] bg-white/[0.04]">
+        <div className="relative mb-3.5 aspect-video w-full overflow-hidden rounded-[14px] bg-white/[0.04]">
           <Image src={imageSrc} alt={title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-contain" />
         </div>
         <div className="relative flex items-center justify-between px-2 pb-1.5">

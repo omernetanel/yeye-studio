@@ -53,7 +53,7 @@ export const projects: Project[] = [
     description:
       "מערכת ניהול לעסקי שירות שבניתי בעברית מהיסוד, ולא תבנית באנגלית שתורגמה.\nיומן, לקוחות, דוחות והתראות, בממשק RTL אמיתי.",
     url: "https://lynko-liard.vercel.app/demo",
-    image: "/images/lynkolayout.webp",
+    image: "/images/projects/lynkosass.webp",
     tags: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion", "RTL קודם"],
     story: {
       storyTitle: "למה בניתי את זה ככה",
@@ -114,7 +114,7 @@ export const projects: Project[] = [
     category: "דף נחיתה שיווקי",
     description: "דף שיווקי בעברית מלאה שמספר את הסיפור של המוצר תוך כדי גלילה.",
     url: "https://lynko-liard.vercel.app/",
-    image: "/images/lynkolayoutage.webp",
+    image: "/images/projects/lynkoweb.webp",
     tags: ["Next.js", "Framer Motion", "Tailwind CSS", "RTL קודם"],
     story: {
       storyTitle: "פרויקט בפני עצמו",
@@ -170,7 +170,7 @@ export const projects: Project[] = [
     category: "דף נחיתה",
     description: "דף נחיתה שבניתי עבור Sorozin Chef.",
     url: "https://sorozinchef.pages.dev/",
-    image: "/images/sorozinchefpweb.webp",
+    image: "/images/projects/sorozinchefweb.webp",
     external: true,
   },
   {

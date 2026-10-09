@@ -92,10 +92,10 @@ export default function ProjectsCarousel({
               <Image
                 src={entry.src}
                 alt={entry.alt}
-                width={1672}
-                height={941}
+                width={1920}
+                height={1080}
                 sizes="(min-width: 768px) 540px, 100vw"
-                className="block aspect-[1672/941] w-full rounded-2xl object-cover"
+                className="block aspect-video w-full rounded-2xl object-cover"
               />
               <span
                 className={`mt-4 block ${TITLE_CLASS} ${entry.opens ? "underline-offset-4 group-hover:underline" : ""}`}
