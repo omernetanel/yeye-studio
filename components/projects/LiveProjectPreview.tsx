@@ -131,16 +131,19 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
               <iframe
                 src={url}
                 title={title}
-                // In the phone the site's own viewport is 393 x 764 - an
+                // In the phone the site's own viewport is 410 x 797 - an iPhone's
+                // 393 and the 17 a desktop browser takes for its scrollbar, so
+                // that the page itself still has the full 393 and does not
+                // scroll sideways - an
                 // iPhone's screen less its two strips - and the whole of it is
-                // scaled by 278/393 to sit in the drawn one. So its lines break
+                // scaled by 278/410 to sit in the drawn one. So its lines break
                 // where they do on a phone, which at the drawing's own width
                 // they did not. Pinned to a corner so the scale has one fixed
                 // point.
                 className={cn(
                   "border-0",
                   phone
-                    ? "absolute top-0 left-0 h-[764px] w-[393px] max-w-none origin-top-left scale-[0.7074]"
+                    ? "absolute top-0 left-0 h-[797px] w-[410px] max-w-none origin-top-left scale-[0.678]"
                     : "h-full w-full",
                 )}
                 loading="eager"
