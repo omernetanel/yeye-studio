@@ -116,7 +116,11 @@ void main() {
   float cardAspect = uSize.x / uSize.y;
   float imageAspect = uImage.x / max(uImage.y, 1.0);
   vec2 scale = imageAspect > cardAspect ? vec2(cardAspect / imageAspect, 1.0) : vec2(1.0, imageAspect / cardAspect);
-  scale /= 1.08;
+  // NO ZOOM. The original drew every picture 8% larger than its card, to have
+  // room to slide it sideways inside the card as the row moves (uShift below).
+  // These pictures are screenshots of whole pages, with a menu along the top
+  // and buttons in the corners, and the 8% cut all of that off. A picture the
+  // card's own shape is now shown edge to edge, and has nothing left to slide.
   vec2 uv = vec2(local.x, 1.0 - local.y);
   uv = (uv - 0.5) * scale + 0.5;
   uv.x += uShift * (1.0 - scale.x) * 0.5;
