@@ -70,15 +70,18 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
           "relative flex flex-col overflow-hidden bg-black/[0.04] shadow-[0_20px_50px_rgba(0,0,0,0.12)]",
           view === "desktop" || !hasUrl
             ? "aspect-[16/10] w-full max-w-[1100px] rounded-2xl border border-black/10"
-            : // A PHONE'S OWN WIDTH, AND A PLAIN RECTANGLE. It was a 300px drawing
-              // of a handset with a thick bezel, which left the site 280px to
-              // render in - narrower than any phone, so its lines broke where
-              // they never do - and a notch and a home bar laid over the top
-              // and bottom of it. 390px is a current phone; on a real phone
-              // the frame takes the whole screen width instead (w-screen),
-              // stepping out of the page's side padding to do it. The edge is
-              // an outline, which takes no width away from the site inside.
-              "aspect-[9/19.5] w-screen max-w-[390px] outline outline-1 outline-black/15"
+            : // THE PHONE IS A DRAWING; THE SITE INSIDE IT IS A REAL PHONE'S WIDTH.
+              // A dark handset with rounded shoulders, and inside it a plain
+              // rectangular screen at 9:16 - no notch and no home bar laid over
+              // the site, and no rounded corners cutting into it.
+              // The screen is 288px wide on the page, but the site is not
+              // rendered at 288: it is rendered at 405x720 and scaled down to
+              // fit (see the iframe below). At the handset's own width it broke
+              // its lines where no phone does; shown at a phone's true size
+              // instead, it was far too tall and had no handset round it.
+              // The 12px of padding is what keeps the square screen inside the
+              // rounded shell: any less and the shell's curve would cut it.
+              "h-[536px] w-[312px] rounded-[2rem] bg-neutral-900 p-3"
         )}
       >
         {(view === "desktop" || !hasUrl) && (
@@ -89,9 +92,24 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
           </div>
         )}
 
-        <div className="relative min-h-0 flex-1">
+        <div className="relative min-h-0 flex-1 overflow-hidden">
           {hasUrl && loaded && (
-            <iframe src={url} title={title} className="h-full w-full border-0" loading="eager" referrerPolicy="no-referrer" />
+            <iframe
+              src={url}
+              title={title}
+              // In the phone: the site's own viewport is 405x720 - a phone's width,
+              // with room for a scrollbar where the browser draws one - and
+              // the whole thing is scaled by 288/405 to sit in the drawn
+              // screen. Pinned to a corner so the scale has one fixed point.
+              className={cn(
+                "border-0",
+                view === "mobile"
+                  ? "absolute top-0 left-0 h-[720px] w-[405px] max-w-none origin-top-left scale-[0.7111]"
+                  : "h-full w-full",
+              )}
+              loading="eager"
+              referrerPolicy="no-referrer"
+            />
           )}
 
           {(!hasUrl || !loaded) && (
