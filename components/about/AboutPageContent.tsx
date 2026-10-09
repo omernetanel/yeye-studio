@@ -79,6 +79,7 @@ function Reveal({ children, className }: { children: ReactNode; className?: stri
 }
 
 export default function AboutPageContent() {
+  const portrait = <LanyardPortrait src="/images/portrait.webp" alt={`עומר, מייסד ${SITE_NAME}`} />;
   return (
     // Wide, but held in from the edges of the screen.
     <article className="mx-auto max-w-[1400px] px-6 pt-[120px] pb-24 md:px-16 md:pt-[104px]">
@@ -117,6 +118,11 @@ export default function AboutPageContent() {
                 <mark className="text-marker bg-transparent text-inherit">פשוט לא הצלחתי להפסיק.</mark>
               </p>
             </section>
+            {/* ON A PHONE THE BADGE HANGS HERE, between the two parts of the
+                story, and not after all of it. The same badge as the desk's,
+                a second time and shown by CSS alone: the one that is not
+                displayed never comes into view, so it never builds its scene. */}
+            <figure className="relative m-0 mx-auto w-full max-w-[400px] md:hidden">{portrait}</figure>
             <section>
               <h2 className={HEADING}>למה YEYE</h2>
               <p className={`mt-3 ${BODY}`}>
@@ -139,8 +145,8 @@ export default function AboutPageContent() {
         {/* Held in view beside the text on a desk while it scrolls. No z-index
             of its own: the badge is thrown past its place, and goes under the
             text when it does. */}
-        <figure className="relative m-0 w-full max-w-[400px] justify-self-center md:sticky md:top-[80px] md:justify-self-end">
-          <LanyardPortrait src="/images/portrait.webp" alt={`עומר, מייסד ${SITE_NAME}`} />
+        <figure className="relative m-0 hidden w-full max-w-[400px] md:sticky md:top-[80px] md:block md:justify-self-end">
+          {portrait}
         </figure>
       </header>
 

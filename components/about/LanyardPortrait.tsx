@@ -138,7 +138,7 @@ export default function LanyardPortrait({ src, alt }: { src: string; alt: string
     <>
       {/* On a phone the slot and its short band need room of their own under
           the text. */}
-      <div className="relative mt-14 w-full md:mt-0" style={{ aspectRatio: BOX_RATIO }}>
+      <div className="relative mt-24 w-full md:mt-0" style={{ aspectRatio: BOX_RATIO }}>
         <div
           ref={slotRef}
           className="absolute top-1/2 left-1/2 w-[calc(100%-48px)] -translate-x-1/2 -translate-y-1/2"
