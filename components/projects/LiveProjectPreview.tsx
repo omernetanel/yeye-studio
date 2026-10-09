@@ -70,7 +70,15 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
           "relative flex flex-col overflow-hidden bg-black/[0.04] shadow-[0_20px_50px_rgba(0,0,0,0.12)]",
           view === "desktop" || !hasUrl
             ? "aspect-[16/10] w-full max-w-[1100px] rounded-2xl border border-black/10"
-            : "aspect-[9/19.5] w-[300px] rounded-[2.75rem] border-[10px] border-[#1a1a1a]"
+            : // A PHONE'S OWN WIDTH, AND A PLAIN RECTANGLE. It was a 300px drawing
+              // of a handset with a thick bezel, which left the site 280px to
+              // render in - narrower than any phone, so its lines broke where
+              // they never do - and a notch and a home bar laid over the top
+              // and bottom of it. 390px is a current phone; on a real phone
+              // the frame takes the whole screen width instead (w-screen),
+              // stepping out of the page's side padding to do it. The edge is
+              // an outline, which takes no width away from the site inside.
+              "aspect-[9/19.5] w-screen max-w-[390px] outline outline-1 outline-black/15"
         )}
       >
         {(view === "desktop" || !hasUrl) && (
@@ -112,16 +120,6 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
             </button>
           )}
 
-          {view === "mobile" && hasUrl && loaded && (
-            <>
-              <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-center pt-2">
-                <div className="h-6 w-24 rounded-full bg-[#1a1a1a]" />
-              </div>
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-2">
-                <div className="h-1 w-28 rounded-full bg-white/40" />
-              </div>
-            </>
-          )}
         </div>
       </motion.div>
 
