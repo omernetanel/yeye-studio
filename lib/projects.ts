@@ -169,7 +169,7 @@ export const projects: Project[] = [
     cardCategory: "דף נחיתה",
     category: "דף נחיתה",
     description: "דף נחיתה שבניתי עבור Sorozin Chef.",
-    url: "https://omernetanel.github.io/sorozinchef/",
+    url: "https://sorozinchef.pages.dev/",
     image: "/images/sorozinchefpweb.webp",
     external: true,
   },
