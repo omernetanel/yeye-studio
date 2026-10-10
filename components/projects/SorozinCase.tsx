@@ -297,14 +297,14 @@ export default function SorozinCase({ site }: Props) {
               <FoldWords text="מותג אחד." />
             </span>
           </h2>
-          <div className="mx-auto mt-12 md:mt-20 md:w-[78%]">
+          <div className="mx-auto mt-12 md:mt-20 md:w-[74%]">
             {/* NO WHITE ROUND IT. A thick white frame was built for the desk,
                 and for a phone that frame and then a white band from edge to
                 edge of the screen; all three came out. On a phone the picture
                 is let a little way into the page's side margins instead, to be
                 larger, and stops short of the screen's edges. */}
             <div className="-mx-3 md:mx-0">
-              <ScrollPiece piece={MENUS} sizes="(max-width: 768px) 100vw, 78vw" />
+              <ScrollPiece piece={MENUS} sizes="(max-width: 768px) 100vw, 74vw" />
             </div>
             <p className="mt-4 text-center font-body text-m-body text-white/70 md:mt-6 md:text-[19px]">
               תפריט לכל אירוע: שוק, בופה, פרימיום וספיישל&apos;ס.
