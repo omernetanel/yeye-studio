@@ -52,20 +52,21 @@ const PIECES = [
   },
   // THE MENUS GO HERE once they are shown anew - four of them, one for each
   // kind of event, each seen on its own.
-  {
-    src: "/images/projects/sorozin/sorozin1.webp",
-    alt: "כרטיסי ביקור של Sorozin Chef, שני הצדדים",
-    width: 1679,
-    height: 937,
-    place: "md:col-span-7 md:mt-48",
-  },
   // The landing page as an object among the others, before it is met live
-  // further down: on its own row, and kept in from both edges.
+  // further down.
   {
     src: "/images/projects/sorozin/sorozinweb01.webp",
     alt: "דף הנחיתה של Sorozin Chef פתוח על מסך מחשב נייד",
     width: 1536,
     height: 1024,
+    place: "md:col-span-7 md:mt-48",
+  },
+  // On its own row, and kept in from both edges.
+  {
+    src: "/images/projects/sorozin/sorozin1.webp",
+    alt: "כרטיסי ביקור של Sorozin Chef, שני הצדדים",
+    width: 1679,
+    height: 937,
     place: "md:col-span-8 md:col-start-3 md:mt-6",
   },
 ];
@@ -234,7 +235,20 @@ export default function SorozinCase({ site }: Props) {
           picture shows is its alt. Two columns that do not line up, as on the
           home page; one column on a phone. White carries on from the section
           above, with no seam between them. */}
-      <section className="relative bg-white px-6 pb-24 md:pb-40">
+      <section className="relative bg-white px-6 pt-10 pb-24 md:pt-20 md:pb-40">
+        {/* ITS HEADING IS THE KIND OF JOB THIS WAS, said once and large: not a
+            new brand but an old one made again. Grey, so that it is the
+            ground the pictures stand on and not one more thing to read. The
+            section's name to a screen reader is said in words beside it. */}
+        <h2
+          data-fold-line
+          lang="en"
+          dir="ltr"
+          className="mx-auto mb-12 max-w-[1400px] text-right font-display text-[15.5vw] leading-[0.95] font-extrabold tracking-tight text-heading-soft md:mb-20 md:text-[clamp(96px,13.5vw,210px)]"
+        >
+          <span className="sr-only">Rebrand</span>
+          <FoldWords text="#REBRAND" />
+        </h2>
         <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-6">
           {PIECES.map((piece) => (
             <div key={piece.src} className={piece.place}>
@@ -247,17 +261,35 @@ export default function SorozinCase({ site }: Props) {
             once he has approved its wording: one quote, his name, and what he
             is to the business. It also parts the picture of the landing page
             from the landing page itself. */}
+      </section>
 
-        {/* THE LANDING PAGE, LIVE: the site itself in the frame, to scroll in
-            and to see as a phone would show it. */}
-        <div className="mx-auto mt-24 max-w-[1400px] md:mt-40">
-          <h2 className="text-center font-display text-m-title font-extrabold tracking-tight text-black md:text-[clamp(40px,4.6vw,68px)]">
-            ודף הנחיתה, חי.
-          </h2>
-          <p className="mx-auto mt-5 mb-10 max-w-[640px] text-center font-body text-m-body text-black/70 md:mb-14 md:text-[19px] md:leading-[1.7]">
-            דף בהיר למותג כהה:{" "}
-            <strong className={EMPHASIS}>כך קרש החיתוך שנושא את הלוגו הוא הדבר הראשון שרואים</strong>.
-          </p>
+      {/* THE LANDING PAGE, LIVE, IN A SECTION OF ITS OWN: the site itself in
+          the frame, to scroll in and to see as a phone would show it. The
+          lightest grey, a step off the white above - the page it frames is a
+          light one, and it was lost as one more thing at the foot of the
+          pictures. */}
+      <section className="relative bg-neutral-100 px-6 pt-40 pb-24 md:pt-72 md:pb-40">
+        <BladeCut className="bg-white" flip />
+        <div className="mx-auto max-w-[1400px]">
+          <div className="mx-auto max-w-[1100px]">
+            <h2
+              data-fold-line
+              className="font-display text-m-display font-extrabold tracking-tight text-black md:text-[clamp(56px,7.4vw,112px)] md:leading-[1.02]"
+            >
+              <span className="sr-only">ודף הנחיתה, חי.</span>
+              <FoldWords text="ודף הנחיתה, חי." />
+            </h2>
+            <div className="mt-10 mb-12 grid gap-6 font-body text-m-body text-black/70 md:mt-14 md:mb-20 md:grid-cols-2 md:gap-10 md:text-[19px] md:leading-[1.7]">
+              <p>
+                דף בהיר למותג כהה. כך קרש החיתוך שנושא את הלוגו הוא הדבר הראשון שרואים,{" "}
+                <strong className={EMPHASIS}>ומקבל את כל תשומת הלב</strong>.
+              </p>
+              <p>
+                המראה לקוח מעולם של ספרי בישול, לא מעולם של מסעדות בשר:{" "}
+                <strong className={EMPHASIS}>הרבה לבן, חומר גלם אחד במרכז</strong>, והחתימה של השף מתחת לטקסט.
+              </p>
+            </div>
+          </div>
           <LiveProjectPreview url={site.url} title="דף הנחיתה של Sorozin Chef" fallbackImage={site.image} />
         </div>
       </section>
@@ -267,7 +299,7 @@ export default function SorozinCase({ site }: Props) {
         data-nav-dark="true"
         className="relative bg-black px-6 pt-48 pb-24 text-center text-white md:pt-80 md:pb-32"
       >
-        <BladeCut className="bg-white" flip />
+        <BladeCut className="bg-neutral-100" />
         <h2 className="mx-auto max-w-[900px] font-display text-m-title font-extrabold tracking-tight md:text-[clamp(44px,5.4vw,80px)] md:leading-[1.05]">
           רוצים מותג שמבינים מהרגע הראשון?
         </h2>
