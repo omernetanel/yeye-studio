@@ -225,7 +225,7 @@ export default function SorozinCase({ site }: Props) {
               deal of room for two remarks. */}
           <div className="mt-12 grid gap-6 font-body text-m-body text-black/70 md:mt-16 md:grid-cols-3 md:gap-10 md:text-[19px] md:leading-[1.7]">
             <p>
-              מיתוג מחדש לשף בשרים שעושה אירועים: לוגו, תפריטים, כרטיסי ביקור ודף נחיתה.{" "}
+              מיתוג מחדש לשף בשרים: לוגו, תפריטים, כרטיסי ביקור ודף נחיתה.{" "}
               <strong className={EMPHASIS}>מהמיתוג הקודם לא נשאר דבר</strong>.
             </p>
             <p>
