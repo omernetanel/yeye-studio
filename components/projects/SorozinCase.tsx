@@ -42,50 +42,43 @@ interface Props {
 
 const INSTAGRAM = "https://www.instagram.com/sorozin__meatshow/";
 
-// THE KNIVES OPEN IT, on a row of their own: the mark on the thing it was
-// drawn from. Then the aprons on the right and the cards on the left of them,
-// lower - the tall picture in the narrow column and the wide one in the wide
-// column - and the four menus to close. NEITHER OF THE TWO ROWS RUNS THE FULL
-// WIDTH OF THE PAGE: the files are about 1500px across and there are no larger
-// ones, so across a wide screen they were huge and soft. Kept in from both
-// edges, the knives more than the menus, whose small type needs the room.
+// TWO COLUMNS THAT DO NOT LINE UP, as on the home page: the knives and under
+// them the cards in the wide one, the aprons in the narrow one, starting
+// lower. Then the four menus on their own, centred. It was rows before - one
+// picture across the page, a pair, another across the page - and scrolling
+// through it was a stop at each row; in columns one picture is always
+// arriving as another leaves.
+//
+// NOTHING RUNS THE FULL WIDTH OF THE PAGE: the files are about 1500px across
+// and there are no larger ones, so at that size they were huge and soft.
 //
 // NO PICTURE OF THE LANDING PAGE. One stood here, the site open on a laptop,
 // and came out: the board with the mark on it is in the first picture, and
 // the site itself is live two sections down.
-const PIECES = [
-  {
-    src: "/images/projects/sorozin/sorozin4.webp",
-    alt: "קרש חיתוך, סט סכינים ומעמד עם הלוגו והשם של Sorozin Chef",
-    width: 1536,
-    height: 1024,
-    place: "md:col-span-8 md:col-start-3",
-  },
-  {
-    src: "/images/projects/sorozin/sorozin2.webp",
-    alt: "הלוגו של Sorozin Chef על שני סינרים, שחור ולבן",
-    width: 1227,
-    height: 1282,
-    place: "md:col-span-5",
-  },
-  {
-    src: "/images/projects/sorozin/sorozin1.webp",
-    alt: "כרטיסי ביקור של Sorozin Chef, שני הצדדים",
-    width: 1679,
-    height: 937,
-    place: "md:col-span-7 md:mt-48",
-  },
-  // The one picture with a line under it: that there are four, and what the
-  // four are, is not something the picture says at the size it is shown.
-  {
-    src: "/images/projects/sorozin/sorozin6.webp",
-    alt: "ארבעת התפריטים של Sorozin Chef זה לצד זה, כל אחד בצבע משלו",
-    width: 1491,
-    height: 797,
-    place: "md:col-span-10 md:col-start-2 md:mt-6",
-    note: "ארבעה תפריטים, אחד לכל סוג אירוע: שוק, בופה, פרימיום וספיישלס.",
-  },
-];
+const KNIVES = {
+  src: "/images/projects/sorozin/sorozin4.webp",
+  alt: "קרש חיתוך, סט סכינים ומעמד עם הלוגו והשם של Sorozin Chef",
+  width: 1536,
+  height: 1024,
+};
+const CARDS = {
+  src: "/images/projects/sorozin/sorozin1.webp",
+  alt: "כרטיסי ביקור של Sorozin Chef, שני הצדדים",
+  width: 1679,
+  height: 937,
+};
+const APRONS = {
+  src: "/images/projects/sorozin/sorozin2.webp",
+  alt: "הלוגו של Sorozin Chef על שני סינרים, שחור ולבן",
+  width: 1227,
+  height: 1282,
+};
+const MENUS = {
+  src: "/images/projects/sorozin/sorozin6.webp",
+  alt: "ארבעת התפריטים של Sorozin Chef זה לצד זה, כל אחד בצבע משלו",
+  width: 1491,
+  height: 797,
+};
 
 // Where a folding line's top is on the screen, as a share of its height, while
 // its letters fold in.
@@ -268,15 +261,30 @@ export default function SorozinCase({ site }: Props) {
           <span className="sr-only">Rebrand</span>
           <FoldWords text="#REBRAND" />
         </h2>
-        <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-6">
-          {PIECES.map((piece) => (
-            <div key={piece.src} className={piece.place}>
-              <ScrollPiece piece={piece} sizes="(max-width: 768px) 100vw, 80vw" />
-              {"note" in piece && (
-                <p className="mt-4 font-body text-m-body text-black/70 md:mt-6 md:text-[19px]">{piece.note}</p>
-              )}
+        <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-10">
+          <div className="flex flex-col gap-10 md:col-span-7 md:gap-16">
+            <ScrollPiece piece={KNIVES} sizes="(max-width: 768px) 100vw, 58vw" />
+            {/* A little narrower than the knives over it, and against the far
+                side of the column: two pictures of one width, one over the
+                other, were a strip. */}
+            <div className="md:w-[96%] md:self-end">
+              <ScrollPiece piece={CARDS} sizes="(max-width: 768px) 100vw, 50vw" />
             </div>
-          ))}
+          </div>
+          <div className="md:col-span-5 md:col-start-8 md:mt-56">
+            <ScrollPiece piece={APRONS} sizes="(max-width: 768px) 100vw, 42vw" />
+          </div>
+        </div>
+        {/* THE MENUS, ON THEIR OWN AND CENTRED, with the one line on this page
+            that stands under a picture: that there are four, and what the four
+            are, is not something the picture says at the size it is shown. */}
+        <div className="mx-auto mt-10 max-w-[1400px] md:mt-20">
+          <div className="mx-auto md:w-[62%]">
+            <ScrollPiece piece={MENUS} sizes="(max-width: 768px) 100vw, 62vw" />
+            <p className="mt-4 text-center font-body text-m-body text-black/70 md:mt-6 md:text-[19px]">
+              ארבעה תפריטים, אחד לכל סוג אירוע: שוק, בופה, פרימיום וספיישל&apos;ס.
+            </p>
+          </div>
         </div>
 
         {/* ONE LINE FROM THE CLIENT, between the pictures and the live site -
@@ -287,7 +295,7 @@ export default function SorozinCase({ site }: Props) {
             UNTIL HE HAS APPROVED IT: the page does not go out before that. */}
         <figure className="mx-auto mt-24 max-w-[900px] text-center md:mt-40">
           <blockquote className="font-display text-m-lead leading-[1.35] font-bold tracking-tight text-black md:text-[clamp(32px,3.6vw,52px)] md:leading-[1.25]">
-            &quot;באנו להחליף לוגו ותפריטים. <span className="text-marker">יצאנו עם עסק שנראה חדש.</span>&quot;
+            &quot;באנו להחליף לוגו ותפריטים, <span className="text-marker">יצאנו עם עסק שנראה חדש.</span>&quot;
           </blockquote>
           <figcaption className="mt-6 font-display text-m-body text-black/60 md:text-[17px]">
             צח סורוזין, Sorozin Chef
