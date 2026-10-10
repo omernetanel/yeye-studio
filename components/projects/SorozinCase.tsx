@@ -20,16 +20,19 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
  * A PAGE OF ITS OWN SHAPE, like the one for MAY'S and not a copy of it. That
  * one runs with icing because its mark does. This mark is two crossed knives,
  * so here the seams between the sections are cut on the slant, one way and
- * then the other (BladeCut), and the page is black, charcoal and white with no
- * colour in it at all.
+ * then the other (BladeCut), and the page is black and white with no colour in
+ * it at all.
  *
  * IT ENDS ON THE LIVE SITE. The brand has a landing page, so the page carries
  * the same live preview the sites' pages are built round, phone view and all.
  *
  * WHAT IS SAID IS WHAT HAPPENED, and no more: he asked for a new mark and new
- * menus; crossed butcher's knives because nothing says "meat chef" faster; the
- * 26 because he asked for it, beside the name so it stays clear in every
- * version of the mark. No results and no praise are claimed.
+ * menus; crossed butcher's knives because nothing says "meat chef" faster;
+ * charcoal grey because charcoal is the fire's own material; the 26 because he
+ * asked for it, beside the name so it stays clear in every version of the mark.
+ * No results and no praise are claimed. SAID PLAINLY AND BRIEFLY: a line that
+ * explains what a picture already shows (that a QR code is there to be
+ * scanned) was written and taken out.
  */
 
 interface Props {
@@ -66,7 +69,6 @@ const BLADE_START = 0.3;
 // A phrase that carries its sentence: medium and full black, as on the page
 // for MAY'S and the "about" page.
 const EMPHASIS = "font-medium text-black";
-const EMPHASIS_ON_DARK = "font-medium text-white";
 // The mark in the opening: how much larger it starts, and how far it has
 // settled by the time the page has scrolled this share of a screen.
 const MARK_ZOOM = 0.05;
@@ -196,48 +198,22 @@ export default function SorozinCase({ site }: Props) {
               <FoldWords text="שיבינו מהרגע הראשון." />
             </span>
           </h2>
-          <div className="mt-12 grid gap-6 font-body text-m-body text-black/70 md:mt-16 md:grid-cols-2 md:gap-10 md:text-[19px] md:leading-[1.7]">
+          {/* Everything said about the mark, here and in three short
+              paragraphs. Its colour and its number had a section of their own
+              - a screen of charcoal with CHEF 26 across it - and it was a great
+              deal of room for two remarks. */}
+          <div className="mt-12 grid gap-6 font-body text-m-body text-black/70 md:mt-16 md:grid-cols-3 md:gap-10 md:text-[19px] md:leading-[1.7]">
             <p>
-              ל-Sorozin Chef, שף בשרים שעושה אירועים, היו לוגו ותפריטים שהוא לא אהב ורצה לחדש.{" "}
-              <strong className={EMPHASIS}>הכול נעשה מחדש, מאפס</strong>.
+              Sorozin Chef, שף בשרים לאירועים, הגיע עם לוגו ותפריטים שביקש לחדש.{" "}
+              <strong className={EMPHASIS}>המותג נבנה מחדש, מאפס</strong>.
             </p>
             <p>
-              שתי סכיני בשר מוצלבות הן הסימן הכי קלאסי שיש לשף. לא היה צורך להמציא משהו חדש: הלוגו צריך להיות
-              מזוהה איתו, ו<strong className={EMPHASIS}>ברור לכולם מהרגע הראשון</strong>.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* THE MARK'S THREE DECISIONS, ON CHARCOAL - the brand's own grey, and
-          the reason for it is the first thing said here. */}
-      <section
-        data-nav-dark="true"
-        className="relative bg-linear-to-b from-neutral-700 to-neutral-900 px-6 pt-40 pb-24 text-white md:pt-72 md:pb-36"
-      >
-        <BladeCut className="bg-white" flip />
-        <div className="mx-auto max-w-[1100px]">
-          <h2
-            data-fold-line
-            lang="en"
-            dir="ltr"
-            className="text-right font-display text-[26vw] leading-[0.95] font-extrabold tracking-tight md:text-[clamp(120px,17vw,260px)]"
-          >
-            <span className="sr-only">Chef 26</span>
-            <FoldWords text="CHEF 26" />
-          </h2>
-          <div className="mt-10 grid gap-6 font-body text-m-body text-white/75 md:mt-14 md:grid-cols-3 md:gap-10 md:text-[19px] md:leading-[1.7]">
-            <p>
-              <strong className={EMPHASIS_ON_DARK}>אפור פחם, לא אדום.</strong> פחם הוא מה שהכי מזוהה עם על האש,
-              ולוגו אדום כבר יש לכולם.
+              שתי סכיני בשר מוצלבות הן הסימן הקלאסי ביותר של התחום. הלוגו לא מנסה להמציא שפה חדשה, אלא להיות{" "}
+              <strong className={EMPHASIS}>מזוהה וברור מהמבט הראשון</strong>.
             </p>
             <p>
-              <strong className={EMPHASIS_ON_DARK}>ה-26 היה בקשה שלו</strong>: הוא רצה שהמספר ייכנס ללוגו. הוא יושב
-              ליד השם ולא על הסכינים, כדי שיישאר ברור בכל גרסה של הלוגו.
-            </p>
-            <p>
-              מעל הסכינים כתוב Premium Meat Experience, כי זו החוויה שהוא נותן:{" "}
-              <strong className={EMPHASIS_ON_DARK}>בשר, ברמת פרימיום</strong>.
+              הצבע הוא <strong className={EMPHASIS}>אפור פחם</strong>, החומר שמזוהה יותר מכל עם האש, ולא האדום
+              המתבקש. המספר 26 שולב לבקשת השף, לצד השם ולא בתוך הסמל, כך שהוא נשאר קריא בכל גודל ובכל גרסה.
             </p>
           </div>
         </div>
@@ -245,9 +221,9 @@ export default function SorozinCase({ site }: Props) {
 
       {/* WHAT THE MARK WENT ON, with nothing written under it - what each
           picture shows is its alt. Two columns that do not line up, as on the
-          home page; one column on a phone. */}
-      <section className="relative bg-white px-6 pt-40 pb-24 md:pt-72 md:pb-40">
-        <BladeCut className="bg-neutral-900" />
+          home page; one column on a phone. White carries on from the section
+          above, with no seam between them. */}
+      <section className="relative bg-white px-6 pb-24 md:pb-40">
         <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-6">
           {PIECES.map((piece, index) => (
             <div key={piece.src} className={index % 2 === 0 ? "md:col-span-5" : "md:col-span-7 md:mt-48"}>
@@ -255,11 +231,6 @@ export default function SorozinCase({ site }: Props) {
             </div>
           ))}
         </div>
-        {/* One thing about the cards that the picture does not say by itself. */}
-        <p className="mx-auto mt-12 max-w-[640px] text-center font-body text-m-body text-black/70 md:mt-20 md:text-[19px] md:leading-[1.7]">
-          על כרטיס הביקור יש שני קודי QR, לאינסטגרם ולוואטסאפ:{" "}
-          <strong className={EMPHASIS}>סורקים, ומדברים איתו</strong>.
-        </p>
 
         {/* THE LANDING PAGE, LIVE: the site itself in the frame, to scroll in
             and to see as a phone would show it. */}
@@ -268,8 +239,8 @@ export default function SorozinCase({ site }: Props) {
             ודף הנחיתה, חי.
           </h2>
           <p className="mx-auto mt-5 mb-10 max-w-[640px] text-center font-body text-m-body text-black/70 md:mb-14 md:text-[19px] md:leading-[1.7]">
-            המותג כהה והדף בהיר, בכוונה:{" "}
-            <strong className={EMPHASIS}>על רקע כהה קרש החיתוך עם הלוגו היה נבלע</strong>.
+            הדף בהיר, בניגוד למותג הכהה: על רקע בהיר{" "}
+            <strong className={EMPHASIS}>קרש החיתוך עם הלוגו מקבל את הנוכחות שלו</strong>.
           </p>
           <LiveProjectPreview url={site.url} title="דף הנחיתה של Sorozin Chef" fallbackImage={site.image} />
         </div>
