@@ -42,6 +42,10 @@ interface Props {
 
 const INSTAGRAM = "https://www.instagram.com/sorozin__meatshow/";
 
+// The aprons on the right and the cards on the left of them, lower: the tall
+// picture in the narrow column and the wide one in the wide column. The
+// landing page last, so that its picture is the one beside the quote and the
+// live site that follow.
 const PIECES = [
   {
     src: "/images/projects/sorozin/sorozin2.webp",
@@ -52,21 +56,19 @@ const PIECES = [
   },
   // THE MENUS GO HERE once they are shown anew - four of them, one for each
   // kind of event, each seen on its own.
-  // The landing page as an object among the others, before it is met live
-  // further down.
-  {
-    src: "/images/projects/sorozin/sorozinweb01.webp",
-    alt: "דף הנחיתה של Sorozin Chef פתוח על מסך מחשב נייד",
-    width: 1536,
-    height: 1024,
-    place: "md:col-span-7 md:mt-48",
-  },
-  // On its own row, and kept in from both edges.
   {
     src: "/images/projects/sorozin/sorozin1.webp",
     alt: "כרטיסי ביקור של Sorozin Chef, שני הצדדים",
     width: 1679,
     height: 937,
+    place: "md:col-span-7 md:mt-48",
+  },
+  // On its own row, and kept in from both edges.
+  {
+    src: "/images/projects/sorozin/sorozinweb01.webp",
+    alt: "דף הנחיתה של Sorozin Chef פתוח על מסך מחשב נייד",
+    width: 1536,
+    height: 1024,
     place: "md:col-span-8 md:col-start-3 md:mt-6",
   },
 ];
@@ -233,10 +235,10 @@ export default function SorozinCase({ site }: Props) {
 
       {/* WHAT THE MARK WENT ON, with nothing written under it - what each
           picture shows is its alt. Two columns that do not line up, as on the
-          home page; one column on a phone. On the lightest grey, a step off
+          home page; one column on a phone. On a light grey, two steps off
           the white on either side of it, so that it is a section of its own
           with a seam at its head. */}
-      <section className="relative bg-neutral-100 px-6 pt-40 pb-24 md:pt-72 md:pb-40">
+      <section className="relative bg-neutral-200 px-6 pt-40 pb-24 md:pt-72 md:pb-40">
         <BladeCut className="bg-white" flip />
         {/* ITS HEADING IS THE KIND OF JOB THIS WAS, said once and large: not a
             new brand but an old one made again. Grey, so that it is the
@@ -282,7 +284,7 @@ export default function SorozinCase({ site }: Props) {
           HEADING IS THE DECISION, not an announcement: "and the landing page,
           live" stood here, and only said what the frame under it shows. */}
       <section className="relative bg-white px-6 pt-40 pb-24 md:pt-72 md:pb-40">
-        <BladeCut className="bg-neutral-100" />
+        <BladeCut className="bg-neutral-200" />
         <div className="mx-auto max-w-[1400px]">
           <div className="mx-auto max-w-[1100px]">
             <h2 className="font-display text-m-display font-extrabold tracking-tight text-black md:text-[clamp(56px,7.4vw,112px)] md:leading-[1.02]">
