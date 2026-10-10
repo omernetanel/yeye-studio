@@ -28,11 +28,11 @@ export interface DesignBrand {
   pieces: DesignPiece[];
   /** The brand's own page on this site, when it has one: its name links there. */
   page?: string;
-  /** A site that goes with the brand, when there is one. */
-  link?: { label: string; href: string };
 }
 
-// The landing page is already listed with the sites; its address lives there.
+// The brand's page is listed with the sites, where its landing page is; its
+// address lives there. No separate link to the landing page from here: the
+// brand's page shows it, live.
 const sorozinSite = projects.find((project) => project.slug === "sorozin-chef");
 
 export const designWork: DesignBrand[] = [
@@ -81,6 +81,5 @@ export const designWork: DesignBrand[] = [
         height: 1282,
       },
     ],
-    link: sorozinSite ? { label: "לדף הנחיתה", href: sorozinSite.url } : undefined,
   },
 ];

@@ -5,7 +5,6 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import ArrowIcon from "@/components/ui/ArrowIcon";
 import CurvedLoop from "@/components/ui/CurvedLoop";
-import ExternalNote from "@/components/ui/ExternalNote";
 import FoldText, { setFold } from "@/components/ui/FoldText";
 import { ScrollPiece, useScrollPieces } from "@/components/ui/ScrollPiece";
 import { DESIGN_LOOP_MARKS, DESIGN_LOOP_TEXT } from "@/lib/content";
@@ -62,20 +61,6 @@ function BrandHeader({ brand, className }: { brand: DesignBrand; className?: str
         )}
       </h3>
       <p className="mt-0.5 font-body text-m-body text-black/55 md:text-[17px]">{brand.line}</p>
-      {brand.link && (
-        <p className="mt-5 flex flex-col items-start gap-1.5">
-          <Link
-            href={brand.link.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 font-display text-m-body font-medium text-black underline-offset-4 hover:underline md:text-[17px]"
-          >
-            {brand.link.label}
-            <ArrowIcon />
-          </Link>
-          <ExternalNote className="text-black/50" />
-        </p>
-      )}
     </header>
   );
 }
