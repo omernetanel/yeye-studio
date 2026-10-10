@@ -275,29 +275,48 @@ export default function SorozinCase({ site }: Props) {
             <ScrollPiece piece={APRONS} sizes="(max-width: 768px) 100vw, 42vw" />
           </div>
         </div>
-        {/* THE MENUS, ON THEIR OWN AND CENTRED, with the one line on this page
-            that stands under a picture: that there are four, and what the four
-            are, is not something the picture says at the size it is shown. */}
-        <div className="mx-auto mt-10 max-w-[1400px] md:mt-20">
-          <div className="mx-auto md:w-[62%]">
-            <ScrollPiece piece={MENUS} sizes="(max-width: 768px) 100vw, 62vw" />
-            <p className="mt-4 text-center font-body text-m-body text-black/70 md:mt-6 md:text-[19px]">
-              ארבעה תפריטים, אחד לכל סוג אירוע: שוק, בופה, פרימיום וספיישל&apos;ס.
+      </section>
+
+      {/* THE MENUS, IN A SECTION OF THEIR OWN: one screen, one heading, one
+          picture, one line. ON THE BRAND'S CHARCOAL - the page's one dark
+          stretch between its black ends - where the picture's own dark counter
+          falls away and the four colours are what is left. Not a screen for
+          each menu: that was proposed, and was a great deal for a menu. */}
+      <section
+        data-nav-dark="true"
+        className="relative bg-neutral-900 px-6 pt-40 pb-24 text-white md:pt-72 md:pb-40"
+      >
+        <BladeCut className="bg-neutral-200" />
+        <div className="mx-auto max-w-[1400px]">
+          <h2 className="mx-auto max-w-[1100px] font-display text-m-display font-extrabold tracking-tight md:text-[clamp(56px,7.4vw,112px)] md:leading-[1.02]">
+            <span className="sr-only">ארבעה תפריטים, ארבעה צבעים.</span>
+            <span data-fold-line className="block text-neutral-500">
+              <FoldWords text="ארבעה תפריטים," />
+            </span>
+            <span data-fold-line className="block">
+              <FoldWords text="ארבעה צבעים." />
+            </span>
+          </h2>
+          <div className="mx-auto mt-12 md:mt-20 md:w-[70%]">
+            <ScrollPiece piece={MENUS} sizes="(max-width: 768px) 100vw, 70vw" />
+            <p className="mt-4 text-center font-body text-m-body text-white/70 md:mt-6 md:text-[19px]">
+              תפריט לכל סוג אירוע: שוק, בופה, פרימיום וספיישל&apos;ס.
             </p>
           </div>
         </div>
 
-        {/* ONE LINE FROM THE CLIENT, between the pictures and the live site -
-            which also parts the picture of the landing page from the landing
-            page itself. From Tzach, the son, who the work was done with. It
-            says what the job was and how it ended, and ends on other words
-            than the quote on the page for MAY'S does. THE WORDING IS A DRAFT
-            UNTIL HE HAS APPROVED IT: the page does not go out before that. */}
+        {/* ONE LINE FROM THE CLIENT, after all the work and before the live
+            site. From Tzach, the son, who the work was done with. It says
+            what the job was and how it ended, and ends on other words than
+            the quote on the page for MAY'S does. THE WORDING IS A DRAFT UNTIL
+            HE HAS APPROVED IT: the page does not go out before that. */}
         <figure className="mx-auto mt-24 max-w-[900px] text-center md:mt-40">
-          <blockquote className="font-display text-m-lead leading-[1.35] font-bold tracking-tight text-black md:text-[clamp(32px,3.6vw,52px)] md:leading-[1.25]">
-            &quot;באנו להחליף לוגו ותפריטים, <span className="text-marker">יצאנו עם עסק שנראה חדש.</span>&quot;
+          <blockquote className="font-display text-m-lead leading-[1.35] font-bold tracking-tight md:text-[clamp(32px,3.6vw,52px)] md:leading-[1.25]">
+            &quot;באנו להחליף לוגו ותפריטים,{" "}
+            <span className="text-marker [--marker-color:var(--color-neutral-700)]">יצאנו עם עסק שנראה חדש.</span>
+            &quot;
           </blockquote>
-          <figcaption className="mt-6 font-display text-m-body text-black/60 md:text-[17px]">
+          <figcaption className="mt-6 font-display text-m-body text-white/60 md:text-[17px]">
             צח סורוזין, Sorozin Chef
           </figcaption>
         </figure>
@@ -309,7 +328,7 @@ export default function SorozinCase({ site }: Props) {
           HEADING IS THE DECISION, not an announcement: "and the landing page,
           live" stood here, and only said what the frame under it shows. */}
       <section className="relative bg-white px-6 pt-40 pb-24 md:pt-72 md:pb-40">
-        <BladeCut className="bg-neutral-200" />
+        <BladeCut className="bg-neutral-900" flip />
         <div className="mx-auto max-w-[1400px]">
           <div className="mx-auto max-w-[1100px]">
             <h2 className="font-display text-m-display font-extrabold tracking-tight text-black md:text-[clamp(56px,7.4vw,112px)] md:leading-[1.02]">
@@ -341,7 +360,7 @@ export default function SorozinCase({ site }: Props) {
         data-nav-dark="true"
         className="relative bg-black px-6 pt-48 pb-24 text-center text-white md:pt-80 md:pb-32"
       >
-        <BladeCut className="bg-white" flip />
+        <BladeCut className="bg-white" />
         <h2 className="mx-auto max-w-[900px] font-display text-m-title font-extrabold tracking-tight md:text-[clamp(44px,5.4vw,80px)] md:leading-[1.05]">
           רוצים מותג שמבינים מהרגע הראשון?
         </h2>
