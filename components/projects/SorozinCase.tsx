@@ -300,7 +300,7 @@ export default function SorozinCase({ site }: Props) {
           <div className="mx-auto mt-12 md:mt-20 md:w-[70%]">
             <ScrollPiece piece={MENUS} sizes="(max-width: 768px) 100vw, 70vw" />
             <p className="mt-4 text-center font-body text-m-body text-white/70 md:mt-6 md:text-[19px]">
-              תפריט לכל סוג אירוע: שוק, בופה, פרימיום וספיישל&apos;ס.
+              תפריט לכל אירוע: שוק, בופה, פרימיום וספיישל&apos;ס.
             </p>
           </div>
         </div>
