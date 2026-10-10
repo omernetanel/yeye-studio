@@ -289,18 +289,18 @@ export default function SorozinCase({ site }: Props) {
         <BladeCut className="bg-neutral-200" />
         <div className="mx-auto max-w-[1400px]">
           <h2 className="mx-auto max-w-[1100px] font-display text-m-display font-extrabold tracking-tight md:text-[clamp(56px,7.4vw,112px)] md:leading-[1.02]">
-            <span className="sr-only">ארבעה תפריטים, ארבעה צבעים.</span>
+            <span className="sr-only">תפריט לכל אירוע, מותג אחד לכולם.</span>
             <span data-fold-line className="block text-neutral-500">
-              <FoldWords text="ארבעה תפריטים," />
+              <FoldWords text="תפריט לכל אירוע," />
             </span>
             <span data-fold-line className="block">
-              <FoldWords text="ארבעה צבעים." />
+              <FoldWords text="מותג אחד לכולם." />
             </span>
           </h2>
           <div className="mx-auto mt-12 md:mt-20 md:w-[70%]">
             <ScrollPiece piece={MENUS} sizes="(max-width: 768px) 100vw, 70vw" />
             <p className="mt-4 text-center font-body text-m-body text-white/70 md:mt-6 md:text-[19px]">
-              תפריט לכל סוג אירוע: שוק, בופה, פרימיום וספיישל&apos;ס.
+              שוק, בופה, פרימיום וספיישל&apos;ס.
             </p>
           </div>
         </div>
