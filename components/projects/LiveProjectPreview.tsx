@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -14,6 +14,10 @@ interface LiveProjectPreviewProps {
 }
 
 type View = "desktop" | "mobile";
+
+// The width the desk view gives the site, in its own px (the iframe's class
+// carries the same number, and 1080 for its height).
+const DESK_WIDTH = 1920;
 
 /**
  * The project stays embedded live, in-page — no need to leave YEYE Digital
@@ -36,6 +40,19 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
   // The handset is drawn only round a real site: with no address the picture
   // stands in the browser frame, whichever view is chosen.
   const phone = view === "mobile" && hasUrl;
+  // How far the desk view's 1920px site is scaled to sit in its frame: the
+  // frame's width over the site's.
+  const screenRef = useRef<HTMLDivElement>(null);
+  const [deskScale, setDeskScale] = useState(1);
+  useEffect(() => {
+    const screen = screenRef.current;
+    if (!screen) return undefined;
+    const measure = () => setDeskScale(screen.clientWidth / DESK_WIDTH);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(screen);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="flex w-full flex-col items-center gap-5">
@@ -132,11 +149,17 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
 
           {/* On the desk view the site's area is 16:9, the shape of the pictures
               that stand in for it, so each fills it edge to edge. */}
-          <div className={cn("relative overflow-hidden", phone ? "min-h-0 flex-1" : "aspect-video")}>
+          <div ref={screenRef} className={cn("relative overflow-hidden", phone ? "min-h-0 flex-1" : "aspect-video")}>
             {hasUrl && loaded && (
               <iframe
                 src={url}
                 title={title}
+                // ON THE DESK THE SITE'S OWN VIEWPORT IS A FULL 1920 x 1080, and
+                // the whole of it is scaled down to the frame - the same thing
+                // the phone does. At the frame's own width (1100 at most) the
+                // site laid itself out for a small laptop: the opening screen
+                // did not fit, and what showed was not the page as it opens.
+                style={phone ? undefined : { transform: `scale(${deskScale})` }}
                 // In the phone the site's own viewport is 410 x 797: an iPhone's
                 // 393 across, and the 17 a desktop browser takes for its
                 // scrollbar, so the page itself still has the full 393; and as
@@ -149,7 +172,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
                   "border-0",
                   phone
                     ? "absolute top-0 left-0 h-[797px] w-[410px] max-w-none origin-top-left scale-[0.678]"
-                    : "h-full w-full",
+                    : "absolute top-0 left-0 h-[1080px] w-[1920px] max-w-none origin-top-left",
                 )}
                 loading="eager"
                 referrerPolicy="no-referrer"

@@ -286,7 +286,7 @@ export default function SorozinCase({ site }: Props) {
             </h2>
             <div className="mt-12 mb-12 grid gap-6 font-body text-m-body text-black/70 md:mt-16 md:mb-20 md:grid-cols-2 md:gap-10 md:text-[19px] md:leading-[1.7]">
               <p>
-                אתר לשף בשרים כמעט מתבקש שיהיה כהה: שחור, אש, נתח במרכז.{" "}
+                אתר לשף בשרים כמעט מתבקש שיהיה כהה: שחור, אש, נתח במרכז. גם הפלטה של המותג עצמו כהה.{" "}
                 <strong className={EMPHASIS}>הדף הזה הולך לכיוון ההפוך</strong>, ונראה כמו עמוד פתוח בספר בישול.
               </p>
               <p>
