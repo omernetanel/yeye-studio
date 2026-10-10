@@ -151,11 +151,20 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     // The question is whether the page is still changing height, and a
     // ResizeObserver answers exactly that: place again on every change, and
     // fall silent on its own once the height holds.
+    // Where this arrival is headed, or null while that cannot be said yet: a
+    // hash whose section is not in the page so far.
+    const destination = () => returnTo ?? destinationForHash(window.location.hash);
     const place = () => {
-      const top = returnTo ?? destinationForHash(window.location.hash) ?? 0;
+      const top = destination() ?? 0;
       const instance = lenisRef.current;
-      if (instance) instance.scrollTo(top, { immediate: true });
-      else window.scrollTo(0, top);
+      if (instance) {
+        // Lenis clamps a scroll to the page height it last measured, and on
+        // the frames after a route change that is still the page that was
+        // left: a jump deep into the home page stopped at the old page's
+        // length. Measured again here, before it is asked.
+        instance.resize();
+        instance.scrollTo(top, { immediate: true });
+      } else window.scrollTo(0, top);
       return top;
     };
 
@@ -175,7 +184,18 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     // distance: an earlier version compared scrollY against the placement and
     // let go past two pixels, which Lenis's own settling could trip by itself
     // while nobody had touched anything.
-    const until = performance.now() + HOLD_ARRIVAL_MS;
+    //
+    // THE SECTION AIMED AT MAY NOT BE THERE YET. The first time the home page
+    // is opened in a visit, from a link on another page, its sections mount a
+    // moment after the route has changed. The placement found no section, put
+    // the page at the top, saw that it had "arrived" there, and let go - so
+    // "more work" on a project's page led to the hero. It worked from the
+    // second time on, with the home page already loaded, which is why one
+    // project's page seemed broken and another's did not. Until the section
+    // exists there is nothing to have arrived at: the hold waits for it, and
+    // its half second starts when the section does.
+    const started = performance.now();
+    let until: number | null = destination() === null ? null : started + HOLD_ARRIVAL_MS;
     let frame: number | null = null;
 
     const stop = () => {
@@ -189,12 +209,17 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     // And not over before the page has actually reached its place: a return
     // to a deep position waits for the page to grow tall enough to hold it,
     // up to a limit.
-    const limit = until + HOLD_REACH_MS;
+    const limit = started + HOLD_ARRIVAL_MS + HOLD_REACH_MS;
     const hold = () => {
       const now = performance.now();
-      const reached = Math.abs(window.scrollY - aimed) < 2;
-      if (now > limit || (now > until && reached)) return stop();
-      place();
+      const target = destination();
+      if (target !== null && until === null) until = now + HOLD_ARRIVAL_MS;
+      const reached = target !== null && Math.abs(window.scrollY - target) < 2;
+      // A section that has only now appeared still gets its half second, past
+      // the limit if need be: the limit is for giving up, not for cutting
+      // short a placement that has just begun.
+      if (until === null ? now > limit : now > until && (reached || now > limit)) return stop();
+      if (target !== null) place();
       frame = requestAnimationFrame(hold);
     };
 
