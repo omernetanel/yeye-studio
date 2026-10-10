@@ -20,7 +20,7 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
  * A PAGE OF ITS OWN SHAPE, like the one for MAY'S and not a copy of it. That
  * one runs with icing because its mark does. This mark is two crossed knives,
  * so here the seams between the sections are cut on the slant, one way and
- * then the other (BladeCut), and the page is black, steel and white with no
+ * then the other (BladeCut), and the page is black, charcoal and white with no
  * colour in it at all.
  *
  * IT ENDS ON THE LIVE SITE. The brand has a landing page, so the page carries
@@ -66,6 +66,7 @@ const BLADE_START = 0.3;
 // A phrase that carries its sentence: medium and full black, as on the page
 // for MAY'S and the "about" page.
 const EMPHASIS = "font-medium text-black";
+const EMPHASIS_ON_DARK = "font-medium text-white";
 // The mark in the opening: how much larger it starts, and how far it has
 // settled by the time the page has scrolled this share of a screen.
 const MARK_ZOOM = 0.05;
@@ -197,8 +198,8 @@ export default function SorozinCase({ site }: Props) {
           </h2>
           <div className="mt-12 grid gap-6 font-body text-m-body text-black/70 md:mt-16 md:grid-cols-2 md:gap-10 md:text-[19px] md:leading-[1.7]">
             <p>
-              Sorozin Chef הוא שף בשרים שעושה אירועים. הוא רצה{" "}
-              <strong className={EMPHASIS}>להחליף לוגו ולעשות תפריטים חדשים</strong>, והמותג נבנה מחדש סביב זה.
+              ל-Sorozin Chef, שף בשרים שעושה אירועים, היו לוגו ותפריטים שהוא לא אהב ורצה לחדש.{" "}
+              <strong className={EMPHASIS}>הכול נעשה מחדש, מאפס</strong>.
             </p>
             <p>
               שתי סכיני בשר מוצלבות הן הסימן הכי קלאסי שיש לשף. לא היה צורך להמציא משהו חדש: הלוגו צריך להיות
@@ -208,28 +209,35 @@ export default function SorozinCase({ site }: Props) {
         </div>
       </section>
 
-      {/* THE NUMBER, ON STEEL: the one grey section on the page, the colour of
-          the knives and of the counter everything was photographed on. */}
-      <section className="relative bg-linear-to-b from-neutral-200 to-neutral-400 px-6 pt-40 pb-24 md:pt-72 md:pb-36">
+      {/* THE MARK'S THREE DECISIONS, ON CHARCOAL - the brand's own grey, and
+          the reason for it is the first thing said here. */}
+      <section
+        data-nav-dark="true"
+        className="relative bg-linear-to-b from-neutral-700 to-neutral-900 px-6 pt-40 pb-24 text-white md:pt-72 md:pb-36"
+      >
         <BladeCut className="bg-white" flip />
         <div className="mx-auto max-w-[1100px]">
           <h2
             data-fold-line
             lang="en"
             dir="ltr"
-            className="text-right font-display text-[26vw] leading-[0.95] font-extrabold tracking-tight text-black md:text-[clamp(120px,17vw,260px)]"
+            className="text-right font-display text-[26vw] leading-[0.95] font-extrabold tracking-tight md:text-[clamp(120px,17vw,260px)]"
           >
             <span className="sr-only">Chef 26</span>
             <FoldWords text="CHEF 26" />
           </h2>
-          <div className="mt-10 grid gap-6 font-body text-m-body text-black/75 md:mt-14 md:grid-cols-2 md:gap-10 md:text-[19px] md:leading-[1.7]">
+          <div className="mt-10 grid gap-6 font-body text-m-body text-white/75 md:mt-14 md:grid-cols-3 md:gap-10 md:text-[19px] md:leading-[1.7]">
             <p>
-              <strong className={EMPHASIS}>ה-26 היה בקשה שלו</strong>: הוא רצה שהמספר ייכנס ללוגו. הוא יושב ליד
-              השם ולא על הסכינים, כדי שיישאר ברור בכל גרסה של הלוגו.
+              <strong className={EMPHASIS_ON_DARK}>אפור פחם, לא אדום.</strong> פחם הוא מה שהכי מזוהה עם על האש,
+              ולוגו אדום כבר יש לכולם.
+            </p>
+            <p>
+              <strong className={EMPHASIS_ON_DARK}>ה-26 היה בקשה שלו</strong>: הוא רצה שהמספר ייכנס ללוגו. הוא יושב
+              ליד השם ולא על הסכינים, כדי שיישאר ברור בכל גרסה של הלוגו.
             </p>
             <p>
               מעל הסכינים כתוב Premium Meat Experience, כי זו החוויה שהוא נותן:{" "}
-              <strong className={EMPHASIS}>בשר, ברמת פרימיום</strong>.
+              <strong className={EMPHASIS_ON_DARK}>בשר, ברמת פרימיום</strong>.
             </p>
           </div>
         </div>
@@ -239,7 +247,7 @@ export default function SorozinCase({ site }: Props) {
           picture shows is its alt. Two columns that do not line up, as on the
           home page; one column on a phone. */}
       <section className="relative bg-white px-6 pt-40 pb-24 md:pt-72 md:pb-40">
-        <BladeCut className="bg-neutral-400" />
+        <BladeCut className="bg-neutral-900" />
         <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-6">
           {PIECES.map((piece, index) => (
             <div key={piece.src} className={index % 2 === 0 ? "md:col-span-5" : "md:col-span-7 md:mt-48"}>
@@ -247,13 +255,22 @@ export default function SorozinCase({ site }: Props) {
             </div>
           ))}
         </div>
+        {/* One thing about the cards that the picture does not say by itself. */}
+        <p className="mx-auto mt-12 max-w-[640px] text-center font-body text-m-body text-black/70 md:mt-20 md:text-[19px] md:leading-[1.7]">
+          על כרטיס הביקור יש שני קודי QR, לאינסטגרם ולוואטסאפ:{" "}
+          <strong className={EMPHASIS}>סורקים, ומדברים איתו</strong>.
+        </p>
 
         {/* THE LANDING PAGE, LIVE: the site itself in the frame, to scroll in
             and to see as a phone would show it. */}
         <div className="mx-auto mt-24 max-w-[1400px] md:mt-40">
-          <h2 className="mb-10 text-center font-display text-m-title font-extrabold tracking-tight text-black md:mb-14 md:text-[clamp(40px,4.6vw,68px)]">
+          <h2 className="text-center font-display text-m-title font-extrabold tracking-tight text-black md:text-[clamp(40px,4.6vw,68px)]">
             ודף הנחיתה, חי.
           </h2>
+          <p className="mx-auto mt-5 mb-10 max-w-[640px] text-center font-body text-m-body text-black/70 md:mb-14 md:text-[19px] md:leading-[1.7]">
+            המותג כהה והדף בהיר, בכוונה:{" "}
+            <strong className={EMPHASIS}>על רקע כהה קרש החיתוך עם הלוגו היה נבלע</strong>.
+          </p>
           <LiveProjectPreview url={site.url} title="דף הנחיתה של Sorozin Chef" fallbackImage={site.image} />
         </div>
 
