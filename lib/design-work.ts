@@ -68,7 +68,7 @@ export const designWork: DesignBrand[] = [
     line: "שף פרטי / לוגו, כרטיסי ביקור ודף נחיתה",
     pieces: [
       {
-        src: "/images/projects/sorogin/sorozin1.webp",
+        src: "/images/projects/sorozin/sorozin1.webp",
         alt: "כרטיסי ביקור של Sorozin Chef, שני הצדדים",
         width: 1679,
         height: 937,
