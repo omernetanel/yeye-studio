@@ -286,12 +286,12 @@ export default function SorozinCase({ site }: Props) {
             </h2>
             <div className="mt-12 mb-12 grid gap-6 font-body text-m-body text-black/70 md:mt-16 md:mb-20 md:grid-cols-2 md:gap-10 md:text-[19px] md:leading-[1.7]">
               <p>
-                כך קרש החיתוך שנושא את הלוגו הוא הדבר הראשון שרואים,{" "}
-                <strong className={EMPHASIS}>ומקבל את כל תשומת הלב</strong>.
+                אתר לשף בשרים כמעט מתבקש שיהיה כהה: שחור, אש, נתח במרכז.{" "}
+                <strong className={EMPHASIS}>הדף הזה הולך לכיוון ההפוך</strong>, ונראה כמו עמוד פתוח בספר בישול.
               </p>
               <p>
-                <strong className={EMPHASIS}>הוא נראה כמו עמוד מספר בישול</strong>, לא כמו אתר של מסעדת בשרים: לבן
-                נקי, קרש אחד במרכז, וחתימת השף.
+                על הלבן, קרש החיתוך שנושא את הלוגו הוא הדבר הראשון שרואים, ומתחתיו החתימה של השף.{" "}
+                <strong className={EMPHASIS}>קודם האדם שמבשל, ורק אחר כך העסק</strong>.
               </p>
             </div>
           </div>
