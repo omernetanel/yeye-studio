@@ -298,14 +298,15 @@ export default function SorozinCase({ site }: Props) {
             </span>
           </h2>
           <div className="mx-auto mt-12 md:mt-20 md:w-[70%]">
-            {/* WHITE ROUND IT, because on charcoal the dark counter in the picture
-                had no edge and the four menus floated. On the desk a thick
-                frame, on the part of the picture that moves, so the frame rides
-                with it. On a phone a frame that thick took a quarter of the
-                picture, so there it is a white band from one edge of the screen
-                to the other, with the picture across it and white over and
-                under. */}
-            <div className="-mx-6 bg-white py-6 md:mx-0 md:bg-transparent md:py-0">
+            {/* ON THE DESK, A THICK WHITE FRAME, because on charcoal the dark
+                counter in the picture had no edge and the four menus floated.
+                It is on the part of the picture that moves, so the frame rides
+                with it. ON A PHONE THERE IS NO WHITE AT ALL: a frame that thick
+                took a quarter of the picture, and a white band from edge to
+                edge of the screen was tried after it and turned down too. The
+                picture is let a little way into the page's side margins there
+                instead, to be larger, and stops short of the screen's edges. */}
+            <div className="-mx-3 md:mx-0">
               <ScrollPiece
                 piece={MENUS}
                 sizes="(max-width: 768px) 100vw, 70vw"
