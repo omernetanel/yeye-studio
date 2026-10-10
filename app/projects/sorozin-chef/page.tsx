@@ -13,7 +13,7 @@ const meta = pageMetadata({
   path: "/projects/sorozin-chef",
 });
 // The brand's own picture on its share card, instead of the wordmark.
-const images = ["/images/projects/sorozin/sorozinweb01.webp"];
+const images = ["/images/projects/sorozin/sorozin4.webp"];
 
 export const metadata: Metadata = {
   ...meta,

@@ -42,11 +42,22 @@ interface Props {
 
 const INSTAGRAM = "https://www.instagram.com/sorozin__meatshow/";
 
-// The aprons on the right and the cards on the left of them, lower: the tall
-// picture in the narrow column and the wide one in the wide column. The
-// landing page last, so that its picture is the one beside the quote and the
-// live site that follow.
+// THE KNIVES OPEN IT, the full width of the page: the mark on the thing it was
+// drawn from. Then the aprons on the right and the cards on the left of them,
+// lower - the tall picture in the narrow column and the wide one in the wide
+// column - and the four menus across the page to close.
+//
+// NO PICTURE OF THE LANDING PAGE. One stood here, the site open on a laptop,
+// and came out: the board with the mark on it is in the first picture, and
+// the site itself is live two sections down.
 const PIECES = [
+  {
+    src: "/images/projects/sorozin/sorozin4.webp",
+    alt: "קרש חיתוך, סט סכינים ומעמד עם הלוגו והשם של Sorozin Chef",
+    width: 1536,
+    height: 1024,
+    place: "md:col-span-12",
+  },
   {
     src: "/images/projects/sorozin/sorozin2.webp",
     alt: "הלוגו של Sorozin Chef על שני סינרים, שחור ולבן",
@@ -54,8 +65,6 @@ const PIECES = [
     height: 1282,
     place: "md:col-span-5",
   },
-  // THE MENUS GO HERE once they are shown anew - four of them, one for each
-  // kind of event, each seen on its own.
   {
     src: "/images/projects/sorozin/sorozin1.webp",
     alt: "כרטיסי ביקור של Sorozin Chef, שני הצדדים",
@@ -63,13 +72,15 @@ const PIECES = [
     height: 937,
     place: "md:col-span-7 md:mt-48",
   },
-  // On its own row, and kept in from both edges.
+  // The one picture with a line under it: that there are four, and what the
+  // four are, is not something the picture says at the size it is shown.
   {
-    src: "/images/projects/sorozin/sorozinweb01.webp",
-    alt: "דף הנחיתה של Sorozin Chef פתוח על מסך מחשב נייד",
-    width: 1536,
-    height: 1024,
-    place: "md:col-span-8 md:col-start-3 md:mt-6",
+    src: "/images/projects/sorozin/sorozin6.webp",
+    alt: "ארבעת התפריטים של Sorozin Chef זה לצד זה, כל אחד בצבע משלו",
+    width: 1491,
+    height: 797,
+    place: "md:col-span-12 md:mt-6",
+    note: "ארבעה תפריטים, אחד לכל סוג אירוע: שוק, בופה, פרימיום וספיישלס.",
   },
 ];
 
@@ -257,7 +268,10 @@ export default function SorozinCase({ site }: Props) {
         <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-6">
           {PIECES.map((piece) => (
             <div key={piece.src} className={piece.place}>
-              <ScrollPiece piece={piece} sizes="(max-width: 768px) 100vw, 60vw" />
+              <ScrollPiece piece={piece} sizes="(max-width: 768px) 100vw, (max-width: 1400px) 100vw, 1400px" />
+              {"note" in piece && (
+                <p className="mt-4 font-body text-m-body text-black/70 md:mt-6 md:text-[19px]">{piece.note}</p>
+              )}
             </div>
           ))}
         </div>
