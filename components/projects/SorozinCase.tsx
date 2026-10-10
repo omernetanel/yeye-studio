@@ -48,6 +48,7 @@ const PIECES = [
     alt: "הלוגו של Sorozin Chef על שני סינרים, שחור ולבן",
     width: 1227,
     height: 1282,
+    place: "md:col-span-5",
   },
   // THE MENUS GO HERE once they are shown anew - four of them, one for each
   // kind of event, each seen on its own.
@@ -56,6 +57,16 @@ const PIECES = [
     alt: "כרטיסי ביקור של Sorozin Chef, שני הצדדים",
     width: 1679,
     height: 937,
+    place: "md:col-span-7 md:mt-48",
+  },
+  // The landing page as an object among the others, before it is met live
+  // further down: on its own row, and kept in from both edges.
+  {
+    src: "/images/projects/sorozin/sorozinweb01.webp",
+    alt: "דף הנחיתה של Sorozin Chef פתוח על מסך מחשב נייד",
+    width: 1536,
+    height: 1024,
+    place: "md:col-span-8 md:col-start-3 md:mt-6",
   },
 ];
 
@@ -204,16 +215,16 @@ export default function SorozinCase({ site }: Props) {
               deal of room for two remarks. */}
           <div className="mt-12 grid gap-6 font-body text-m-body text-black/70 md:mt-16 md:grid-cols-3 md:gap-10 md:text-[19px] md:leading-[1.7]">
             <p>
-              Sorozin Chef, שף בשרים לאירועים, הגיע עם לוגו ותפריטים שביקש לחדש.{" "}
-              <strong className={EMPHASIS}>המותג נבנה מחדש, מאפס</strong>.
+              מיתוג מחדש לשף בשרים שעושה אירועים: לוגו, תפריטים, כרטיסי ביקור ודף נחיתה.{" "}
+              <strong className={EMPHASIS}>מהמיתוג הקודם לא נשאר דבר</strong>.
             </p>
             <p>
-              שתי סכיני בשר מוצלבות הן הסימן הקלאסי ביותר של התחום. הלוגו לא מנסה להמציא שפה חדשה, אלא להיות{" "}
-              <strong className={EMPHASIS}>מזוהה וברור מהמבט הראשון</strong>.
+              הסמל: שתי סכיני בשר מוצלבות. הקלאסי ביותר בתחום, ובכוונה.{" "}
+              <strong className={EMPHASIS}>לוגו של שף בשרים צריך להיקרא במבט אחד</strong>, לא להתפענח.
             </p>
             <p>
-              הצבע הוא <strong className={EMPHASIS}>אפור פחם</strong>, החומר שמזוהה יותר מכל עם האש, ולא האדום
-              המתבקש. המספר 26 שולב לבקשת השף, לצד השם ולא בתוך הסמל, כך שהוא נשאר קריא בכל גודל ובכל גרסה.
+              הצבע: <strong className={EMPHASIS}>אפור פחם</strong>, ולא האדום שהתחום כולו צבוע בו. ה-26 יושב לצד
+              השם ולא בתוך הסמל, וכך נשאר קריא בכל גודל.
             </p>
           </div>
         </div>
@@ -225,12 +236,17 @@ export default function SorozinCase({ site }: Props) {
           above, with no seam between them. */}
       <section className="relative bg-white px-6 pb-24 md:pb-40">
         <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-6">
-          {PIECES.map((piece, index) => (
-            <div key={piece.src} className={index % 2 === 0 ? "md:col-span-5" : "md:col-span-7 md:mt-48"}>
-              <ScrollPiece piece={piece} sizes="(max-width: 768px) 100vw, 55vw" />
+          {PIECES.map((piece) => (
+            <div key={piece.src} className={piece.place}>
+              <ScrollPiece piece={piece} sizes="(max-width: 768px) 100vw, 60vw" />
             </div>
           ))}
         </div>
+
+        {/* ONE LINE FROM HIM GOES HERE, between the pictures and the live site,
+            once he has approved its wording: one quote, his name, and what he
+            is to the business. It also parts the picture of the landing page
+            from the landing page itself. */}
 
         {/* THE LANDING PAGE, LIVE: the site itself in the frame, to scroll in
             and to see as a phone would show it. */}
@@ -239,15 +255,11 @@ export default function SorozinCase({ site }: Props) {
             ודף הנחיתה, חי.
           </h2>
           <p className="mx-auto mt-5 mb-10 max-w-[640px] text-center font-body text-m-body text-black/70 md:mb-14 md:text-[19px] md:leading-[1.7]">
-            הדף בהיר, בניגוד למותג הכהה: על רקע בהיר{" "}
-            <strong className={EMPHASIS}>קרש החיתוך עם הלוגו מקבל את הנוכחות שלו</strong>.
+            דף בהיר למותג כהה:{" "}
+            <strong className={EMPHASIS}>כך קרש החיתוך שנושא את הלוגו הוא הדבר הראשון שרואים</strong>.
           </p>
           <LiveProjectPreview url={site.url} title="דף הנחיתה של Sorozin Chef" fallbackImage={site.image} />
         </div>
-
-        {/* ONE LINE FROM HIM GOES HERE, after the work has been seen and before
-            the close, once he has approved its wording: one quote, his name,
-            and what he is to the business. */}
       </section>
 
       {/* THE CLOSE: back to black, and one thing to press. */}
