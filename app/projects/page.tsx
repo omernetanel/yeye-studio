@@ -3,7 +3,7 @@ import { pageMetadata } from "@/lib/site";
 import Navbar from "@/components/layout/Navbar";
 import SubPageNav from "@/components/layout/SubPageNav";
 import Footer from "@/components/layout/Footer";
-import { projects } from "@/lib/projects";
+import { projectLink, projects } from "@/lib/projects";
 import ProjectCard from "@/components/ui/ProjectCard";
 
 export const metadata: Metadata = pageMetadata({
@@ -31,8 +31,8 @@ export default function ProjectsPage() {
               title={project.cardTitle ?? project.title}
               category={project.cardCategory ?? project.category}
               imageSrc={project.image}
-              href={project.external ? project.url : `/projects/${project.slug}`}
-              external={project.external}
+              href={projectLink(project).href}
+              external={projectLink(project).external}
             />
           ))}
         </div>

@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { Fragment, useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import Link from "next/link";
 import ArrowIcon from "@/components/ui/ArrowIcon";
 import Button from "@/components/ui/Button";
-import FoldText, { setFold } from "@/components/ui/FoldText";
+import { setFold } from "@/components/ui/FoldText";
+import FoldWords from "@/components/ui/FoldWords";
 import GlazeDrips from "@/components/ui/GlazeDrips";
 import { ScrollPiece, useScrollPieces } from "@/components/ui/ScrollPiece";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
@@ -62,23 +63,6 @@ const EMPHASIS = "font-medium text-black";
 // settled by the time the page has scrolled this share of a screen.
 const MARK_ZOOM = 0.05;
 const MARK_SETTLE = 0.5;
-
-/**
- * A line that folds in, cut into words that do not break. FoldText sets every
- * letter as a box of its own, and a line of such boxes wraps wherever it runs
- * out of room - in the middle of a word. The words are silent: the heading
- * that uses this says its sentence once itself, in an sr-only span.
- */
-function FoldWords({ text }: { text: string }) {
-  return text.split(" ").map((word, index) => (
-    <Fragment key={index}>
-      {index > 0 && " "}
-      <span className="inline-block whitespace-nowrap">
-        <FoldText text={word} silent />
-      </span>
-    </Fragment>
-  ));
-}
 
 export default function MaysCase() {
   const rootRef = useRef<HTMLDivElement>(null);

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ExternalNote from "@/components/ui/ExternalNote";
 import FlexCarousel, { type FlexCarouselHandle } from "@/components/ui/FlexCarousel";
-import { projects } from "@/lib/projects";
+import { projectLink, projects } from "@/lib/projects";
 import { PROJECTS_HEADING } from "@/lib/content";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
@@ -18,23 +18,27 @@ const TITLE_CLASS = "font-display text-m-sub font-bold text-black md:text-[22px]
 // Four real projects today, and nothing here is written for four: the row takes
 // its count from this array and wraps by it, and the project pages are built
 // from the same file. Adding work is adding an entry to lib/projects.
-const entries = projects.map((project) => ({
-  src: project.image,
-  alt: project.cardTitle ?? project.title,
-  title: project.cardTitle ?? project.title,
-  category: project.cardCategory ?? project.category,
-  href: project.external ? project.url : `/projects/${project.slug}`,
+const entries = projects.map((project) => {
+  const { href, external } = projectLink(project);
   // Really another site, and not merely "has no page here": one piece is marked
   // external and still points at an address on this one.
-  leavesSite: Boolean(project.external) && project.url.startsWith("http"),
-  // And whether it has a page of its own here. Neither is true of a piece that
-  // is marked external but has no live address yet: it gets no note at all.
-  hasPage: !project.external,
-  // And so, whether there is anywhere to go at all. A piece that neither
-  // leaves the site nor has a page here is shown and is not a link: pressed,
-  // it led to a page that does not exist.
-  opens: !project.external || project.url.startsWith("http"),
-}));
+  const leavesSite = external && href.startsWith("http");
+  return {
+    src: project.image,
+    alt: project.cardTitle ?? project.title,
+    title: project.cardTitle ?? project.title,
+    category: project.cardCategory ?? project.category,
+    href,
+    leavesSite,
+    // And whether it has a page of its own here. Neither is true of a piece that
+    // is marked external but has no live address yet: it gets no note at all.
+    hasPage: !external,
+    // And so, whether there is anywhere to go at all. A piece that neither
+    // leaves the site nor has a page here is shown and is not a link: pressed,
+    // it led to a page that does not exist.
+    opens: !external || leavesSite,
+  };
+});
 
 /**
  * The work, as one row under glass, and the caption of whichever piece is in

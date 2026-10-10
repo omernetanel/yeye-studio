@@ -42,6 +42,18 @@ export interface Project {
   story?: ProjectStory;
   /** Card links straight out to `url` instead of an internal /projects/[slug] page — no detail page is generated for it. */
   external?: boolean;
+  /**
+   * A page of its own on this site, built by hand and not by /projects/[slug]:
+   * a brand's page, with the live site inside it. Cards lead there instead of
+   * out to `url`.
+   */
+  page?: string;
+}
+
+/** Where a card for this piece leads, and whether that is off this site. */
+export function projectLink(project: Project) {
+  const href = project.page ?? (project.external ? project.url : `/projects/${project.slug}`);
+  return { href, external: Boolean(project.external) && !project.page };
 }
 
 export const projects: Project[] = [
@@ -117,7 +129,10 @@ export const projects: Project[] = [
     description: "דף נחיתה שבניתי עבור Sorozin Chef.",
     url: "https://sorozinchef.pages.dev/",
     image: "/images/projects/sorozinchefweb.webp",
+    // No /projects/[slug] page: the brand has one of its own, and the live
+    // site is shown inside it.
     external: true,
+    page: "/projects/sorozin-chef",
   },
   {
     slug: "lynko-landing",

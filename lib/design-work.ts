@@ -65,7 +65,8 @@ export const designWork: DesignBrand[] = [
   },
   {
     name: "Sorozin Chef",
-    line: "שף פרטי / לוגו, כרטיסי ביקור ודף נחיתה",
+    line: "שף בשרים / מיתוג מחדש",
+    page: sorozinSite?.page,
     pieces: [
       {
         src: "/images/projects/sorozin/sorozin1.webp",
