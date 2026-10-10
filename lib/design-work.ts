@@ -73,6 +73,12 @@ export const designWork: DesignBrand[] = [
         width: 1679,
         height: 937,
       },
+      {
+        src: "/images/projects/sorozin/sorozin2.webp",
+        alt: "הלוגו של Sorozin Chef על שני סינרים, שחור ולבן",
+        width: 1227,
+        height: 1282,
+      },
     ],
     link: sorozinSite ? { label: "לדף הנחיתה", href: sorozinSite.url } : undefined,
   },
