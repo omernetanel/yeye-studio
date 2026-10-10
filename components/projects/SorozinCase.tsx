@@ -298,14 +298,20 @@ export default function SorozinCase({ site }: Props) {
             </span>
           </h2>
           <div className="mx-auto mt-12 md:mt-20 md:w-[70%]">
-            {/* A thick white frame on the desk, on the part of the picture that moves, so the
-                frame rides with it: on charcoal the dark counter in the picture
-                had no edge, and the four menus floated. */}
-            <ScrollPiece
-              piece={MENUS}
-              sizes="(max-width: 768px) 100vw, 70vw"
-              className="md:[&>span]:border-[35px] md:[&>span]:border-white"
-            />
+            {/* WHITE ROUND IT, because on charcoal the dark counter in the picture
+                had no edge and the four menus floated. On the desk a thick
+                frame, on the part of the picture that moves, so the frame rides
+                with it. On a phone a frame that thick took a quarter of the
+                picture, so there it is a white band from one edge of the screen
+                to the other, with the picture across it and white over and
+                under. */}
+            <div className="-mx-6 bg-white py-6 md:mx-0 md:bg-transparent md:py-0">
+              <ScrollPiece
+                piece={MENUS}
+                sizes="(max-width: 768px) 100vw, 70vw"
+                className="md:[&>span]:border-[35px] md:[&>span]:border-white"
+              />
+            </div>
             <p className="mt-4 text-center font-body text-m-body text-white/70 md:mt-6 md:text-[19px]">
               תפריט לכל אירוע: שוק, בופה, פרימיום וספיישל&apos;ס.
             </p>
