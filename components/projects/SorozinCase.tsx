@@ -233,18 +233,21 @@ export default function SorozinCase({ site }: Props) {
 
       {/* WHAT THE MARK WENT ON, with nothing written under it - what each
           picture shows is its alt. Two columns that do not line up, as on the
-          home page; one column on a phone. White carries on from the section
-          above, with no seam between them. */}
-      <section className="relative bg-white px-6 pt-10 pb-24 md:pt-20 md:pb-40">
+          home page; one column on a phone. On the lightest grey, a step off
+          the white on either side of it, so that it is a section of its own
+          with a seam at its head. */}
+      <section className="relative bg-neutral-100 px-6 pt-40 pb-24 md:pt-72 md:pb-40">
+        <BladeCut className="bg-white" flip />
         {/* ITS HEADING IS THE KIND OF JOB THIS WAS, said once and large: not a
             new brand but an old one made again. Grey, so that it is the
-            ground the pictures stand on and not one more thing to read. The
-            section's name to a screen reader is said in words beside it. */}
+            ground the pictures stand on and not one more thing to read; and
+            on the left, the far side from where the page's own text starts.
+            The section's name to a screen reader is said in words beside it. */}
         <h2
           data-fold-line
           lang="en"
           dir="ltr"
-          className="mx-auto mb-12 max-w-[1400px] text-right font-display text-[15.5vw] leading-[0.95] font-extrabold tracking-tight text-heading-soft md:mb-20 md:text-[clamp(96px,13.5vw,210px)]"
+          className="mx-auto mb-12 max-w-[1400px] text-left font-display text-[15.5vw] leading-[0.95] font-extrabold tracking-tight text-heading-soft md:mb-20 md:text-[clamp(96px,13.5vw,210px)]"
         >
           <span className="sr-only">Rebrand</span>
           <FoldWords text="#REBRAND" />
@@ -264,22 +267,16 @@ export default function SorozinCase({ site }: Props) {
       </section>
 
       {/* THE LANDING PAGE, LIVE, IN A SECTION OF ITS OWN: the site itself in
-          the frame, to scroll in and to see as a phone would show it. The
-          lightest grey, a step off the white above - the page it frames is a
-          light one, and it was lost as one more thing at the foot of the
-          pictures. */}
-      <section className="relative bg-neutral-100 px-6 pt-40 pb-24 md:pt-72 md:pb-40">
-        <BladeCut className="bg-white" flip />
+          the frame, to scroll in and to see as a phone would show it. At the
+          foot of the pictures it was one more thing in their section. NO
+          HEADING TO SEE: "and the landing page, live" stood here, and it only
+          announced what the frame under it already shows. */}
+      <section className="relative bg-white px-6 pt-40 pb-24 md:pt-72 md:pb-40">
+        <BladeCut className="bg-neutral-100" />
         <div className="mx-auto max-w-[1400px]">
           <div className="mx-auto max-w-[1100px]">
-            <h2
-              data-fold-line
-              className="font-display text-m-display font-extrabold tracking-tight text-black md:text-[clamp(56px,7.4vw,112px)] md:leading-[1.02]"
-            >
-              <span className="sr-only">ודף הנחיתה, חי.</span>
-              <FoldWords text="ודף הנחיתה, חי." />
-            </h2>
-            <div className="mt-10 mb-12 grid gap-6 font-body text-m-body text-black/70 md:mt-14 md:mb-20 md:grid-cols-2 md:gap-10 md:text-[19px] md:leading-[1.7]">
+            <h2 className="sr-only">דף הנחיתה</h2>
+            <div className="mb-12 grid gap-6 font-body text-m-body text-black/70 md:mb-20 md:grid-cols-2 md:gap-10 md:text-[19px] md:leading-[1.7]">
               <p>
                 דף בהיר למותג כהה. כך קרש החיתוך שנושא את הלוגו הוא הדבר הראשון שרואים,{" "}
                 <strong className={EMPHASIS}>ומקבל את כל תשומת הלב</strong>.
@@ -299,7 +296,7 @@ export default function SorozinCase({ site }: Props) {
         data-nav-dark="true"
         className="relative bg-black px-6 pt-48 pb-24 text-center text-white md:pt-80 md:pb-32"
       >
-        <BladeCut className="bg-neutral-100" />
+        <BladeCut className="bg-white" flip />
         <h2 className="mx-auto max-w-[900px] font-display text-m-title font-extrabold tracking-tight md:text-[clamp(44px,5.4vw,80px)] md:leading-[1.05]">
           רוצים מותג שמבינים מהרגע הראשון?
         </h2>
