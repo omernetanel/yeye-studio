@@ -37,6 +37,8 @@ interface Props {
   site: { url: string; image: string };
 }
 
+const INSTAGRAM = "https://www.instagram.com/sorozin__meatshow/";
+
 const PIECES = [
   {
     src: "/images/projects/sorozin/sorozin2.webp",
@@ -119,9 +121,11 @@ export default function SorozinCase({ site }: Props) {
     if (!prefersReducedMotion) move();
   });
 
-  const siteLink = (
-    <a href={site.url} target="_blank" rel="noopener noreferrer" dir="ltr" className="underline-offset-4 hover:underline">
-      {new URL(site.url).host}
+  // Where he is: his Instagram, by its name. Not the site's address - it is an
+  // odd-looking one, and the site itself is further down this page, live.
+  const instagramLink = (
+    <a href={INSTAGRAM} target="_blank" rel="noopener noreferrer" dir="ltr" className="underline-offset-4 hover:underline">
+      @sorozin__meatshow
     </a>
   );
 
@@ -154,7 +158,7 @@ export default function SorozinCase({ site }: Props) {
 
         <div className="mx-auto mt-10 max-w-[1100px] font-display md:hidden">
           <p className="text-m-sub font-bold">שף בשרים / מיתוג מחדש</p>
-          <p className="mt-0.5 text-m-body text-white/70">{siteLink}</p>
+          <p className="mt-0.5 text-m-body text-white/70">{instagramLink}</p>
         </div>
 
         <dl className="mx-auto mt-12 hidden max-w-[980px] gap-10 text-center font-display md:grid md:grid-cols-3">
@@ -169,9 +173,9 @@ export default function SorozinCase({ site }: Props) {
           <div>
             <dt className="text-m-small text-white/55">איפה הוא</dt>
             <dd className="mt-1 text-m-sub font-bold">
-              {siteLink}
+              {instagramLink}
               <span className="mt-1 block font-body text-[12px] font-normal text-white/55">
-                האתר, נפתח בכרטיסייה חדשה
+                אינסטגרם, נפתח בכרטיסייה חדשה
               </span>
             </dd>
           </div>
