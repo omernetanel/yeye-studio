@@ -80,6 +80,15 @@ export const designWork: DesignBrand[] = [
         width: 1227,
         height: 1282,
       },
+      // The landing page, here and not only in the gallery of sites above:
+      // it is part of the same rebrand, and a reader who passed it there did
+      // not know that.
+      {
+        src: "/images/projects/sorozin/sorozinweb01.webp",
+        alt: "דף הנחיתה של Sorozin Chef פתוח על מסך מחשב נייד",
+        width: 1536,
+        height: 1024,
+      },
     ],
   },
 ];
