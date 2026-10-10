@@ -297,21 +297,14 @@ export default function SorozinCase({ site }: Props) {
               <FoldWords text="מותג אחד." />
             </span>
           </h2>
-          <div className="mx-auto mt-12 md:mt-20 md:w-[70%]">
-            {/* ON THE DESK, A THICK WHITE FRAME, because on charcoal the dark
-                counter in the picture had no edge and the four menus floated.
-                It is on the part of the picture that moves, so the frame rides
-                with it. ON A PHONE THERE IS NO WHITE AT ALL: a frame that thick
-                took a quarter of the picture, and a white band from edge to
-                edge of the screen was tried after it and turned down too. The
-                picture is let a little way into the page's side margins there
-                instead, to be larger, and stops short of the screen's edges. */}
+          <div className="mx-auto mt-12 md:mt-20 md:w-[78%]">
+            {/* NO WHITE ROUND IT. A thick white frame was built for the desk,
+                and for a phone that frame and then a white band from edge to
+                edge of the screen; all three came out. On a phone the picture
+                is let a little way into the page's side margins instead, to be
+                larger, and stops short of the screen's edges. */}
             <div className="-mx-3 md:mx-0">
-              <ScrollPiece
-                piece={MENUS}
-                sizes="(max-width: 768px) 100vw, 70vw"
-                className="md:[&>span]:border-[35px] md:[&>span]:border-white"
-              />
+              <ScrollPiece piece={MENUS} sizes="(max-width: 768px) 100vw, 78vw" />
             </div>
             <p className="mt-4 text-center font-body text-m-body text-white/70 md:mt-6 md:text-[19px]">
               תפריט לכל אירוע: שוק, בופה, פרימיום וספיישל&apos;ס.
