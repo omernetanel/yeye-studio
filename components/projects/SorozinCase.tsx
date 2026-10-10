@@ -298,7 +298,14 @@ export default function SorozinCase({ site }: Props) {
             </span>
           </h2>
           <div className="mx-auto mt-12 md:mt-20 md:w-[70%]">
-            <ScrollPiece piece={MENUS} sizes="(max-width: 768px) 100vw, 70vw" />
+            {/* A thick white frame, on the part of the picture that moves, so the
+                frame rides with it: on charcoal the dark counter in the picture
+                had no edge, and the four menus floated. */}
+            <ScrollPiece
+              piece={MENUS}
+              sizes="(max-width: 768px) 100vw, 70vw"
+              className="[&>span]:border-[20px] [&>span]:border-white md:[&>span]:border-[35px]"
+            />
             <p className="mt-4 text-center font-body text-m-body text-white/70 md:mt-6 md:text-[19px]">
               תפריט לכל אירוע: שוק, בופה, פרימיום וספיישל&apos;ס.
             </p>
