@@ -290,8 +290,8 @@ export default function SorozinCase({ site }: Props) {
                 <strong className={EMPHASIS}>ומקבל את כל תשומת הלב</strong>.
               </p>
               <p>
-                המראה לקוח מעולם של ספרי בישול, לא מעולם של מסעדות בשר:{" "}
-                <strong className={EMPHASIS}>הרבה לבן, חומר גלם אחד במרכז</strong>, והחתימה של השף מתחת לטקסט.
+                <strong className={EMPHASIS}>הוא נראה כמו עמוד מספר בישול</strong>, לא כמו אתר של מסעדת בשרים: לבן
+                נקי, קרש אחד במרכז, וחתימת השף.
               </p>
             </div>
           </div>
