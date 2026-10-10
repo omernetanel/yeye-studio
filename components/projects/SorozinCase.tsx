@@ -268,17 +268,25 @@ export default function SorozinCase({ site }: Props) {
 
       {/* THE LANDING PAGE, LIVE, IN A SECTION OF ITS OWN: the site itself in
           the frame, to scroll in and to see as a phone would show it. At the
-          foot of the pictures it was one more thing in their section. NO
-          HEADING TO SEE: "and the landing page, live" stood here, and it only
-          announced what the frame under it already shows. */}
+          foot of the pictures it was one more thing in their section. ITS
+          HEADING IS THE DECISION, not an announcement: "and the landing page,
+          live" stood here, and only said what the frame under it shows. */}
       <section className="relative bg-white px-6 pt-40 pb-24 md:pt-72 md:pb-40">
         <BladeCut className="bg-neutral-100" />
         <div className="mx-auto max-w-[1400px]">
           <div className="mx-auto max-w-[1100px]">
-            <h2 className="sr-only">דף הנחיתה</h2>
-            <div className="mb-12 grid gap-6 font-body text-m-body text-black/70 md:mb-20 md:grid-cols-2 md:gap-10 md:text-[19px] md:leading-[1.7]">
+            <h2 className="font-display text-m-display font-extrabold tracking-tight text-black md:text-[clamp(56px,7.4vw,112px)] md:leading-[1.02]">
+              <span className="sr-only">דף בהיר, למותג כהה.</span>
+              <span data-fold-line className="block text-heading-soft">
+                <FoldWords text="דף בהיר," />
+              </span>
+              <span data-fold-line className="block">
+                <FoldWords text="למותג כהה." />
+              </span>
+            </h2>
+            <div className="mt-12 mb-12 grid gap-6 font-body text-m-body text-black/70 md:mt-16 md:mb-20 md:grid-cols-2 md:gap-10 md:text-[19px] md:leading-[1.7]">
               <p>
-                דף בהיר למותג כהה. כך קרש החיתוך שנושא את הלוגו הוא הדבר הראשון שרואים,{" "}
+                כך קרש החיתוך שנושא את הלוגו הוא הדבר הראשון שרואים,{" "}
                 <strong className={EMPHASIS}>ומקבל את כל תשומת הלב</strong>.
               </p>
               <p>
