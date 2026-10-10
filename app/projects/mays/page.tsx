@@ -11,7 +11,7 @@ const meta = pageMetadata({
   path: "/projects/mays",
 });
 // The brand's own picture on its share card, instead of the wordmark.
-const images = ["/images/projects/mays3.webp"];
+const images = ["/images/projects/mays/mays3.webp"];
 
 export const metadata: Metadata = {
   ...meta,

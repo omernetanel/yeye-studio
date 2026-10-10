@@ -42,7 +42,7 @@ export const designWork: DesignBrand[] = [
     page: "/projects/mays",
     pieces: [
       {
-        src: "/images/projects/mays1.webp",
+        src: "/images/projects/mays/mays1.webp",
         alt: "הלוגו של MAY'S פתוח על מסך מחשב נייד",
         width: 1254,
         height: 1254,
@@ -50,13 +50,13 @@ export const designWork: DesignBrand[] = [
       // THE PACKAGING GOES HERE, second, once its 3D model exists: between the
       // logo and the print, not after everything else.
       {
-        src: "/images/projects/mays2.webp",
+        src: "/images/projects/mays/mays2.webp",
         alt: "כרטיסי ביקור וגיליון מדבקות של MAY'S",
         width: 1254,
         height: 1254,
       },
       {
-        src: "/images/projects/mays3.webp",
+        src: "/images/projects/mays/mays3.webp",
         alt: "פוסטר ותפריט של MAY'S",
         width: 1448,
         height: 1086,
@@ -68,7 +68,7 @@ export const designWork: DesignBrand[] = [
     line: "שף פרטי / לוגו, כרטיסי ביקור ודף נחיתה",
     pieces: [
       {
-        src: "/images/projects/sorozin1.webp",
+        src: "/images/projects/sorogin/sorozin1.webp",
         alt: "כרטיסי ביקור של Sorozin Chef, שני הצדדים",
         width: 1679,
         height: 937,

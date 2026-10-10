@@ -53,5 +53,5 @@ _shot.mjs
 
 # The design work shown on the site: only the WebP files it serves are
 # committed. The PSDs and the PNG exports they came from stay on disk.
-/public/images/projects/*.psd
-/public/images/projects/*.png
+/public/images/projects/**/*.psd
+/public/images/projects/**/*.png

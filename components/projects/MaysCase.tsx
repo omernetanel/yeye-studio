@@ -36,7 +36,7 @@ const INSTAGRAM = "https://www.instagram.com/mays_cinnabon/";
 
 const PIECES = [
   {
-    src: "/images/projects/mays2.webp",
+    src: "/images/projects/mays/mays2.webp",
     alt: "כרטיסי ביקור וגיליון מדבקות של MAY'S",
     width: 1254,
     height: 1254,
@@ -44,7 +44,7 @@ const PIECES = [
   // THE PACKAGING GOES HERE once its 3D model exists, and after it whatever
   // else is made: the brand sheet, the posts, the adverts.
   {
-    src: "/images/projects/mays3.webp",
+    src: "/images/projects/mays/mays3.webp",
     alt: "פוסטר ותפריט של MAY'S",
     width: 1448,
     height: 1086,
@@ -140,7 +140,7 @@ export default function MaysCase() {
         <h1 className="sr-only">MAY&apos;S</h1>
         <div ref={markRef} className="mx-auto w-[78%] max-w-[640px] will-change-transform md:max-w-[min(640px,78svh)]">
           <Image
-            src="/images/projects/mayslogo.webp"
+            src="/images/projects/mays/mayslogo.webp"
             alt="הלוגו של MAY'S: אותיות שזיגוג נוזל מהן"
             width={2400}
             height={1412}
