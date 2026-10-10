@@ -260,10 +260,20 @@ export default function SorozinCase({ site }: Props) {
           ))}
         </div>
 
-        {/* ONE LINE FROM HIM GOES HERE, between the pictures and the live site,
-            once he has approved its wording: one quote, his name, and what he
-            is to the business. It also parts the picture of the landing page
-            from the landing page itself. */}
+        {/* ONE LINE FROM THE CLIENT, between the pictures and the live site -
+            which also parts the picture of the landing page from the landing
+            page itself. From Tzach, the son, who the work was done with. It
+            says what the job was and how it ended, and ends on other words
+            than the quote on the page for MAY'S does. THE WORDING IS A DRAFT
+            UNTIL HE HAS APPROVED IT: the page does not go out before that. */}
+        <figure className="mx-auto mt-24 max-w-[900px] text-center md:mt-40">
+          <blockquote className="font-display text-m-lead leading-[1.35] font-bold tracking-tight text-black md:text-[clamp(32px,3.6vw,52px)] md:leading-[1.25]">
+            &quot;באנו להחליף לוגו ותפריטים. <span className="text-marker">יצאנו עם עסק שנראה חדש.</span>&quot;
+          </blockquote>
+          <figcaption className="mt-6 font-display text-m-body text-black/60 md:text-[17px]">
+            צח סורוזין, Sorozin Chef
+          </figcaption>
+        </figure>
       </section>
 
       {/* THE LANDING PAGE, LIVE, IN A SECTION OF ITS OWN: the site itself in
