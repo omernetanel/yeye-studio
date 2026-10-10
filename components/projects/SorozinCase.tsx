@@ -224,8 +224,8 @@ export default function SorozinCase({ site }: Props) {
               <strong className={EMPHASIS}>לוגו של שף בשרים צריך להיקרא במבט אחד</strong>, לא להתפענח.
             </p>
             <p>
-              הצבע: <strong className={EMPHASIS}>אפור פחם</strong>, ולא האדום שהתחום כולו צבוע בו. ה-26 יושב לצד
-              השם ולא בתוך הסמל, וכך נשאר קריא בכל גודל.
+              הצבע: <strong className={EMPHASIS}>אפור פחם</strong>, ולא האדום שהתחום כולו צבוע בו. ה-26, שנכנס לבקשת
+              השף, יושב לצד השם ולא בתוך הסמל, וכך נשאר קריא בכל גודל.
             </p>
           </div>
         </div>

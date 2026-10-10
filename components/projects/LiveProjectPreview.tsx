@@ -77,7 +77,11 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
               // with the island in the status bar. A 9:16 slab with a thick
               // dark edge read as a music player.
               "h-[618px] w-[300px] rounded-[2.9rem] bg-neutral-800 p-[11px] ring-1 ring-black/40"
-            : "aspect-[16/10] w-full max-w-[1100px] overflow-hidden rounded-2xl border border-black/10 bg-black/[0.04]"
+            : // No shape of its own: the bar is as tall as it is, and the site
+              // under it is 16:9 (below). At 16:10 for the two together, the
+              // 16:9 picture stood in a taller box with a grey band over and
+              // under it.
+              "w-full max-w-[1100px] overflow-hidden rounded-2xl border border-black/10 bg-black/[0.04]"
         )}
       >
         {/* The band's buttons: the action button and the two volume keys on one
@@ -126,7 +130,9 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
             </div>
           )}
 
-          <div className="relative min-h-0 flex-1 overflow-hidden">
+          {/* On the desk view the site's area is 16:9, the shape of the pictures
+              that stand in for it, so each fills it edge to edge. */}
+          <div className={cn("relative overflow-hidden", phone ? "min-h-0 flex-1" : "aspect-video")}>
             {hasUrl && loaded && (
               <iframe
                 src={url}
