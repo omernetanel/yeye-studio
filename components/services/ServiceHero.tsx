@@ -48,7 +48,7 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
   const withWork = work.length > 0;
 
   return (
-    <section ref={sectionRef} className="px-6 pt-[150px] pb-20 md:px-12 md:pt-[130px]">
+    <section ref={sectionRef} className="px-6 pt-[150px] pb-20 md:px-12 md:pt-[176px]">
       <div
         className={cn(
           "mx-auto",
