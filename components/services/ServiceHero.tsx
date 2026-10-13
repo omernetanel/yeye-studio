@@ -13,15 +13,21 @@ interface ServiceHeroProps {
 }
 
 // The entrance, from Pixel Swap of React Bits (THIRD_PARTY_NOTICES.md), with
-// that component's own defaults: the edge of one square, the size it starts at
-// against its full size, how long the whole entrance takes and how long one
-// square takes to open, and the most squares there may be.
-const PIXEL_PX = 64;
+// that component's own defaults: the size a square starts at against its full
+// size, how long the whole entrance takes and how long one square takes to
+// open.
 const PIXEL_START_SCALE = 0.35;
 const REVEAL_MS = 1400;
 const PIXEL_MS = 450;
-const MAX_PIXELS = 600;
 const KEYFRAME_STEPS = 14;
+// THE SQUARES ARE SIZED BY HOW MANY CROSS THE SCREEN, NOT IN PIXELS. Their
+// demonstration is a card some 770px wide with 64px squares: twelve across,
+// large against what they cover, and that proportion is the whole look. At
+// 64px on a full screen there were thirty across and five hundred in all, and
+// it read as static, not as blocks. Twelve across, and never under their 64px
+// - which on a phone is six.
+const COLUMNS = 12;
+const PIXEL_MIN_PX = 64;
 
 // The same layout the section gives its content, for the copies the squares
 // show (the section's own classes are these plus what places the squares).
@@ -76,14 +82,9 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
 
     const width = section.clientWidth;
     const height = section.clientHeight;
-    let size = PIXEL_PX;
-    let columns = Math.max(1, Math.ceil(width / size));
-    let rows = Math.max(1, Math.ceil(height / size));
-    if (columns * rows > MAX_PIXELS) {
-      size = Math.ceil(size * Math.sqrt((columns * rows) / MAX_PIXELS));
-      columns = Math.max(1, Math.ceil(width / size));
-      rows = Math.max(1, Math.ceil(height / size));
-    }
+    const size = Math.max(PIXEL_MIN_PX, Math.ceil(width / COLUMNS));
+    const columns = Math.max(1, Math.ceil(width / size));
+    const rows = Math.max(1, Math.ceil(height / size));
     // The grid overhangs the section evenly, so the squares at its edges are
     // whole squares and not slivers.
     const originX = (width - columns * size) / 2;
