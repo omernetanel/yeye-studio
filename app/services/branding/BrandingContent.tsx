@@ -5,14 +5,14 @@ import Navbar from "@/components/layout/Navbar";
 import SubPageNav from "@/components/layout/SubPageNav";
 import Footer from "@/components/layout/Footer";
 import ServiceAmbientBackground from "@/components/services/ServiceAmbientBackground";
-import ServiceHero from "@/components/services/ServiceHero";
+import ServiceHero, { type ServiceWorkItem } from "@/components/services/ServiceHero";
 import WhatIsIt from "@/components/services/WhatIsIt";
 import StatsSection from "@/components/services/StatsSection";
 import TypesGrid from "@/components/services/TypesGrid";
 import ProcessTimeline from "@/components/services/ProcessTimeline";
 import WhatYouGet from "@/components/services/WhatYouGet";
 import ServiceFinalCTA from "@/components/services/ServiceFinalCTA";
-import ServiceWork, { type ServiceWorkItem } from "@/components/services/ServiceWork";
+
 
 
 const brandTypes = [
@@ -83,6 +83,7 @@ export default function BrandingContent() {
           titleLine2="לעסק שלכם להיזכר"
           description="זהות חזותית מלאה שמבדלת אתכם מהמתחרים ונשארת בזיכרון, מהלוגו ועד כל מקום שבו לקוח פוגש אתכם."
           ctaLabel="בואו נבנה את המותג שלכם"
+          work={work}
         />
         <WhatIsIt
           title="מה זה מיתוג עסקי?"
@@ -92,7 +93,6 @@ export default function BrandingContent() {
         <TypesGrid title="איזה סוג מיתוג מתאים לך?" items={brandTypes} />
         <ProcessTimeline title="איך זה עובד?" steps={processSteps} />
         <WhatYouGet title="וזה לא הכול" subtitle="מה מקבלים מעבר לזהות עצמה" rows={whatYouGetRows} />
-        <ServiceWork title="ככה זה נראה בפועל" items={work} />
         <ServiceFinalCTA title="רוצים מותג שאנשים זוכרים?" />
       </div>
 

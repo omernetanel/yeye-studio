@@ -95,6 +95,7 @@ function BrandBlock({ brand, drifts }: { brand: DesignBrand; drifts: boolean }) 
         <ScrollPiece
           piece={brand.pieces[0]}
           sizes="(max-width: 768px) 100vw, 58vw"
+          href={brand.page}
           // A touch under the full eight columns, and kept against the page's
           // far edge: seven columns was a great deal too small.
           className="mt-5 md:col-span-8 md:mt-0 md:w-[94%] md:justify-self-end"
@@ -120,6 +121,7 @@ function BrandBlock({ brand, drifts }: { brand: DesignBrand; drifts: boolean }) 
             key={piece.src}
             piece={piece}
             sizes="(max-width: 768px) 90vw, 46vw"
+            href={brand.page}
             className={cn(
               PHONE_ORDER[index],
               "mt-5 md:mt-6",
@@ -138,6 +140,7 @@ function BrandBlock({ brand, drifts }: { brand: DesignBrand; drifts: boolean }) 
             key={piece.src}
             piece={piece}
             sizes="(max-width: 768px) 90vw, 46vw"
+            href={brand.page}
             className={cn(
               PHONE_ORDER[index],
               "mt-5",

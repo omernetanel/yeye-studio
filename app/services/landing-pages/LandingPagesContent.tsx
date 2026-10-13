@@ -5,14 +5,14 @@ import Navbar from "@/components/layout/Navbar";
 import SubPageNav from "@/components/layout/SubPageNav";
 import Footer from "@/components/layout/Footer";
 import ServiceAmbientBackground from "@/components/services/ServiceAmbientBackground";
-import ServiceHero from "@/components/services/ServiceHero";
+import ServiceHero, { type ServiceWorkItem } from "@/components/services/ServiceHero";
 import WhatIsIt from "@/components/services/WhatIsIt";
 import StatsSection from "@/components/services/StatsSection";
 import TypesGrid from "@/components/services/TypesGrid";
 import ProcessTimeline from "@/components/services/ProcessTimeline";
 import WhatYouGet from "@/components/services/WhatYouGet";
 import ServiceFinalCTA from "@/components/services/ServiceFinalCTA";
-import ServiceWork, { type ServiceWorkItem } from "@/components/services/ServiceWork";
+
 
 
 const pageTypes = [
@@ -86,6 +86,7 @@ export default function LandingPagesContent() {
           titleLine2="שמביאים לקוחות"
           description="לכל דף ולכל אתר שאני בונה יש תפקיד אחד: להפוך גולשים ללקוחות."
           ctaLabel="בואו נבנה את הדף שלכם"
+          work={work}
         />
         <WhatIsIt
           title="דף נחיתה או אתר תדמית?"
@@ -95,7 +96,6 @@ export default function LandingPagesContent() {
         <TypesGrid title="איזה סוג דף מתאים לך?" items={pageTypes} />
         <ProcessTimeline title="איך זה עובד?" steps={processSteps} />
         <WhatYouGet title="וזה לא הכול" subtitle="מה מקבלים מעבר לדף עצמו" rows={whatYouGetRows} />
-        <ServiceWork title="ככה זה נראה בפועל" items={work} />
         <ServiceFinalCTA title="רוצים דף נחיתה שבאמת מביא פניות?" />
       </div>
 

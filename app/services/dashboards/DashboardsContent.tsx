@@ -5,14 +5,14 @@ import Navbar from "@/components/layout/Navbar";
 import SubPageNav from "@/components/layout/SubPageNav";
 import Footer from "@/components/layout/Footer";
 import ServiceAmbientBackground from "@/components/services/ServiceAmbientBackground";
-import ServiceHero from "@/components/services/ServiceHero";
+import ServiceHero, { type ServiceWorkItem } from "@/components/services/ServiceHero";
 import WhatIsIt from "@/components/services/WhatIsIt";
 import StatsSection from "@/components/services/StatsSection";
 import TypesGrid from "@/components/services/TypesGrid";
 import ProcessTimeline from "@/components/services/ProcessTimeline";
 import WhatYouGet from "@/components/services/WhatYouGet";
 import ServiceFinalCTA from "@/components/services/ServiceFinalCTA";
-import ServiceWork, { type ServiceWorkItem } from "@/components/services/ServiceWork";
+
 
 
 const systemTypes = [
@@ -72,6 +72,7 @@ export default function DashboardsContent() {
           titleLine2="בדיוק כמו העסק שלכם"
           description="דשבורד וכלי ניהול פנימיים שמרכזים את העסק במקום אחד, בממשק פשוט ובלי גיליונות אקסל."
           ctaLabel="בואו נבנה את המערכת שלכם"
+          work={work}
         />
         <WhatIsIt
           title="מה זה מערכת ניהול?"
@@ -81,7 +82,6 @@ export default function DashboardsContent() {
         <TypesGrid title="איזה סוג מערכת מתאים לך?" items={systemTypes} />
         <ProcessTimeline title="איך זה עובד?" steps={processSteps} />
         <WhatYouGet title="וזה לא הכול" subtitle="מה מקבלים מעבר למערכת עצמה" rows={whatYouGetRows} />
-        <ServiceWork title="ככה זה נראה בפועל" items={work} />
         <ServiceFinalCTA title="רוצים מערכת שעובדת בשבילכם?" />
       </div>
 

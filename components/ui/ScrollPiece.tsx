@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useLayoutEffect, type RefObject } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import type { DesignPiece } from "@/lib/design-work";
@@ -29,15 +30,34 @@ const PIECE_ZOOM = 0.16;
 const PIECE_SETTLE = 0.6;
 const PIECE_RIDE_PX = [8, 18];
 
+const WINDOW = "block overflow-hidden will-change-transform";
+
 export function ScrollPiece({
   piece,
   sizes,
   className,
+  href,
 }: {
   piece: DesignPiece;
   sizes: string;
   className?: string;
+  /**
+   * A page on this site that the picture leads to. The window itself is then
+   * the link, so the three boxes stay three and the hook below finds them as
+   * it always did; the picture's description is the link's name.
+   */
+  href?: string;
 }) {
+  const picture = (
+    <Image
+      src={piece.src}
+      alt={piece.alt}
+      width={piece.width}
+      height={piece.height}
+      sizes={sizes}
+      className="h-auto w-full will-change-transform"
+    />
+  );
   return (
     // Three boxes, each for one job. The figure is the place the picture
     // stands in and the only one measured, so it never moves. The window
@@ -46,16 +66,13 @@ export function ScrollPiece({
     // than the window at rest, as it first was, it lost its edges, and these
     // are pictures of whole things - a sheet of stickers, two cards.
     <figure data-scroll-piece className={className}>
-      <span className="block overflow-hidden will-change-transform">
-        <Image
-          src={piece.src}
-          alt={piece.alt}
-          width={piece.width}
-          height={piece.height}
-          sizes={sizes}
-          className="h-auto w-full will-change-transform"
-        />
-      </span>
+      {href ? (
+        <Link href={href} className={WINDOW}>
+          {picture}
+        </Link>
+      ) : (
+        <span className={WINDOW}>{picture}</span>
+      )}
     </figure>
   );
 }
