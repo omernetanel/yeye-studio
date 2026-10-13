@@ -20,6 +20,9 @@ const PIXEL_START_SCALE = 0.35;
 const REVEAL_MS = 1400;
 const PIXEL_MS = 450;
 const KEYFRAME_STEPS = 14;
+// How long the black opening stands whole before the first square turns: a
+// beat, so that it is seen to have been black.
+const HOLD_MS = 300;
 // THE SQUARES ARE SIZED BY HOW MANY CROSS THE SCREEN, NOT IN PIXELS. Their
 // demonstration is a card some 770px wide with 64px squares: twelve across,
 // large against what they cover, and that proportion is the whole look. At
@@ -59,7 +62,49 @@ const ease = (progress: number) => 1 - (1 - progress) ** 4;
  * content inside every square, held still by the exact inverse of the
  * square's own scaling, so nothing in it is seen to move or grow.
  */
-export default function ServiceHero({ titleLine1, titleLine2, description, ctaLabel }: ServiceHeroProps) {
+/** The opening's own content, as it stands on white or, `dark`, on black. */
+function Opening({ titleLine1, titleLine2, description, ctaLabel, dark = false }: ServiceHeroProps & { dark?: boolean }) {
+  return (
+    <>
+      <h1
+        className={cn(
+          "mb-7 font-display text-[clamp(40px,6.6vw,96px)] leading-[1.08] font-extrabold tracking-tight",
+          dark ? "text-white" : "text-black",
+        )}
+      >
+        {titleLine1}
+        <br />
+        <span
+          className={dark ? "text-neutral-500" : "bg-[image:var(--gradient-brand)] bg-clip-text text-transparent"}
+        >
+          {titleLine2}
+        </span>
+      </h1>
+      <p
+        className={cn(
+          "mx-auto mb-9 max-w-[720px] font-body text-lg leading-[1.8] md:text-[21px]",
+          dark ? "text-white/70" : "text-black/70",
+        )}
+      >
+        {description}
+      </p>
+      <div className="flex justify-center">
+        <Button
+          href="/#cta"
+          className={
+            dark
+              ? "!border-white !bg-none !bg-white !text-black !shadow-none"
+              : "!border-black !bg-none !bg-black !shadow-none"
+          }
+        >
+          {ctaLabel}
+        </Button>
+      </div>
+    </>
+  );
+}
+
+export default function ServiceHero(props: ServiceHeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -126,7 +171,7 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
 
         const timing: KeyframeAnimationOptions = {
           duration: PIXEL_MS,
-          delay: scatter(row * columns + column + 1) * (REVEAL_MS - PIXEL_MS),
+          delay: HOLD_MS + scatter(row * columns + column + 1) * (REVEAL_MS - PIXEL_MS),
           easing: "linear",
           fill: "both",
         };
@@ -135,7 +180,7 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
     }
     grid.replaceChildren(...squares);
 
-    const done = window.setTimeout(finish, REVEAL_MS);
+    const done = window.setTimeout(finish, HOLD_MS + REVEAL_MS);
     return () => {
       window.clearTimeout(done);
       animations.forEach((animation) => animation.cancel());
@@ -148,32 +193,40 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
       {/* Unseen while the squares are showing copies of it, and from the first
           paint: the page is sent with the opening in it, and it would show
           whole for a moment before the squares began. */}
-      <div ref={contentRef} className={cn("mx-auto max-w-[1100px]", shown ? "opacity-100" : "opacity-0")}>
-        <h1 className="mb-7 font-display text-[clamp(40px,6.6vw,96px)] leading-[1.08] font-extrabold tracking-tight text-black">
-          {titleLine1}
-          <br />
-          <span className="bg-[image:var(--gradient-brand)] bg-clip-text text-transparent">{titleLine2}</span>
-        </h1>
-        <p className="mx-auto mb-9 max-w-[720px] font-body text-lg leading-[1.8] text-black/70 md:text-[21px]">
-          {description}
-        </p>
-        <div className="flex justify-center">
-          <Button href="/#cta" className="!border-black !bg-none !bg-black !shadow-none">
-            {ctaLabel}
-          </Button>
-        </div>
+      <div ref={contentRef} className={cn("mx-auto w-full max-w-[1100px]", shown ? "opacity-100" : "opacity-0")}>
+        <Opening {...props} />
       </div>
 
-      {/* THE SQUARES, AND THE BLACK THEY OPEN OVER. The black is what makes them
-          squares: opening white onto a white page, each was only a scrap of
-          the heading appearing from nowhere, and the entrance read as a page
-          that had failed to draw. It is there from the first paint, so the
-          page does not show white, then black, then squares; and gone, with
-          the squares, the moment the last has opened. */}
+      {/* WHAT THE SQUARES OPEN OVER: THE SAME OPENING, WHITE ON BLACK, laid out
+          exactly as the one above so that every letter is in the same place.
+          A square turning is then that part of the screen changing colour and
+          nothing else: the heading can be read from the first paint to the
+          last square, and never moves.
+
+          It was plain black first, and the opening arrived out of nothing;
+          then black with the service's name across it, and for a second two
+          large texts stood on top of each other. Out of reach of the keyboard
+          and of assistive technology: it is a second copy of what is above.
+          Gone, with the squares, the moment the last has opened. */}
+      <div
+        aria-hidden="true"
+        inert
+        className={cn(
+          "pointer-events-none absolute inset-0 bg-black motion-reduce:hidden",
+          SECTION_SPACE,
+          shown && "hidden",
+        )}
+      >
+        <div className="mx-auto w-full max-w-[1100px]">
+          <Opening {...props} dark />
+        </div>
+      </div>
+      {/* The squares, over it, while they last. Filled and emptied by the
+          effect above. */}
       <div
         ref={gridRef}
         aria-hidden="true"
-        className={cn("pointer-events-none absolute inset-0 bg-black motion-reduce:hidden", shown && "hidden")}
+        className={cn("pointer-events-none absolute inset-0 motion-reduce:hidden", shown && "hidden")}
       />
     </section>
   );
