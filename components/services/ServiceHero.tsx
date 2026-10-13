@@ -115,7 +115,7 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
         // The whole opening, laid out as the section lays it out and shifted
         // so that this square shows its own part of it.
         const frame = document.createElement("div");
-        frame.className = cn("absolute", SECTION_SPACE);
+        frame.className = cn("absolute bg-white", SECTION_SPACE);
         frame.style.cssText = `left:${-left}px;top:${-top}px;width:${width}px;height:${height}px;transform-origin:${left + size / 2}px ${top + size / 2}px`;
         const copy = content.cloneNode(true) as HTMLElement;
         copy.style.opacity = "1";
@@ -163,8 +163,17 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
         </div>
       </div>
 
-      {/* The squares, while they last. Filled and emptied by the effect above. */}
-      <div ref={gridRef} aria-hidden="true" className="pointer-events-none absolute inset-0" />
+      {/* THE SQUARES, AND THE BLACK THEY OPEN OVER. The black is what makes them
+          squares: opening white onto a white page, each was only a scrap of
+          the heading appearing from nowhere, and the entrance read as a page
+          that had failed to draw. It is there from the first paint, so the
+          page does not show white, then black, then squares; and gone, with
+          the squares, the moment the last has opened. */}
+      <div
+        ref={gridRef}
+        aria-hidden="true"
+        className={cn("pointer-events-none absolute inset-0 bg-black motion-reduce:hidden", shown && "hidden")}
+      />
     </section>
   );
 }
