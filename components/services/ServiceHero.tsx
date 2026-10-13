@@ -35,7 +35,7 @@ interface ServiceHeroProps {
  * thing it offers, and that page opens on the name, a line and a row of work.
  *
  * On a desk the words stand on the reading side and the work on the other, the
- * second picture lower and nearer the words. On a phone the work
+ * two pictures side by side with the second set lower. On a phone the work
  * follows the button. A service with no work to show yet keeps the opening it
  * had: the words alone, in the middle.
  *
@@ -48,7 +48,7 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
   const withWork = work.length > 0;
 
   return (
-    <section ref={sectionRef} className="px-6 pt-[150px] pb-20 md:px-12">
+    <section ref={sectionRef} className="px-6 pt-[150px] pb-20 md:px-12 md:pt-[130px]">
       <div
         className={cn(
           "mx-auto",
@@ -64,7 +64,7 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
               "mb-7 font-display leading-[1.08] font-extrabold tracking-tight text-black",
               // Half the screen is the work's: the heading is set for the half
               // it has.
-              withWork ? "text-[clamp(40px,4.7vw,72px)]" : "text-[clamp(40px,6.6vw,96px)]",
+              withWork ? "text-[clamp(36px,3.9vw,60px)]" : "text-[clamp(40px,6.6vw,96px)]",
             )}
           >
             {titleLine1}
@@ -99,22 +99,26 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.45 }}
-            className="mt-16 flex flex-col gap-10 md:col-span-6 md:mt-0 md:gap-0"
+            className="mt-16 flex flex-col gap-10 md:col-span-6 md:mt-0 md:flex-row md:items-start md:gap-6"
           >
             {work.map((item, index) => (
               <div
                 key={item.href}
                 className={cn(
-                  // Two: the first against the far edge, the second lower,
-                  // nearer the words. They do not overlap: laid over the first, the
-                  // second covered the name written under it.
-                  work.length > 1 && (index === 0 ? "md:w-[74%] md:self-end" : "md:mt-8 md:w-[58%]"),
+                  // TWO STAND SIDE BY SIDE, the second set lower, so that the
+                  // work is about as tall as the words beside it and the whole
+                  // opening is one screen. One over the other, they were a
+                  // column twice the height of the screen: the first picture
+                  // filled it, and the heading sat in the middle of that
+                  // column, at the foot of the screen.
+                  "md:min-w-0 md:flex-1",
+                  index > 0 && "md:mt-16",
                 )}
               >
                 <ScrollPiece
                   piece={item.piece}
                   href={item.href}
-                  sizes="(max-width: 768px) 100vw, 40vw"
+                  sizes={work.length > 1 ? "(max-width: 768px) 100vw, 24vw" : "(max-width: 768px) 100vw, 46vw"}
                 />
                 <Link
                   href={item.href}
