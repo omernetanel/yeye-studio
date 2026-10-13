@@ -243,7 +243,7 @@ export class SteppedPlayhead {
       return;
     }
 
-    const target = this.targetFor(at);
+    const asked = this.targetFor(at);
 
     // Arriving on the page already inside the section - a reload, a link - is
     // not a transition anyone asked to watch. The first reading is placed, and
@@ -252,8 +252,32 @@ export class SteppedPlayhead {
     // there, not for the moments on the way.
     const jumped = previous !== null && Math.abs(at - previous) >= MAX_GLIDE_READING_SCREENS;
     if (!this.placed || jumped) {
-      this.place(target);
+      this.place(asked);
       return;
+    }
+
+    // ONE MOMENT AT A TIME, HOWEVER MANY SWIPES. The scroll can ask for a
+    // state several lines on - a finger is never braked, and a reader who
+    // takes the page for stuck swipes three or four times in a second. Every
+    // one of those used to count: the story ran through the stages by itself
+    // and stopped on the third or fourth, which nobody had asked to see. The
+    // playhead goes no further than the next state a reader rests at, from
+    // where it is now; swipes made while it is on its way there are a wish
+    // for it to hurry (below) and nothing more.
+    const [low, high] = this.reach();
+    const target = clamp(asked, low, high);
+
+    // And the page is brought back to where the story is, as soon as it is
+    // moving by itself: otherwise the scroll would stay those lines ahead, and
+    // run out of the section with moments still unplayed. The panel is pinned,
+    // so nothing is seen to move.
+    if (target !== asked && momentum && this.options.brake) {
+      const stop =
+        asked > target
+          ? this.starts[Math.ceil(target) - 1] + BRAKE_PAST_SCREENS
+          : this.starts[Math.floor(target)] - BRAKE_PAST_SCREENS;
+      this.lastScreens = stop;
+      this.options.brake(stop);
     }
 
     // Inside a scrubbed stretch, the finger drives it directly - once the
@@ -280,6 +304,28 @@ export class SteppedPlayhead {
     if (this.frame !== null) cancelAnimationFrame(this.frame);
     this.frame = null;
     this.move = null;
+  }
+
+  /**
+   * How far the playhead may be sent from where it is: back to the last state
+   * a reader rests at, and on to the next one. A state nobody rests at (see
+   * Transition.screens) is not a limit - the move passes through it. Nor,
+   * going on, is the end of a scrubbed stretch: the finger was driving that,
+   * and the swipe that carries it over the line is the swipe that plays what
+   * comes next.
+   */
+  private reach(): [number, number] {
+    const { transitions } = this.options;
+    const rests = (anchor: number) => {
+      if (anchor <= 0 || anchor >= this.last) return true;
+      const into = transitions[anchor - 1];
+      return !(into.kind === "play" && into.screens === 0);
+    };
+    let low = Math.max(0, Math.ceil(this.position - 1e-9) - 1);
+    while (!rests(low)) low--;
+    let high = Math.min(this.last, Math.floor(this.position + 1e-9) + 1);
+    while (high < this.last && (!rests(high) || transitions[high - 1].kind === "scrub")) high++;
+    return [low, high];
   }
 
   /**

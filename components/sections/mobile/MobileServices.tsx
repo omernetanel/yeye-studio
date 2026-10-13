@@ -284,7 +284,11 @@ const STORY = {
   // turned a page. The brake is what keeps a strong throw from running past, so
   // the room no longer has to.
   transitions: [
-    { kind: "scrub", screens: 1 }, // the ball with the list on it
+    // A THIRD OF A SCREEN, so that the first swipe opens the paper. It was a
+    // whole screen in which almost nothing on the ball moves, and a swipe
+    // covers less than that: readers swiped two or three times at a page that
+    // looked stuck before anything happened.
+    { kind: "scrub", screens: 0.35 }, // the ball with the list on it
     // The clocks were slowed by about half after a real hand: at 1.8 / 0.5 /
     // 2.8 / 2.2 seconds everything happened before it could be watched.
     // NO ROOM OF ITS OWN (screens: 0): the open sheet with nothing on it was a
