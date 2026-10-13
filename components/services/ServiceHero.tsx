@@ -20,12 +20,12 @@ const PIXEL_PX = 64;
 const PIXEL_START_SCALE = 0.35;
 const REVEAL_MS = 1400;
 const PIXEL_MS = 450;
-const MAX_PIXELS = 220;
+const MAX_PIXELS = 600;
 const KEYFRAME_STEPS = 14;
 
 // The same layout the section gives its content, for the copies the squares
 // show (the section's own classes are these plus what places the squares).
-const SECTION_SPACE = "px-6 pt-[160px] pb-20 text-center";
+const SECTION_SPACE = "flex min-h-[100svh] flex-col justify-center px-6 pt-28 pb-20 text-center";
 
 // A square's place in the order: a fixed scatter, not chance, so the entrance
 // is the same every time the page is opened.

@@ -56,7 +56,7 @@ export default function BusinessSitesContent() {
     <main id="main" className="relative min-h-screen overflow-hidden bg-white">
       <ServiceAmbientBackground />
       <Navbar />
-      <SubPageNav />
+      <SubPageNav bare />
 
       <div className="relative z-10">
         <ServiceHero
