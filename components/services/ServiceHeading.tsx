@@ -10,6 +10,10 @@ import { cn } from "@/lib/utils";
 // Where the heading's top is on the screen, as a share of its height, while
 // its letters fold in: from just inside the bottom edge to past the middle.
 const FOLD = [0.95, 0.55] as const;
+// A heading that opens by itself: how long after the page arrives, and how
+// long it takes.
+const AUTO_DELAY_MS = 700;
+const AUTO_MS = 900;
 
 /**
  * The heading over a section of a service page, at the site's own size and
@@ -20,7 +24,21 @@ const FOLD = [0.95, 0.55] as const;
  * faded up once. Seven of those down one page is what made it read as an
  * encyclopaedia entry: nothing was larger than anything else.
  */
-export default function ServiceHeading({ children, className }: { children: string; className?: string }) {
+export default function ServiceHeading({
+  children,
+  className,
+  auto = false,
+}: {
+  children: string;
+  className?: string;
+  /**
+   * Opens by itself as the page arrives, once, whatever the scroll. For the
+   * first heading under a page's opening: it stands at the foot of the first
+   * screen, and folded away until it was scrolled to it left that screen
+   * empty, with nothing to say the page went on.
+   */
+  auto?: boolean;
+}) {
   const ref = useRef<HTMLHeadingElement>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
   const { scrollY } = useScroll();
@@ -39,13 +57,24 @@ export default function ServiceHeading({ children, className }: { children: stri
       setFold(heading, 1);
       return;
     }
+    if (auto) {
+      // On its own clock: after the opening above it has come up, over the
+      // time a scrolled heading takes to cross its stretch of the screen.
+      const from = performance.now() + AUTO_DELAY_MS;
+      let frame = requestAnimationFrame(function open(now) {
+        const progress = Math.min(1, Math.max(0, (now - from) / AUTO_MS));
+        setFold(heading, 1 - (1 - progress) ** 3);
+        if (progress < 1) frame = requestAnimationFrame(open);
+      });
+      return () => cancelAnimationFrame(frame);
+    }
     move();
     window.addEventListener("resize", move);
     return () => window.removeEventListener("resize", move);
-  }, [prefersReducedMotion]);
+  }, [auto, prefersReducedMotion]);
 
   useMotionValueEvent(scrollY, "change", () => {
-    if (!prefersReducedMotion) move();
+    if (!prefersReducedMotion && !auto) move();
   });
 
   return (

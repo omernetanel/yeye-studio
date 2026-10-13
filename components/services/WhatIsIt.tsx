@@ -10,15 +10,19 @@ interface WhatIsItProps {
 
 export default function WhatIsIt({ title, text }: WhatIsItProps) {
   return (
-    <section className="px-6 py-16">
+    <section className="px-6 pt-6 pb-16">
       <div className="mx-auto max-w-[900px] text-center">
-        <ServiceHeading className="mb-5">{title}</ServiceHeading>
+        {/* Both open as the page arrives, not as they are scrolled to: this
+            block shows at the foot of the first screen, and is what says the
+            page goes on. */}
+        <ServiceHeading className="mb-5" auto>
+          {title}
+        </ServiceHeading>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="font-display text-m-sub leading-[1.6] font-medium text-black/80 md:text-[28px] md:leading-[1.5]"
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 1 }}
+          className="mx-auto max-w-[760px] font-body text-lg leading-[1.8] text-black/70 md:text-[21px]"
         >
           {text}
         </motion.p>
