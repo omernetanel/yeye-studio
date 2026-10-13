@@ -47,35 +47,26 @@ const scatter = (seed: number) => {
 const ease = (progress: number) => 1 - (1 - progress) ** 4;
 
 /**
- * The opening of a service page: the heading, one sentence and one button,
- * ARRIVING IN SQUARES. Each square is a window onto the finished opening; they
- * open in no order, small and faint to full, and when the last has opened
- * they are taken away and the opening itself stands there. Once, as the page
- * arrives.
+ * The opening's own content, as it stands on white or, `dark`, on black.
  *
- * It replaces three fades, one after the other - the entrance of every
- * template there is. With less motion there are no squares: the opening is
- * simply there.
- *
- * Only the arriving half of Pixel Swap: there is no second content to swap to
- * and nothing to trigger. What is kept is how it is done - a copy of the
- * content inside every square, held still by the exact inverse of the
- * square's own scaling, so nothing in it is seen to move or grow.
+ * ON BLACK THE TWO LINES OF THE HEADING TRADE PLACES: the first is the grey
+ * one and the second the white. Simply inverted, the grey line was grey on
+ * both grounds, and the squares turning over it changed nothing that could be
+ * seen. This way each line changes colour as its squares turn.
  */
-/** The opening's own content, as it stands on white or, `dark`, on black. */
 function Opening({ titleLine1, titleLine2, description, ctaLabel, dark = false }: ServiceHeroProps & { dark?: boolean }) {
   return (
     <>
       <h1
         className={cn(
           "mb-7 font-display text-[clamp(40px,6.6vw,96px)] leading-[1.08] font-extrabold tracking-tight",
-          dark ? "text-white" : "text-black",
+          dark ? "text-neutral-500" : "text-black",
         )}
       >
         {titleLine1}
         <br />
         <span
-          className={dark ? "text-neutral-500" : "bg-[image:var(--gradient-brand)] bg-clip-text text-transparent"}
+          className={dark ? "text-white" : "bg-[image:var(--gradient-brand)] bg-clip-text text-transparent"}
         >
           {titleLine2}
         </span>
@@ -104,6 +95,24 @@ function Opening({ titleLine1, titleLine2, description, ctaLabel, dark = false }
   );
 }
 
+/**
+ * The opening of a service page - the heading, one sentence and one button -
+ * taking the whole first screen, and TURNING FROM BLACK TO WHITE IN SQUARES as
+ * the page arrives. It is there in white on black from the first paint; each
+ * square is a window onto the same opening in black on white; they open in no
+ * order, small and faint to full, and when the last has opened they are taken
+ * away and the opening itself stands there. Once.
+ *
+ * It replaces three fades, one after the other - the entrance of every
+ * template there is. With less motion there is no black and there are no
+ * squares: the opening is simply there.
+ *
+ * The transition of Pixel Swap, used once: its two contents are the same
+ * opening in its two colourings, and nothing triggers it but arriving. What is
+ * kept is how it is done - a copy of the content inside every square, held
+ * still by the exact inverse of the square's own scaling, so nothing in it is
+ * seen to move or grow.
+ */
 export default function ServiceHero(props: ServiceHeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
