@@ -315,8 +315,8 @@ export default function SorozinCase({ site }: Props) {
         {/* ONE LINE FROM THE CLIENT, after all the work and before the live
             site. From Tzach, the son, who the work was done with. It says
             what the job was and how it ended, and ends on other words than
-            the quote on the page for MAY'S does. THE WORDING IS A DRAFT UNTIL
-            HE HAS APPROVED IT: the page does not go out before that. */}
+            the quote on the page for MAY'S does. The wording was written with
+            Omer, and he approved it, and the page, on 2026-10-13. */}
         <figure className="mx-auto mt-24 max-w-[900px] text-center md:mt-40">
           <blockquote className="font-display text-m-lead leading-[1.35] font-bold tracking-tight md:text-[clamp(32px,3.6vw,52px)] md:leading-[1.25]">
             &quot;באנו להחליף לוגו ותפריטים,{" "}
