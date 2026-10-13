@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import ServiceHeading from "@/components/services/ServiceHeading";
-import BorderGlowCard from "@/components/ui/BorderGlowCard";
+import ServiceCard from "@/components/services/ServiceCard";
 
 interface FeatureItem {
   number: string;
@@ -42,8 +42,8 @@ export default function WhatYouGet({ title, subtitle, rows }: WhatYouGetProps) {
               className="grid grid-cols-1 gap-5 sm:grid-cols-2"
             >
               {row.map((item) => (
-                // The benefit cards from the home page — see TypesGrid.
-                <BorderGlowCard key={item.number} className="h-full p-7 [--glow-face:var(--color-neutral-800)]">
+                // The service pages' own dark card - see ServiceCard.
+                <ServiceCard key={item.number} className="h-full p-7">
                   <div className="flex items-start gap-5">
                     <span className="mt-0.5 shrink-0 font-display text-4xl leading-none font-extrabold text-white/20">
                       {item.number}
@@ -53,7 +53,7 @@ export default function WhatYouGet({ title, subtitle, rows }: WhatYouGetProps) {
                       <p className="font-body text-[15px] leading-[1.85] text-white/75">{item.description}</p>
                     </div>
                   </div>
-                </BorderGlowCard>
+                </ServiceCard>
               ))}
             </motion.div>
           ))}

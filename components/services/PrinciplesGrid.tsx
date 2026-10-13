@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import ServiceHeading from "@/components/services/ServiceHeading";
 import type { LucideIcon } from "lucide-react";
-import BorderGlowCard from "@/components/ui/BorderGlowCard";
+import ServiceCard from "@/components/services/ServiceCard";
 import SwipeCarousel from "@/components/ui/SwipeCarousel";
 
 interface Principle {
@@ -20,8 +20,8 @@ interface PrinciplesGridProps {
 function PrincipleCardContent({ item }: { item: Principle }) {
   const Icon = item.icon;
   return (
-    // The benefit cards from the home page — see TypesGrid.
-    <BorderGlowCard className="h-full p-7 [--glow-face:var(--color-neutral-800)]">
+    // The service pages' own dark card - see ServiceCard.
+    <ServiceCard className="h-full p-7">
       <div className="flex flex-col items-center gap-3 text-center">
         <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-white/15 bg-white/[0.06]">
           <Icon size={24} strokeWidth={1.5} className="text-white" />
@@ -29,7 +29,7 @@ function PrincipleCardContent({ item }: { item: Principle }) {
         <h3 className="font-display text-[15px] font-bold text-white">{item.title}</h3>
         <p className="font-body text-[13px] leading-[1.65] text-white/75">{item.description}</p>
       </div>
-    </BorderGlowCard>
+    </ServiceCard>
   );
 }
 
