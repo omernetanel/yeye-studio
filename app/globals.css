@@ -389,6 +389,52 @@ body {
   animation: scroll-cue 2.2s ease-in-out infinite;
 }
 
+/* THE SECOND LINE OF A SERVICE PAGE'S HEADING TURNS GREY UNDER A GLINT (see
+   ServiceHero). It arrives black, like the line above it. Then, once the
+   heading has come up, a narrow band of light crosses it from right to left,
+   the way the line is read, and what the band has passed is the brand's grey.
+
+   One long gradient behind the letters - grey, the band, black - two and a
+   half times their width, slid across them: at rest the letters show its black
+   end, and when it has run, its grey one. The delay is the heading's own
+   arrival. With less motion it is simply grey (the run is cut to nothing, and
+   its end state is what is left). */
+.hero-glint {
+  background-image: linear-gradient(
+    to left,
+    var(--color-primary-light) 0%,
+    var(--color-primary) 40%,
+    #fff 50%,
+    #000 60%,
+    #000 100%
+  );
+  background-size: 250% 100%;
+  background-position: 0% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: hero-glint 1s cubic-bezier(0.4, 0, 0.2, 1) 1s forwards;
+}
+
+@keyframes hero-glint {
+  to {
+    background-position: 100% 0;
+  }
+}
+
+/* With less motion - the system's setting or the site's own switch - nothing
+   crosses the line: it is grey from the start. */
+[data-a11y-motion] .hero-glint {
+  animation-delay: 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-glint {
+    animation-duration: 0.01ms;
+    animation-delay: 0s;
+  }
+}
+
 @keyframes icon-rocket {
   0%,
   100% {

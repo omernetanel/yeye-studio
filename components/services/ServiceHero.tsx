@@ -22,7 +22,7 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
         >
           {titleLine1}
           <br />
-          <span className="bg-[image:var(--gradient-brand)] bg-clip-text text-transparent">{titleLine2}</span>
+          <span className="hero-glint">{titleLine2}</span>
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
