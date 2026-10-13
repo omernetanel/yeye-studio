@@ -1,6 +1,6 @@
 "use client";
 
-import { Code2, MessageSquare, Paintbrush, Rocket, Smartphone, Target, Users, Zap } from "lucide-react";
+import { Code2, MessageSquare, Paintbrush, Rocket } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import SubPageNav from "@/components/layout/SubPageNav";
 import Footer from "@/components/layout/Footer";
@@ -10,16 +10,10 @@ import WhatIsIt from "@/components/services/WhatIsIt";
 import StatsSection from "@/components/services/StatsSection";
 import TypesGrid from "@/components/services/TypesGrid";
 import ProcessTimeline from "@/components/services/ProcessTimeline";
-import PrinciplesGrid from "@/components/services/PrinciplesGrid";
 import WhatYouGet from "@/components/services/WhatYouGet";
 import ServiceFinalCTA from "@/components/services/ServiceFinalCTA";
+import ServiceWork, { type ServiceWorkItem } from "@/components/services/ServiceWork";
 
-const principles = [
-  { icon: Target, title: "מטרה אחת ברורה", description: "כל דף בנוי סביב פעולה אחת, בלי הסחות ובלי תפריטים שמושכים לצדדים." },
-  { icon: Zap, title: "טעינה מהירה", description: "כל שנייה של המתנה עולה בפניות. הדפים שאני בונה נטענים מהר." },
-  { icon: Smartphone, title: "קודם כול לטלפון", description: "רוב הגולשים מגיעים מהטלפון, אז משם אני מתחיל לתכנן." },
-  { icon: Users, title: "הוכחה חברתית", description: "המלצות במקום הנכון הן לפעמים מה שמכריע את ההחלטה." },
-];
 
 const pageTypes = [
   { title: "איסוף לידים", description: "פרטי קשר תמורת משהו שווה: שיחת ייעוץ, קטלוג או הצעת מחיר.", use: "מתאים אם אתם רוצים לבנות רשימת לקוחות פוטנציאליים" },
@@ -44,6 +38,30 @@ const stats = [
   { stat: "83%", statLabel: "מהביקורים בדפי נחיתה מגיעים מהטלפון", source: { name: "Unbounce, 2024", href: "https://unbounce.com/conversion-benchmark-report/" }, text: "רוב מי שיגיע לדף שלכם יראה אותו על מסך קטן, ביד אחת. לכן אני מתכנן קודם את הגרסה לטלפון, ורק אחריה את המחשב." },
 ];
 
+// Two landing pages the site has a page for.
+const work: ServiceWorkItem[] = [
+  {
+    name: "Sorozin Chef",
+    href: "/projects/sorozin-chef",
+    piece: {
+      src: "/images/projects/sorozin/sorozinweb01.webp",
+      alt: "דף הנחיתה של Sorozin Chef פתוח על מסך מחשב נייד",
+      width: 1536,
+      height: 1024,
+    },
+  },
+  {
+    name: "LYNKO",
+    href: "/projects/lynko-landing",
+    piece: {
+      src: "/images/projects/lynkoweb.webp",
+      alt: "דף הנחיתה של LYNKO",
+      width: 1920,
+      height: 1080,
+    },
+  },
+];
+
 const whatYouGetRows = [
   [
     { number: "01", title: "ידע שיווקי", description: "חוץ מהדף עצמו, אני משתף אתכם במה שלמדתי על מה עובד, מה לא ואיך להוציא ממנו יותר." },
@@ -64,20 +82,20 @@ export default function LandingPagesContent() {
 
       <div className="relative z-10">
         <ServiceHero
-          titleLine1="דפי נחיתה"
+          titleLine1="דפי נחיתה ואתרי תדמית"
           titleLine2="שמביאים לקוחות"
-          description="לכל דף נחיתה שאני בונה יש תפקיד אחד: להפוך גולשים ללקוחות."
+          description="לכל דף ולכל אתר שאני בונה יש תפקיד אחד: להפוך גולשים ללקוחות."
           ctaLabel="בואו נבנה את הדף שלכם"
         />
         <WhatIsIt
-          title="מה זה דף נחיתה?"
-          text="דף נחיתה הוא עמוד שנבנה בשביל פעולה אחת: השארת פרטים, רכישה או הרשמה. אין בו תפריט שמסיח את הדעת ואין קישורים החוצה. כל מה שיש בדף מוביל לאותה פעולה, ובגלל זה הוא מביא יותר פניות מעמוד רגיל באתר."
+          title="דף נחיתה או אתר תדמית?"
+          text="דף נחיתה הוא עמוד שנבנה בשביל פעולה אחת: השארת פרטים, רכישה או הרשמה. אין בו תפריט שמסיח את הדעת ואין קישורים החוצה. כל מה שיש בדף מוביל לאותה פעולה, ובגלל זה הוא מביא יותר פניות מעמוד רגיל באתר. אתר תדמית הוא הגרסה הרחבה: כמה עמודים שמציגים את העסק, את השירותים ואת מי שעומד מאחוריו, למי שבודק אתכם לפני שהוא פונה."
         />
         <StatsSection title="למה כדאי דף נחיתה" stats={stats} />
         <TypesGrid title="איזה סוג דף מתאים לך?" items={pageTypes} />
         <ProcessTimeline title="איך זה עובד?" steps={processSteps} />
-        <PrinciplesGrid title="העקרונות שלי" items={principles} />
         <WhatYouGet title="וזה לא הכול" subtitle="מה מקבלים מעבר לדף עצמו" rows={whatYouGetRows} />
+        <ServiceWork title="ככה זה נראה בפועל" items={work} />
         <ServiceFinalCTA title="רוצים דף נחיתה שבאמת מביא פניות?" />
       </div>
 

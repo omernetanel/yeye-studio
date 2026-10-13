@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, Code2, CreditCard, MessageSquare, Paintbrush, Rocket, ShoppingCart, Smartphone } from "lucide-react";
+import { Code2, MessageSquare, Paintbrush, Rocket } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import SubPageNav from "@/components/layout/SubPageNav";
 import Footer from "@/components/layout/Footer";
@@ -10,16 +10,9 @@ import WhatIsIt from "@/components/services/WhatIsIt";
 import StatsSection from "@/components/services/StatsSection";
 import TypesGrid from "@/components/services/TypesGrid";
 import ProcessTimeline from "@/components/services/ProcessTimeline";
-import PrinciplesGrid from "@/components/services/PrinciplesGrid";
 import WhatYouGet from "@/components/services/WhatYouGet";
 import ServiceFinalCTA from "@/components/services/ServiceFinalCTA";
 
-const principles = [
-  { icon: ShoppingCart, title: "חוויית קנייה חלקה", description: "מהמוצר ועד התשלום, בלי חיכוך ובלי בלבול. כל שלב בנוי כדי שיקנו." },
-  { icon: CreditCard, title: "תשלומים מאובטחים", description: "חיבור ל-Stripe, ל-PayPal ולסליקה ישראלית, עם אבטחה לפי התקנים." },
-  { icon: BarChart3, title: "ניהול קל", description: "לוח בקרה פשוט למוצרים, למלאי ולהזמנות. לא צריך ידע טכני." },
-  { icon: Smartphone, title: "קודם כול לטלפון", description: "רוב הקניות היום קורות בטלפון, אז משם אני מתחיל." },
-];
 
 const storeTypes = [
   { title: "חנות מוצרים פיזיים", description: "ביגוד, אביזרים, מוצרים לבית. חנות עם ניהול מלאי, משלוחים ותשלומים.", use: "מתאים אם יש לכם מוצר פיזי שאתם רוצים למכור אונליין" },
@@ -72,7 +65,6 @@ export default function OnlineStoresContent() {
         <StatsSection title="למה כדאי חנות אונליין" stats={stats} />
         <TypesGrid title="איזה סוג חנות מתאים לך?" items={storeTypes} />
         <ProcessTimeline title="איך זה עובד?" steps={processSteps} />
-        <PrinciplesGrid title="העקרונות שלי" items={principles} />
         <WhatYouGet title="וזה לא הכול" subtitle="מה מקבלים מעבר לחנות עצמה" rows={whatYouGetRows} />
         <ServiceFinalCTA title="רוצים חנות שבאמת מוכרת?" />
       </div>

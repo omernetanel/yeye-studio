@@ -30,7 +30,9 @@ export default function ServiceWork({ title, items }: { title: string; items: Se
     <section ref={rootRef} className="px-6 py-16">
       <div className="mx-auto max-w-[1100px]">
         <ServiceHeading className="mb-12">{title}</ServiceHeading>
-        <div className="grid gap-12 sm:grid-cols-2 sm:gap-x-10">
+        {/* One piece of work stands alone in the middle; two stand side by
+            side, the second lower. */}
+        <div className={items.length === 1 ? "mx-auto max-w-[760px]" : "grid gap-12 sm:grid-cols-2 sm:gap-x-10"}>
           {items.map((item, index) => (
             <Link key={item.href} href={item.href} className={`group block ${index % 2 === 1 ? "sm:mt-24" : ""}`}>
               <ScrollPiece piece={item.piece} sizes="(max-width: 640px) 100vw, 520px" />

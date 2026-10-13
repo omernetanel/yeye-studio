@@ -1,6 +1,6 @@
 "use client";
 
-import { Fingerprint, Layers, MessageSquare, Paintbrush, Palette, Rocket, Sparkles } from "lucide-react";
+import { Layers, MessageSquare, Paintbrush, Rocket } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import SubPageNav from "@/components/layout/SubPageNav";
 import Footer from "@/components/layout/Footer";
@@ -10,17 +10,10 @@ import WhatIsIt from "@/components/services/WhatIsIt";
 import StatsSection from "@/components/services/StatsSection";
 import TypesGrid from "@/components/services/TypesGrid";
 import ProcessTimeline from "@/components/services/ProcessTimeline";
-import PrinciplesGrid from "@/components/services/PrinciplesGrid";
 import WhatYouGet from "@/components/services/WhatYouGet";
 import ServiceFinalCTA from "@/components/services/ServiceFinalCTA";
 import ServiceWork, { type ServiceWorkItem } from "@/components/services/ServiceWork";
 
-const principles = [
-  { icon: Palette, title: "עיצוב עקבי", description: "שפה עיצובית אחת בכל מקום: באתר, ברשתות החברתיות, בדפוס ובכל השאר." },
-  { icon: Fingerprint, title: "זהות ייחודית", description: "מיתוג שמבדל אתכם מהמתחרים ומשקף בדיוק מי אתם ומה אתם מציעים." },
-  { icon: Layers, title: "מערכת שלמה", description: "לוגו הוא רק ההתחלה. מקבלים מדריך מותג עם צבעים, גופנים וכללי שימוש שכל ספק יכול לעבוד לפיו." },
-  { icon: Sparkles, title: "רושם ראשוני חזק", description: "מותג מוקפד בונה אמון תוך שניות ומגדיל את הסיכוי שיבחרו בכם." },
-];
 
 const brandTypes = [
   { title: "עסקים חדשים", description: "זהות מותג מאפס: לוגו, צבעים, טיפוגרפיה ומדריך מותג מלא.", use: "מתאים אם אתם משיקים עסק וצריכים זהות מקצועית מהיום הראשון" },
@@ -98,7 +91,6 @@ export default function BrandingContent() {
         <StatsSection title="למה כדאי להשקיע במיתוג" stats={stats} />
         <TypesGrid title="איזה סוג מיתוג מתאים לך?" items={brandTypes} />
         <ProcessTimeline title="איך זה עובד?" steps={processSteps} />
-        <PrinciplesGrid title="העקרונות שלי" items={principles} />
         <WhatYouGet title="וזה לא הכול" subtitle="מה מקבלים מעבר לזהות עצמה" rows={whatYouGetRows} />
         <ServiceWork title="ככה זה נראה בפועל" items={work} />
         <ServiceFinalCTA title="רוצים מותג שאנשים זוכרים?" />

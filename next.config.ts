@@ -28,8 +28,14 @@ const nextConfig: NextConfig = {
   // safe, and the browser serves them from disk without asking.
   // The contact page is gone: every way to get in touch is the form at the end
   // of the home page. Old links and search results land on it instead of a 404.
+  // And the page for business sites is one with the page for landing pages:
+  // the home page lists them as one service, and two pages said nearly the
+  // same thing. Its address still leads somewhere.
   async redirects() {
-    return [{ source: "/contact", destination: "/#cta", permanent: true }];
+    return [
+      { source: "/contact", destination: "/#cta", permanent: true },
+      { source: "/services/business-sites", destination: "/services/landing-pages", permanent: true },
+    ];
   },
 
   async headers() {

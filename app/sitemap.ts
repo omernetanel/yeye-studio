@@ -2,10 +2,11 @@ import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 import { projects } from "@/lib/projects";
 
-// Every service page there is. It was four of the five — branding was simply
-// missing, and so never offered to a search engine — and a list written by
-// hand beside a folder of pages drifts the moment one is added.
-const serviceSlugs = ["online-stores", "landing-pages", "business-sites", "dashboards", "branding"];
+// Every service page there is, one for each service the home page lists. A
+// list written by hand beside a folder of pages drifts the moment one is
+// added: branding was once simply missing from it, and so never offered to a
+// search engine.
+const serviceSlugs = ["branding", "landing-pages", "online-stores", "dashboards"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [

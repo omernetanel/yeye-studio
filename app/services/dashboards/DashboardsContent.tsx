@@ -1,6 +1,6 @@
 "use client";
 
-import { Code2, Database, LayoutDashboard, Lock, MessageSquare, Paintbrush, Rocket, Zap } from "lucide-react";
+import { Code2, MessageSquare, Paintbrush, Rocket } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import SubPageNav from "@/components/layout/SubPageNav";
 import Footer from "@/components/layout/Footer";
@@ -10,16 +10,10 @@ import WhatIsIt from "@/components/services/WhatIsIt";
 import StatsSection from "@/components/services/StatsSection";
 import TypesGrid from "@/components/services/TypesGrid";
 import ProcessTimeline from "@/components/services/ProcessTimeline";
-import PrinciplesGrid from "@/components/services/PrinciplesGrid";
 import WhatYouGet from "@/components/services/WhatYouGet";
 import ServiceFinalCTA from "@/components/services/ServiceFinalCTA";
+import ServiceWork, { type ServiceWorkItem } from "@/components/services/ServiceWork";
 
-const principles = [
-  { icon: LayoutDashboard, title: "ממשק פשוט", description: "מערכת מורכבת לא חייבת להיות קשה לשימוש. הממשקים שאני בונה מובנים תוך דקות." },
-  { icon: Database, title: "נתונים בזמן אמת", description: "הזמנות, לקוחות וביצועים, מעודכנים ובמקום אחד." },
-  { icon: Lock, title: "אבטחה מלאה", description: "הרשאות לפי תפקיד, גיבויים אוטומטיים וחיבור מוצפן. הנתונים שלכם מוגנים." },
-  { icon: Zap, title: "ביצועים גבוהים", description: "עובדת מהר גם עם אלפי רשומות, ויכולה לגדול יחד עם העסק." },
-];
 
 const systemTypes = [
   { title: "ניהול לקוחות ותורים", description: "קביעת תורים, מעקב אחרי לקוחות ותזכורות שנשלחות לבד.", use: "מתאים אם יש לכם קליניקה, סטודיו או כל עסק שעובד עם פגישות" },
@@ -38,6 +32,20 @@ const stats = [
   { stat: "לבד", statLabel: "העבודה החוזרת נעשית בלי שתיגעו בה", text: "עסק שמנהל לקוחות, תורים ומלאי באקסל מבזבז שעות על עבודה ידנית. מערכת ייעודית עושה את החלק החוזר לבד, מקטינה טעויות ומחזירה לכם זמן לעסק עצמו." },
   { stat: "מקור אחד", statLabel: "בלי העתקה ידנית בין מערכות", text: "העתקה ידנית של מידע בין מערכות היא אחד המקורות הנפוצים לטעויות יקרות. כשלקוחות, הזמנות ותשלומים יושבים במערכת אחת, קל יותר לשמור על המידע מסודר ומעודכן." },
   { stat: "בזמן אמת", statLabel: "תמונת מצב של העסק בלחיצה", text: "כמה לקוחות חדשים היו החודש? מה יש במלאי? איזה שירות הכי מבוקש? עם לוח בקרה משלכם התשובות נמצאות בלחיצה, ולא מפוזרות בין גיליונות ומיילים." },
+];
+
+// The management system the site has a page for.
+const work: ServiceWorkItem[] = [
+  {
+    name: "LYNKO",
+    href: "/projects/lynko",
+    piece: {
+      src: "/images/projects/lynkosass.webp",
+      alt: "מסך ניהול התורים של LYNKO",
+      width: 1920,
+      height: 1080,
+    },
+  },
 ];
 
 const whatYouGetRows = [
@@ -72,8 +80,8 @@ export default function DashboardsContent() {
         <StatsSection title="למה כדאי מערכת ניהול" stats={stats} />
         <TypesGrid title="איזה סוג מערכת מתאים לך?" items={systemTypes} />
         <ProcessTimeline title="איך זה עובד?" steps={processSteps} />
-        <PrinciplesGrid title="העקרונות שלי" items={principles} />
         <WhatYouGet title="וזה לא הכול" subtitle="מה מקבלים מעבר למערכת עצמה" rows={whatYouGetRows} />
+        <ServiceWork title="ככה זה נראה בפועל" items={work} />
         <ServiceFinalCTA title="רוצים מערכת שעובדת בשבילכם?" />
       </div>
 

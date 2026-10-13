@@ -3,9 +3,9 @@ import { pageMetadata } from "@/lib/site";
 import { ServiceStructuredData } from "@/components/seo/StructuredData";
 import LandingPagesContent from "./LandingPagesContent";
 
-const NAME = "בניית דפי נחיתה לעסקים";
+const NAME = "בניית דפי נחיתה ואתרי תדמית";
 const DESCRIPTION =
-  "עיצוב ובניית דף נחיתה שנבנה בשביל מטרה אחת: להפוך גולשים ללקוחות. ממוקד, מהיר ומעוצב מאפס.";
+  "עיצוב ובניית דפי נחיתה ואתרי תדמית לעסקים: דף שנבנה בשביל מטרה אחת, או אתר שמציג את העסק כולו. מהיר ומעוצב מאפס.";
 const PATH = "/services/landing-pages";
 
 export const metadata: Metadata = pageMetadata({ label: NAME, description: DESCRIPTION, path: PATH });
