@@ -5,7 +5,7 @@ import { registerLanding } from "@/lib/nav/landings";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import ServiceRow from "@/components/sections/services/ServiceRow";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
-import { SERVICES_HEADING, SERVICES_LEAD, services } from "@/lib/content";
+import { SERVICES_HEADING, services } from "@/lib/content";
 import { ScrollFrames, type FrameSequence } from "@/lib/scrub/scroll-frames";
 import { SteppedPlayhead, travelScreensFor, type StoryOptions } from "@/lib/scrub/stepped-playhead";
 import { isMomentum, stopMomentumAt, trackTouch } from "@/lib/scrub/momentum";
@@ -460,11 +460,16 @@ export default function MobileServices() {
     headingBox.style.transform = `scale(${lerp(1, HEADING_REST_SCALE, rise)})`;
     setFold(heading, folded);
 
-    // THE CUE comes in with the heading - the first thing that stands still on
-    // the open sheet - and stays for everything after it: the four stages, the
-    // crumple and the plane. It goes as the plane flies off, which the finger
-    // drives, so by then nobody needs telling.
-    cue.style.opacity = String(Math.min(folded, clamp01((1 - progress) / (1 - PLANE_REST))));
+    // THE CUE IS THERE FROM THE FIRST FRAME OF THE SECTION, on the ball with
+    // the services on it, and stays for everything after: the paper opening,
+    // the four stages, the crumple and the plane. It used to come in with the
+    // heading on the open sheet, and the ball before that was the one screen
+    // in the section where readers were watched taking the page for stuck -
+    // the screen that pins first, with nothing on it to say so. It goes as
+    // the plane flies off, which the finger drives, so by then nobody needs
+    // telling. The services block leaves it the foot of the screen (the
+    // layer's bottom inset): it used to run to the last pixel there.
+    cue.style.opacity = String(clamp01((1 - progress) / (1 - PLANE_REST)));
 
     for (let index = 0; index < STAGE_COUNT; index++) {
       // 0 → 1 across the swap into this stage, and across the swap out of it.
@@ -595,7 +600,7 @@ export default function MobileServices() {
             of the block sat under the menu. */}
         <div
           ref={servicesLayerRef}
-          className="paper-halo absolute inset-x-0 top-16 bottom-3 flex flex-col justify-center px-[5%]"
+          className="paper-halo absolute inset-x-0 top-16 bottom-[108px] flex flex-col justify-center px-[5%]"
         >
           <ServicesIntro />
         </div>
@@ -680,7 +685,7 @@ export default function MobileServices() {
         </div>
 
         {/* KEEP SCROLLING (see ScrollCue): at the foot of the screen from the
-            moment the heading stands on the open sheet until the section lets
+            first frame of the section, on the ball, until the section lets
             go. On the panel and not in the layer above, which shrinks away with
             the crumple. */}
         <div
@@ -702,17 +707,22 @@ export default function MobileServices() {
 }
 
 /**
- * The desktop's services block at the phone's size: the sentence, the lead, and
- * the four rows with their icons and the sentence under each — the same
- * ServiceRow the desktop prints, so there is one list and not two.
+ * The desktop's services block at the phone's size: the sentence and the four
+ * rows with their icons and the sentence under each — the same ServiceRow the
+ * desktop prints, so there is one list and not two.
+ *
+ * WITHOUT THE DESKTOP'S LEAD LINE under the sentence. The block has to leave
+ * the foot of the screen to the scroll cue, which stands there from the first
+ * frame, and on a short phone it filled the screen to the last pixel; the line
+ * only announced the list that follows it. On a short phone the sentence is
+ * set smaller and the rows closer as well.
  */
 function ServicesIntro() {
   return (
     <>
-      <h2 className="text-center font-display text-m-statement font-bold text-balance text-black">
+      <h2 className="text-center font-display text-m-statement font-bold text-balance text-black [@media(max-height:700px)]:text-[26px] [@media(max-height:700px)]:leading-[1.3]">
         {SERVICES_HEADING.join(" ")}
       </h2>
-      <p className="mt-3 text-center font-body text-m-body text-black/70">{SERVICES_LEAD}</p>
       <div className="mt-7 [@media(max-height:700px)]:mt-4">
         {services.map((service, index) => (
           <ServiceRow key={service.title} service={service} index={index} compact />

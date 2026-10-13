@@ -46,7 +46,7 @@ export default function ServiceRow({ service, index, compact = false, className 
         "group flex items-center justify-between border-b border-black/8 last:border-b-0",
         // A short phone gets the tighter rows back: the four at py-4 do not fit
         // under the menu on a 667px screen.
-        compact ? "gap-3 py-4 [@media(max-height:700px)]:py-3" : "gap-6 py-5 pe-10 first:pt-0",
+        compact ? "gap-3 py-4 [@media(max-height:700px)]:py-2" : "gap-6 py-5 pe-10 first:pt-0",
         className
       )}
     >
