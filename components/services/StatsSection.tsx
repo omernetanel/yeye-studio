@@ -1,6 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { animate, motion, useInView } from "framer-motion";
+import { usePrefersReducedMotion } from "@/lib/reduced-motion";
+import ServiceHeading from "@/components/services/ServiceHeading";
 
 interface Stat {
   stat: string;
@@ -17,19 +20,45 @@ interface StatsSectionProps {
   stats: Stat[];
 }
 
+/**
+ * The figure itself. One that is a single number with or without a unit
+ * ("50ms") counts up to it once, as it comes onto the screen; anything else -
+ * a word, "24/7" - is simply printed. With less motion nothing counts.
+ */
+function Figure({ value }: { value: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const parts = /^(\D*)(\d+)(\D*)$/.exec(value);
+  const before = parts?.[1] ?? "";
+  const target = parts ? Number(parts[2]) : null;
+  const after = parts?.[3] ?? "";
+
+  useEffect(() => {
+    const element = ref.current;
+    if (target === null || !inView || prefersReducedMotion || !element) return undefined;
+    const controls = animate(0, target, {
+      duration: 1.1,
+      ease: "easeOut",
+      onUpdate: (current) => {
+        element.textContent = `${before}${Math.round(current)}${after}`;
+      },
+    });
+    return () => controls.stop();
+  }, [after, before, inView, prefersReducedMotion, target]);
+
+  return (
+    <span ref={ref} dir={target === null ? undefined : "ltr"}>
+      {value}
+    </span>
+  );
+}
+
 export default function StatsSection({ title, stats }: StatsSectionProps) {
   return (
     <section className="px-6 py-16">
       <div className="mx-auto max-w-[1000px]">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6 }}
-          className="mb-12 text-center font-display text-3xl font-bold text-black"
-        >
-          {title}
-        </motion.h2>
+        <ServiceHeading className="mb-12">{title}</ServiceHeading>
 
         <div className="flex flex-col gap-10">
           {stats.map((item, i) => (
@@ -41,11 +70,11 @@ export default function StatsSection({ title, stats }: StatsSectionProps) {
               transition={{ duration: 0.7, ease: "easeOut", delay: i * 0.1 }}
               className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-center sm:gap-12 sm:text-right"
             >
-              <div className="shrink-0 sm:w-[220px]">
-                <div className="mb-2 bg-[image:var(--gradient-brand)] bg-clip-text font-display text-5xl leading-none font-extrabold text-transparent">
-                  {item.stat}
+              <div className="shrink-0 sm:w-[300px]">
+                <div className="mb-3 font-display text-5xl leading-none font-extrabold tracking-tight text-black md:text-7xl">
+                  <Figure value={item.stat} />
                 </div>
-                <div className="font-display text-xs leading-[1.4] text-black/60">{item.statLabel}</div>
+                <div className="font-display text-sm leading-[1.4] font-bold text-black">{item.statLabel}</div>
                 {item.source && (
                   <a
                     href={item.source.href}

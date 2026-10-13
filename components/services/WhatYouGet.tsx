@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import ServiceHeading from "@/components/services/ServiceHeading";
 import BorderGlowCard from "@/components/ui/BorderGlowCard";
 
 interface FeatureItem {
@@ -26,7 +27,7 @@ export default function WhatYouGet({ title, subtitle, rows }: WhatYouGetProps) {
           transition={{ duration: 0.6 }}
           className="mb-14 text-center"
         >
-          <h2 className="mb-3 font-display text-3xl font-bold text-black">{title}</h2>
+          <ServiceHeading className="mb-3">{title}</ServiceHeading>
           <p className="font-body text-base text-black/70">{subtitle}</p>
         </motion.div>
 

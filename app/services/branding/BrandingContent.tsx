@@ -13,6 +13,7 @@ import ProcessTimeline from "@/components/services/ProcessTimeline";
 import PrinciplesGrid from "@/components/services/PrinciplesGrid";
 import WhatYouGet from "@/components/services/WhatYouGet";
 import ServiceFinalCTA from "@/components/services/ServiceFinalCTA";
+import ServiceWork, { type ServiceWorkItem } from "@/components/services/ServiceWork";
 
 const principles = [
   { icon: Palette, title: "עיצוב עקבי", description: "שפה עיצובית אחת בכל מקום: באתר, ברשתות החברתיות, בדפוס ובכל השאר." },
@@ -38,6 +39,31 @@ const stats = [
   { stat: "50ms", statLabel: "מספיקות כדי לגבש רושם מהעיצוב", source: { name: "Lindgaard et al., 2006", href: "https://doi.org/10.1080/01449290500330448" }, text: "המראה נשפט לפני שנקראת מילה אחת. מיתוג מוקפד גורם לרושם המיידי הזה לעבוד לטובתכם." },
   { stat: "אותו מותג", statLabel: "באתר, ברשתות, בדפוס ובכל מקום אחר", text: "עסק שכל ערוץ שלו נראה אחר נראה כמו כמה עסקים קטנים. זהות אחת שחוזרת בכל מקום היא מה שגורם לזכור אתכם." },
   { stat: "אצלכם", statLabel: "קבצי המקור והחומרים שנמסרים בסיום", text: "בסיום נמסרים לכם קבצי המקור והחומרים שנכללים בפרויקט, כדי שתוכלו להמשיך לעבוד עם כל ספק ובכל פלטפורמה." },
+];
+
+// The two brands the site has a page for. Each picture is one that page shows
+// too.
+const work: ServiceWorkItem[] = [
+  {
+    name: "MAY'S",
+    href: "/projects/mays",
+    piece: {
+      src: "/images/projects/mays/mays2.webp",
+      alt: "כרטיסי ביקור וגיליון מדבקות של MAY'S",
+      width: 1254,
+      height: 1254,
+    },
+  },
+  {
+    name: "Sorozin Chef",
+    href: "/projects/sorozin-chef",
+    piece: {
+      src: "/images/projects/sorozin/sorozin4.webp",
+      alt: "קרש חיתוך, סט סכינים ומעמד עם הלוגו והשם של Sorozin Chef",
+      width: 1536,
+      height: 1024,
+    },
+  },
 ];
 
 const whatYouGetRows = [
@@ -74,6 +100,7 @@ export default function BrandingContent() {
         <ProcessTimeline title="איך זה עובד?" steps={processSteps} />
         <PrinciplesGrid title="העקרונות שלי" items={principles} />
         <WhatYouGet title="וזה לא הכול" subtitle="מה מקבלים מעבר לזהות עצמה" rows={whatYouGetRows} />
+        <ServiceWork title="ככה זה נראה בפועל" items={work} />
         <ServiceFinalCTA title="רוצים מותג שאנשים זוכרים?" />
       </div>
 

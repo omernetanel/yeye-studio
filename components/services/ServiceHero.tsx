@@ -13,12 +13,12 @@ interface ServiceHeroProps {
 export default function ServiceHero({ titleLine1, titleLine2, description, ctaLabel }: ServiceHeroProps) {
   return (
     <section className="px-6 pt-[160px] pb-20 text-center">
-      <div className="mx-auto max-w-[800px]">
+      <div className="mx-auto max-w-[1100px]">
         <motion.h1
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.1 }}
-          className="mb-6 font-display text-[clamp(38px,5vw,60px)] leading-[1.15] font-extrabold tracking-tight text-black"
+          className="mb-7 font-display text-[clamp(40px,6.6vw,96px)] leading-[1.08] font-extrabold tracking-tight text-black"
         >
           {titleLine1}
           <br />
@@ -28,7 +28,7 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.25 }}
-          className="mb-9 font-body text-lg leading-[1.8] text-black/70"
+          className="mx-auto mb-9 max-w-[720px] font-body text-lg leading-[1.8] text-black/70 md:text-[21px]"
         >
           {description}
         </motion.p>

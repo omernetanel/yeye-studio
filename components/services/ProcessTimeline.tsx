@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import ServiceHeading from "@/components/services/ServiceHeading";
 import type { LucideIcon } from "lucide-react";
 import BorderGlowCard from "@/components/ui/BorderGlowCard";
 
@@ -41,15 +42,7 @@ export default function ProcessTimeline({ title, steps }: ProcessTimelineProps) 
   return (
     <section className="px-6 py-16">
       <div className="mx-auto max-w-[700px]">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6 }}
-          className="mb-14 text-center font-display text-3xl font-bold text-black"
-        >
-          {title}
-        </motion.h2>
+        <ServiceHeading className="mb-14">{title}</ServiceHeading>
 
         {/* Mobile: simple right-aligned vertical timeline */}
         <div className="relative sm:hidden">

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import ServiceHeading from "@/components/services/ServiceHeading";
 import BorderGlowCard from "@/components/ui/BorderGlowCard";
 import SwipeCarousel from "@/components/ui/SwipeCarousel";
 
@@ -33,15 +34,7 @@ export default function TypesGrid({ title, items }: TypesGridProps) {
   return (
     <section className="px-6 py-16">
       <div className="mx-auto max-w-[1100px]">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6 }}
-          className="mb-12 text-center font-display text-3xl font-bold text-black"
-        >
-          {title}
-        </motion.h2>
+        <ServiceHeading className="mb-12">{title}</ServiceHeading>
 
         {/* -mx-6 so the track spans the screen, and vw with `centred` so the
             first card opens in the middle with a peek either side. */}
