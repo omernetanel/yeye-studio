@@ -23,11 +23,15 @@ export const SERVICES_LEAD = "ובתכל’ס, זה מה שאני עושה:";
 // line. Desktop and phone both.
 export const PROJECTS_HEADING = ["חלק", "מהעבודות", "שלי"];
 
+// IN THE ORDER A BUSINESS GOES THROUGH THEM: an identity, then a site, then
+// selling, then running it. It is also the order of what the site can show for
+// each - branding has two pieces of work behind it, and stores, which used to
+// come first, have none.
 export const services = [
   {
-    title: "חנויות אונליין",
-    description: "חנויות מעוצבות ומדויקות\nעם חוויית קנייה שמביאה מכירות.",
-    href: "/services/online-stores",
+    title: "מיתוג עסקי",
+    description: "זהות חזותית מלאה שמבדלת אתכם\nמהמתחרים ובונה מותג שנשאר בזיכרון.",
+    href: "/services/branding",
   },
   {
     title: "דפי נחיתה ואתרי תדמית",
@@ -35,14 +39,14 @@ export const services = [
     href: "/services/landing-pages",
   },
   {
+    title: "חנויות אונליין",
+    description: "חנויות מעוצבות ומדויקות\nעם חוויית קנייה שמביאה מכירות.",
+    href: "/services/online-stores",
+  },
+  {
     title: "מערכות ניהול",
     description: "דשבורדים וכלי ניהול פנימיים\nשמסדרים את העסק שלכם במקום אחד.",
     href: "/services/dashboards",
-  },
-  {
-    title: "מיתוג עסקי",
-    description: "זהות חזותית מלאה שמבדלת אתכם\nמהמתחרים ובונה מותג שנשאר בזיכרון.",
-    href: "/services/branding",
   },
 ];
 

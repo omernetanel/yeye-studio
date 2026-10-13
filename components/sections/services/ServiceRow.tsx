@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 // The words live in lib/content; the icons live with the row, because they
 // belong to this row design and nothing else draws them.
-const SERVICE_ICONS = [ShoppingBag, Rocket, Layers, PenTool];
+const SERVICE_ICONS = [PenTool, Rocket, ShoppingBag, Layers];
 
 // Every row hovers to the same grey. It used to be a different accent per row,
 // which fought the black-and-white section around it; a single neutral reads as
