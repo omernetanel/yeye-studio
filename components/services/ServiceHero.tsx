@@ -38,7 +38,7 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
           transition={{ duration: 0.6, delay: 0.35 }}
           className="flex justify-center"
         >
-          <Button href="/#cta">{ctaLabel}</Button>
+          <Button href="/#cta" className="!border-black !bg-none !bg-black !shadow-none">{ctaLabel}</Button>
         </motion.div>
       </div>
     </section>

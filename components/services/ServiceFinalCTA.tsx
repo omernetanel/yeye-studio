@@ -23,7 +23,7 @@ export default function ServiceFinalCTA({ title }: ServiceFinalCTAProps) {
           {title}
         </h2>
         <p className="mb-8 font-body text-lg text-black/70">ייעוץ ראשוני ללא עלות. אשמח לשמוע על הפרויקט שלכם.</p>
-        <Button href="/#cta">בואו נתחיל</Button>
+        <Button href="/#cta" className="!border-black !bg-none !bg-black !shadow-none">בואו נתחיל</Button>
       </motion.div>
     </section>
   );

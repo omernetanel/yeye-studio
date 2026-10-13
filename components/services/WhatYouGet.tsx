@@ -43,7 +43,7 @@ export default function WhatYouGet({ title, subtitle, rows }: WhatYouGetProps) {
             >
               {row.map((item) => (
                 // The benefit cards from the home page — see TypesGrid.
-                <BorderGlowCard key={item.number} className="h-full p-7">
+                <BorderGlowCard key={item.number} className="h-full p-7 [--glow-face:var(--color-neutral-800)]">
                   <div className="flex items-start gap-5">
                     <span className="mt-0.5 shrink-0 font-display text-4xl leading-none font-extrabold text-white/20">
                       {item.number}

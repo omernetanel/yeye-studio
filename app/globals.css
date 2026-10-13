@@ -577,7 +577,10 @@ body {
   isolation: isolate;
   border-radius: 24px;
   border: 1px solid rgb(255 255 255 / 10%);
-  background: #0b0b0b;
+  /* Near black, unless whoever places the card sets --glow-face: the service
+     pages carry a dozen of these down a white page, and at this depth they
+     were the heaviest thing on it. */
+  background: var(--glow-face, #0b0b0b);
   /* Clips the turning disc below to the card's own shape. */
   overflow: hidden;
 }
@@ -687,7 +690,7 @@ body {
   position: absolute;
   inset: 1.5px;
   border-radius: inherit;
-  background: #0b0b0b;
+  background: var(--glow-face, #0b0b0b);
   pointer-events: none;
 }
 

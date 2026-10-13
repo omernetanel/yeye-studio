@@ -20,7 +20,7 @@ function TypeCardContent({ item }: { item: TypeItem }) {
   return (
     // The benefit cards from the home page, so every card on the site is one
     // object: black face, a light turning around the edge.
-    <BorderGlowCard className="h-full p-7">
+    <BorderGlowCard className="h-full p-7 [--glow-face:var(--color-neutral-800)]">
       <div className="flex flex-col gap-3">
         <h3 className="font-display text-lg font-bold text-white">{item.title}</h3>
         <p className="font-body text-sm leading-[1.7] text-white/75">{item.description}</p>
