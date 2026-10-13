@@ -49,32 +49,39 @@ const ease = (progress: number) => 1 - (1 - progress) ** 4;
 /**
  * The opening's own content, as it stands on white or, `dark`, on black.
  *
- * ON BLACK THE TWO LINES OF THE HEADING TRADE PLACES: the first is the grey
- * one and the second the white. Simply inverted, the grey line was grey on
- * both grounds, and the squares turning over it changed nothing that could be
- * seen. This way each line changes colour as its squares turn.
+ * WHILE IT ARRIVES IT IS ONE COLOUR AGAINST ITS GROUND: all white on the
+ * black, all black on the white, the sentence under the heading included. A
+ * grey line is grey on both, and the squares turning over it changed nothing
+ * that could be seen. The greys come afterwards, once the opening has
+ * `settled`: the heading's second line under a glint that crosses it
+ * (.hero-glint in globals.css), and the sentence easing back to its own.
  */
-function Opening({ titleLine1, titleLine2, description, ctaLabel, dark = false }: ServiceHeroProps & { dark?: boolean }) {
+function Opening({
+  titleLine1,
+  titleLine2,
+  description,
+  ctaLabel,
+  dark = false,
+  settled = false,
+}: ServiceHeroProps & { dark?: boolean; settled?: boolean }) {
   return (
     <>
       <h1
         className={cn(
           "mb-7 font-display text-[clamp(40px,6.6vw,96px)] leading-[1.08] font-extrabold tracking-tight",
-          dark ? "text-neutral-500" : "text-black",
+          dark ? "text-white" : "text-black",
         )}
       >
         {titleLine1}
         <br />
-        <span
-          className={dark ? "text-white" : "bg-[image:var(--gradient-brand)] bg-clip-text text-transparent"}
-        >
+        <span className={dark ? undefined : "hero-glint"} data-run={settled ? "" : undefined}>
           {titleLine2}
         </span>
       </h1>
       <p
         className={cn(
-          "mx-auto mb-9 max-w-[720px] font-body text-lg leading-[1.8] md:text-[21px]",
-          dark ? "text-white/70" : "text-black/70",
+          "mx-auto mb-9 max-w-[720px] font-body text-lg leading-[1.8] transition-colors duration-700 md:text-[21px]",
+          dark ? "text-white" : settled ? "text-black/70" : "text-black",
         )}
       >
         {description}
@@ -203,7 +210,7 @@ export default function ServiceHero(props: ServiceHeroProps) {
           paint: the page is sent with the opening in it, and it would show
           whole for a moment before the squares began. */}
       <div ref={contentRef} className={cn("mx-auto w-full max-w-[1100px]", shown ? "opacity-100" : "opacity-0")}>
-        <Opening {...props} />
+        <Opening {...props} settled={shown} />
       </div>
 
       {/* WHAT THE SQUARES OPEN OVER: THE SAME OPENING, WHITE ON BLACK, laid out
