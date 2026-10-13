@@ -33,11 +33,6 @@ React Bits:
   ported to TypeScript; the drawing sized from its own type and curve instead
   of a fixed box, the speed made per second, the per-frame React state
   removed, and it rests off screen and stands still with reduced motion.
-- The entrance in `components/services/ServiceHero.tsx`, from **PixelSwap** —
-  only its arriving half, in TypeScript: the grid, the scatter that orders
-  it, and squares that are windows onto a copy of the content, held still by
-  the inverse of their own scaling. No second content, no trigger, and none
-  of its options.
 - `components/ui/Lanyard.tsx` and `Lanyard.css`, from **Lanyard** — ported to
   TypeScript; the card framed to rest on a place the page keeps for it, a
   short band fixed at a slot added, the entrance changed to a drop, the
