@@ -1,6 +1,5 @@
 "use client";
 
-import { Layers, MessageSquare, Paintbrush, Rocket } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import SubPageNav from "@/components/layout/SubPageNav";
 import Footer from "@/components/layout/Footer";
@@ -22,10 +21,10 @@ const brandTypes = [
 ];
 
 const processSteps = [
-  { number: "01", icon: MessageSquare, title: "מחקר ואסטרטגיה", description: "אני לומד את העסק, את הקהל ואת המתחרים כדי להבין איזו זהות תדבר הכי חזק ללקוחות שלכם." },
-  { number: "02", icon: Paintbrush, title: "עיצוב הזהות", description: "אני מפתח כיוונים ללוגו, לצבעים ולטיפוגרפיה עד שמוצאים את הכיוון הנכון." },
-  { number: "03", icon: Layers, title: "בניית המערכת", description: "אני מרחיב את הזהות לכל מקום שבו פוגשים אתכם: כרטיסי ביקור, רשתות חברתיות, מסמכים ועוד." },
-  { number: "04", icon: Rocket, title: "מסירה", description: "אתם מקבלים מדריך מותג ואת קבצי המקור שנכללים במסירה, כדי להשתמש בזהות לבד ובביטחון." },
+  { title: "מחקר ואסטרטגיה", description: "אני לומד את העסק, את הקהל ואת המתחרים כדי להבין איזו זהות תדבר הכי חזק ללקוחות שלכם." },
+  { title: "עיצוב הזהות", description: "אני מפתח כיוונים ללוגו, לצבעים ולטיפוגרפיה עד שמוצאים את הכיוון הנכון." },
+  { title: "בניית המערכת", description: "אני מרחיב את הזהות לכל מקום שבו פוגשים אתכם: כרטיסי ביקור, רשתות חברתיות, מסמכים ועוד." },
+  { title: "מסירה", description: "אתם מקבלים מדריך מותג ואת קבצי המקור שנכללים במסירה, כדי להשתמש בזהות לבד ובביטחון." },
 ];
 
 const stats = [
@@ -89,6 +88,7 @@ export default function BrandingContent() {
         <WhatIsIt
           title="מה זה מיתוג עסקי?"
           text="מיתוג עסקי הוא המראה והתחושה שהעסק משדר בכל מקום: לוגו, צבעים, טיפוגרפיה ושפה עיצובית אחת. הוא מה שהופך עסק אנונימי למותג שלקוחות זוכרים, סומכים עליו וממליצים עליו."
+          mark="למותג שלקוחות זוכרים"
         />
         <StatsSection title="למה כדאי להשקיע במיתוג" stats={stats} />
         <TypesGrid title="איזה סוג מיתוג מתאים לך?" items={brandTypes} />

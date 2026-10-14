@@ -6,9 +6,22 @@ import ServiceHeading from "@/components/services/ServiceHeading";
 interface WhatIsItProps {
   title: string;
   text: string;
+  /** The one phrase in the text that carries it, under the site's marker. */
+  mark?: string;
 }
 
-export default function WhatIsIt({ title, text }: WhatIsItProps) {
+export default function WhatIsIt({ title, text, mark }: WhatIsItProps) {
+  const at = mark ? text.indexOf(mark) : -1;
+  const body =
+    at < 0 || !mark ? (
+      text
+    ) : (
+      <>
+        {text.slice(0, at)}
+        <mark className="text-marker bg-transparent text-inherit">{mark}</mark>
+        {text.slice(at + mark.length)}
+      </>
+    );
   return (
     <section className="px-6 pt-6 pb-16">
       <div className="mx-auto max-w-[900px] text-center">
@@ -24,7 +37,7 @@ export default function WhatIsIt({ title, text }: WhatIsItProps) {
           transition={{ duration: 0.7, delay: 1 }}
           className="mx-auto max-w-[760px] font-body text-lg leading-[1.8] text-black/70 md:text-[21px]"
         >
-          {text}
+          {body}
         </motion.p>
       </div>
     </section>

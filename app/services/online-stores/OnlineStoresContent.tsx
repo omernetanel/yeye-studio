@@ -1,6 +1,5 @@
 "use client";
 
-import { Code2, MessageSquare, Paintbrush, Rocket } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import SubPageNav from "@/components/layout/SubPageNav";
 import Footer from "@/components/layout/Footer";
@@ -21,10 +20,10 @@ const storeTypes = [
 ];
 
 const processSteps = [
-  { number: "01", icon: MessageSquare, title: "הבנת העסק והמוצרים", description: "אני לומד את המוצרים, את הקהל ואת מה שמייחד אתכם מול המתחרים. קודם אסטרטגיית מכירה, ורק אחר כך עיצוב." },
-  { number: "02", icon: Paintbrush, title: "עיצוב חוויית הקנייה", description: "דף מוצר שמוכר, עגלה שלא מאבדת לקוחות ותשלום שנגמר בהזמנה." },
-  { number: "03", icon: Code2, title: "פיתוח וחיבורים", description: "בונים את החנות עם מערכת ניהול, סליקה, משלוחים ומלאי. הכול עובד מהיום הראשון." },
-  { number: "04", icon: Rocket, title: "השקה וליווי", description: "משיקים אחרי בדיקות מלאות, ואני נשאר איתכם חודש כדי לוודא שהכול רץ חלק." },
+  { title: "הבנת העסק והמוצרים", description: "אני לומד את המוצרים, את הקהל ואת מה שמייחד אתכם מול המתחרים. קודם אסטרטגיית מכירה, ורק אחר כך עיצוב." },
+  { title: "עיצוב חוויית הקנייה", description: "דף מוצר שמוכר, עגלה שלא מאבדת לקוחות ותשלום שנגמר בהזמנה." },
+  { title: "פיתוח וחיבורים", description: "בונים את החנות עם מערכת ניהול, סליקה, משלוחים ומלאי. הכול עובד מהיום הראשון." },
+  { title: "השקה וליווי", description: "משיקים אחרי בדיקות מלאות, ואני נשאר איתכם חודש כדי לוודא שהכול רץ חלק." },
 ];
 
 const stats = [
@@ -61,6 +60,7 @@ export default function OnlineStoresContent() {
         <WhatIsIt
           title="מה זה חנות אונליין?"
           text="חנות אונליין היא סניף של העסק שאף פעם לא נסגר. היא מוכרת ללקוחות מכל מקום ובכל שעה, בלי שמישהו יצטרך לעמוד מאחורי הדלפק. כשהיא בנויה נכון, היא ערוץ המכירה שעובד הכי קשה בעסק."
+          mark="ערוץ המכירה שעובד הכי קשה בעסק"
         />
         <StatsSection title="למה כדאי חנות אונליין" stats={stats} />
         <TypesGrid title="איזה סוג חנות מתאים לך?" items={storeTypes} />

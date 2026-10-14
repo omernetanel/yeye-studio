@@ -1,6 +1,5 @@
 "use client";
 
-import { Code2, MessageSquare, Paintbrush, Rocket } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import SubPageNav from "@/components/layout/SubPageNav";
 import Footer from "@/components/layout/Footer";
@@ -22,10 +21,10 @@ const systemTypes = [
 ];
 
 const processSteps = [
-  { number: "01", icon: MessageSquare, title: "מיפוי תהליכים", description: "אנחנו יושבים ואני לומד איך העסק עובד: אילו נתונים חשובים, מה חוזר על עצמו, ואיפה הולך הכי הרבה זמן." },
-  { number: "02", icon: Paintbrush, title: "עיצוב הממשק", description: "ממשק שמותאם לאנשים שיעבדו איתו: פשוט, ברור ומהיר. לא צריך הדרכה ארוכה כדי להתחיל." },
-  { number: "03", icon: Code2, title: "פיתוח וחיבורים", description: "אני בונה את המערכת עם כל החיבורים שצריך: תשלומים, יומן, מייל ו-WhatsApp. הכול מחובר ועובד." },
-  { number: "04", icon: Rocket, title: "השקה והדרכה", description: "אני עובר עם הצוות שלכם על המערכת עד שכולם מרגישים בנוח, ונשאר לתמיכה טכנית בחודש הראשון." },
+  { title: "מיפוי תהליכים", description: "אנחנו יושבים ואני לומד איך העסק עובד: אילו נתונים חשובים, מה חוזר על עצמו, ואיפה הולך הכי הרבה זמן." },
+  { title: "עיצוב הממשק", description: "ממשק שמותאם לאנשים שיעבדו איתו: פשוט, ברור ומהיר. לא צריך הדרכה ארוכה כדי להתחיל." },
+  { title: "פיתוח וחיבורים", description: "אני בונה את המערכת עם כל החיבורים שצריך: תשלומים, יומן, מייל ו-WhatsApp. הכול מחובר ועובד." },
+  { title: "השקה והדרכה", description: "אני עובר עם הצוות שלכם על המערכת עד שכולם מרגישים בנוח, ונשאר לתמיכה טכנית בחודש הראשון." },
 ];
 
 const stats = [
@@ -77,6 +76,7 @@ export default function DashboardsContent() {
         <WhatIsIt
           title="מה זה מערכת ניהול?"
           text="מערכת ניהול היא כלי עבודה פנימי שנבנה בשביל העסק שלכם. במקום להתאים את עצמכם לתוכנה גנרית, מקבלים בדיוק את מה שצריך. וכשמערכת פשוטה ומדויקת, כל הצוות באמת משתמש בה."
+          mark="כל הצוות באמת משתמש בה"
         />
         <StatsSection title="למה כדאי מערכת ניהול" stats={stats} />
         <TypesGrid title="איזה סוג מערכת מתאים לך?" items={systemTypes} />

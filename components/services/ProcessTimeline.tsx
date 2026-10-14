@@ -1,13 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useLayoutEffect, useRef } from "react";
+import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import ServiceHeading from "@/components/services/ServiceHeading";
-import type { LucideIcon } from "lucide-react";
-import ServiceCard from "@/components/services/ServiceCard";
+import FoldText, { setFold } from "@/components/ui/FoldText";
+import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
 interface Step {
-  number: string;
-  icon: LucideIcon;
   title: string;
   description: string;
 }
@@ -17,93 +16,102 @@ interface ProcessTimelineProps {
   steps: Step[];
 }
 
-function StepCard({ step }: { step: Step }) {
-  return (
-    // The service pages' own dark card - see ServiceCard.
-    <ServiceCard className="p-5">
-      <div className="flex flex-col gap-2.5">
-        <span className="font-display text-[11px] tracking-[0.08em] text-white/65">{step.number}</span>
-        <h3 className="font-display text-[15px] font-bold text-white">{step.title}</h3>
-        <p className="font-body text-[13px] leading-[1.7] text-white/75">{step.description}</p>
-      </div>
-    </ServiceCard>
-  );
-}
+// Where a numeral's top is on the screen, as a share of its height, while it
+// folds in: the range the headings on these pages fold over (ServiceHeading).
+const FOLD = [0.95, 0.6] as const;
 
-function StepIcon({ Icon }: { Icon: LucideIcon }) {
-  return (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-accent/50 bg-accent/15 shadow-[0_0_12px_rgba(74,74,74,0.2)]">
-      <Icon size={14} strokeWidth={1.5} className="text-accent" />
-    </div>
-  );
-}
-
+/**
+ * HOW THE WORK GOES, IN THE SITE'S OWN SET OF A STAGE: a numeral as the
+ * largest thing on the row with the total beside it in grey, a heavy title,
+ * and one sentence - the way the home page shows its four stages on the phone,
+ * without the pin. A service page is an answer, not a show.
+ *
+ * It was a timeline of dark cards with an icon in a ring on a line down the
+ * middle: a template, and the one block on these pages that looked like one.
+ *
+ * The numerals fold in with the scroll and back out on the way up, like the
+ * headings; the words arrive once.
+ */
 export default function ProcessTimeline({ title, steps }: ProcessTimelineProps) {
-  return (
-    <section className="px-6 py-16">
-      <div className="mx-auto max-w-[700px]">
-        <ServiceHeading className="mb-14">{title}</ServiceHeading>
+  const listRef = useRef<HTMLOListElement>(null);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const { scrollY } = useScroll();
 
-        {/* Mobile: simple right-aligned vertical timeline */}
-        <div className="relative sm:hidden">
-          <motion.div
-            initial={{ scaleY: 0 }}
-            whileInView={{ scaleY: 1 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 1.2, ease: "easeInOut", delay: 0.2 }}
-            style={{ transformOrigin: "top" }}
-            className="absolute top-4 right-4 bottom-4 w-px bg-gradient-to-b from-transparent via-primary-light/40 to-transparent"
-          />
-          <div className="flex flex-col gap-8">
-            {steps.map((step, i) => (
+  const fold = () => {
+    const list = listRef.current;
+    if (!list) return;
+    const screen = window.innerHeight;
+    const numerals = Array.from(list.querySelectorAll<HTMLElement>("[data-step-numeral]"));
+    // Every box read before any letter is written.
+    const tops = numerals.map((numeral) => numeral.getBoundingClientRect().top / screen);
+    numerals.forEach((numeral, index) => setFold(numeral, (FOLD[0] - tops[index]) / (FOLD[0] - FOLD[1])));
+  };
+
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    // With less motion the numerals are simply open: no scroll does it there.
+    if (prefersReducedMotion) {
+      for (const numeral of list.querySelectorAll<HTMLElement>("[data-step-numeral]")) setFold(numeral, 1);
+      return;
+    }
+    fold();
+    window.addEventListener("resize", fold);
+    return () => window.removeEventListener("resize", fold);
+  }, [prefersReducedMotion]);
+
+  useMotionValueEvent(scrollY, "change", () => {
+    if (!prefersReducedMotion) fold();
+  });
+
+  return (
+    <section className="px-6 py-16 md:py-24">
+      <div className="mx-auto max-w-[1100px]">
+        <ServiceHeading className="mb-12 md:mb-16">{title}</ServiceHeading>
+
+        <ol ref={listRef}>
+          {steps.map((step, index) => (
+            <li
+              key={step.title}
+              // The numeral against the reading edge, the words beside it; a
+              // hairline between the rows and under the last.
+              className="grid grid-cols-[auto_1fr] items-start gap-x-6 border-t border-black/10 py-8 last:border-b md:grid-cols-12 md:gap-x-10 md:py-12"
+            >
+              {/* "1/4", set left to right inside the right-to-left page, the
+                  way the home page sets it. Decoration: the title carries the
+                  same count for a screen reader. */}
+              <p
+                dir="ltr"
+                aria-hidden="true"
+                className="flex items-baseline justify-end gap-1 font-display select-none md:col-span-3"
+              >
+                <span
+                  data-step-numeral
+                  className="text-[72px] leading-[0.85] font-extrabold tracking-[-0.04em] text-black md:text-[clamp(96px,10vw,150px)]"
+                >
+                  <FoldText text={String(index + 1)} silent />
+                </span>
+                <span className="text-[24px] font-bold text-black/30 md:text-[36px]">/{steps.length}</span>
+              </p>
+
               <motion.div
-                key={step.number}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.6, ease: "easeOut", delay: i * 0.12 }}
-                className="flex items-start gap-4"
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="text-right md:col-span-9 md:pt-3"
               >
-                <StepIcon Icon={step.icon} />
-                <div className="flex-1">
-                  <StepCard step={step} />
-                </div>
+                <h3 className="font-display text-[26px] leading-[1.15] font-extrabold text-black md:text-[clamp(30px,2.8vw,42px)]">
+                  <span className="sr-only">{`שלב ${index + 1} מתוך ${steps.length}: `}</span>
+                  {step.title}
+                </h3>
+                <p className="mt-3 max-w-[640px] font-body text-lg leading-[1.8] text-black/70 md:text-[21px]">
+                  {step.description}
+                </p>
               </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* Desktop: alternating connected timeline */}
-        <div className="relative hidden sm:block">
-          <motion.div
-            initial={{ scaleY: 0 }}
-            whileInView={{ scaleY: 1 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 1.2, ease: "easeInOut", delay: 0.2 }}
-            style={{ transformOrigin: "top" }}
-            className="absolute top-6 right-1/2 bottom-6 w-px bg-gradient-to-b from-transparent via-primary-light/40 to-transparent"
-          />
-          {steps.map((step, i) => {
-            const isRight = i % 2 === 0;
-            return (
-              <motion.div
-                key={step.number}
-                initial={{ opacity: 0, x: isRight ? 40 : -40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.6, ease: "easeOut", delay: i * 0.15 }}
-                className={`relative mb-10 flex items-center ${isRight ? "justify-end" : "justify-start"}`}
-              >
-                <div className="w-[44%]">
-                  <StepCard step={step} />
-                </div>
-                <div className="absolute right-[calc(50%-16px)]">
-                  <StepIcon Icon={step.icon} />
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   );
