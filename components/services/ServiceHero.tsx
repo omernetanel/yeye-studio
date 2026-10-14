@@ -21,6 +21,8 @@ interface ServiceHeroProps {
   titleLine2: string;
   description: string;
   ctaLabel: string;
+  /** The words in the second line that take the glint. The whole line if left out. */
+  glint?: string;
   /** One or two pieces of work to stand beside the heading. */
   work?: ServiceWorkItem[];
 }
@@ -42,10 +44,22 @@ interface ServiceHeroProps {
  * The second line of the heading arrives black and turns grey under a glint
  * (.hero-glint in globals.css).
  */
-export default function ServiceHero({ titleLine1, titleLine2, description, ctaLabel, work = [] }: ServiceHeroProps) {
+export default function ServiceHero({ titleLine1, titleLine2, description, ctaLabel, glint, work = [] }: ServiceHeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
   useScrollPieces(sectionRef);
   const withWork = work.length > 0;
+  // The line around the glinted words stays black.
+  const at = glint ? titleLine2.indexOf(glint) : -1;
+  const line =
+    at < 0 ? (
+      <span className="hero-glint">{titleLine2}</span>
+    ) : (
+      <>
+        {titleLine2.slice(0, at)}
+        <span className="hero-glint">{glint}</span>
+        {titleLine2.slice(at + (glint?.length ?? 0))}
+      </>
+    );
 
   return (
     <section ref={sectionRef} className="px-6 pt-[130px] pb-12 md:px-12 md:pt-[140px]">
@@ -69,7 +83,7 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
           >
             {titleLine1}
             <br />
-            <span className="hero-glint">{titleLine2}</span>
+            {line}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 16 }}

@@ -81,6 +81,7 @@ export default function BrandingContent() {
         <ServiceHero
           titleLine1="זהות מותג שגורמת"
           titleLine2="לעסק שלכם להיזכר"
+          glint="להיזכר"
           description="זהות חזותית מלאה שמבדלת אתכם מהמתחרים ונשארת בזיכרון, מהלוגו ועד כל מקום שבו לקוח פוגש אתכם."
           ctaLabel="בואו נבנה את המותג שלכם"
           work={work}
