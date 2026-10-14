@@ -711,14 +711,6 @@ export default function ServicesSection() {
       HEADING_ZONE_PADDING_TOP_PX +
       (headingZoneNaturalHeightRef.current - HEADING_ZONE_PADDING_TOP_PX - HEADING_ZONE_PADDING_BOTTOM_PX) / 2;
     heading.style.transform = `translateY(${restCentreOffset * servicesShrinkT}px)`;
-    // The heading zone's own height (and padding — see that constant's
-    // own comment) collapses in step with its fade — the video zone
-    // below it grows to fill the freed space, so by the time the paper
-    // is fully open the video is flush with the panel's top edge (no gap
-    // left exposing its own boundary against the page).
-    headingZone.style.height = `${lerp(headingZoneNaturalHeightRef.current, 0, servicesShrinkT)}px`;
-    headingZone.style.paddingTop = `${lerp(HEADING_ZONE_PADDING_TOP_PX, 0, servicesShrinkT)}px`;
-    headingZone.style.paddingBottom = `${lerp(HEADING_ZONE_PADDING_BOTTOM_PX, 0, servicesShrinkT)}px`;
 
     servicesContent.style.opacity = String(1 - servicesShrinkT);
     servicesContent.style.transform = `scale(${lerp(1, CONTENT_SHRINK_SCALE, servicesShrinkT)})`;
@@ -738,6 +730,20 @@ export default function ServicesSection() {
 
     const sheet = sheetRef.current;
     if (sheet) animateProcess(sheet, sheetSeconds(progress));
+
+    // The heading zone's own height (and padding — see that constant's
+    // own comment) collapses in step with its fade — the video zone
+    // below it grows to fill the freed space, so by the time the paper
+    // is fully open the video is flush with the panel's top edge (no gap
+    // left exposing its own boundary against the page).
+    //
+    // LAST, because it is the one write here that changes layout: the
+    // process above reads layout offsets, and written before them it forced
+    // a full layout on every scroll frame. Nothing measured above depends on
+    // this zone - the sheet is placed on the panel, not under the zone.
+    headingZone.style.height = `${lerp(headingZoneNaturalHeightRef.current, 0, servicesShrinkT)}px`;
+    headingZone.style.paddingTop = `${lerp(HEADING_ZONE_PADDING_TOP_PX, 0, servicesShrinkT)}px`;
+    headingZone.style.paddingBottom = `${lerp(HEADING_ZONE_PADDING_BOTTOM_PX, 0, servicesShrinkT)}px`;
   };
 
   // The process on the open sheet, on the sheet clock — see HEADING_IN. Every

@@ -604,6 +604,8 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
 
     let disposed = false;
     let rafId: number | null = null;
+    // Whether the hero is on screen at all - see where the loop is started.
+    let onScreen = true;
 
     const gl = canvas.getContext("webgl2", {
       alpha: true,
@@ -1156,7 +1158,10 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, chromeCanvas);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
       chromePainted = true;
-      setChromePaintedByHero(true);
+      // Off screen the loop is stopped, and with it the check that hands the
+      // button back its own colour: a repaint then (a font arriving) must not
+      // leave the menu transparent over the rest of the page.
+      if (onScreen) setChromePaintedByHero(true);
     };
 
     // Where that layer sits on this frame, in the canvas's own UV. Read fresh
@@ -1243,7 +1248,9 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
 
     const handleVideoMeta = () => positionVideo();
     video.addEventListener("loadedmetadata", handleVideoMeta);
-    const attemptPlay = () => video.play().catch(() => {});
+    const attemptPlay = () => {
+      if (onScreen) video.play().catch(() => {});
+    };
     attemptPlay();
     video.addEventListener("canplay", attemptPlay);
     const handleVisibility = () => {
@@ -1572,10 +1579,37 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
 
       rafId = requestAnimationFrame(step);
     };
-    rafId = requestAnimationFrame(step);
+
+    // ONLY WHILE THE HERO IS ON SCREEN. The loop runs the whole simulation
+    // every frame, ink or no ink, and it used to run for as long as the page
+    // was open - under the paper, the gallery and the form, a full fluid solve
+    // and a playing clip nobody could see. On a phone that is the frame budget
+    // and the battery of every section below, and a phone that heats up slows
+    // itself down. Off screen it stops, the clip pauses, and both take up again
+    // where they were the moment any of the hero comes back.
+    const start = () => {
+      if (rafId !== null || disposed) return;
+      lastTime = performance.now();
+      rafId = requestAnimationFrame(step);
+      attemptPlay();
+    };
+    const stop = () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      rafId = null;
+      setChromePaintedByHero(false);
+      video.pause();
+    };
+    const visibility = new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+      if (onScreen) start();
+      else stop();
+    });
+    visibility.observe(wrapper);
+    start();
 
     return () => {
       disposed = true;
+      visibility.disconnect();
       redrawRef.current = null;
       // The hero is not painting the chrome any more, so the button takes its
       // own colour back rather than staying transparent over a dead canvas.

@@ -65,6 +65,11 @@ const MAX_CANVAS_DPR = 2;
 // enough that a visitor who never scrolls that far never downloads them.
 const LOAD_ROOT_MARGIN = "150% 0px";
 
+// A download that fails on the network, rather than on the server, is tried
+// again: first after this long, then twice as long each time, up to the cap.
+const RETRY_FIRST_MS = 1000;
+const RETRY_MAX_MS = 30000;
+
 type Drawable = ImageBitmap | HTMLImageElement;
 
 async function decodeFrame(blob: Blob): Promise<Drawable> {
@@ -93,10 +98,20 @@ export class ScrollFrames {
   private readonly context: CanvasRenderingContext2D;
   private readonly blobs: (Blob | null)[];
   private readonly inFlight = new Set<number>();
-  // Frames that could not be fetched or decoded. They are never asked for again:
-  // without this, a bad file would be re-fetched every time the reader scrolled
-  // near it, for as long as the page was open. Their neighbours stand in.
+  // Frames the server would not give or that would not decode. They are never
+  // asked for again: without this, a bad file would be re-fetched every time
+  // the reader scrolled near it, for as long as the page was open. Their
+  // neighbours stand in.
   private readonly failed = new Set<number>();
+  // A NETWORK FAILURE IS NOT ONE OF THOSE. It used to be: a phone dropping its
+  // connection for a moment - or the reader switching apps, which ends the
+  // downloads in flight - failed every frame still in the queue within a
+  // second, each was given up on for good, and the paper stood on the last
+  // frame that had arrived for as long as the page was open. Only a reload
+  // brought it back. Now the downloads stop and start again later.
+  private retryTimer: number | null = null;
+  private retryDelay = RETRY_FIRST_MS;
+  private workers = 0;
   private readonly decoded = new Map<number, Drawable>();
   private readonly decoding = new Set<number>();
   private readonly abort = new AbortController();
@@ -147,6 +162,8 @@ export class ScrollFrames {
     this.abort.abort();
     this.resizeObserver.disconnect();
     this.loadObserver.disconnect();
+    if (this.retryTimer !== null) window.clearTimeout(this.retryTimer);
+    window.removeEventListener("online", this.resume);
     for (const frame of this.decoded.values()) releaseFrame(frame);
     this.decoded.clear();
   }
@@ -168,8 +185,32 @@ export class ScrollFrames {
     }
     enqueue(last);
 
-    for (let worker = 0; worker < LOAD_CONCURRENCY; worker++) void this.runWorker();
+    this.startWorkers();
   }
+
+  private startWorkers() {
+    while (this.workers < LOAD_CONCURRENCY) void this.runWorker();
+  }
+
+  /** The downloads stopped on the network; try again a little later. */
+  private stall() {
+    if (this.retryTimer !== null || this.disposed) return;
+    this.retryTimer = window.setTimeout(this.resume, this.retryDelay);
+    this.retryDelay = Math.min(RETRY_MAX_MS, this.retryDelay * 2);
+    // Or as soon as the phone says it is back, whichever comes first.
+    window.addEventListener("online", this.resume);
+  }
+
+  private resume = () => {
+    if (this.retryTimer !== null) window.clearTimeout(this.retryTimer);
+    this.retryTimer = null;
+    window.removeEventListener("online", this.resume);
+    if (this.disposed) return;
+    // The frames that failed were taken off the queue on their way out, so it
+    // is read again from the start; whatever has arrived since is skipped.
+    this.queueCursor = 0;
+    this.startWorkers();
+  };
 
   /** Not here yet, not on its way, and not given up on. */
   private needsFetch(index: number) {
@@ -191,24 +232,31 @@ export class ScrollFrames {
   }
 
   private async runWorker() {
-    for (let index = this.nextToFetch(); index !== null && !this.disposed; index = this.nextToFetch()) {
-      this.inFlight.add(index);
-      try {
-        const response = await fetch(this.sequence.frameUrl(index), { signal: this.abort.signal });
-        // A frame that fails is given up on rather than retried: its neighbours
-        // stand in for it, which is invisible, and a retry loop on a dead
-        // connection is not.
-        if (response.ok) this.blobs[index] = await response.blob();
-        else this.failed.add(index);
-      } catch {
-        if (this.disposed) return;
-        this.failed.add(index);
-      } finally {
-        this.inFlight.delete(index);
+    this.workers++;
+    try {
+      for (let index = this.nextToFetch(); index !== null && !this.disposed; index = this.nextToFetch()) {
+        this.inFlight.add(index);
+        try {
+          const response = await fetch(this.sequence.frameUrl(index), { signal: this.abort.signal });
+          // A frame the server refuses is given up on rather than retried: its
+          // neighbours stand in for it, which is invisible.
+          if (response.ok) this.blobs[index] = await response.blob();
+          else this.failed.add(index);
+        } catch {
+          // The network, not the file: this worker stops, and they all start
+          // again later (see stall).
+          this.stall();
+          return;
+        } finally {
+          this.inFlight.delete(index);
+        }
+        this.retryDelay = RETRY_FIRST_MS;
+        if (this.blobs[index] && Math.abs(index - this.target) <= DECODE_RADIUS + 1) {
+          this.decodeAround(this.target);
+        }
       }
-      if (this.blobs[index] && Math.abs(index - this.target) <= DECODE_RADIUS + 1) {
-        this.decodeAround(this.target);
-      }
+    } finally {
+      this.workers--;
     }
   }
 

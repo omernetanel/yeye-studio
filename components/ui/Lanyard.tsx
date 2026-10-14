@@ -1337,6 +1337,10 @@ export default function Lanyard({
       [frontTexture, backTexture, strapTexture, grain, weave].forEach((texture) => texture.dispose());
       environment.dispose();
       renderer.dispose();
+      // The context itself, which dispose() leaves to the garbage collector:
+      // every visit to the page made one more, and a phone counts them. The
+      // canvas is made here and goes with it, so nothing reuses the lost one.
+      renderer.forceContextLoss();
       canvas.remove();
     };
     // The scene is built once for the card it is given. Everything that can
