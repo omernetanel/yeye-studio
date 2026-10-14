@@ -60,11 +60,6 @@ const DECODE_RADIUS = 4;
 // for nothing the eye can find.
 const MAX_CANVAS_DPR = 2;
 
-// Loading starts when the canvas is within a screen and a half of the viewport:
-// early enough that the first frames are in before the section arrives, late
-// enough that a visitor who never scrolls that far never downloads them.
-const LOAD_ROOT_MARGIN = "150% 0px";
-
 // A download that fails on the network, rather than on the server, is tried
 // again: first after this long, then twice as long each time, up to the cap.
 const RETRY_FIRST_MS = 1000;
@@ -116,7 +111,6 @@ export class ScrollFrames {
   private readonly decoding = new Set<number>();
   private readonly abort = new AbortController();
   private readonly resizeObserver: ResizeObserver;
-  private readonly loadObserver: IntersectionObserver;
   private queue: number[] = [];
   private queueCursor = 0;
   private target = 0;
@@ -133,15 +127,11 @@ export class ScrollFrames {
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(canvas);
 
-    this.loadObserver = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) this.startLoading();
-      },
-      { rootMargin: LOAD_ROOT_MARGIN }
-    );
-    this.loadObserver.observe(canvas);
-
     this.resize();
+    // WITH THE PAGE, NOT WHEN THE SECTION IS NEAR. Both papers sit straight
+    // under the hero, so a reader is never more than a swipe away from them,
+    // and the frames are downloading from the moment the page is.
+    this.startLoading();
   }
 
   /** Show frame `index` — or, until it has arrived, the nearest one that has. */
@@ -161,7 +151,6 @@ export class ScrollFrames {
     this.disposed = true;
     this.abort.abort();
     this.resizeObserver.disconnect();
-    this.loadObserver.disconnect();
     if (this.retryTimer !== null) window.clearTimeout(this.retryTimer);
     window.removeEventListener("online", this.resume);
     for (const frame of this.decoded.values()) releaseFrame(frame);
@@ -169,9 +158,6 @@ export class ScrollFrames {
   }
 
   private startLoading() {
-    this.loadObserver.disconnect();
-    if (this.queue.length) return;
-
     const seen = new Set<number>();
     const enqueue = (index: number) => {
       if (seen.has(index)) return;

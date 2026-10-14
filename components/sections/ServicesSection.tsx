@@ -879,7 +879,7 @@ export default function ServicesSection() {
     const canvas = canvasRef.current;
     if (!wrapper || !canvas) return;
 
-    // Loads itself as the section comes within reach, sizes itself to the
+    // Loads itself with the page, sizes itself to the
     // canvas, and releases everything it holds on the way out.
     const frames = new ScrollFrames(canvas, PAPER);
     framesRef.current = frames;

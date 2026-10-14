@@ -512,7 +512,7 @@ export default function MobileServices() {
     if (!canvas) return;
 
     // Owns everything about the paper from here: it starts downloading frames
-    // only once the section is within a screen and a half, keeps its backing
+    // with the page, keeps its backing
     // store matched to the canvas, and on the way out cancels any download
     // still running and frees every decoded frame it holds.
     const frames = new ScrollFrames(canvas, PAPER);
@@ -525,8 +525,17 @@ export default function MobileServices() {
     playheadRef.current = playhead;
     onScroll();
 
+    // A finger lifting from the glass - see SteppedPlayhead.settle. The last
+    // touch, not every one: two fingers lifting one at a time is one lift.
+    const onLift = (event: TouchEvent) => {
+      if (event.touches.length === 0) playhead.settle();
+    };
+    window.addEventListener("touchend", onLift, { passive: true });
+    window.addEventListener("touchcancel", onLift, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {
+      window.removeEventListener("touchend", onLift);
+      window.removeEventListener("touchcancel", onLift);
       window.removeEventListener("resize", onScroll);
       playhead.dispose();
       playheadRef.current = null;

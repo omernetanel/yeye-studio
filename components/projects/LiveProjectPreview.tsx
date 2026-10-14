@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { BatteryFull, ExternalLink, Monitor, Play, Signal, Smartphone, Wifi } from "lucide-react";
+import { useIsMobile } from "@/lib/use-mobile";
 import { cn } from "@/lib/utils";
 
 interface LiveProjectPreviewProps {
@@ -26,7 +27,13 @@ const DESK_WIDTH = 1920;
  * site's own responsive breakpoints kick in for real.
  */
 export default function LiveProjectPreview({ url, title, fallbackImage }: LiveProjectPreviewProps) {
-  const [view, setView] = useState<View>("desktop");
+  // Until the reader picks one, the view of the device they are reading on: a
+  // phone opens on the site as a phone shows it. A desk view on a phone was a
+  // frame the width of the screen, and every swipe on it scrolled the site
+  // inside instead of the page.
+  const isMobile = useIsMobile();
+  const [chosen, setView] = useState<View | null>(null);
+  const view: View = chosen ?? (isMobile ? "mobile" : "desktop");
   // The iframe only mounts after an explicit click. Loading it eagerly meant
   // a visitor scrolling the page with their cursor over the panel would get
   // their scroll captured by the embedded site instead of the page — a
@@ -92,8 +99,9 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
             ? // AN IPHONE, DRAWN: its proportions (300 x 618, the 71.6 x 147.6mm
               // of the real one), a metal band with its buttons, and a screen
               // with the island in the status bar. A 9:16 slab with a thick
-              // dark edge read as a music player.
-              "h-[618px] w-[300px] rounded-[2.9rem] bg-neutral-800 p-[11px] ring-1 ring-black/40"
+              // dark edge read as a music player. A little smaller on a phone,
+              // so there is page either side of it to scroll by.
+              "h-[536px] w-[260px] rounded-[2.5rem] bg-neutral-800 p-[10px] ring-1 ring-black/40 md:h-[618px] md:w-[300px] md:rounded-[2.9rem] md:p-[11px]"
             : // No shape of its own: the bar is as tall as it is, and the site
               // under it is 16:9 (below). At 16:10 for the two together, the
               // 16:9 picture stood in a taller box with a grey band over and
@@ -106,10 +114,10 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
             the handset. */}
         {phone && (
           <div aria-hidden="true">
-            <span className="absolute top-[104px] -left-[2px] h-[22px] w-[3px] rounded-l bg-neutral-700" />
-            <span className="absolute top-[148px] -left-[2px] h-[40px] w-[3px] rounded-l bg-neutral-700" />
-            <span className="absolute top-[198px] -left-[2px] h-[40px] w-[3px] rounded-l bg-neutral-700" />
-            <span className="absolute top-[168px] -right-[2px] h-[64px] w-[3px] rounded-r bg-neutral-700" />
+            <span className="absolute top-[90px] -left-[2px] h-[19px] w-[3px] rounded-l bg-neutral-700 md:top-[104px] md:h-[22px]" />
+            <span className="absolute top-[128px] -left-[2px] h-[35px] w-[3px] rounded-l bg-neutral-700 md:top-[148px] md:h-[40px]" />
+            <span className="absolute top-[172px] -left-[2px] h-[35px] w-[3px] rounded-l bg-neutral-700 md:top-[198px] md:h-[40px]" />
+            <span className="absolute top-[146px] -right-[2px] h-[55px] w-[3px] rounded-r bg-neutral-700 md:top-[168px] md:h-[64px]" />
           </div>
         )}
 
@@ -122,7 +130,7 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
         <div
           className={cn(
             "flex min-h-0 flex-1 flex-col overflow-hidden",
-            phone && "rounded-[2.2rem] bg-black",
+            phone && "rounded-[1.9rem] bg-black md:rounded-[2.2rem]",
           )}
         >
           {phone ? (
@@ -164,14 +172,15 @@ export default function LiveProjectPreview({ url, title, fallbackImage }: LivePr
                 // 393 across, and the 17 a desktop browser takes for its
                 // scrollbar, so the page itself still has the full 393; and as
                 // tall as the screen is less its two strips. The whole of it is
-                // scaled by 278/410 to sit in the drawn screen. So its lines
+                // scaled by 278/410 to sit in the drawn screen (240/410 in the
+                // smaller handset a phone shows, 786 tall). So its lines
                 // break where they do on a phone, which at the drawing's own
                 // width they did not. Pinned to a corner so the scale has one
                 // fixed point.
                 className={cn(
                   "border-0",
                   phone
-                    ? "absolute top-0 left-0 h-[797px] w-[410px] max-w-none origin-top-left scale-[0.678]"
+                    ? "absolute top-0 left-0 h-[786px] w-[410px] max-w-none origin-top-left scale-[0.5854] md:h-[797px] md:scale-[0.678]"
                     : "absolute top-0 left-0 h-[1080px] w-[1920px] max-w-none origin-top-left",
                 )}
                 loading="eager"

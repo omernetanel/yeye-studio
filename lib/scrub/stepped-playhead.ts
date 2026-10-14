@@ -272,10 +272,7 @@ export class SteppedPlayhead {
     // run out of the section with moments still unplayed. The panel is pinned,
     // so nothing is seen to move.
     if (target !== asked && momentum && this.options.brake) {
-      const stop =
-        asked > target
-          ? this.starts[Math.ceil(target) - 1] + BRAKE_PAST_SCREENS
-          : this.starts[Math.floor(target)] - BRAKE_PAST_SCREENS;
+      const stop = this.lineOf(target, asked);
       this.lastScreens = stop;
       this.options.brake(stop);
     }
@@ -297,6 +294,50 @@ export class SteppedPlayhead {
     } else if (retarget || this.move === null) {
       this.startMove();
     }
+  }
+
+  /**
+   * The finger has lifted: the page is put back with the story.
+   *
+   * A throw is braked as it goes (above), but a finger never is, and a slow
+   * drag carries the page on several lines while the story goes one state.
+   * Left like that, the page and the story were in two places: the next swipe
+   * on asked for a state the story had already passed, and played it BACK -
+   * and a drag back up past the section left the story on a stage, waiting for
+   * the reader to come down to it. Everyone scrolls differently, so this is
+   * the case for some readers every time.
+   *
+   * Inside the pin the page is moved to the story's line, which nobody sees:
+   * the panel is pinned. Above it, where the panel is on its way off the
+   * screen, the story goes back to its start instead - that is where the page
+   * is.
+   */
+  settle() {
+    const at = this.lastScreens;
+    if (at === null || !this.placed || at >= this.total) return;
+    const asked = this.targetFor(at);
+    const [low, high] = this.reach();
+    const target = clamp(asked, low, high);
+    if (target === asked) return;
+    if (at <= 0) {
+      this.place(asked);
+      return;
+    }
+    if (!this.options.brake) return;
+    const stop = this.lineOf(target, asked);
+    this.lastScreens = stop;
+    this.options.brake(stop);
+  }
+
+  /**
+   * Where the page stands for the story to be at `target` when the scroll
+   * asked for `asked`: just past the line into it, on the side the scroll was
+   * on - so the next reading asks for `target` itself.
+   */
+  private lineOf(target: number, asked: number) {
+    return asked > target
+      ? this.starts[Math.ceil(target) - 1] + BRAKE_PAST_SCREENS
+      : this.starts[Math.floor(target)] - BRAKE_PAST_SCREENS;
   }
 
   /** Stops the clock. The section is going away. */
