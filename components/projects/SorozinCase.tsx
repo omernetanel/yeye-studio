@@ -83,10 +83,6 @@ const MENUS = {
 // Where a folding line's top is on the screen, as a share of its height, while
 // its letters fold in.
 const FOLD = [0.92, 0.5] as const;
-// The same for a seam: how deep its cut is when it comes onto the screen, and
-// where on the screen it has reached its full depth.
-const BLADE = [0.98, 0.4] as const;
-const BLADE_START = 0.3;
 // A phrase that carries its sentence: medium and full black, as on the page
 // for MAY'S and the "about" page.
 const EMPHASIS = "font-medium text-black";
@@ -108,17 +104,11 @@ export default function SorozinCase({ site }: Props) {
     const root = rootRef.current;
     if (!root) return;
     const screen = window.innerHeight;
-    // Every box read before any style is written. A seam is scaled from its
-    // top edge, so its top is the one thing about it that never moves.
+    // Every box read before any style is written. The seams cut themselves -
+    // see BladeCut.
     const lines = Array.from(root.querySelectorAll<HTMLElement>("[data-fold-line]"));
-    const blades = Array.from(root.querySelectorAll<HTMLElement>("[data-blade]"));
     const lineTops = lines.map((line) => line.getBoundingClientRect().top / screen);
-    const bladeTops = blades.map((blade) => blade.getBoundingClientRect().top / screen);
     lines.forEach((line, index) => setFold(line, (FOLD[0] - lineTops[index]) / (FOLD[0] - FOLD[1])));
-    blades.forEach((blade, index) => {
-      const through = clamp01((BLADE[0] - bladeTops[index]) / (BLADE[0] - BLADE[1]));
-      blade.style.transform = `scaleY(${(BLADE_START + (1 - BLADE_START) * through).toFixed(4)})`;
-    });
     // The mark eases back as the page starts to move, as if the camera did.
     const mark = markRef.current;
     if (mark) {
@@ -132,7 +122,6 @@ export default function SorozinCase({ site }: Props) {
     if (!root) return;
     if (prefersReducedMotion) {
       for (const line of root.querySelectorAll<HTMLElement>("[data-fold-line]")) setFold(line, 1);
-      for (const blade of root.querySelectorAll<HTMLElement>("[data-blade]")) blade.style.removeProperty("transform");
       markRef.current?.style.removeProperty("transform");
       return;
     }
@@ -208,7 +197,7 @@ export default function SorozinCase({ site }: Props) {
 
       {/* THE IDEA. */}
       <section className="relative bg-white px-6 pt-40 pb-24 md:pt-72 md:pb-36">
-        <BladeCut className="bg-black" />
+        <BladeCut className="fill-black" dark />
         <div className="mx-auto max-w-[1100px]">
           <h2 className="font-display text-m-display font-extrabold tracking-tight text-black md:text-[clamp(56px,7.4vw,112px)] md:leading-[1.02]">
             <span className="sr-only">שף בשרים. שיבינו מהרגע הראשון.</span>
@@ -246,7 +235,7 @@ export default function SorozinCase({ site }: Props) {
           the white on either side of it, so that it is a section of its own
           with a seam at its head. */}
       <section className="relative bg-neutral-200 px-6 pt-40 pb-24 md:pt-72 md:pb-40">
-        <BladeCut className="bg-white" flip />
+        <BladeCut className="fill-white" flip variant={1} />
         {/* ITS HEADING IS THE KIND OF JOB THIS WAS, said once and large: not a
             new brand but an old one made again. Grey, so that it is the
             ground the pictures stand on and not one more thing to read; and
@@ -286,7 +275,7 @@ export default function SorozinCase({ site }: Props) {
         data-nav-dark="true"
         className="relative bg-neutral-900 px-6 pt-40 pb-24 text-white md:pt-72 md:pb-40"
       >
-        <BladeCut className="bg-neutral-200" />
+        <BladeCut className="fill-neutral-200" variant={2} />
         <div className="mx-auto max-w-[1400px]">
           <h2 className="mx-auto max-w-[1100px] font-display text-m-display font-extrabold tracking-tight md:text-[clamp(56px,7.4vw,112px)] md:leading-[1.02]">
             <span className="sr-only">ארבעה תפריטים, מותג אחד.</span>
@@ -335,7 +324,7 @@ export default function SorozinCase({ site }: Props) {
           HEADING IS THE DECISION, not an announcement: "and the landing page,
           live" stood here, and only said what the frame under it shows. */}
       <section className="relative bg-white px-6 pt-40 pb-24 md:pt-72 md:pb-40">
-        <BladeCut className="bg-neutral-900" flip />
+        <BladeCut className="fill-neutral-900" flip dark variant={3} />
         <div className="mx-auto max-w-[1400px]">
           <div className="mx-auto max-w-[1100px]">
             <h2 className="font-display text-m-display font-extrabold tracking-tight text-black md:text-[clamp(56px,7.4vw,112px)] md:leading-[1.02]">
@@ -367,7 +356,8 @@ export default function SorozinCase({ site }: Props) {
         data-nav-dark="true"
         className="relative bg-black px-6 pt-48 pb-24 text-center text-white md:pt-80 md:pb-32"
       >
-        <BladeCut className="bg-white" />
+        {/* The last cut, and the deepest: the close has the room for it. */}
+        <BladeCut className="fill-white" heavy />
         <h2 className="mx-auto max-w-[900px] font-display text-m-title font-extrabold tracking-tight md:text-[clamp(44px,5.4vw,80px)] md:leading-[1.05]">
           רוצים מותג שמבינים מהרגע הראשון?
         </h2>
