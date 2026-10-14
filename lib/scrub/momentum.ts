@@ -68,13 +68,27 @@ export function isMomentum() {
  * back a frame later, the page is simply at rest where it was stopped. Inside a
  * pinned panel none of this is visible - the only thing the reader sees is that
  * the throw brought them to the next moment.
+ *
+ * ONE LOCK, HOWEVER MANY STOPS IN A FRAME. A glide fires several scroll events
+ * a frame, and the scrollTo here fires one more, so a second stop often comes
+ * before the first has given the overflow back. Each stop used to remember the
+ * overflow it found and restore that: the second one found "hidden", restored
+ * it last, and the page could not be scrolled again - not here, and not on the
+ * next page either, since <html> outlives a client-side navigation. Only a
+ * reload let it go. So the page's own overflow is taken once, and given back
+ * once, a frame after the first stop.
  */
+let release: number | null = null;
+
 export function stopMomentumAt(y: number) {
   const root = document.documentElement;
-  const previous = root.style.overflow;
-  root.style.overflow = "hidden";
+  if (release === null) {
+    const own = root.style.overflow;
+    root.style.overflow = "hidden";
+    release = requestAnimationFrame(() => {
+      release = null;
+      root.style.overflow = own;
+    });
+  }
   window.scrollTo(0, y);
-  requestAnimationFrame(() => {
-    root.style.overflow = previous;
-  });
 }
