@@ -291,10 +291,15 @@ export default function AboutSection() {
     const panel = greet?.offsetParent as HTMLElement | null;
     if (!stage || !greet || !content || !portrait || !claim || !panel) return;
 
+    // Every read before the first write: the greeting's size below changes
+    // layout, and a read after it forced a whole layout on every scroll frame.
     const screen = window.innerHeight;
-    const travel = stage.getBoundingClientRect().height - screen;
+    const stageBox = stage.getBoundingClientRect();
+    const panelWidth = panel.clientWidth;
+    const closerTop = closerStageRef.current?.getBoundingClientRect().top ?? 0;
+    const travel = stageBox.height - screen;
     if (travel <= 0) return;
-    const progress = clamp01(-stage.getBoundingClientRect().top / travel);
+    const progress = clamp01(-stageBox.top / travel);
 
     const reached = reachedRef.current;
     const arrived = (key: string, range: readonly [number, number]) => {
@@ -349,7 +354,7 @@ export default function AboutSection() {
     const portraitDown = smoothstep(span(progress, BEATS.portraitLand));
     const pLand = portraitLandingRef.current;
     const bigScale = (screen * PORTRAIT_BIG_H) / pLand.height;
-    const bigX = (PORTRAIT_BIG_X - 0.5) * panel.clientWidth;
+    const bigX = (PORTRAIT_BIG_X - 0.5) * panelWidth;
     portrait.style.opacity = String(portraitIn);
     portrait.style.transform =
       `translate(-50%, -50%) translate(${lerp(bigX, pLand.x, portraitDown)}px, ${lerp(0, pLand.y, portraitDown)}px) scale(${lerp(bigScale, 1, portraitDown).toFixed(4)})`;
@@ -389,7 +394,7 @@ export default function AboutSection() {
     const closerLine = closerLineRef.current;
     const closerSwash = closerSwashRef.current;
     if (closerStage && closerLine && closerSwash) {
-      const held = -closerStage.getBoundingClientRect().top;
+      const held = -closerTop;
       const inEnd = screen * CLOSER_IN_VH;
       const drawStart = inEnd + screen * CLOSER_HOLD_VH;
       const drawEnd = drawStart + screen * CLOSER_DRAW_VH;

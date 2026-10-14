@@ -175,7 +175,10 @@ export class ScrollFrames {
   }
 
   private startWorkers() {
-    while (this.workers < LOAD_CONCURRENCY) void this.runWorker();
+    // Counted out, never "while there are fewer than six": a worker with nothing
+    // left to fetch is done before it returns, so that count would never reach
+    // six and the loop would never end.
+    for (let worker = this.workers; worker < LOAD_CONCURRENCY; worker++) void this.runWorker();
   }
 
   /** The downloads stopped on the network; try again a little later. */

@@ -184,6 +184,11 @@ export default function MobileAbout() {
 
   const update = () => {
     const screen = window.innerHeight;
+    // The greeting's size, written LAST. It is the one write in here that
+    // changes layout, and everything below reads layout: written first, it
+    // forced the phone through a whole layout on every scroll frame. The
+    // greeting is absolute, so nothing read here depends on its size.
+    let greetStyle: { fontSize: string; transform: string } | null = null;
 
     const intro = introStageRef.current;
     const portrait = portraitRef.current;
@@ -205,8 +210,10 @@ export default function MobileAbout() {
         if (greet) {
           const height = (greetHeightRef.current * size) / GREET_SIZE_SETTLED_PX;
           const fromMiddle = panelHeight / 2 - height / 2 - panelHeight * GREET_TOP;
-          greet.style.fontSize = `${size.toFixed(2)}px`;
-          greet.style.transform = `translateY(${lerp(fromMiddle, 0, settle).toFixed(1)}px)`;
+          greetStyle = {
+            fontSize: `${size.toFixed(2)}px`,
+            transform: `translateY(${lerp(fromMiddle, 0, settle).toFixed(1)}px)`,
+          };
         }
         [GREET_LINE_1, GREET_LINE_2].forEach((range, index) => {
           const line = greetLinesRef.current[index];
@@ -275,14 +282,21 @@ export default function MobileAbout() {
       }
     });
 
+    const writeGreet = () => {
+      const greet = greetRef.current;
+      if (!greet || !greetStyle) return;
+      greet.style.fontSize = greetStyle.fontSize;
+      greet.style.transform = greetStyle.transform;
+    };
+
     const stage = closerStageRef.current;
     const line = closerLineRef.current;
     const swash = closerSwashRef.current;
-    if (!stage || !line || !swash) return;
+    if (!stage || !line || !swash) return writeGreet();
 
     const box = stage.getBoundingClientRect();
     const travel = box.height - screen;
-    if (travel <= 0) return;
+    if (travel <= 0) return writeGreet();
     const closerLead = screen * CLOSER_LEAD_VH;
 
     // Where the line's top sits on screen, from layout rather than its rect,
@@ -320,6 +334,7 @@ export default function MobileAbout() {
 
     const draw = span(progress, CLOSER_DRAW);
     swash.style.clipPath = `inset(0 ${((1 - draw) * 100).toFixed(1)}% 0 0)`;
+    writeGreet();
   };
 
   useLayoutEffect(() => {
