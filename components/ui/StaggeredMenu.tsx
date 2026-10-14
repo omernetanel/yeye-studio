@@ -172,7 +172,10 @@ export default function StaggeredMenu({
   }, [offscreen]);
 
   const playOpen = useCallback(() => {
-    if (busyRef.current) return;
+    // Already opening: leave it to finish. Busy CLOSING is not a reason to
+    // stay shut - opened again while it slid away, the menu used to stay
+    // closed with its button saying it was open.
+    if (busyRef.current && openTlRef.current) return;
     busyRef.current = true;
     const tl = buildOpenTimeline();
     if (!tl) {

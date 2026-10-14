@@ -17,25 +17,6 @@ import { CONTACT_EMAIL, INSTAGRAM_URL, WHATSAPP_NUMBER } from "@/lib/site";
 
 const TAGLINE_TEXT = "בואו נבנה לכם אתר שעובד ומוכר באמת.";
 
-/**
- * TEMPORARY, and here to be flipped rather than read.
- *
- * Set this to false and the line is gone from all four places it lives —
- * painted on the canvas on desktop, real type on mobile, and the two
- * measuring/reduced-motion copies behind them. Set it back to true and it
- * returns. Nothing else has to be edited either way.
- *
- * It exists because the question is one for the eye and not for argument, and
- * the two states are not the same layout: the logo is sized from whatever is
- * left after the line and the buttons have taken theirs, so WITHOUT THE LINE
- * THE WORDMARK GROWS. Comparing them from memory would be comparing the wrong
- * thing.
- *
- * DELETE THIS once the call is made — either the line stays as it is now, or it
- * comes out for good. A switch nobody flips is dead code with a comment on it.
- */
-const SHOW_TAGLINE = true;
-
 // How far the phone's CTA sits BELOW the exact midpoint between the wordmark
 // and the line at the foot (see where it is applied). Dead centre is where the
 // arithmetic lands; a little under it is where the eye wants it, because the
@@ -338,7 +319,7 @@ export default function HeroSection() {
               logoSrc="/images/logo.png"
               videoSrc="/videos/herobg-v2.mp4"
               textTargets={[
-                ...(SHOW_TAGLINE ? [taglineTarget] : []),
+                taglineTarget,
                 { ref: footStudioRef, color: "rgba(0, 0, 0, 0.45)" },
               ]}
               logoSlotRef={logoSlotRef}
@@ -377,23 +358,21 @@ export default function HeroSection() {
         <div className="pointer-events-none relative flex h-full flex-col px-6 pt-[18px] pb-3">
           <h1 className="sr-only">YEYE</h1>
 
-          {SHOW_TAGLINE && (
-            // Two lines now, not one, and no longer nowrap: at 18px on a single
-            // line it was a caption. Broken and set larger it carries the
-            // weight of being the only sentence on the screen. Balanced rather
-            // than hand-broken — a manual break is only ever right at one width;
-            // the paper copies whatever break the browser chose.
-            <p
-              ref={taglineRef}
-              // font-medium, the weight of the two links under the wordmark: at
-              // semibold the line read as a second headline competing with it.
-              className={`text-right font-display text-[21px] leading-[1.3] font-medium text-balance ${
-                painted ? "text-transparent" : "text-black"
-              }`}
-            >
-              {TAGLINE_TEXT}
-            </p>
-          )}
+          {/* Two lines now, not one, and no longer nowrap: at 18px on a single
+              line it was a caption. Broken and set larger it carries the
+              weight of being the only sentence on the screen. Balanced rather
+              than hand-broken — a manual break is only ever right at one width;
+              the paper copies whatever break the browser chose. */}
+          <p
+            ref={taglineRef}
+            // font-medium, the weight of the two links under the wordmark: at
+            // semibold the line read as a second headline competing with it.
+            className={`text-right font-display text-[21px] leading-[1.3] font-medium text-balance ${
+              painted ? "text-transparent" : "text-black"
+            }`}
+          >
+            {TAGLINE_TEXT}
+          </p>
 
           {/* The space the wordmark is SIZED from — it is still the leftover
               between the line above and the row below, which is what keeps the
@@ -539,7 +518,7 @@ export default function HeroSection() {
             ref={inkRef}
             logoSrc="/images/logo.png"
             videoSrc="/videos/herobg-v2.mp4"
-            textTargets={SHOW_TAGLINE ? [taglineTarget, studioTarget] : [studioTarget]}
+            textTargets={[taglineTarget, studioTarget]}
             logoSlotRef={logoSlotRef}
             ctas={[contactCta]}
             icons={footIcons}
@@ -560,7 +539,7 @@ export default function HeroSection() {
             screen readers and search engines. */}
         <h1 className="sr-only">YEYE</h1>
 
-        {!SHOW_TAGLINE ? null : prefersReducedMotion ? (
+        {prefersReducedMotion ? (
           <div className="mx-auto mt-4 w-full max-w-[1400px] px-6">
             <div className="flex flex-col items-start text-right">
               <p className="font-display text-2xl leading-snug font-semibold text-black md:text-4xl">{TAGLINE_TEXT}</p>
