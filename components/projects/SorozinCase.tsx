@@ -167,7 +167,10 @@ export default function SorozinCase({ site }: Props) {
         className="relative flex min-h-[78svh] flex-col justify-center overflow-hidden bg-black px-6 pt-28 pb-12 text-white md:block md:min-h-0 md:pt-24 md:pb-24"
       >
         <h1 className="sr-only">Sorozin Chef</h1>
-        <div ref={markRef} className="relative mx-auto w-[64%] max-w-[420px] will-change-transform md:max-w-[min(420px,56svh)]">
+        {/* .mark-at-rest: already at the size the scroll starts it at (1 +
+            MARK_ZOOM), from the first paint. Set only by the script, it showed
+            at its plain size and then jumped bigger once the page woke. */}
+        <div ref={markRef} className="mark-at-rest relative mx-auto w-[64%] max-w-[420px] will-change-transform md:max-w-[min(420px,56svh)]">
           <Image
             src="/images/projects/sorozin/sorozinlogo.webp"
             alt="הלוגו של Sorozin Chef: שתי סכיני בשר מוצלבות מעל השם"

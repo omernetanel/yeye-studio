@@ -122,7 +122,9 @@ export default function MaysCase() {
         className="relative flex min-h-[78svh] flex-col justify-center overflow-hidden bg-black px-6 pt-28 pb-12 text-white md:block md:min-h-0 md:pt-24 md:pb-24"
       >
         <h1 className="sr-only">MAY&apos;S</h1>
-        <div ref={markRef} className="mx-auto w-[78%] max-w-[640px] will-change-transform md:max-w-[min(640px,78svh)]">
+        {/* .mark-at-rest: at the size the scroll starts it at from the first
+            paint - see the same mark on the Sorozin Chef page. */}
+        <div ref={markRef} className="mark-at-rest mx-auto w-[78%] max-w-[640px] will-change-transform md:max-w-[min(640px,78svh)]">
           <Image
             src="/images/projects/mays/mayslogo.webp"
             alt="הלוגו של MAY'S: אותיות שזיגוג נוזל מהן"

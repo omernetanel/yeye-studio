@@ -435,6 +435,22 @@ body {
   }
 }
 
+/* A BRAND PAGE'S OPENING MARK, at the size its scroll starts it at - 1 +
+   MARK_ZOOM in MaysCase and SorozinCase, which must agree with this - before
+   the script takes it over. The script writes the same transform inline, so
+   from then on it wins; with less motion it clears it, and so does this. */
+.mark-at-rest {
+  transform: scale(1.05);
+}
+[data-a11y-motion] .mark-at-rest {
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mark-at-rest {
+    transform: none;
+  }
+}
+
 /* THE ENTRANCE OF WHAT IS ON SCREEN WHEN A PAGE OPENS: up a little, out of
    nothing. In CSS and not in framer-motion, because it is the first thing a
    reader sees: written in JS it waited for the whole bundle, and on a slow
