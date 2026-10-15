@@ -98,10 +98,11 @@ const HEADING_IN = [3.8, 4.8] as const;
 // A real pause standing big before it settles — at 0.2s it read as shrinking
 // the moment it had arrived — and a slower settle.
 const HEADING_SETTLE = [5.4, 6.2] as const;
-// How much bigger the heading stands before it settles (234px against the
-// settled 52).
-const HEADING_BIG_SCALE = 4.5;
-const DRAWING_OPACITY = 0.5;
+// How much bigger the heading stands before it settles: 234px, as it always
+// has, against the small settled 28.
+const HEADING_BIG_SCALE = 234 / 28;
+// Under the stages' own drawings it is the paper's texture, a step below them.
+const DRAWING_OPACITY = 0.35;
 // A stage holds the sheet for STAGE_SPAN, and STAGE_SWAP of that is the
 // handover at its start. 0.95s is about eighty per cent of a screen of scroll
 // each — long enough to read a name and a line without the page feeling stuck.
@@ -109,10 +110,10 @@ const STAGES_START = 6.4;
 const STAGE_SPAN = 0.95;
 const STAGE_SWAP = 0.3;
 const STAGE_RISE_PX = 34;
-// Where a stage's words are from the middle of its drawing, in the drawing's
-// own widths - the other half of the sheet: what the magnifier circles.
-const ART_TOWARD_WORDS_LEFT: [number, number] = [-1.6, 0];
-const ART_TOWARD_WORDS_RIGHT: [number, number] = [1.6, 0];
+// Where the magnifier starts its circle, from the middle of its drawing at
+// rest, in the drawing's own widths: it comes in from the right, the side the
+// page reads from.
+const MAGNIFIER_FROM: [number, number] = [0.9, 0];
 const CONTENT_SHRINK_SCALE = 0.6;
 const VIDEO_REST_SCALE = 1.10;
 const VIDEO_REST_SHIFT_X_PX = 45;
@@ -401,7 +402,11 @@ function ProcessDiagram({ sheetRef }: { sheetRef: RefObject<HTMLDivElement | nul
         <h3
           data-process-heading
           aria-label={PROCESS_HEADING.join(" ")}
-          className="absolute inset-x-0 top-[10%] z-10 flex h-0 items-center justify-center gap-[0.28em] font-display text-[52px] leading-[1.05] font-bold text-black"
+          // Settled SMALL in the top-right corner of the stage field (the same
+          // 13% inset as the stages): a title for the sheet, well below each
+          // stage's name, so the two do not fight. Centred at the very top it
+          // stood in the navbar's own row, between the logo and the menu.
+          className="absolute inset-x-[13%] top-[13%] z-10 flex h-0 items-center justify-start gap-[0.28em] font-display text-[28px] leading-[1.05] font-bold text-black"
         >
           {PROCESS_HEADING.map((line) => (
             <span
@@ -473,54 +478,61 @@ function ProcessStages() {
     // The band between the settled heading and the foot of the sheet. Every
     // stage is absolutely placed inside it, so they share one slot and a swap
     // moves nothing around them.
-    <div className="absolute inset-x-0 top-[20%] bottom-[18%]">
+    <div className="absolute inset-x-0 top-[21%] bottom-[19%]">
       {STAGE_TITLES.map((title, index) => (
         <div
           key={title}
           data-process-stage
           // THE DRAWING ON ONE SIDE, THE WORDS ON THE OTHER, the sides
           // trading from stage to stage: first on the right (the start of a
-          // right-to-left row), then on the left. The words' own column was the
-          // whole sheet's width, with a small line icon over the numeral.
-          className={cn(
-            "absolute inset-0 flex items-center gap-[5%] px-[4%]",
-            index % 2 === 1 && "flex-row-reverse",
-          )}
+          // right-to-left row), then on the left.
+          //
+          // TWO FIXED COLUMNS INSIDE A CLEAR FIELD. The pencil sheet behind has
+          // sketches in its top-left and bottom-right corners; the band and the
+          // 13% inset keep the stage off both. A row sized by its content put the words
+          // wherever the drawing's width left them, and so somewhere different
+          // on every stage. Even halves: the drawings are as big as the band
+          // allows, and the widest of them (the deploy screen) fills its half.
+          className="absolute inset-y-0 inset-x-[13%] grid grid-cols-2 grid-rows-[100%] items-center gap-[4%]"
           style={{ opacity: 0 }}
         >
-          {/* Its drawing (process/art), the height of the band; it tells its
-              little story as the stage comes in. */}
-          <StageArtBox index={index} className="relative h-[86%] w-auto shrink-0" />
+          {/* Its drawing (process/art); it tells its little story as the stage
+              comes in. Sized by the band's height. */}
+          <StageArtBox
+            index={index}
+            className={cn("relative h-[88%] w-auto justify-self-center", index % 2 === 1 && "order-2")}
+          />
 
-          <div className="flex min-w-0 flex-1 flex-col items-center text-center">
-            {/* The numeral is the ground the name sits on: faint, enormous, and
-                BEHIND it rather than beside it, so the two read as one mark. */}
-            <span
-              aria-hidden="true"
-              className="font-display text-[clamp(110px,12vw,200px)] leading-[0.8] font-extrabold text-black/10"
-            >
+          {/* Set from the right, as one block: the count, the name on one
+              line, and the sentence in the two lines it was written in
+              (STAGE_LINES). The white glow lifts the type off the pencil work
+              behind it. */}
+          <div className="flex flex-col items-start text-start [text-shadow:0_0_22px_#fff,0_0_8px_#fff]">
+            <span className="font-display text-[clamp(13px,1vw,16px)] font-bold tracking-[0.2em] text-black/45">
               {String(index + 1).padStart(2, "0")}
+              <span className="text-black/25"> / 04</span>
             </span>
-            {/* Pulled up into the numeral's own space. The white glow is what
-                lifts the type off the pencil work behind it — the same job the
-                SVG halo did for the diagram this replaces. */}
-            <h4 className="-mt-[0.34em] font-display text-[clamp(34px,3.8vw,60px)] leading-[1.05] font-bold text-black [text-shadow:0_0_24px_#fff,0_0_10px_#fff]">
+            <h4 className="mt-3 font-display text-[clamp(32px,3.2vw,52px)] leading-[1.1] font-bold whitespace-nowrap text-black">
               {title}
             </h4>
-            <p className="mt-6 max-w-[520px] font-body text-[clamp(17px,1.4vw,22px)] leading-[1.75] text-balance text-black/70 [text-shadow:0_0_20px_#fff,0_0_8px_#fff]">
-              {STAGE_LINES[index].join(" ")}
+            <p className="mt-5 font-body text-[clamp(16px,1.25vw,20px)] leading-[1.75] text-black/65">
+              {STAGE_LINES[index].map((line) => (
+                <span key={line} className="block">
+                  {line}
+                </span>
+              ))}
             </p>
           </div>
         </div>
       ))}
 
-      {/* KEEP SCROLLING, down the right side of the sheet - the phone's own cue,
-          see ScrollCue. It stands where a column of four circles counted the
-          stages; each stage already carries its numeral, and what the reader
-          was missing was not the count but a sign that the page goes on.
-          Hidden while the services text is up; update() brings it in as that
-          text goes. */}
-      <div data-process-cue style={{ opacity: 0 }} className="absolute top-1/2 right-[3%] -translate-y-1/2">
+      {/* KEEP SCROLLING, at the foot of the sheet under the stages - the
+          phone's own cue, see ScrollCue, and in the phone's own place. On the
+          right side it stood level with each stage's name, an inch from it.
+          Each stage already carries its numeral; what the reader was missing
+          was not the count but a sign that the page goes on. Hidden while the
+          services text is up; update() brings it in as that text goes. */}
+      <div data-process-cue style={{ opacity: 0 }} className="absolute bottom-[-20%] left-1/2 -translate-x-1/2">
         <ScrollCue />
       </div>
     </div>
@@ -759,7 +771,8 @@ export default function ServicesSection() {
     const settle = smoothstep(mapRange(seconds, HEADING_SETTLE[0], HEADING_SETTLE[1], 0, 1));
 
     // The two halves of the heading, each from its place in the big two-line
-    // stack at the middle of the sheet to its place in the settled line.
+    // stack at the middle of the sheet to its place in the small settled line
+    // in the top-right corner.
     const lines = heading.children;
     const sheetW = sheet.offsetWidth;
     const sheetH = sheet.offsetHeight;
@@ -776,7 +789,7 @@ export default function ServicesSection() {
       line.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${lerp(HEADING_BIG_SCALE, 1, settle).toFixed(4)})`;
     }
 
-    // The drawing fades in while the heading makes room for it — to half, so
+    // The drawing fades in while the heading makes room for it — faintly, so
     // the pencil stays a texture on the paper and the stages read over it.
     drawing.style.opacity = String(settle * DRAWING_OPACITY);
 
@@ -794,10 +807,9 @@ export default function ServicesSection() {
       stage.style.opacity = String(shown);
       stage.style.transform = `translateY(${(lerp(STAGE_RISE_PX, 0, arrive) + lerp(0, -STAGE_RISE_PX, leave)).toFixed(2)}px)`;
       // Its drawing, first in the stage: in once the stage is more than half
-      // in, on its own clock (process/art). The words are on the other side,
-      // which way depends on the stage.
+      // in, on its own clock (process/art).
       const art = stage.firstElementChild as HTMLElement | null;
-      if (art) showStageArt(art, i, shown > 0.5, i % 2 === 0 ? ART_TOWARD_WORDS_LEFT : ART_TOWARD_WORDS_RIGHT);
+      if (art) showStageArt(art, i, shown > 0.5, MAGNIFIER_FROM);
     });
 
     // The cue comes in as the services text goes and the paper starts to open -

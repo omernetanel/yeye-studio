@@ -43,26 +43,28 @@ export const STAGE_ART: StageArt[] = [
   { main: { src: "/images/hiw/hiw_1.webp", aspect: "aspect-[900/1076]", ratio: 1076 / 900 } },
   {
     main: { src: "/images/hiw/hiw_2_1.webp", aspect: "aspect-[900/984]", ratio: 984 / 900 },
-    // The brush, its middle resting just off the screen's left edge.
+    // The brush, stopped on the screen: its middle on the left edge, high up,
+    // so the bristles lie on the picture as if it has just put them down.
     visitor: {
       src: "/images/hiw/hiw_2_2.webp",
       aspect: "aspect-[900/922]",
       ratio: 922 / 900,
       width: 0.46,
-      rest: [-0.12, 0.62],
+      rest: [0.02, 0.4],
       anchor: [0.5, 0.5],
     },
   },
   { main: { src: "/images/hiw/hiw_3.webp", aspect: "aspect-[900/804]", ratio: 804 / 900 } },
   {
     main: { src: "/images/hiw/hiw_4_1.webp", aspect: "aspect-[900/708]", ratio: 708 / 900 },
-    // The cursor, its tip on "Publish" - 53% across and 74% down the screen.
+    // The cursor, its tip on the end of the "Publish" button, past the word so
+    // the word stays readable - 72% across and 79% down the screen.
     visitor: {
       src: "/images/hiw/hiw_4_2.webp",
       aspect: "aspect-[646/882]",
       ratio: 882 / 646,
       width: 0.17,
-      rest: [0.53, 0.74],
+      rest: [0.72, 0.79],
       anchor: [0.03, 0.03],
     },
   },
@@ -108,14 +110,14 @@ const BRUSH_STROKES: [number, number][] = [
  * One stage's drawing at `progress` (0 = not in yet, 1 = in its place). Writes
  * transforms only, and reads the box's own layout width first.
  *
- * `toward` is where the words are, from the middle of the drawing at rest, in
- * the drawing's own widths: the magnifier's circle is drawn around there.
+ * `from` is where the magnifier starts its circle, from the middle of the
+ * drawing at rest, in the drawing's own widths. Each layout picks it.
  *
  * GENTLE: one turn of the magnifier, not two and a half; one stroke of the
  * brush, not three; a press of the cursor you see rather than a twitch. The
  * first cut of these was all of that inside a second, and read as busy.
  */
-export function poseStageArt(box: HTMLElement, index: number, progress: number, toward: [number, number]) {
+export function poseStageArt(box: HTMLElement, index: number, progress: number, from: [number, number]) {
   const width = box.offsetWidth;
   const height = box.offsetHeight;
   const main = box.firstElementChild as HTMLElement | null;
@@ -126,11 +128,11 @@ export function poseStageArt(box: HTMLElement, index: number, progress: number, 
   const e = easeInOut(t);
 
   if (index === 0) {
-    // Once round over the words, the circle closing as it comes home.
+    // Once round as it searches its way in, the circle closing as it comes home.
     const turn = Math.PI * 0.5 + e * Math.PI * 2;
     const radius = 0.2 * (1 - e);
-    const x = lerp(toward[0], 0, e) + Math.cos(turn) * radius;
-    const y = lerp(toward[1], 0, e) + Math.sin(turn) * radius;
+    const x = lerp(from[0], 0, e) + Math.cos(turn) * radius;
+    const y = lerp(from[1], 0, e) + Math.sin(turn) * radius;
     main.style.transform = `translate(${(x * width).toFixed(1)}px, ${(y * width).toFixed(1)}px) rotate(${((1 - e) * -8).toFixed(2)}deg)`;
   } else if (index === 2) {
     main.style.transform = `translateY(${((1 - e) * 0.06 * width).toFixed(1)}px) rotate(${((1 - e) * -4).toFixed(2)}deg)`;
@@ -178,7 +180,7 @@ const runs = new WeakMap<HTMLElement, Run>();
  * the layout likes - only a change does anything. Once out, the story starts
  * again from the beginning the next time it comes in.
  */
-export function showStageArt(box: HTMLElement, index: number, shown: boolean, toward: [number, number]) {
+export function showStageArt(box: HTMLElement, index: number, shown: boolean, from: [number, number]) {
   let run = runs.get(box);
   if (!run) {
     run = { shown: false, progress: 0, opacity: 0, frame: null, last: 0 };
@@ -201,7 +203,7 @@ export function showStageArt(box: HTMLElement, index: number, shown: boolean, to
       if (live.opacity === 0) live.progress = 0;
     }
     box.style.opacity = String(live.opacity * ART_OPACITY);
-    poseStageArt(box, index, live.progress, toward);
+    poseStageArt(box, index, live.progress, from);
     const moving = live.shown ? live.progress < 1 || live.opacity < 1 : live.opacity > 0;
     live.frame = moving ? requestAnimationFrame(step) : null;
   };

@@ -208,8 +208,8 @@ const ART_PLACES = [
   "left-[5%] top-[57%] w-[72%]",
   "left-[14%] top-[57%] w-[78%]",
 ];
-/** Where the words are from the middle of a drawing at rest, in its own widths: what the magnifier circles. */
-const ART_TOWARD_WORDS: [number, number] = [0.35, -1];
+/** Where the magnifier starts its circle, in its own widths from its rest: over the words above it. */
+const MAGNIFIER_FROM: [number, number] = [0.35, -1];
 
 /** How small the stages get as they go back into the folding paper. */
 const COLLAPSED_SCALE = 0.55;
@@ -522,7 +522,7 @@ export default function MobileServices() {
       // the one coming in barely meet - and out as they begin to go. The story
       // it tells runs on its own, slower clock.
       const art = artRefs.current[index];
-      if (art) showStageArt(art, index, swapIn >= 0.5 && swapOut < 0.5, ART_TOWARD_WORDS);
+      if (art) showStageArt(art, index, swapIn >= 0.5 && swapOut < 0.5, MAGNIFIER_FROM);
     }
 
     const statementOpacity = fadeIn(time, CUE_STATEMENT_IN);
