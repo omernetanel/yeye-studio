@@ -6,37 +6,41 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { cn } from "@/lib/utils";
 
 /**
- * A seam cut on the slant, the way a blade leaves one: the section above ends
- * in one straight diagonal edge. Laid at the head of the section below and
- * filled with the colour of the one above (`className`, as a fill),
- * alternating sides down the page (`flip`) so that two seams in a row cross
- * like the knives in the mark they were drawn from.
+ * The seam between two sections, drawn as a knife: the section above ends in
+ * a straight edge, and from it a blade lies across the next one - its spine
+ * flush with the edge, its belly curving up to the point, its handle off the
+ * side of the screen. Filled with the colour of the section above
+ * (`className`, as a fill), from alternate sides down the page (`flip`), so
+ * that two seams in a row cross like the knives in the mark.
  *
- * THE CUT IS MADE AS THE SEAM COMES UP THE SCREEN. The blade goes in at one
- * top corner and runs across and down to the other, and the edge it leaves is
- * honed: a thin lighter line along it, where steel catches the light. When the
- * cut is through, a glint runs down that line once. Scrolled back, the cut
- * closes again, and the glint is there to be seen the next time.
+ * THE BLADE IS DRAWN AS THE SEAM COMES UP THE SCREEN - slid in from its own
+ * side - and once it is all the way in, a glint runs down its edge. Scrolled
+ * back, it slides out again, and the glint is there to be seen next time.
  *
- * It used to be one triangle stretched taller with the scroll, the same at
- * every seam. Each now has its own depth (`variant`), and the last on a page
- * can cut deeper (`heavy`) - the way the glaze on the page for MAY'S runs
- * longest at its last seam.
+ * NOT A TRIANGLE. The seam was one before: a wedge the width of the page,
+ * stretched with the scroll, and down a page of them it read as the points of
+ * a backgammon board. A blade is the shape of the mark itself, the way the
+ * glaze on the page for MAY'S is the shape of that one.
  *
- * Drawn in real pixels from the element's own width, so the angle is the same
- * on a phone as on a desk. With less motion the cut is simply there.
- * Decoration - hidden from assistive technology.
+ * Each seam has its own length (`variant`), and the last on a page can be
+ * longer and broader (`heavy`). Drawn in real pixels from the element's own
+ * width. With less motion the blade is simply there. Decoration - hidden from
+ * assistive technology.
  */
 
-// How deep each seam is cut, as a share of the page's width, by `variant`,
-// and never deeper than the room the sections leave above their words.
-const DEPTHS = [0.13, 0.17, 0.11, 0.15];
-const DEPTH_HEAVY = 0.2;
-const MAX_DEPTH_PX = 240;
-const MAX_DEPTH_HEAVY_PX = 280;
-// Where the seam is on the screen (0 top, 1 bottom) when the blade goes in,
-// and when it is through.
-const CUT = [1, 0.45] as const;
+// How much of the page's width each blade runs, by `variant`.
+const LENGTHS = [0.62, 0.74, 0.56, 0.68];
+const LENGTH_HEAVY = 0.84;
+// How broad a blade is at the heel, as a share of the width, between these.
+const BREADTH = 0.032;
+const BREADTH_PX = [14, 46] as const;
+const HEAVY_BREADTH = 1.35;
+// How much of the blade's length runs straight before the belly curves up to
+// the point.
+const STRAIGHT = 0.45;
+// Where the seam is on the screen (0 top, 1 bottom) when the blade starts in,
+// and when it is home.
+const DRAW = [1, 0.5] as const;
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
@@ -49,22 +53,22 @@ export default function BladeCut({
 }: {
   /** The section above's colour, as a fill. */
   className: string;
-  /** The deep end on the other side: the blade goes in from the left. */
+  /** The handle on the left, the point to the right. */
   flip?: boolean;
-  /** The section above is dark, so its edge is honed light rather than dark. */
+  /** The section above is dark, so the edge is honed light rather than dark. */
   dark?: boolean;
-  /** Which depth. Each seam on a page takes its own. */
+  /** Which length. Each seam on a page takes its own. */
   variant?: number;
-  /** Deeper, for the last seam on a page. The section under it has to leave the room. */
+  /** Longer and broader, for the last seam on a page. */
   heavy?: boolean;
 }) {
   const reduce = usePrefersReducedMotion();
   const svgRef = useRef<SVGSVGElement>(null);
-  const fillRef = useRef<SVGPolygonElement>(null);
-  const edgeRef = useRef<SVGLineElement>(null);
-  const glintRef = useRef<SVGLineElement>(null);
+  const bladeRef = useRef<SVGPathElement>(null);
+  const edgeRef = useRef<SVGPathElement>(null);
+  const glintRef = useRef<SVGPathElement>(null);
   const [width, setWidth] = useState(0);
-  const [through, setThrough] = useState(false);
+  const [home, setHome] = useState(false);
   const { scrollY } = useScroll();
 
   useEffect(() => {
@@ -75,33 +79,37 @@ export default function BladeCut({
     return () => observer.disconnect();
   }, []);
 
-  const depth = Math.min(
-    heavy ? MAX_DEPTH_HEAVY_PX : MAX_DEPTH_PX,
-    width * (heavy ? DEPTH_HEAVY : DEPTHS[variant % DEPTHS.length]),
-  );
+  const breadth =
+    Math.min(BREADTH_PX[1], Math.max(BREADTH_PX[0], width * BREADTH)) * (heavy ? HEAVY_BREADTH : 1);
 
   const draw = () => {
     const svg = svgRef.current;
-    const fill = fillRef.current;
+    const blade = bladeRef.current;
     const edge = edgeRef.current;
     const glint = glintRef.current;
-    if (!svg || !fill || !edge || !glint || width <= 0) return;
+    if (!svg || !blade || !edge || !glint || width <= 0) return;
     const at = svg.getBoundingClientRect().top / window.innerHeight;
-    // Eased out: the blade goes in fast and slows as it comes through.
-    const t = reduce ? 1 : 1 - (1 - clamp01((CUT[0] - at) / (CUT[0] - CUT[1]))) ** 3;
-    const from = flip ? 0 : width;
-    const tipX = from + ((flip ? width : 0) - from) * t;
-    const tipY = depth * t;
+    // Eased out: it comes in fast and settles.
+    const t = reduce ? 1 : 1 - (1 - clamp01((DRAW[0] - at) / (DRAW[0] - DRAW[1]))) ** 3;
+
+    const length = width * (heavy ? LENGTH_HEAVY : LENGTHS[variant % LENGTHS.length]);
+    // Out past its own side of the screen until it slides in.
+    const out = (1 - t) * (length + breadth);
+    // Laid out with the heel on the right, and mirrored for a flipped seam.
+    const x = (value: number) => (flip ? width - value - out : value + out).toFixed(1);
+    const heel = width;
+    const turn = width - length * STRAIGHT;
+    const point = width - length;
+    const h = breadth.toFixed(1);
+    const belly =
+      `M${x(heel)},${h} L${x(turn)},${h}` +
+      ` C${x(width - length * 0.75)},${h} ${x(width - length * 0.95)},${(breadth * 0.5).toFixed(1)} ${x(point)},0`;
     // A pixel over the section above, so no hairline of the page shows
     // between the two.
-    fill.setAttribute("points", `${from},-1 ${tipX},-1 ${tipX},${tipY} ${from},0`);
-    for (const line of [edge, glint]) {
-      line.setAttribute("x1", String(from));
-      line.setAttribute("y1", "0");
-      line.setAttribute("x2", tipX.toFixed(1));
-      line.setAttribute("y2", tipY.toFixed(1));
-    }
-    setThrough(!reduce && t >= 1);
+    blade.setAttribute("d", `M${x(heel)},-1 L${x(heel)},${h}` + belly.slice(belly.indexOf(" L")) + ` L${x(point)},-1 Z`);
+    edge.setAttribute("d", belly);
+    glint.setAttribute("d", belly);
+    setHome(!reduce && t >= 1);
   };
 
   useLayoutEffect(draw);
@@ -114,20 +122,22 @@ export default function BladeCut({
     <svg
       ref={svgRef}
       aria-hidden="true"
-      className={cn("pointer-events-none absolute inset-x-0 -top-px block w-full overflow-visible", className)}
-      height={Math.ceil(depth) + 2}
+      className={cn("pointer-events-none absolute inset-x-0 -top-px block w-full overflow-hidden", className)}
+      height={Math.ceil(breadth) + 3}
     >
-      <polygon ref={fillRef} />
-      {/* The honed edge, and the glint that runs down it once the cut is
-          through (.blade-glint in globals.css). pathLength 1, so the glint is
-          the same share of the edge on every screen. */}
-      <line ref={edgeRef} strokeWidth={1.5} className={dark ? "stroke-white/25" : "stroke-black/10"} />
-      <line
+      <path ref={bladeRef} />
+      {/* The honed edge, and the glint that runs down it from the heel to the
+          point once the blade is home (.blade-glint in globals.css).
+          pathLength 1, so the glint is the same share of the edge on every
+          screen. */}
+      <path ref={edgeRef} fill="none" strokeWidth={1.5} className={dark ? "stroke-white/30" : "stroke-black/15"} />
+      <path
         ref={glintRef}
+        fill="none"
         pathLength={1}
         strokeWidth={2}
         strokeLinecap="round"
-        className={cn("blade-glint", dark ? "stroke-white" : "stroke-black/45", through && "blade-glint--run")}
+        className={cn("blade-glint", dark ? "stroke-white" : "stroke-black/50", home && "blade-glint--run")}
       />
     </svg>
   );

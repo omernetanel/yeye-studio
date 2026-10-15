@@ -157,7 +157,7 @@ export default function SorozinCase({ site }: Props) {
         className="relative flex min-h-[78svh] flex-col justify-center overflow-hidden bg-black px-6 pt-28 pb-12 text-white md:block md:min-h-0 md:pt-24 md:pb-24"
       >
         <h1 className="sr-only">Sorozin Chef</h1>
-        <div ref={markRef} className="mx-auto w-[64%] max-w-[420px] will-change-transform md:max-w-[min(420px,56svh)]">
+        <div ref={markRef} className="relative mx-auto w-[64%] max-w-[420px] will-change-transform md:max-w-[min(420px,56svh)]">
           <Image
             src="/images/projects/sorozin/sorozinlogo.webp"
             alt="הלוגו של Sorozin Chef: שתי סכיני בשר מוצלבות מעל השם"
@@ -167,6 +167,9 @@ export default function SorozinCase({ site }: Props) {
             sizes="(max-width: 660px) 64vw, 420px"
             className="h-auto w-full"
           />
+          {/* Light running across the steel once, as the page opens - shaped
+              by the mark itself (.sorozin-shine in globals.css). */}
+          <div aria-hidden="true" className="sorozin-shine pointer-events-none absolute inset-0" />
         </div>
 
         <div className="mx-auto mt-10 max-w-[1100px] font-display md:hidden">

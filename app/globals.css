@@ -447,6 +447,32 @@ body {
 .blade-glint--run {
   animation: blade-glint 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+/* LIGHT ACROSS THE STEEL of the Sorozin Chef mark, once, as its page opens: a
+   bright band slid across a layer cut to the mark's own shape. Over the white
+   letters it is nothing; over the grey of the knives it is the glint of a
+   blade. With less motion it does not run. */
+.sorozin-shine {
+  -webkit-mask: url("/images/projects/sorozin/sorozinlogo.webp") center / contain no-repeat;
+  mask: url("/images/projects/sorozin/sorozinlogo.webp") center / contain no-repeat;
+  background-image: linear-gradient(115deg, transparent 38%, rgb(255 255 255 / 0.9) 50%, transparent 62%);
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  animation: sorozin-shine 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.9s forwards;
+}
+@keyframes sorozin-shine {
+  to {
+    background-position: 0% 0;
+  }
+}
+[data-a11y-motion] .sorozin-shine {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sorozin-shine {
+    display: none;
+  }
+}
+
 @keyframes blade-glint {
   0% {
     stroke-dashoffset: 0.14;

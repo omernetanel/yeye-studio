@@ -6,6 +6,7 @@ import { useLayoutEffect, type RefObject } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import type { DesignPiece } from "@/lib/design-work";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
+import { cn } from "@/lib/utils";
 
 /**
  * A picture of a piece of work that moves with the scroll, and the hook that
@@ -55,7 +56,13 @@ export function ScrollPiece({
       width={piece.width}
       height={piece.height}
       sizes={sizes}
-      className="h-auto w-full will-change-transform"
+      // A picture that leads somewhere comes a little closer under the
+      // pointer. The `scale` property, not a transform: the scroll writes the
+      // transform, and the two multiply rather than fight.
+      className={cn(
+        "h-auto w-full will-change-transform",
+        href && "transition-[scale] duration-500 ease-out group-hover:scale-[1.04]",
+      )}
     />
   );
   return (
@@ -67,7 +74,7 @@ export function ScrollPiece({
     // are pictures of whole things - a sheet of stickers, two cards.
     <figure data-scroll-piece className={className}>
       {href ? (
-        <Link href={href} className={WINDOW}>
+        <Link href={href} className={cn(WINDOW, "group")}>
           {picture}
         </Link>
       ) : (

@@ -128,10 +128,12 @@ export class ScrollFrames {
     this.resizeObserver.observe(canvas);
 
     this.resize();
-    // WITH THE PAGE, NOT WHEN THE SECTION IS NEAR. Both papers sit straight
-    // under the hero, so a reader is never more than a swipe away from them,
-    // and the frames are downloading from the moment the page is.
-    this.startLoading();
+    // RIGHT AFTER THE PAGE, NOT WHEN THE SECTION IS NEAR. Both papers sit
+    // straight under the hero, so a reader is never more than a swipe away
+    // from them - but the hero is what is on screen, so it has the connection
+    // to itself until the page has loaded, and the frames start then.
+    if (document.readyState === "complete") this.startLoading();
+    else window.addEventListener("load", this.startLoading, { once: true });
   }
 
   /** Show frame `index` — or, until it has arrived, the nearest one that has. */
@@ -151,13 +153,15 @@ export class ScrollFrames {
     this.disposed = true;
     this.abort.abort();
     this.resizeObserver.disconnect();
+    window.removeEventListener("load", this.startLoading);
     if (this.retryTimer !== null) window.clearTimeout(this.retryTimer);
     window.removeEventListener("online", this.resume);
     for (const frame of this.decoded.values()) releaseFrame(frame);
     this.decoded.clear();
   }
 
-  private startLoading() {
+  private startLoading = () => {
+    if (this.disposed) return;
     const seen = new Set<number>();
     const enqueue = (index: number) => {
       if (seen.has(index)) return;
@@ -172,7 +176,7 @@ export class ScrollFrames {
     enqueue(last);
 
     this.startWorkers();
-  }
+  };
 
   private startWorkers() {
     // Counted out, never "while there are fewer than six": a worker with nothing
