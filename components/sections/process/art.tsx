@@ -4,8 +4,8 @@
  * sheet (MobileServices) and the desk's (ServicesSection); where each drawing
  * stands is the layout's business, and how it moves is decided here, once.
  *
- * WHAT EACH ONE DOES on its way in, as a function of how far in it is (0 to 1),
- * so it follows the scroll like everything else on the sheet:
+ * WHAT EACH ONE DOES on its way in, on a clock of its own that starts when its
+ * stage does (see STORY_SECONDS):
  * 1. The magnifier goes over the words in a circle, the way you search a page
  *    with one, and settles in its place.
  * 2. A brush comes in from the side and works across the screen, as if it is
@@ -86,7 +86,6 @@ export const ART_OPACITY = 0.5;
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
-const easeOut = (t: number) => 1 - (1 - t) ** 3;
 
 /** Piecewise-linear through points spaced evenly over 0..1. */
 function along(points: [number, number][], t: number): [number, number] {
@@ -97,14 +96,12 @@ function along(points: [number, number][], t: number): [number, number] {
 }
 
 // The brush's way across the screen, as shares of the screen's width and
-// height: in from the left and three strokes over it - and then to its place
-// (its `rest`).
+// height: in from the left and one slow stroke over it, back and across - and
+// then to its place (its `rest`).
 const BRUSH_STROKES: [number, number][] = [
-  [-0.9, 0.15],
-  [0.3, 0.28],
-  [0.75, 0.38],
-  [0.32, 0.52],
-  [0.78, 0.6],
+  [-0.55, 0.3],
+  [0.62, 0.4],
+  [0.22, 0.56],
 ];
 
 /**
@@ -113,6 +110,10 @@ const BRUSH_STROKES: [number, number][] = [
  *
  * `toward` is where the words are, from the middle of the drawing at rest, in
  * the drawing's own widths: the magnifier's circle is drawn around there.
+ *
+ * GENTLE: one turn of the magnifier, not two and a half; one stroke of the
+ * brush, not three; a press of the cursor you see rather than a twitch. The
+ * first cut of these was all of that inside a second, and read as busy.
  */
 export function poseStageArt(box: HTMLElement, index: number, progress: number, toward: [number, number]) {
   const width = box.offsetWidth;
@@ -122,20 +123,19 @@ export function poseStageArt(box: HTMLElement, index: number, progress: number, 
   if (!main) return;
   const art = STAGE_ART[index];
   const t = clamp01(progress);
+  const e = easeInOut(t);
 
   if (index === 0) {
-    // Round and round over the words, the circle tightening as it comes home.
-    const e = easeInOut(t);
-    const turn = Math.PI * 0.5 + e * Math.PI * 2.5;
-    const radius = 0.3 * (1 - e);
+    // Once round over the words, the circle closing as it comes home.
+    const turn = Math.PI * 0.5 + e * Math.PI * 2;
+    const radius = 0.2 * (1 - e);
     const x = lerp(toward[0], 0, e) + Math.cos(turn) * radius;
     const y = lerp(toward[1], 0, e) + Math.sin(turn) * radius;
-    main.style.transform = `translate(${(x * width).toFixed(1)}px, ${(y * width).toFixed(1)}px) rotate(${((1 - e) * -14).toFixed(2)}deg)`;
+    main.style.transform = `translate(${(x * width).toFixed(1)}px, ${(y * width).toFixed(1)}px) rotate(${((1 - e) * -8).toFixed(2)}deg)`;
   } else if (index === 2) {
-    const e = easeOut(t);
-    main.style.transform = `translateY(${((1 - e) * 0.12 * width).toFixed(1)}px) rotate(${((1 - e) * -7).toFixed(2)}deg)`;
+    main.style.transform = `translateY(${((1 - e) * 0.06 * width).toFixed(1)}px) rotate(${((1 - e) * -4).toFixed(2)}deg)`;
   } else {
-    main.style.transform = `translateY(${((1 - easeOut(t)) * 0.06 * width).toFixed(1)}px)`;
+    main.style.transform = `translateY(${((1 - e) * 0.04 * width).toFixed(1)}px)`;
   }
 
   if (!visitor || !art.visitor) return;
@@ -146,19 +146,73 @@ export function poseStageArt(box: HTMLElement, index: number, progress: number, 
   let scale = 1;
   let rotate = 0;
   if (index === 1) {
-    point = along([...BRUSH_STROKES, v.rest], easeInOut(t));
-    // A brush tilts as it is dragged one way and the other.
-    rotate = Math.sin(t * Math.PI * 5) * 8 * (1 - t);
+    point = along([...BRUSH_STROKES, v.rest], e);
+    // A brush leans a little the way it is drawn, and settles upright.
+    rotate = Math.sin(t * Math.PI * 2) * 5 * (1 - t);
   } else {
-    // Up from below to the button over the first three quarters, then a press.
-    const come = easeOut(clamp01(t / 0.75));
-    point = [lerp(1.1, v.rest[0], come), lerp(1.35, v.rest[1], come)];
-    const press = clamp01((t - 0.8) / 0.18);
-    scale = 1 - Math.sin(press * Math.PI) * 0.16;
+    // Up to the button over most of the time, a pause, then one soft press.
+    const come = easeInOut(clamp01(t / 0.7));
+    point = [lerp(0.95, v.rest[0], come), lerp(1.2, v.rest[1], come)];
+    const press = clamp01((t - 0.78) / 0.2);
+    scale = 1 - Math.sin(press * Math.PI) * 0.1;
   }
   const dx = (point[0] - v.rest[0]) * width;
   const dy = (point[1] - v.rest[1]) * height;
   visitor.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) rotate(${rotate.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+}
+
+// THE DRAWINGS KEEP THEIR OWN TIME. The swap that brings a stage in lasts a
+// second or so, and a story told inside it was rushed: the drawing begins as
+// its stage begins, and takes this long, whether the words have settled or
+// not. It goes faster than it came: a drawing leaving fades, it does not play
+// its story backwards.
+const STORY_SECONDS = 2.8;
+const FADE_IN_SECONDS = 0.6;
+const FADE_OUT_SECONDS = 0.4;
+
+type Run = { shown: boolean; progress: number; opacity: number; frame: number | null; last: number };
+const runs = new WeakMap<HTMLElement, Run>();
+
+/**
+ * Bring one stage's drawing in (`shown`) or send it out. Called as often as
+ * the layout likes - only a change does anything. Once out, the story starts
+ * again from the beginning the next time it comes in.
+ */
+export function showStageArt(box: HTMLElement, index: number, shown: boolean, toward: [number, number]) {
+  let run = runs.get(box);
+  if (!run) {
+    run = { shown: false, progress: 0, opacity: 0, frame: null, last: 0 };
+    runs.set(box, run);
+    box.style.opacity = "0";
+  }
+  if (run.shown === shown) return;
+  run.shown = shown;
+  if (run.frame !== null) return;
+  const live = run;
+  live.last = performance.now();
+  const step = (now: number) => {
+    const dt = Math.min(0.1, (now - live.last) / 1000);
+    live.last = now;
+    if (live.shown) {
+      live.progress = Math.min(1, live.progress + dt / STORY_SECONDS);
+      live.opacity = Math.min(1, live.opacity + dt / FADE_IN_SECONDS);
+    } else {
+      live.opacity = Math.max(0, live.opacity - dt / FADE_OUT_SECONDS);
+      if (live.opacity === 0) live.progress = 0;
+    }
+    box.style.opacity = String(live.opacity * ART_OPACITY);
+    poseStageArt(box, index, live.progress, toward);
+    const moving = live.shown ? live.progress < 1 || live.opacity < 1 : live.opacity > 0;
+    live.frame = moving ? requestAnimationFrame(step) : null;
+  };
+  live.frame = requestAnimationFrame(step);
+}
+
+/** Stops a drawing's clock - its layout is going away. */
+export function stopStageArt(box: HTMLElement) {
+  const run = runs.get(box);
+  if (run?.frame != null) cancelAnimationFrame(run.frame);
+  runs.delete(box);
 }
 
 /**

@@ -14,7 +14,7 @@ import { stackHeading } from "@/lib/motion/stack-heading";
 import FoldText, { setFold } from "@/components/ui/FoldText";
 import ScrollCue from "@/components/ui/ScrollCue";
 import { PROCESS_HEADING, STAGE_LINES, STAGE_TITLES } from "../process/stages";
-import { ART_OPACITY, StageArtBox, poseStageArt } from "../process/art";
+import { StageArtBox, showStageArt, stopStageArt } from "../process/art";
 
 // The paper, as the clip's own frames — every one of servicesbg-mobile.mp4's 458,
 // at its own 720×1280 and 30fps, so nothing is thinned out against the video it
@@ -517,17 +517,12 @@ export default function MobileServices() {
         part.style.transform = lift;
       }
 
-      // ITS DRAWING (process/art), behind the words. It tells its little story
-      // over the incoming half of the swap - the same half the words come in
-      // on, so the drawing going out and the one coming in never share the
-      // sheet. The first has the whole swap: the heading before it has no
-      // drawing to make room for, and the magnifier's circle needs the time.
+      // ITS DRAWING (process/art), behind the words: in as its words begin to
+      // come in - the incoming half of the swap, so the drawing going out and
+      // the one coming in barely meet - and out as they begin to go. The story
+      // it tells runs on its own, slower clock.
       const art = artRefs.current[index];
-      if (art) {
-        const story = index === 0 ? swapIn : clamp01(swapIn * 2 - 1);
-        art.style.opacity = String(Math.min(smoothstep(clamp01(story * 4)), 1 - leaving) * ART_OPACITY);
-        poseStageArt(art, index, story, ART_TOWARD_WORDS);
-      }
+      if (art) showStageArt(art, index, swapIn >= 0.5 && swapOut < 0.5, ART_TOWARD_WORDS);
     }
 
     const statementOpacity = fadeIn(time, CUE_STATEMENT_IN);
@@ -546,6 +541,8 @@ export default function MobileServices() {
     // store matched to the canvas, and on the way out cancels any download
     // still running and frees every decoded frame it holds.
     const frames = new ScrollFrames(canvas, PAPER);
+    // The drawings' own clocks, stopped on the way out (see process/art).
+    const arts = [...artRefs.current];
     framesRef.current = frames;
     // The playhead outlives this render, so it keeps this render's `render` -
     // which is safe only because render reads nothing but refs and module
@@ -571,6 +568,7 @@ export default function MobileServices() {
       playheadRef.current = null;
       frames.dispose();
       framesRef.current = null;
+      for (const art of arts) if (art) stopStageArt(art);
     };
   }, [prefersReducedMotion]);
 
