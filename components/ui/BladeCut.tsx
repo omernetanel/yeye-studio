@@ -14,9 +14,10 @@ import { cn } from "@/lib/utils";
  *
  * THE CUT IS MADE AS THE SEAM COMES UP THE SCREEN. The blade goes in at one
  * top corner and runs across and down to the other, and the edge it leaves is
- * honed: a thin lighter line along it, where steel catches the light. When the
- * cut is through, a glint runs down that line once. Scrolled back, the cut
- * closes again, and the glint is there to be seen the next time.
+ * honed: a thin lighter line along it, where steel catches the light.
+ * Scrolled back, the cut closes again. (A glint ran down that line once the
+ * cut was through, and came out: the page's one glint is on the pictures'
+ * section instead.)
  *
  * It used to be one triangle stretched taller with the scroll, the same at
  * every seam. Each now has its own depth (`variant`), and the last on a page
@@ -68,9 +69,7 @@ export default function BladeCut({
   const svgRef = useRef<SVGSVGElement>(null);
   const fillRef = useRef<SVGPolygonElement>(null);
   const edgeRef = useRef<SVGLineElement>(null);
-  const glintRef = useRef<SVGLineElement>(null);
   const [width, setWidth] = useState(0);
-  const [through, setThrough] = useState(false);
   const { scrollY } = useScroll();
 
   useEffect(() => {
@@ -90,8 +89,7 @@ export default function BladeCut({
     const svg = svgRef.current;
     const fill = fillRef.current;
     const edge = edgeRef.current;
-    const glint = glintRef.current;
-    if (!svg || !fill || !edge || !glint || width <= 0) return;
+    if (!svg || !fill || !edge || width <= 0) return;
     const at = svg.getBoundingClientRect().top / window.innerHeight;
     // Eased out: the blade goes in fast and slows as it comes through.
     const t = reduce ? 1 : 1 - (1 - clamp01((CUT[0] - at) / (CUT[0] - CUT[1]))) ** 3;
@@ -101,13 +99,10 @@ export default function BladeCut({
     // A pixel over the section above, so no hairline of the page shows
     // between the two.
     fill.setAttribute("points", `${from},-1 ${tipX},-1 ${tipX},${tipY} ${from},0`);
-    for (const line of [edge, glint]) {
-      line.setAttribute("x1", String(from));
-      line.setAttribute("y1", "0");
-      line.setAttribute("x2", tipX.toFixed(1));
-      line.setAttribute("y2", tipY.toFixed(1));
-    }
-    setThrough(!reduce && t >= 1);
+    edge.setAttribute("x1", String(from));
+    edge.setAttribute("y1", "0");
+    edge.setAttribute("x2", tipX.toFixed(1));
+    edge.setAttribute("y2", tipY.toFixed(1));
   };
 
   useLayoutEffect(draw);
@@ -124,17 +119,8 @@ export default function BladeCut({
       height={Math.ceil(depth) + 2}
     >
       <polygon ref={fillRef} />
-      {/* The honed edge, and the glint that runs down it once the cut is
-          through (.blade-glint in globals.css). pathLength 1, so the glint is
-          the same share of the edge on every screen. */}
+      {/* The honed edge. */}
       <line ref={edgeRef} strokeWidth={1.5} className={dark ? "stroke-white/25" : "stroke-black/10"} />
-      <line
-        ref={glintRef}
-        pathLength={1}
-        strokeWidth={2}
-        strokeLinecap="round"
-        className={cn("blade-glint", dark ? "stroke-white" : "stroke-black/45", through && "blade-glint--run")}
-      />
     </svg>
   );
 }

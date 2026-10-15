@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useLayoutEffect, useRef } from "react";
-import { useMotionValueEvent, useScroll } from "framer-motion";
+import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import Link from "next/link";
 import LiveProjectPreview from "@/components/projects/LiveProjectPreview";
 import ArrowIcon from "@/components/ui/ArrowIcon";
@@ -239,6 +239,24 @@ export default function SorozinCase({ site }: Props) {
           with a seam at its head. */}
       <section className="relative bg-neutral-200 px-6 pt-40 pb-24 md:pt-72 md:pb-40">
         <BladeCut className="fill-white" flip variant={1} />
+        {/* ONE GLINT ACROSS THE GREY, the page's only one: a band of light
+            run over the section once as it comes onto the screen, the way it
+            runs down a blade turned in the hand. Behind the heading and the
+            pictures, which stand over it. With less motion it stays out of
+            sight (a transform, which MotionConfig turns off). */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <motion.div
+            initial={{ x: "-120%" }}
+            whileInView={{ x: "320%" }}
+            // Off its head reaching two thirds up the screen: the section is
+            // several screens tall, and a share of it would never be in view.
+            viewport={{ once: true, margin: "0px 0px -35% 0px" }}
+            transition={{ duration: 1.8, ease: [0.4, 0, 0.2, 1], delay: 0.3 }}
+            className="absolute inset-y-0 left-0 w-1/3"
+          >
+            <div className="h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+          </motion.div>
+        </div>
         {/* ITS HEADING IS THE KIND OF JOB THIS WAS, said once and large: not a
             new brand but an old one made again. Grey, so that it is the
             ground the pictures stand on and not one more thing to read; and
@@ -248,12 +266,12 @@ export default function SorozinCase({ site }: Props) {
           data-fold-line
           lang="en"
           dir="ltr"
-          className="mx-auto mb-12 max-w-[1400px] text-left font-display text-[15.5vw] leading-[0.95] font-extrabold tracking-tight text-heading-soft md:mb-20 md:text-[clamp(96px,13.5vw,210px)]"
+          className="relative mx-auto mb-12 max-w-[1400px] text-left font-display text-[15.5vw] leading-[0.95] font-extrabold tracking-tight text-heading-soft md:mb-20 md:text-[clamp(96px,13.5vw,210px)]"
         >
           <span className="sr-only">Rebrand</span>
           <FoldWords text="#REBRAND" />
         </h2>
-        <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-10">
+        <div className="relative mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-10">
           <div className="flex flex-col gap-10 md:col-span-7 md:gap-16">
             <ScrollPiece piece={KNIVES} sizes="(max-width: 768px) 100vw, 58vw" />
             {/* A little narrower than the knives over it, and against the far

@@ -435,18 +435,6 @@ body {
   }
 }
 
-/* THE GLINT DOWN A BLADE'S EDGE (BladeCut), once the cut is through: a short
-   bright stretch of the line, run from the corner the blade went in at to the
-   far end, and gone. The line's length is 1 (pathLength), so the stretch is
-   the same share of the edge on every screen. Hidden until it runs. */
-.blade-glint {
-  stroke-dasharray: 0.14 1.2;
-  stroke-dashoffset: 0.14;
-  opacity: 0;
-}
-.blade-glint--run {
-  animation: blade-glint 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
 /* LIGHT ACROSS THE STEEL of the Sorozin Chef mark, once, as its page opens: a
    bright band slid across a layer cut to the mark's own shape. Over the white
    letters it is nothing; over the grey of the knives it is the glint of a
@@ -470,20 +458,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .sorozin-shine {
     display: none;
-  }
-}
-
-@keyframes blade-glint {
-  0% {
-    stroke-dashoffset: 0.14;
-    opacity: 1;
-  }
-  85% {
-    opacity: 1;
-  }
-  100% {
-    stroke-dashoffset: -1;
-    opacity: 0;
   }
 }
 
