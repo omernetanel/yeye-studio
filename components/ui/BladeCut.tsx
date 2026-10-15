@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useMotionValueEvent, useScroll } from "framer-motion";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { cn } from "@/lib/utils";
 
@@ -11,25 +12,22 @@ import { cn } from "@/lib/utils";
  * alternating sides down the page (`flip`) so that two seams in a row cross
  * like the knives in the mark they were drawn from.
  *
- * ONE STROKE, NOT A SCRUB. As the seam comes onto the screen a thin bright
- * line slashes along the diagonal, and the cut falls open behind it in one
- * short move - the stroke of a knife, and then it is done. Scrolled back
- * above the seam it closes again, out of sight, ready to be cut once more.
- * With less motion the cut is simply there.
+ * IT STRETCHES WITH THE SCROLL: shallow as the seam comes onto the screen,
+ * to its full depth by the time it is past the middle, and back on the way
+ * up. With less motion the cut is simply there.
  *
  * WHAT CAME BEFORE, so it is not built again:
- * - A wedge a sixth of the page deep, stretched with the scroll: down a page
- *   of them, the points of a backgammon board.
+ * - A wedge a sixth of the page deep: down a page of them, the points of a
+ *   backgammon board. This is the same stretch at a middle depth.
  * - A shallow cut drawn across the page with the scroll: the slow fill read
  *   as cheap, worst on a phone.
  * - A knife drawn across the seam (spine, belly, point): a picture of a
  *   knife, not a cut.
- * This keeps the angle of the first at a middle depth, and the moment of a
- * blade instead of a crawl.
+ * - One stroke on arrival - a bright line, then the cut falling open: read
+ *   as a jump.
  *
  * Drawn in real pixels from the element's own width, so the angle is the same
- * on a phone as on a desk. Decoration - hidden from assistive technology. The
- * stroke and the opening are CSS (.blade-cut in globals.css).
+ * on a phone as on a desk. Decoration - hidden from assistive technology.
  */
 
 // How deep each seam is cut, as a share of the page's width, by `variant`.
@@ -37,8 +35,12 @@ const DEPTHS = [0.1, 0.12, 0.09, 0.11];
 const DEPTH_HEAVY = 0.14;
 const MAX_DEPTH_PX = 170;
 const MAX_DEPTH_HEAVY_PX = 220;
-// The cut is made once the seam is this far up from the foot of the screen.
-const CUT_AT = "0px 0px -15% 0px";
+// Where the seam is on the screen (0 top, 1 bottom) when it starts to stretch,
+// and when it is at its full depth; and how deep it already is at the start.
+const STRETCH = [0.98, 0.4] as const;
+const STRETCH_FROM = 0.3;
+
+const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
 export default function BladeCut({
   className,
@@ -60,29 +62,34 @@ export default function BladeCut({
 }) {
   const reduce = usePrefersReducedMotion();
   const svgRef = useRef<SVGSVGElement>(null);
+  const cutRef = useRef<SVGGElement>(null);
   const [width, setWidth] = useState(0);
-  const [cut, setCut] = useState(false);
+  const { scrollY } = useScroll();
 
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
     const resize = new ResizeObserver(() => setWidth(svg.getBoundingClientRect().width));
     resize.observe(svg);
-    // Cut on the way in; closed again only once the seam is back below the
-    // screen, where nobody sees it close.
-    const watch = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setCut(true);
-        else if (entry.boundingClientRect.top > 0) setCut(false);
-      },
-      { rootMargin: CUT_AT },
-    );
-    watch.observe(svg);
-    return () => {
-      resize.disconnect();
-      watch.disconnect();
-    };
+    return () => resize.disconnect();
   }, []);
+
+  // Stretched from its top edge, which is the one thing about it that never
+  // moves, so the box it is measured by is never mid-animation.
+  const stretch = () => {
+    const svg = svgRef.current;
+    const cut = cutRef.current;
+    if (!svg || !cut) return;
+    const at = svg.getBoundingClientRect().top / window.innerHeight;
+    const through = reduce ? 1 : clamp01((STRETCH[0] - at) / (STRETCH[0] - STRETCH[1]));
+    cut.style.transform = `scaleY(${(STRETCH_FROM + (1 - STRETCH_FROM) * through).toFixed(4)})`;
+  };
+
+  useLayoutEffect(stretch);
+
+  useMotionValueEvent(scrollY, "change", () => {
+    if (!reduce) stretch();
+  });
 
   const depth = Math.min(
     heavy ? MAX_DEPTH_HEAVY_PX : MAX_DEPTH_PX,
@@ -97,20 +104,15 @@ export default function BladeCut({
     <svg
       ref={svgRef}
       aria-hidden="true"
-      className={cn(
-        "blade-cut pointer-events-none absolute inset-x-0 -top-px block w-full overflow-visible",
-        (cut || reduce) && "blade-cut--open",
-        reduce && "blade-cut--still",
-        className,
-      )}
+      className={cn("pointer-events-none absolute inset-x-0 -top-px block w-full overflow-visible", className)}
       height={Math.ceil(depth) + 2}
     >
       {width > 0 && (
         <>
-          {/* The cut itself and its honed edge, opening together from the top.
-              A pixel over the section above, so no hairline of the page shows
-              between the two. */}
-          <g className="blade-cut-open">
+          {/* The cut itself and its honed edge, stretched together from the
+              top. A pixel over the section above, so no hairline of the page
+              shows between the two. */}
+          <g ref={cutRef} className="[transform-box:view-box] [transform-origin:0_0]">
             <polygon points={`${from},-1 ${to},-1 ${to},${depth.toFixed(1)} ${from},0`} />
             <line
               x1={from}
@@ -118,20 +120,11 @@ export default function BladeCut({
               x2={to}
               y2={depth.toFixed(1)}
               strokeWidth={1.5}
+              // The same hairline at every depth, however far it is stretched.
+              vectorEffect="non-scaling-stroke"
               className={dark ? "stroke-white/25" : "stroke-black/10"}
             />
           </g>
-          {/* The stroke: the line the blade draws, ahead of the opening. */}
-          <line
-            x1={from}
-            y1={0}
-            x2={to}
-            y2={depth.toFixed(1)}
-            pathLength={1}
-            strokeWidth={2}
-            strokeLinecap="round"
-            className={cn("blade-cut-stroke", dark ? "stroke-white" : "stroke-black/60")}
-          />
         </>
       )}
     </svg>
