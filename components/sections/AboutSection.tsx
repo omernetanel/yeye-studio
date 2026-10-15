@@ -472,9 +472,20 @@ export default function AboutSection() {
       update();
     };
     window.addEventListener("resize", onResize);
+
+    // And again once the portrait's own file is in. Its slot is a copy of the
+    // picture, sized by the file: before it has loaded the slot is 0 tall, the
+    // landing was never measured, and the portrait came in at hundreds of
+    // times its size and landed in the middle of the copy. Whether the font or
+    // the picture arrived first decided it, which is why it was only now and
+    // then.
+    const slotImage = portraitSlotRef.current?.querySelector("img");
+    if (slotImage && !slotImage.complete) slotImage.addEventListener("load", onResize);
+
     return () => {
       cancelled = true;
       window.removeEventListener("resize", onResize);
+      slotImage?.removeEventListener("load", onResize);
     };
   }, [prefersReducedMotion]);
 
