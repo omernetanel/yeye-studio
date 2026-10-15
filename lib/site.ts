@@ -70,11 +70,16 @@ export const FORMS_INBOX = CONTACT_EMAIL;
 /**
  * The forms' check that a person is sending them - Cloudflare Turnstile. This
  * key is PUBLIC by design: it is printed into every page that shows a form.
- * Its pair, TURNSTILE_SECRET_KEY, lives only in Vercel and .env.local and is
- * read by the server (app/api/contact/route.ts). The widget itself is set up
- * in Cloudflare, under Turnstile, for yeye.co.il and localhost.
+ * Its pair, TURNSTILE_SECRET_KEY, lives only in Vercel and is read by the
+ * server (app/api/contact/route.ts). The widget itself is set up in
+ * Cloudflare, under Turnstile, for yeye.co.il and localhost.
+ *
+ * NEXT_PUBLIC_TURNSTILE_SITE_KEY replaces it for a test run only: Cloudflare
+ * publishes keys that always pass or always fail, and the "yeye-forms-test"
+ * server in .claude/launch.json starts with them, so both forms can be tried
+ * end to end, both ways, without the real keys ever leaving Vercel.
  */
-export const TURNSTILE_SITE_KEY = "0x4AAAAAAFXcHPLFXiIBz8Ra";
+export const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAAFXcHPLFXiIBz8Ra";
 export const FORMS_SENDER = `${SITE_NAME} <forms@yeye.co.il>`;
 
 /**

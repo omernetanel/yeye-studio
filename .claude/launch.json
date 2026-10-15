@@ -12,6 +12,18 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["next", "start", "-p", "3100"],
       "port": 3100
+    },
+    {
+      "name": "yeye-forms-test",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "set NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000BB&& set TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA&& npx next dev -p 3200"],
+      "port": 3200
+    },
+    {
+      "name": "yeye-forms-test-blocked",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "set NEXT_PUBLIC_TURNSTILE_SITE_KEY=2x00000000000000000000BB&& set TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA&& npx next dev -p 3201"],
+      "port": 3201
     }
   ]
 }

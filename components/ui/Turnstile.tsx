@@ -74,18 +74,28 @@ const Turnstile = forwardRef<TurnstileHandle, { theme: "light" | "dark"; classNa
   const apiRef = useRef<TurnstileApi | null>(null);
   const tokenRef = useRef<string | null>(null);
   const waitersRef = useRef<((token: string | null) => void)[]>([]);
+  // The check could not run at all - its script did not load, or Cloudflare
+  // reported an error. A send then fails at once rather than after the wait.
+  const failedRef = useRef(false);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     let cancelled = false;
+    failedRef.current = false;
     // One list for the life of the form: emptied in place, never replaced.
     const waiters = waitersRef.current;
 
     const settle = (token: string | null) => {
       tokenRef.current = token;
       if (token === null) return;
+      failedRef.current = false;
       for (const resolve of waiters.splice(0)) resolve(token);
+    };
+    const fail = () => {
+      tokenRef.current = null;
+      failedRef.current = true;
+      for (const resolve of waiters.splice(0)) resolve(null);
     };
 
     const start = () => {
@@ -102,13 +112,15 @@ const Turnstile = forwardRef<TurnstileHandle, { theme: "light" | "dark"; classNa
             appearance: "interaction-only",
             "refresh-expired": "auto",
             callback: (token: string) => settle(token),
+            // Expired: refreshed by itself (refresh-expired), so it is only
+            // waited for.
             "expired-callback": () => settle(null),
-            "error-callback": () => settle(null),
+            "error-callback": () => fail(),
           });
         })
+        // Blocked or failed: the form says so, and points to WhatsApp.
         .catch(() => {
-          // The send itself reports it: the server refuses a send with no
-          // token, and the form says so and points to WhatsApp.
+          if (!cancelled) fail();
         });
     };
 
@@ -128,6 +140,7 @@ const Turnstile = forwardRef<TurnstileHandle, { theme: "light" | "dark"; classNa
   useImperativeHandle(ref, () => ({
     token: () => {
       if (tokenRef.current) return Promise.resolve(tokenRef.current);
+      if (failedRef.current) return Promise.resolve(null);
       return new Promise<string | null>((resolve) => {
         waitersRef.current.push(resolve);
         window.setTimeout(() => {
@@ -138,9 +151,13 @@ const Turnstile = forwardRef<TurnstileHandle, { theme: "light" | "dark"; classNa
         }, TOKEN_WAIT_MS);
       });
     },
+    // A fresh check on the same widget. With no widget - the script never
+    // loaded - there is nothing to reset, and the failure stands.
     reset: () => {
+      if (widgetRef.current === null) return;
       tokenRef.current = null;
-      if (widgetRef.current !== null) apiRef.current?.reset(widgetRef.current);
+      failedRef.current = false;
+      apiRef.current?.reset(widgetRef.current);
     },
   }));
 
