@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
+import Turnstile, { type TurnstileHandle } from "@/components/ui/Turnstile";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
 const VIDEO_SRC = "/videos/cta_end.mp4";
@@ -16,6 +17,7 @@ export default function CTASection() {
   const prefersReducedMotion = usePrefersReducedMotion();
   // `website` is the honeypot — see the field itself in the form below.
   const [form, setForm] = useState({ from_name: "", phone: "", reply_to: "", message: "", website: "" });
+  const turnstileRef = useRef<TurnstileHandle>(null);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   // idle → shining → done. The glint borrows the line's colour for the length
   // of the sweep and hands it straight back: the gradient is how this line is
@@ -30,6 +32,8 @@ export default function CTASection() {
 
     setStatus("sending");
     try {
+      // The check that a person is sending this (see Turnstile).
+      const turnstile = await turnstileRef.current?.token();
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,12 +44,16 @@ export default function CTASection() {
           message: form.message,
           website: form.website,
           source: "cta",
+          turnstile: turnstile ?? "",
         }),
       });
       if (!response.ok) throw new Error("contact request failed");
       setStatus("success");
     } catch {
       setStatus("error");
+    } finally {
+      // A token is good for one send.
+      turnstileRef.current?.reset();
     }
   };
 
@@ -254,6 +262,9 @@ export default function CTASection() {
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                 />
+
+                {/* Empty unless Cloudflare asks this visitor to tick a box. */}
+                <Turnstile ref={turnstileRef} theme="light" className="sm:col-span-2 empty:hidden" />
 
                 {/* The trap — see the same field in ContactStage. */}
                 <input

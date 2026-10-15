@@ -18,7 +18,8 @@ export const metadata: Metadata = pageMetadata({
  * it came from, the automatic receipt mailed to the address given, the
  * honeypot, the IP read for rate limiting, the one route
  * that sends the enquiry, the services that carry it (Resend sends it,
- * ImprovMX forwards the domain's mail to a Gmail inbox, Vercel hosts), and the
+ * ImprovMX forwards the domain's mail to a Gmail inbox, Vercel hosts,
+ * Cloudflare Turnstile checks a person is sending - since 16.10.2026), and the
  * two keys in the browser's own storage (accessibility choices in
  * localStorage, the in-site trail behind "חזור" in sessionStorage).
  *
@@ -41,7 +42,7 @@ export const metadata: Metadata = pageMetadata({
  */
 export default function PrivacyPage() {
   return (
-    <LegalPage title="מדיניות פרטיות" updated="29 בספטמבר 2026">
+    <LegalPage title="מדיניות פרטיות" updated="16 באוקטובר 2026">
       <p>
         העמוד הזה מסביר איזה מידע נאסף באתר של {SITE_NAME}, מה נעשה איתו, מי מעבד אותו, כמה זמן הוא
         עשוי להישמר ואילו זכויות עומדות לכם.
@@ -66,6 +67,13 @@ export default function PrivacyPage() {
       <p>
         בשני הטפסים קיים גם שדה נסתר שנועד לזהות שליחה אוטומטית של תוכנות ספאם. הוא אינו מיועד למילוי,
         ופנייה שהגיעה כשהוא מלא נדחית ואינה נשלחת.
+      </p>
+      <p>
+        בנוסף, כשמגיעים לאזור של טופס, פועלת בדפדפן בדיקה של שירות Cloudflare Turnstile, שנועדה לוודא
+        שאדם, ולא תוכנה אוטומטית, שולח את הפנייה. לצורך הבדיקה השירות מעבד נתונים טכניים על הדפדפן
+        והמכשיר, כולל כתובת IP. ברוב המקרים הבדיקה אינה נראית, ולעיתים מתבקש סימון של תיבה. בעת
+        השליחה, השרת של האתר מאמת מול Cloudflare את תוצאת הבדיקה יחד עם כתובת ה־IP, ופנייה שלא
+        אומתה אינה נשלחת.
       </p>
       <p>
         כתובת ה־IP משמשת באופן זמני גם לצורך הגבלת מספר הפניות ומניעת שימוש לרעה בטופס, ואינה נשמרת
@@ -97,7 +105,8 @@ export default function PrivacyPage() {
         אליי ישירות, מועבר באמצעות שירות העברת דואר בשם ImprovMX לתיבת הדואר שלי, המתנהלת בשירות
         Gmail של Google. תשובות שאני שולח בדוא״ל יוצאות גם הן דרך Resend. כל אחד מהשירותים האלה
         מעבד את המידע עבורי לצורך זה, והשימוש בהם כפוף לתנאים ולמדיניות שלהם. האתר מתארח בשירות
-        Vercel, שעשוי לעבד נתוני גישה טכניים כמתואר למעלה.
+        Vercel, שעשוי לעבד נתוני גישה טכניים כמתואר למעלה. הבדיקה שאדם שולח את הטופס מתבצעת בשירות
+        Cloudflare Turnstile, כמתואר למעלה, והשימוש בו כפוף לתנאים ולמדיניות של Cloudflare.
       </p>
       <p>
         מעבר לכך, פרטי הפנייה אינם נמסרים לגורמים נוספים, למעט כאשר הדבר נדרש לפי דין או לצורך הגנה

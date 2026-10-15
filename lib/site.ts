@@ -66,6 +66,15 @@ export const CONTACT_EMAIL = "info@yeye.co.il";
  * forwarded on to the studio's mail. Server-only - neither is shown on a page.
  */
 export const FORMS_INBOX = CONTACT_EMAIL;
+
+/**
+ * The forms' check that a person is sending them - Cloudflare Turnstile. This
+ * key is PUBLIC by design: it is printed into every page that shows a form.
+ * Its pair, TURNSTILE_SECRET_KEY, lives only in Vercel and .env.local and is
+ * read by the server (app/api/contact/route.ts). The widget itself is set up
+ * in Cloudflare, under Turnstile, for yeye.co.il and localhost.
+ */
+export const TURNSTILE_SITE_KEY = "0x4AAAAAAFXcHPLFXiIBz8Ra";
 export const FORMS_SENDER = `${SITE_NAME} <forms@yeye.co.il>`;
 
 /**
