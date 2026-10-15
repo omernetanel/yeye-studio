@@ -114,10 +114,7 @@ const nextConfig: NextConfig = {
               // accessibility settings before the first paint. 'unsafe-eval' is
               // the dev server's requirement alone and is dropped from the
               // build that is actually served.
-              // Cloudflare Turnstile, the forms' check that a person is
-              // sending them (components/ui/Turnstile.tsx): its script, and
-              // the frame it may show a box in (frame-src https: below).
-              `script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com${isDev ? " 'unsafe-eval'" : ""}`,
+              `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob:",
               "media-src 'self' blob:",

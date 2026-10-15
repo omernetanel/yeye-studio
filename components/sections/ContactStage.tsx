@@ -15,7 +15,6 @@ import { Pause, Play } from "lucide-react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import SquishSwitch from "@/components/ui/SquishSwitch";
-import Turnstile, { type TurnstileHandle } from "@/components/ui/Turnstile";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { useIsMobile } from "@/lib/use-mobile";
 import { cn } from "@/lib/utils";
@@ -227,7 +226,6 @@ function ContactForm() {
   // `website` is the honeypot — see the field itself below.
   const [form, setForm] = useState({ from_name: "", phone: "", reply_to: "", website: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
-  const turnstileRef = useRef<TurnstileHandle>(null);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -239,8 +237,6 @@ function ContactForm() {
 
     setStatus("sending");
     try {
-      // The check that a person is sending this (see Turnstile).
-      const turnstile = await turnstileRef.current?.token();
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -250,16 +246,12 @@ function ContactForm() {
           phone: form.phone,
           website: form.website,
           source: "contact",
-          turnstile: turnstile ?? "",
         }),
       });
       if (!response.ok) throw new Error("contact request failed");
       setStatus("success");
     } catch {
       setStatus("error");
-    } finally {
-      // A token is good for one send.
-      turnstileRef.current?.reset();
     }
   };
 
@@ -321,9 +313,6 @@ function ContactForm() {
             onChange={(e) => setForm({ ...form, reply_to: e.target.value })}
             required
           />
-
-          {/* Empty unless Cloudflare asks this visitor to tick a box. */}
-          <Turnstile ref={turnstileRef} theme="dark" className="sm:col-span-2 empty:hidden" />
 
           {/* THE TRAP. Off-screen rather than display:none — a bot that skips
               hidden fields is not the one this catches; one that fills every

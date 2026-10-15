@@ -10,11 +10,6 @@ const CONFIRMATION_SENDER = `${SITE_NAME} <${CONTACT_EMAIL}>`;
 // reaches the browser, and no SDK is needed for one POST.
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
-// Where a form's Turnstile token is checked (components/ui/Turnstile.tsx). A
-// token is long, but never longer than this.
-const TURNSTILE_VERIFY = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-const MAX_TOKEN_LENGTH = 2048;
-
 /**
  * THE FORM'S ONLY REAL GATE. The browser's own checks are a courtesy to the
  * reader — a POST straight at this route skips every one of them — so anything
@@ -159,28 +154,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid payload" }, { status: 400 });
   }
 
-  // A PERSON SENT THIS: Cloudflare vouches for the token the form carries.
-  // Without it, anything that could post here could have the site mail its
-  // receipt to any address it liked, in the studio's name. Before the rate
-  // limit, so a script without a token cannot spend a visitor's allowance.
-  const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
-  if (!turnstileSecret) {
-    // The name only, never a value - as with the mail key below.
-    console.error("contact: bot check not configured, missing TURNSTILE_SECRET_KEY");
-    return NextResponse.json({ error: "bot check not configured" }, { status: 500 });
-  }
-  const token = (parsed as Record<string, unknown>).turnstile;
-  if (typeof token !== "string" || token.length === 0 || token.length > MAX_TOKEN_LENGTH) {
-    return NextResponse.json({ error: "verification failed" }, { status: 403 });
-  }
-  const ip = clientIp(request);
-  if (!(await verifiedPerson(turnstileSecret, token, ip))) {
-    return NextResponse.json({ error: "verification failed" }, { status: 403 });
-  }
-
   // Counted only once the message is worth sending, so a flood of junk cannot
   // spend a real visitor's allowance.
-  if (rateLimited(ip)) {
+  if (rateLimited(clientIp(request))) {
     return NextResponse.json({ error: "too many requests" }, { status: 429 });
   }
 
@@ -246,26 +222,6 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ ok: true });
-}
-
-/**
- * Whether Cloudflare vouches for this token. A token is good once, and only for
- * a short while. If Cloudflare cannot be reached the answer is no: a form that
- * fails closed for a minute is a smaller harm than one that is open.
- */
-async function verifiedPerson(secret: string, token: string, ip: string) {
-  try {
-    const response = await fetch(TURNSTILE_VERIFY, {
-      method: "POST",
-      body: new URLSearchParams({ secret, response: token, ...(ip !== "unknown" ? { remoteip: ip } : {}) }),
-    });
-    const result = (await response.json()) as { success?: boolean; "error-codes"?: string[] };
-    if (!result.success) console.error(`contact: bot check refused: ${(result["error-codes"] ?? []).join(", ")}`);
-    return result.success === true;
-  } catch {
-    console.error("contact: bot check unreachable");
-    return false;
-  }
 }
 
 function send(apiKey: string, message: Record<string, unknown>) {
