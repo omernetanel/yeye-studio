@@ -197,11 +197,11 @@ export const projects: Project[] = [
     cardCategory: "אפליקציית תורים",
     category: "אפליקציית תורים למספרה",
     description: "אפליקציית תורים למספרה שבניתי ל-LBY STUDIO.",
-    // No detail page yet — external:true routes the card straight to
-    // /projects/lby-studio, which the [slug] page's own notFound() call
-    // (for any external project) turns into a genuine 404. Swap this to
-    // external:false and add a `story` once the real project page exists.
-    url: "/projects/lby-studio",
+    // SHOWN, AND NOT A LINK. The app was never launched and will not get a
+    // page of its own (2026-10-16): marked external with no live address, so
+    // the carousel and the list both show its picture and lead nowhere -
+    // see ProjectsCarousel and ProjectCard.
+    url: "",
     image: "/images/lbysreenweb.webp",
     external: true,
   },
