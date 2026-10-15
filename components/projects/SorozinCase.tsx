@@ -198,9 +198,9 @@ export default function SorozinCase({ site }: Props) {
         </dl>
       </section>
 
-      {/* THE IDEA. */}
+      {/* THE IDEA. Straight under the opening, with no cut: the black ends in
+          one hard edge, and the blades start after it. */}
       <section className="relative bg-white px-6 pt-40 pb-24 md:pt-72 md:pb-36">
-        <BladeCut className="fill-black" dark />
         <div className="mx-auto max-w-[1100px]">
           <h2 className="font-display text-m-display font-extrabold tracking-tight text-black md:text-[clamp(56px,7.4vw,112px)] md:leading-[1.02]">
             <span className="sr-only">שף בשרים. שיבינו מהרגע הראשון.</span>
