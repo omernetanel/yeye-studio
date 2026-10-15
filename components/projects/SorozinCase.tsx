@@ -90,16 +90,12 @@ const EMPHASIS = "font-medium text-black";
 // settled by the time the page has scrolled this share of a screen.
 const MARK_ZOOM = 0.05;
 const MARK_SETTLE = 0.5;
-// How long the glint takes to cross #REBRAND.
-const SHINE_MS = 1400;
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
 export default function SorozinCase({ site }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const markRef = useRef<HTMLDivElement>(null);
-  const rebrandRef = useRef<HTMLHeadingElement>(null);
-  const shoneRef = useRef(false);
   const prefersReducedMotion = usePrefersReducedMotion();
   const { scrollY } = useScroll();
   useScrollPieces(rootRef);
@@ -113,33 +109,6 @@ export default function SorozinCase({ site }: Props) {
     const lines = Array.from(root.querySelectorAll<HTMLElement>("[data-fold-line]"));
     const lineTops = lines.map((line) => line.getBoundingClientRect().top / screen);
     lines.forEach((line, index) => setFold(line, (FOLD[0] - lineTops[index]) / (FOLD[0] - FOLD[1])));
-
-    // THE GLINT ACROSS #REBRAND, once, when its letters have all folded in.
-    // Every letter is a box of its own, so each draws the same band of light
-    // shifted by where it stands in the word (--piece-x), and the band is
-    // moved across the whole heading (--shine-at): it crosses the word as one.
-    const heading = rebrandRef.current;
-    const at = heading ? lines.indexOf(heading) : -1;
-    if (heading && !shoneRef.current && at >= 0 && (FOLD[0] - lineTops[at]) / (FOLD[0] - FOLD[1]) >= 1) {
-      shoneRef.current = true;
-      const width = heading.offsetWidth;
-      heading.style.setProperty("--shine-w", `${width}px`);
-      for (const piece of heading.querySelectorAll<HTMLElement>(".fold-piece")) {
-        piece.style.setProperty("--piece-x", `${piece.offsetLeft}px`);
-      }
-      const from = -0.25 * width;
-      const to = 1.25 * width;
-      const start = performance.now();
-      const step = (now: number) => {
-        const t = Math.min(1, (now - start) / SHINE_MS);
-        const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
-        heading.style.setProperty("--shine-at", `${(from + (to - from) * eased).toFixed(1)}px`);
-        if (t < 1) requestAnimationFrame(step);
-        else heading.style.removeProperty("--shine-at");
-      };
-      requestAnimationFrame(step);
-    }
-
     // The mark eases back as the page starts to move, as if the camera did.
     const mark = markRef.current;
     if (mark) {
@@ -276,13 +245,10 @@ export default function SorozinCase({ site }: Props) {
             on the left, the far side from where the page's own text starts.
             The section's name to a screen reader is said in words beside it. */}
         <h2
-          ref={rebrandRef}
           data-fold-line
           lang="en"
           dir="ltr"
-          // The page's one glint runs across it once it has folded in - see
-          // .letter-shine in globals.css and move() above.
-          className="letter-shine relative mx-auto mb-12 max-w-[1400px] text-left font-display text-[15.5vw] leading-[0.95] font-extrabold tracking-tight text-heading-soft md:mb-20 md:text-[clamp(96px,13.5vw,210px)]"
+          className="mx-auto mb-12 max-w-[1400px] text-left font-display text-[15.5vw] leading-[0.95] font-extrabold tracking-tight text-heading-soft md:mb-20 md:text-[clamp(96px,13.5vw,210px)]"
         >
           <span className="sr-only">Rebrand</span>
           <FoldWords text="#REBRAND" />
