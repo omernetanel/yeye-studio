@@ -317,7 +317,15 @@ export default function HeroSection() {
             <FluidInkReveal
               ref={inkRef}
               logoSrc="/images/logo.png"
-              videoSrc="/videos/herobg-v2.mp4"
+              // THE PHONE'S OWN CUT OF THE CLIP: 1000 wide, about what a phone
+              // shows the mark at, and half the file - the desk's 1688 was
+              // twice what a phone can draw, and the ink waits on it. From the
+              // master that stays out of git, at the desk's own quality:
+              //   ffmpeg -i herobg.mp4 -vf "scale=1000:-2:flags=lanczos"
+              //     -c:v libx264 -crf 29 -preset slow -pix_fmt yuv420p -an
+              //     -movflags +faststart herobg-mobile-v1.mp4
+              // A re-export takes a new name (v2): /videos is cached for a year.
+              videoSrc="/videos/herobg-mobile-v1.mp4"
               textTargets={[
                 taglineTarget,
                 { ref: footStudioRef, color: "rgba(0, 0, 0, 0.45)" },
