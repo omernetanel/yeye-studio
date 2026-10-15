@@ -6,12 +6,11 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { cn } from "@/lib/utils";
 
 /**
- * A seam cut by two blades: one in from each top corner of the section below,
- * meeting in a V - and once the seam is at its full depth, each blade's point
- * runs on past the meeting and the two cross, as the knives do in the mark.
- * Laid at the head of the section below and filled with the colour of the one
- * above (`className`, as a fill). Where they meet moves from seam to seam
- * (`variant`, mirrored by `flip`).
+ * A seam cut on the slant, the way a blade leaves one: the section above ends
+ * in one straight diagonal edge. Laid at the head of the section below and
+ * filled with the colour of the one above (`className`, as a fill),
+ * alternating sides down the page (`flip`) so that two seams in a row cross
+ * like the knives in the mark they were drawn from.
  *
  * IT STRETCHES WITH THE SCROLL: shallow as the seam comes onto the screen,
  * to its full depth by the time it is past the middle, and back on the way
@@ -40,16 +39,6 @@ const MAX_DEPTH_HEAVY_PX = 220;
 // and when it is at its full depth; and how deep it already is at the start.
 const STRETCH = [0.98, 0.4] as const;
 const STRETCH_FROM = 0.3;
-// Where the two blades meet, as a share of the width, by `variant` - never
-// twice in the same place down a page.
-const CROSS = [0.5, 0.42, 0.58, 0.46];
-// How far each blade's point runs on past the meeting, as a share of its
-// length to it, and how broad a point is where it leaves the edge, px. The
-// points cross only over the last part of the stretch.
-const TIP = 0.45;
-const TIP_HEAVY = 0.6;
-const TIP_BASE_PX = 2.5;
-const TIPS_FROM = 0.55;
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
@@ -62,7 +51,7 @@ export default function BladeCut({
 }: {
   /** The section above's colour, as a fill. */
   className: string;
-  /** The meeting mirrored across the page. */
+  /** The deep end on the other side: the blade goes in from the left. */
   flip?: boolean;
   /** The section above is dark, so its edge is honed light rather than dark. */
   dark?: boolean;
@@ -74,8 +63,6 @@ export default function BladeCut({
   const reduce = usePrefersReducedMotion();
   const svgRef = useRef<SVGSVGElement>(null);
   const cutRef = useRef<SVGGElement>(null);
-  const leftTipRef = useRef<SVGPolygonElement>(null);
-  const rightTipRef = useRef<SVGPolygonElement>(null);
   const [width, setWidth] = useState(0);
   const { scrollY } = useScroll();
 
@@ -89,32 +76,13 @@ export default function BladeCut({
 
   // Stretched from its top edge, which is the one thing about it that never
   // moves, so the box it is measured by is never mid-animation.
-  const depth = Math.min(
-    heavy ? MAX_DEPTH_HEAVY_PX : MAX_DEPTH_PX,
-    width * (heavy ? DEPTH_HEAVY : DEPTHS[variant % DEPTHS.length]),
-  );
-  // One blade in from each top corner, meeting at the point of the V.
-  const cross = flip ? 1 - CROSS[variant % CROSS.length] : CROSS[variant % CROSS.length];
-  const meetX = width * cross;
-  const tip = heavy ? TIP_HEAVY : TIP;
-
   const stretch = () => {
     const svg = svgRef.current;
     const cut = cutRef.current;
-    const leftTip = leftTipRef.current;
-    const rightTip = rightTipRef.current;
-    if (!svg || !cut || !leftTip || !rightTip) return;
+    if (!svg || !cut) return;
     const at = svg.getBoundingClientRect().top / window.innerHeight;
     const through = reduce ? 1 : clamp01((STRETCH[0] - at) / (STRETCH[0] - STRETCH[1]));
     cut.style.transform = `scaleY(${(STRETCH_FROM + (1 - STRETCH_FROM) * through).toFixed(4)})`;
-    // Past the meeting, each blade's point runs on along its own line - the
-    // left one down to the right, the right one down to the left - and the
-    // two cross under the V, as the knives do in the mark.
-    const run = tip * clamp01((through - TIPS_FROM) / (1 - TIPS_FROM));
-    const n = (value: number) => value.toFixed(1);
-    const base = `${n(meetX - TIP_BASE_PX)},${n(depth)} ${n(meetX + TIP_BASE_PX)},${n(depth)}`;
-    leftTip.setAttribute("points", `${base} ${n(meetX + meetX * run)},${n(depth + depth * run)}`);
-    rightTip.setAttribute("points", `${base} ${n(meetX - (width - meetX) * run)},${n(depth + depth * run)}`);
   };
 
   useLayoutEffect(stretch);
@@ -123,35 +91,39 @@ export default function BladeCut({
     if (!reduce) stretch();
   });
 
+  const depth = Math.min(
+    heavy ? MAX_DEPTH_HEAVY_PX : MAX_DEPTH_PX,
+    width * (heavy ? DEPTH_HEAVY : DEPTHS[variant % DEPTHS.length]),
+  );
+  // The blade goes in at one top corner and comes out at the foot of the
+  // other side.
+  const from = flip ? 0 : width;
+  const to = flip ? width : 0;
+
   return (
     <svg
       ref={svgRef}
       aria-hidden="true"
       className={cn("pointer-events-none absolute inset-x-0 -top-px block w-full overflow-visible", className)}
-      height={Math.ceil(depth * (1 + tip)) + 2}
+      height={Math.ceil(depth) + 2}
     >
       {width > 0 && (
         <>
-          {/* The two blades and their honed edges, stretched together from
-              the top. A pixel over the section above, so no hairline of the
-              page shows between the two. */}
+          {/* The cut itself and its honed edge, stretched together from the
+              top. A pixel over the section above, so no hairline of the page
+              shows between the two. */}
           <g ref={cutRef} className="[transform-box:view-box] [transform-origin:0_0]">
-            <polygon points={`0,-1 ${width},-1 ${width},0 ${meetX},${depth.toFixed(1)} 0,0`} />
-            <polygon ref={leftTipRef} />
-            <polygon ref={rightTipRef} />
-            {[0, width].map((x) => (
-              <line
-                key={x}
-                x1={x}
-                y1={0}
-                x2={meetX}
-                y2={depth.toFixed(1)}
-                strokeWidth={1.5}
-                // The same hairline at every depth, however far it is stretched.
-                vectorEffect="non-scaling-stroke"
-                className={dark ? "stroke-white/25" : "stroke-black/10"}
-              />
-            ))}
+            <polygon points={`${from},-1 ${to},-1 ${to},${depth.toFixed(1)} ${from},0`} />
+            <line
+              x1={from}
+              y1={0}
+              x2={to}
+              y2={depth.toFixed(1)}
+              strokeWidth={1.5}
+              // The same hairline at every depth, however far it is stretched.
+              vectorEffect="non-scaling-stroke"
+              className={dark ? "stroke-white/25" : "stroke-black/10"}
+            />
           </g>
         </>
       )}
