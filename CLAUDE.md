@@ -221,7 +221,18 @@ type-check + lint + build לפני דיווח על השלמת שלב. בדיקה
 שרת) שקורא ל-REST API של **Resend** (הוחלף מ-EmailJS ב-2026-09-28). הטופס
 שולח מ-`forms@yeye.co.il` אל `info@yeye.co.il` (שניהם ב-`lib/site.ts`),
 ו-Reply-To הוא הפונה. **אין שליחה מהקליינט** — המפתח לא חשוף בבאנדל.
-המפתח (`RESEND_API_KEY`) נשמר אך ורק ב-Vercel וב-`.env.local` (לא ב-git).
+המפתחות (`RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`) נשמרים **אך ורק ב-Vercel**.
+אין `.env.local` במחשב, בכוונה — עומר לא רוצה מפתחות בתיקיית הפרויקט.
+
+**הגנה מבוטים:** Cloudflare Turnstile (`components/ui/Turnstile.tsx`), נבדק
+בשרת לפני כל מייל. ה-Site Key ציבורי ב-`lib/site.ts`.
+
+**כל שינוי בטופס, בשרת שלו או בהגנה — נבדק בשני הכיוונים לפני push, בלי
+יוצא מן הכלל:** אדם עובר (`yeye-forms-test`, מפתחות הבדיקה הציבוריים של
+Cloudflare ש"תמיד עוברים") ובוט נדחה (`yeye-forms-test-blocked` + בקשה בלי
+אישור), בשני הטפסים, ושליחה שנייה מאותו טופס. שניהם ב-`.claude/launch.json`.
+באג בטופס לא מקובל בשום צורה: בדיקה של כיוון אחד בלבד ("בוט נדחה, ההגנה
+עובדת") היא מה ששבר את הטפסים באתר החי ב-2026-10-15.
 
 **הדואר של הדומיין:** רשומות ה-DNS אצל box.co.il. ImprovMX מקבל את הדואר
 של `info@` ו-`omer@` ומעביר ל-Gmail העסקי; Resend מאומת על `yeye.co.il`
