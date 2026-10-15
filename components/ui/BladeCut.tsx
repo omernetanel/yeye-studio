@@ -30,11 +30,13 @@ import { cn } from "@/lib/utils";
  * on a phone as on a desk. Decoration - hidden from assistive technology.
  */
 
-// How deep each seam is cut, as a share of the page's width, by `variant`.
-const DEPTHS = [0.1, 0.12, 0.09, 0.11];
-const DEPTH_HEAVY = 0.14;
-const MAX_DEPTH_PX = 170;
-const MAX_DEPTH_HEAVY_PX = 220;
+// How deep each seam is cut, as a share of the page's width, by `variant`,
+// and never deeper than the room the sections leave above their words (288px
+// on a desk, 320 over the close).
+const DEPTHS = [0.125, 0.15, 0.11, 0.14];
+const DEPTH_HEAVY = 0.17;
+const MAX_DEPTH_PX = 210;
+const MAX_DEPTH_HEAVY_PX = 260;
 // Where the seam is on the screen (0 top, 1 bottom) when it starts to stretch,
 // and when it is at its full depth; and how deep it already is at the start.
 const STRETCH = [0.98, 0.4] as const;
