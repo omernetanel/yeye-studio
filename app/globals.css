@@ -435,6 +435,37 @@ body {
   }
 }
 
+/* THE GLINT ACROSS A FOLDED HEADING (#REBRAND on the Sorozin Chef page).
+   Each letter is a box of its own (FoldText), so each paints the same band,
+   shifted back by where it stands in the heading (--piece-x), and the page
+   moves the band across the heading's width (--shine-at, --shine-w): the
+   light crosses the word as one. A dark rim either side of a white core, the
+   way light runs down steel - a white band alone was lost on the light grey
+   the heading stands on. Under it the letters' own grey, so at rest, with no
+   --shine-at, they are simply grey. */
+.letter-shine .fold-piece::before {
+  background-image:
+    linear-gradient(
+      100deg,
+      transparent 42%,
+      var(--color-neutral-500) 46%,
+      #fff 50%,
+      var(--color-neutral-500) 54%,
+      transparent 58%
+    ),
+    linear-gradient(var(--color-heading-soft), var(--color-heading-soft));
+  background-size:
+    calc(var(--shine-w, 0px) * 3) 100%,
+    100% 100%;
+  background-repeat: no-repeat;
+  background-position:
+    calc(var(--shine-at, -100000px) - var(--shine-w, 0px) * 1.5 - var(--piece-x, 0px)) 0,
+    0 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 /* LIGHT ACROSS THE STEEL of the Sorozin Chef mark, once, as its page opens: a
    bright band slid across a layer cut to the mark's own shape. Over the white
    letters it is nothing; over the grey of the knives it is the glint of a

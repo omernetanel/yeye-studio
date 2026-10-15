@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useLayoutEffect, useRef } from "react";
-import { motion, useMotionValueEvent, useScroll } from "framer-motion";
+import { useMotionValueEvent, useScroll } from "framer-motion";
 import Link from "next/link";
 import LiveProjectPreview from "@/components/projects/LiveProjectPreview";
 import ArrowIcon from "@/components/ui/ArrowIcon";
@@ -90,12 +90,16 @@ const EMPHASIS = "font-medium text-black";
 // settled by the time the page has scrolled this share of a screen.
 const MARK_ZOOM = 0.05;
 const MARK_SETTLE = 0.5;
+// How long the glint takes to cross #REBRAND.
+const SHINE_MS = 1400;
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
 export default function SorozinCase({ site }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const markRef = useRef<HTMLDivElement>(null);
+  const rebrandRef = useRef<HTMLHeadingElement>(null);
+  const shoneRef = useRef(false);
   const prefersReducedMotion = usePrefersReducedMotion();
   const { scrollY } = useScroll();
   useScrollPieces(rootRef);
@@ -109,6 +113,33 @@ export default function SorozinCase({ site }: Props) {
     const lines = Array.from(root.querySelectorAll<HTMLElement>("[data-fold-line]"));
     const lineTops = lines.map((line) => line.getBoundingClientRect().top / screen);
     lines.forEach((line, index) => setFold(line, (FOLD[0] - lineTops[index]) / (FOLD[0] - FOLD[1])));
+
+    // THE GLINT ACROSS #REBRAND, once, when its letters have all folded in.
+    // Every letter is a box of its own, so each draws the same band of light
+    // shifted by where it stands in the word (--piece-x), and the band is
+    // moved across the whole heading (--shine-at): it crosses the word as one.
+    const heading = rebrandRef.current;
+    const at = heading ? lines.indexOf(heading) : -1;
+    if (heading && !shoneRef.current && at >= 0 && (FOLD[0] - lineTops[at]) / (FOLD[0] - FOLD[1]) >= 1) {
+      shoneRef.current = true;
+      const width = heading.offsetWidth;
+      heading.style.setProperty("--shine-w", `${width}px`);
+      for (const piece of heading.querySelectorAll<HTMLElement>(".fold-piece")) {
+        piece.style.setProperty("--piece-x", `${piece.offsetLeft}px`);
+      }
+      const from = -0.25 * width;
+      const to = 1.25 * width;
+      const start = performance.now();
+      const step = (now: number) => {
+        const t = Math.min(1, (now - start) / SHINE_MS);
+        const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+        heading.style.setProperty("--shine-at", `${(from + (to - from) * eased).toFixed(1)}px`);
+        if (t < 1) requestAnimationFrame(step);
+        else heading.style.removeProperty("--shine-at");
+      };
+      requestAnimationFrame(step);
+    }
+
     // The mark eases back as the page starts to move, as if the camera did.
     const mark = markRef.current;
     if (mark) {
@@ -239,39 +270,24 @@ export default function SorozinCase({ site }: Props) {
           with a seam at its head. */}
       <section className="relative bg-neutral-200 px-6 pt-40 pb-24 md:pt-72 md:pb-40">
         <BladeCut className="fill-white" flip variant={1} />
-        {/* ONE GLINT ACROSS THE GREY, the page's only one: a band of light
-            run over the section once as it comes onto the screen, the way it
-            runs down a blade turned in the hand. Behind the heading and the
-            pictures, which stand over it. With less motion it stays out of
-            sight (a transform, which MotionConfig turns off). */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-          <motion.div
-            initial={{ x: "-120%" }}
-            whileInView={{ x: "320%" }}
-            // Off its head reaching two thirds up the screen: the section is
-            // several screens tall, and a share of it would never be in view.
-            viewport={{ once: true, margin: "0px 0px -35% 0px" }}
-            transition={{ duration: 1.8, ease: [0.4, 0, 0.2, 1], delay: 0.3 }}
-            className="absolute inset-y-0 left-0 w-1/3"
-          >
-            <div className="h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent" />
-          </motion.div>
-        </div>
         {/* ITS HEADING IS THE KIND OF JOB THIS WAS, said once and large: not a
             new brand but an old one made again. Grey, so that it is the
             ground the pictures stand on and not one more thing to read; and
             on the left, the far side from where the page's own text starts.
             The section's name to a screen reader is said in words beside it. */}
         <h2
+          ref={rebrandRef}
           data-fold-line
           lang="en"
           dir="ltr"
-          className="relative mx-auto mb-12 max-w-[1400px] text-left font-display text-[15.5vw] leading-[0.95] font-extrabold tracking-tight text-heading-soft md:mb-20 md:text-[clamp(96px,13.5vw,210px)]"
+          // The page's one glint runs across it once it has folded in - see
+          // .letter-shine in globals.css and move() above.
+          className="letter-shine relative mx-auto mb-12 max-w-[1400px] text-left font-display text-[15.5vw] leading-[0.95] font-extrabold tracking-tight text-heading-soft md:mb-20 md:text-[clamp(96px,13.5vw,210px)]"
         >
           <span className="sr-only">Rebrand</span>
           <FoldWords text="#REBRAND" />
         </h2>
-        <div className="relative mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-10">
+        <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-10">
           <div className="flex flex-col gap-10 md:col-span-7 md:gap-16">
             <ScrollPiece piece={KNIVES} sizes="(max-width: 768px) 100vw, 58vw" />
             {/* A little narrower than the knives over it, and against the far
