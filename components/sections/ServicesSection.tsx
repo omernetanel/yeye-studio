@@ -7,7 +7,9 @@ import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 import { SERVICES_HEADING, SERVICES_LEAD, services } from "@/lib/content";
 // The words and the artwork, shared with the phone's own arrangement of the
 // same four stages. Only the layout below is the desktop's own.
-import { ICONS, ICON_MOTION, IconExtras, PROCESS_HEADING, STAGE_LINES, STAGE_TITLES } from "./process/stages";
+import { PROCESS_HEADING, STAGE_LINES, STAGE_TITLES } from "./process/stages";
+import { StageArtBox, showStageArt, stopStageArt } from "./process/art";
+import { cn } from "@/lib/utils";
 import FoldText, { setFold } from "@/components/ui/FoldText";
 import ScrollCue from "@/components/ui/ScrollCue";
 // The row itself is shared with the phone, which prints the same four at a
@@ -107,6 +109,10 @@ const STAGES_START = 6.4;
 const STAGE_SPAN = 0.95;
 const STAGE_SWAP = 0.3;
 const STAGE_RISE_PX = 34;
+// Where a stage's words are from the middle of its drawing, in the drawing's
+// own widths - the other half of the sheet: what the magnifier circles.
+const ART_TOWARD_WORDS_LEFT: [number, number] = [-1.6, 0];
+const ART_TOWARD_WORDS_RIGHT: [number, number] = [1.6, 0];
 const CONTENT_SHRINK_SCALE = 0.6;
 const VIDEO_REST_SCALE = 1.10;
 const VIDEO_REST_SHIFT_X_PX = 45;
@@ -472,45 +478,39 @@ function ProcessStages() {
         <div
           key={title}
           data-process-stage
-          className="absolute inset-0 flex flex-col items-center justify-center text-center"
+          // THE DRAWING ON ONE SIDE, THE WORDS ON THE OTHER, the sides
+          // trading from stage to stage: first on the right (the start of a
+          // right-to-left row), then on the left. The words' own column was the
+          // whole sheet's width, with a small line icon over the numeral.
+          className={cn(
+            "absolute inset-0 flex items-center gap-[5%] px-[4%]",
+            index % 2 === 1 && "flex-row-reverse",
+          )}
           style={{ opacity: 0 }}
         >
-          {/* The drawing of the stage, over its numeral: the same artwork the
-              phone prints, at the size the sheet can afford. It is drawn around
-              its own origin, so the viewBox is simply a box around zero. */}
-          <svg
-            viewBox="-64 -64 128 128"
-            aria-hidden="true"
-            className={`mb-2 h-[112px] w-[112px] text-black/45 ${ICON_MOTION[String(index + 1).padStart(2, "0")]}`}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            {ICONS[String(index + 1).padStart(2, "0")].map((part) => (
-              <path key={part.d} d={part.d} className={part.cls} />
-            ))}
-            <IconExtras number={String(index + 1).padStart(2, "0")} />
-          </svg>
+          {/* Its drawing (process/art), the height of the band; it tells its
+              little story as the stage comes in. */}
+          <StageArtBox index={index} className="relative h-[86%] w-auto shrink-0" />
 
-          {/* The numeral is the ground the name sits on: faint, enormous, and
-              BEHIND it rather than beside it, so the two read as one mark. */}
-          <span
-            aria-hidden="true"
-            className="font-display text-[clamp(120px,15vw,230px)] leading-[0.8] font-extrabold text-black/10"
-          >
-            {String(index + 1).padStart(2, "0")}
-          </span>
-          {/* Pulled up into the numeral's own space. The white glow is what
-              lifts the type off the pencil work behind it — the same job the
-              SVG halo did for the diagram this replaces. */}
-          <h4 className="-mt-[0.34em] font-display text-[clamp(38px,4.6vw,68px)] leading-[1.05] font-bold text-black [text-shadow:0_0_24px_#fff,0_0_10px_#fff]">
-            {title}
-          </h4>
-          <p className="mt-7 max-w-[620px] font-body text-[clamp(17px,1.5vw,24px)] leading-[1.75] text-balance text-black/70 [text-shadow:0_0_20px_#fff,0_0_8px_#fff]">
-            {STAGE_LINES[index].join(" ")}
-          </p>
+          <div className="flex min-w-0 flex-1 flex-col items-center text-center">
+            {/* The numeral is the ground the name sits on: faint, enormous, and
+                BEHIND it rather than beside it, so the two read as one mark. */}
+            <span
+              aria-hidden="true"
+              className="font-display text-[clamp(110px,12vw,200px)] leading-[0.8] font-extrabold text-black/10"
+            >
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            {/* Pulled up into the numeral's own space. The white glow is what
+                lifts the type off the pencil work behind it — the same job the
+                SVG halo did for the diagram this replaces. */}
+            <h4 className="-mt-[0.34em] font-display text-[clamp(34px,3.8vw,60px)] leading-[1.05] font-bold text-black [text-shadow:0_0_24px_#fff,0_0_10px_#fff]">
+              {title}
+            </h4>
+            <p className="mt-6 max-w-[520px] font-body text-[clamp(17px,1.4vw,22px)] leading-[1.75] text-balance text-black/70 [text-shadow:0_0_20px_#fff,0_0_8px_#fff]">
+              {STAGE_LINES[index].join(" ")}
+            </p>
+          </div>
         </div>
       ))}
 
@@ -793,6 +793,11 @@ export default function ServicesSection() {
       const shown = arrive * (1 - leave);
       stage.style.opacity = String(shown);
       stage.style.transform = `translateY(${(lerp(STAGE_RISE_PX, 0, arrive) + lerp(0, -STAGE_RISE_PX, leave)).toFixed(2)}px)`;
+      // Its drawing, first in the stage: in once the stage is more than half
+      // in, on its own clock (process/art). The words are on the other side,
+      // which way depends on the stage.
+      const art = stage.firstElementChild as HTMLElement | null;
+      if (art) showStageArt(art, i, shown > 0.5, i % 2 === 0 ? ART_TOWARD_WORDS_LEFT : ART_TOWARD_WORDS_RIGHT);
     });
 
     // The cue comes in as the services text goes and the paper starts to open -
@@ -883,6 +888,9 @@ export default function ServicesSection() {
     // canvas, and releases everything it holds on the way out.
     const frames = new ScrollFrames(canvas, PAPER);
     framesRef.current = frames;
+    const arts = Array.from(
+      sheetRef.current?.querySelectorAll<HTMLElement>("[data-process-stage] > :first-child") ?? [],
+    );
 
     measureHeadingZoneHeight();
     measureShrinkOrigins();
@@ -905,6 +913,8 @@ export default function ServicesSection() {
       ro.disconnect();
       frames.dispose();
       framesRef.current = null;
+      // The drawings' own clocks (process/art).
+      for (const art of arts) stopStageArt(art);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [skipDesktopMotion]);
@@ -949,21 +959,9 @@ export default function ServicesSection() {
           <ol className="mt-14 grid grid-cols-1 gap-x-10 gap-y-16 sm:grid-cols-2">
             {STAGE_TITLES.map((title, index) => (
               <li key={title} className="flex flex-col items-center text-center">
-                <svg
-                  viewBox="-64 -64 128 128"
-                  aria-hidden="true"
-                  className="h-[96px] w-[96px] text-black/45"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {ICONS[String(index + 1).padStart(2, "0")].map((part) => (
-                    <path key={part.d} d={part.d} className={part.cls} />
-                  ))}
-                  <IconExtras number={String(index + 1).padStart(2, "0")} />
-                </svg>
+                {/* Its drawing, still and at the sheet's half strength
+                    (ART_OPACITY in process/art). */}
+                <StageArtBox index={index} className="relative h-[180px] w-auto opacity-50" />
                 <span className="mt-3 font-display text-[13px] font-bold tracking-[0.18em] text-black/35">
                   {String(index + 1).padStart(2, "0")}
                 </span>

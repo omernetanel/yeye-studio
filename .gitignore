@@ -55,3 +55,6 @@ _shot.mjs
 # committed. The PSDs and the PNG exports they came from stay on disk.
 /public/images/projects/**/*.psd
 /public/images/projects/**/*.png
+
+# The "How I work" drawings: the site serves the WebP cuts made from these.
+/public/images/hiw/hiw_*.png
