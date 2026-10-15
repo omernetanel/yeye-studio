@@ -431,7 +431,7 @@ function ProcessDiagram({ sheetRef }: { sheetRef: RefObject<HTMLDivElement | nul
           // ffmpeg -i whatidopng.png -vf
           //   "format=rgba,lumakey=threshold=0.97:tolerance=0.03:softness=0.12"
           //   whatido-alpha.png
-          src="/images/whatido-alpha.png"
+          src="/images/hiw/whatido-alpha.png"
           data-process-drawing
           // THE CENTRAL YEYE IS MASKED OUT, not cut from the file: the heading
           // takes that spot now, and a pencil wordmark behind it read as a

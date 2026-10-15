@@ -14,6 +14,7 @@ import { stackHeading } from "@/lib/motion/stack-heading";
 import FoldText, { setFold } from "@/components/ui/FoldText";
 import ScrollCue from "@/components/ui/ScrollCue";
 import { PROCESS_HEADING, STAGE_LINES, STAGE_TITLES } from "../process/stages";
+import { ART_OPACITY, StageArtBox, poseStageArt } from "../process/art";
 
 // The paper, as the clip's own frames — every one of servicesbg-mobile.mp4's 458,
 // at its own 720×1280 and 30fps, so nothing is thinned out against the video it
@@ -194,6 +195,22 @@ const COUNT_TOTAL = "text-m-display font-bold text-black/30";
 function smoothstep(t: number) {
   return t * t * (3 - 2 * t);
 }
+/**
+ * Where each stage's drawing stands on the sheet, as shares of the panel: in
+ * the lower half, under the words, and each somewhere else - the magnifier low
+ * on the left, the screen and its brush on the right, the code wide on the
+ * left, the publish screen across the middle. Tried at 375x812 and 375x667:
+ * every one ends above the scroll cue.
+ */
+const ART_PLACES = [
+  "left-[4%] top-[50%] w-[54%]",
+  "left-[36%] top-[54%] w-[56%]",
+  "left-[5%] top-[57%] w-[72%]",
+  "left-[14%] top-[57%] w-[78%]",
+];
+/** Where the words are from the middle of a drawing at rest, in its own widths: what the magnifier circles. */
+const ART_TOWARD_WORDS: [number, number] = [0.35, -1];
+
 /** How small the stages get as they go back into the folding paper. */
 const COLLAPSED_SCALE = 0.55;
 /**
@@ -342,6 +359,7 @@ export default function MobileServices() {
   const countRef = useRef<HTMLParagraphElement>(null);
   const digitRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const stageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const artRefs = useRef<(HTMLDivElement | null)[]>([]);
   const cueRef = useRef<HTMLDivElement>(null);
   const statementLayerRef = useRef<HTMLDivElement>(null);
 
@@ -498,6 +516,18 @@ export default function MobileServices() {
         part.style.opacity = visibility;
         part.style.transform = lift;
       }
+
+      // ITS DRAWING (process/art), behind the words. It tells its little story
+      // over the incoming half of the swap - the same half the words come in
+      // on, so the drawing going out and the one coming in never share the
+      // sheet. The first has the whole swap: the heading before it has no
+      // drawing to make room for, and the magnifier's circle needs the time.
+      const art = artRefs.current[index];
+      if (art) {
+        const story = index === 0 ? swapIn : clamp01(swapIn * 2 - 1);
+        art.style.opacity = String(Math.min(smoothstep(clamp01(story * 4)), 1 - leaving) * ART_OPACITY);
+        poseStageArt(art, index, story, ART_TOWARD_WORDS);
+      }
     }
 
     const statementOpacity = fadeIn(time, CUE_STATEMENT_IN);
@@ -559,7 +589,12 @@ export default function MobileServices() {
         </h2>
         <div className="mt-12 space-y-16">
           {STAGE_TITLES.map((title, index) => (
-            <ProcessStage key={title} index={index} withCount />
+            <div key={title}>
+              {/* Its drawing, standing still above it - at the sheet's half
+                  strength (ART_OPACITY), and at rest, which needs no script. */}
+              <StageArtBox index={index} className="relative mx-auto mb-6 w-[64%] opacity-50" />
+              <ProcessStage index={index} withCount />
+            </div>
           ))}
         </div>
         <Statement className="mt-20" />
@@ -631,11 +666,20 @@ export default function MobileServices() {
               centred title - a "features" card, and the one screen on the
               phone that did not look like this studio.
 
-              NOTHING IS DRAWN BEHIND THE WORDS YET. The studio's own
-              illustrations go there, one for each stage, the way the desk
-              prints its diagram on the paper: a layer in this div before the
-              block below, each picture given the same opacity and lift its
-              stage gets in render. */}
+              BEHIND THE WORDS, EACH STAGE'S OWN DRAWING (process/art), in the
+              lower half and never twice in the same place, so the sheet
+              changes with the stage and not just its words. Before the words
+              in the markup, so they are painted under them. */}
+          {ART_PLACES.map((place, index) => (
+            <StageArtBox
+              key={place}
+              index={index}
+              className={`absolute opacity-0 ${place}`}
+              boxRef={(element) => {
+                artRefs.current[index] = element;
+              }}
+            />
+          ))}
 
           {/* The projects heading's entrance: it folds in as a big stack in the
               middle of the opened sheet, then runs back into one line as it
