@@ -322,6 +322,9 @@ function ContactForm() {
             required
           />
 
+          {/* Empty unless Cloudflare asks this visitor to tick a box. */}
+          <Turnstile ref={turnstileRef} theme="dark" className="sm:col-span-2 empty:hidden" />
+
           {/* THE TRAP. Off-screen rather than display:none — a bot that skips
               hidden fields is not the one this catches; one that fills every
               input on the page is, and the server drops anything that arrives
@@ -374,10 +377,6 @@ function ContactForm() {
             </Link>
             .
           </p>
-          {/* Nothing, unless Cloudflare asks this visitor to tick a box - see
-              the same check in the closing form. The pull up takes back the
-              grid's gap, so an empty check moves nothing. */}
-          <Turnstile ref={turnstileRef} theme="dark" className="-mt-3 sm:col-span-2" />
         </form>
       )}
     </div>

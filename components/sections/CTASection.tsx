@@ -263,6 +263,9 @@ export default function CTASection() {
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                 />
 
+                {/* Empty unless Cloudflare asks this visitor to tick a box. */}
+                <Turnstile ref={turnstileRef} theme="light" className="sm:col-span-2 empty:hidden" />
+
                 {/* The trap — see the same field in ContactStage. */}
                 <input
                   type="text"
@@ -301,11 +304,6 @@ export default function CTASection() {
                   </Link>
                   .
                 </p>
-                {/* Nothing, unless Cloudflare asks this visitor to tick a box.
-                    Its own block in the form's last row, never hidden: hidden,
-                    it never came into view, the check never started, and every
-                    send was refused as a bot's. */}
-                <Turnstile ref={turnstileRef} theme="light" className="sm:col-span-2 -mt-4 sm:-mt-3" />
               </form>
             )}
           </motion.div>

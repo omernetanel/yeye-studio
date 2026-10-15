@@ -11,10 +11,10 @@ import { TURNSTILE_SITE_KEY } from "@/lib/site";
  * strangers, and the domain's reputation spent on it. The server now refuses
  * a send that does not carry a token this produced (app/api/contact/route.ts).
  *
- * NOTHING TO SEE, almost always. It runs in the background from the moment
- * the page loads, and only a visitor Cloudflare is unsure of is shown a box to
- * tick, here, under the fields. Its box is never hidden: hidden, it was never
- * rendered into, and every send was refused as a bot's.
+ * NOTHING TO SEE, almost always. It runs in the background once the form is
+ * near the screen, and only a visitor Cloudflare is unsure of is shown a box
+ * to tick, here, under the fields. The script is fetched only then, so a
+ * reader who never reaches a form never downloads it.
  *
  * A token is good for one send. The form asks for one when it is sent - and
  * waits a moment for it if the check is still running - and resets the check
@@ -34,6 +34,8 @@ declare global {
 }
 
 const SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+// Begin when the form is this close to the screen.
+const START_MARGIN = "600px 0px";
 // How long a send waits for a check still under way.
 const TOKEN_WAIT_MS = 8000;
 
@@ -112,13 +114,19 @@ const Turnstile = forwardRef<TurnstileHandle, { theme: "light" | "dark"; classNa
         });
     };
 
-    // AT ONCE, with the page. It used to wait for the form to come near the
-    // screen; a check that starts with the page is one that is always done by
-    // the time anyone presses send.
-    start();
+    const watch = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        watch.disconnect();
+        start();
+      },
+      { rootMargin: START_MARGIN },
+    );
+    watch.observe(container);
 
     return () => {
       cancelled = true;
+      watch.disconnect();
       if (widgetRef.current !== null) apiRef.current?.remove(widgetRef.current);
       widgetRef.current = null;
       for (const resolve of waiters.splice(0)) resolve(null);
