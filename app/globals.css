@@ -435,6 +435,38 @@ body {
   }
 }
 
+/* THE ENTRANCE OF WHAT IS ON SCREEN WHEN A PAGE OPENS: up a little, out of
+   nothing. In CSS and not in framer-motion, because it is the first thing a
+   reader sees: written in JS it waited for the whole bundle, and on a slow
+   phone the opening line of a service page sat invisible for seven seconds
+   after it had arrived. Here it starts with the first paint. --rise is how
+   far it comes up, --delay when it starts. With less motion it is simply
+   there. */
+.rise-in {
+  animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) var(--delay, 0s) both;
+}
+/* From 0.01, not 0: the eye cannot tell them apart, but a browser does not
+   count a fully transparent element as painted, and measured the page as if
+   its opening line arrived only once the scripts had. */
+@keyframes rise-in {
+  from {
+    opacity: 0.01;
+    transform: translateY(var(--rise, 16px));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+[data-a11y-motion] .rise-in {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rise-in {
+    animation: none;
+  }
+}
+
 /* LIGHT ACROSS THE STEEL of the Sorozin Chef mark, once, as its page opens: a
    bright band slid across a layer cut to the mark's own shape. Over the white
    letters it is nothing; over the grey of the knives it is the glint of a
@@ -445,10 +477,18 @@ body {
   background-image: linear-gradient(115deg, transparent 38%, rgb(255 255 255 / 0.9) 50%, transparent 62%);
   background-size: 300% 100%;
   background-position: 100% 0;
+  /* Unseen until it runs. Seen from the first paint, a layer the size of the
+     mark waiting on a file of its own was what the page counted as its main
+     picture, and the page was measured as late as that file. */
+  opacity: 0;
   animation: sorozin-shine 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.9s forwards;
 }
 @keyframes sorozin-shine {
+  from {
+    opacity: 1;
+  }
   to {
+    opacity: 1;
     background-position: 0% 0;
   }
 }

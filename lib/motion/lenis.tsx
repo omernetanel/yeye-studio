@@ -4,7 +4,7 @@ import Lenis from "lenis";
 import { MotionConfig } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { gsap, ScrollTrigger } from "@/lib/motion/gsap";
+import { gsap } from "@/lib/motion/gsap";
 import { noteArrival, noteForwardNavigation, noteHistoryNavigation } from "@/lib/nav/in-site-history";
 import { destinationForHash } from "@/lib/nav/hash-targets";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
@@ -44,8 +44,6 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
     });
-
-    instance.on("scroll", ScrollTrigger.update);
 
     const syncWithGsapTicker = (time: number) => {
       instance.raf(time * 1000);

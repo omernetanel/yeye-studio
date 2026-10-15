@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import ServiceHeading from "@/components/services/ServiceHeading";
 
 interface WhatIsItProps {
@@ -31,14 +30,10 @@ export default function WhatIsIt({ title, text, mark }: WhatIsItProps) {
         <ServiceHeading className="mb-5" auto>
           {title}
         </ServiceHeading>
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 1 }}
-          className="mx-auto max-w-[760px] font-body text-lg leading-[1.8] text-black/70 md:text-[21px]"
-        >
+        {/* In CSS, with the page's opening (.rise-in in globals.css). */}
+        <p className="rise-in mx-auto max-w-[760px] font-body text-lg leading-[1.8] text-black/70 [--delay:1s] md:text-[21px]">
           {body}
-        </motion.p>
+        </p>
       </div>
     </section>
   );

@@ -30,41 +30,23 @@ export default function ProjectPageClient({ project }: Props) {
 
   return (
     <>
+      {/* The opening's entrance is CSS (.rise-in in globals.css): it starts
+          with the first paint instead of waiting for the bundle. */}
       <div className="mx-auto flex max-w-[720px] flex-col items-center gap-4 px-6 pt-[140px] pb-16 text-center">
-        <motion.h1
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="font-display text-4xl leading-[1.05] font-extrabold tracking-tight text-black md:text-5xl"
-        >
+        <h1 className="rise-in font-display text-4xl leading-[1.05] font-extrabold tracking-tight text-black md:text-5xl">
           {project.title}
-        </motion.h1>
+        </h1>
 
-        <motion.span
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
-          className="rounded-full border border-accent/25 bg-accent/10 px-4 py-1.5 font-display text-[13px] font-semibold text-accent"
-        >
+        <span className="rise-in rounded-full border border-accent/25 bg-accent/10 px-4 py-1.5 font-display text-[13px] font-semibold text-accent [--delay:0.15s]">
           {project.category}
-        </motion.span>
+        </span>
 
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
-          className="mt-1 max-w-[560px] font-body text-[16px] leading-[1.85] whitespace-pre-line text-black/70"
-        >
+        <p className="rise-in mt-1 max-w-[560px] font-body text-[16px] leading-[1.85] whitespace-pre-line text-black/70 [--delay:0.3s]">
           {project.description}
-        </motion.p>
+        </p>
 
         {project.tags && project.tags.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
-            className="mt-2 flex flex-wrap justify-center gap-2"
-          >
+          <div className="rise-in mt-2 flex flex-wrap justify-center gap-2 [--delay:0.4s]">
             {project.tags.map((tag) => (
               <span
                 key={tag}
@@ -73,19 +55,14 @@ export default function ProjectPageClient({ project }: Props) {
                 {tag}
               </span>
             ))}
-          </motion.div>
+          </div>
         )}
       </div>
 
       {/* Live preview */}
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
-        className="mx-auto max-w-[1100px] px-6 pb-20"
-      >
+      <div className="rise-in mx-auto max-w-[1100px] px-6 pb-20 [--delay:0.3s] [--rise:24px]">
         <LiveProjectPreview url={project.url} title={project.title} fallbackImage={project.image} />
-      </motion.div>
+      </div>
 
       {story && (
         <div className="mx-auto max-w-[1100px] px-6 pb-24">

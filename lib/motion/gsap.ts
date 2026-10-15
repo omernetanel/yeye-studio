@@ -1,8 +1,7 @@
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
-
-export { gsap, ScrollTrigger };
+// GSAP alone, for the menu's timeline (StaggeredMenu) and the ticker the
+// smooth scroll runs on (lenis.tsx). ScrollTrigger was registered here for
+// years after the last pinned section stopped using it - every section pins
+// by hand now (see CONTEXT) - and every page downloaded it for nothing.
+export { gsap };

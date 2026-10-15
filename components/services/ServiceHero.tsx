@@ -2,7 +2,6 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import ArrowIcon from "@/components/ui/ArrowIcon";
 import Button from "@/components/ui/Button";
 import { ScrollPiece, useScrollPieces } from "@/components/ui/ScrollPiece";
@@ -70,12 +69,11 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
         )}
       >
         <div className={cn(withWork && "text-center md:col-span-6 md:text-start")}>
-          <motion.h1
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
+          {/* The entrance is CSS (.rise-in in globals.css), not framer: this is
+              what a slow phone waited seven seconds to see. */}
+          <h1
             className={cn(
-              "mb-7 font-display leading-[1.08] font-extrabold tracking-tight text-black",
+              "rise-in mb-7 font-display leading-[1.08] font-extrabold tracking-tight text-black [--delay:0.1s] [--rise:24px]",
               // Half the screen is the work's: the heading is set for the half
               // it has.
               withWork ? "text-[clamp(36px,3.9vw,60px)]" : "text-[clamp(40px,6.6vw,96px)]",
@@ -84,37 +82,24 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
             {titleLine1}
             <br />
             {line}
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.25 }}
+          </h1>
+          <p
             className={cn(
-              "mb-9 max-w-[720px] font-body text-lg leading-[1.8] text-black/70 md:text-[21px]",
+              "rise-in mb-9 max-w-[720px] font-body text-lg leading-[1.8] text-black/70 [--delay:0.25s] md:text-[21px]",
               withWork ? "mx-auto md:mx-0" : "mx-auto",
             )}
           >
             {description}
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.35 }}
-            className={cn("flex justify-center", withWork && "md:justify-start")}
-          >
+          </p>
+          <div className={cn("rise-in flex justify-center [--delay:0.35s]", withWork && "md:justify-start")}>
             <Button href="/#cta" className="!border-black !bg-none !bg-black !shadow-none">
               {ctaLabel}
             </Button>
-          </motion.div>
+          </div>
         </div>
 
         {withWork && (
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.45 }}
-            className="mt-16 flex flex-col gap-10 md:col-span-6 md:mt-0 md:flex-row md:items-start md:gap-6"
-          >
+          <div className="rise-in mt-16 flex flex-col gap-10 [--delay:0.45s] [--rise:24px] md:col-span-6 md:mt-0 md:flex-row md:items-start md:gap-6">
             {work.map((item, index) => (
               <div
                 key={item.href}
@@ -133,6 +118,9 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
                   piece={item.piece}
                   href={item.href}
                   sizes={work.length > 1 ? "(max-width: 768px) 100vw, 24vw" : "(max-width: 768px) 100vw, 46vw"}
+                  // On the first screen: fetched with the page, not when it is
+                  // scrolled to.
+                  priority
                 />
                 <Link
                   href={item.href}
@@ -143,7 +131,7 @@ export default function ServiceHero({ titleLine1, titleLine2, description, ctaLa
                 </Link>
               </div>
             ))}
-          </motion.div>
+          </div>
         )}
       </div>
     </section>

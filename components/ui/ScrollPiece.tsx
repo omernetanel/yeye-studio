@@ -38,10 +38,13 @@ export function ScrollPiece({
   sizes,
   className,
   href,
+  priority = false,
 }: {
   piece: DesignPiece;
   sizes: string;
   className?: string;
+  /** On the first screen: fetched with the page rather than when scrolled to. */
+  priority?: boolean;
   /**
    * A page on this site that the picture leads to. The window itself is then
    * the link, so the three boxes stay three and the hook below finds them as
@@ -56,6 +59,7 @@ export function ScrollPiece({
       width={piece.width}
       height={piece.height}
       sizes={sizes}
+      priority={priority}
       // A picture that leads somewhere comes a little closer under the
       // pointer. The `scale` property, not a transform: the scroll writes the
       // transform, and the two multiply rather than fight.

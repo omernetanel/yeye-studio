@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import Link from "next/link";
 import LiveProjectPreview from "@/components/projects/LiveProjectPreview";
@@ -99,6 +99,16 @@ export default function SorozinCase({ site }: Props) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const { scrollY } = useScroll();
   useScrollPieces(rootRef);
+  const [shineReady, setShineReady] = useState(false);
+  useEffect(() => {
+    const ready = () => setShineReady(true);
+    if (document.readyState === "complete") {
+      ready();
+      return;
+    }
+    window.addEventListener("load", ready, { once: true });
+    return () => window.removeEventListener("load", ready);
+  }, []);
 
   const move = () => {
     const root = rootRef.current;
@@ -168,8 +178,12 @@ export default function SorozinCase({ site }: Props) {
             className="h-auto w-full"
           />
           {/* Light running across the steel once, as the page opens - shaped
-              by the mark itself (.sorozin-shine in globals.css). */}
-          <div aria-hidden="true" className="sorozin-shine pointer-events-none absolute inset-0" />
+              by the mark itself (.sorozin-shine in globals.css). ONLY ONCE THE
+              PAGE HAS LOADED: its shape is the mark's own file, fetched a second
+              time for the mask, and from the first paint the browser waited on
+              it as the page's main picture. A pixel inside the mark, so it is
+              never the larger of the two. */}
+          {shineReady && <div aria-hidden="true" className="sorozin-shine pointer-events-none absolute inset-px" />}
         </div>
 
         <div className="mx-auto mt-10 max-w-[1100px] font-display md:hidden">
