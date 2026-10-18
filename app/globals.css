@@ -735,11 +735,58 @@ body {
   color: #d6d6d6;
 }
 
+/* The wash behind the contact form on the desk (ContactStage): only with high
+   contrast on, which is the version of the page that meets the ratio. */
+[data-a11y-contrast] .a11y-contrast-scrim {
+  display: block;
+}
+
 /* Links say they are links. Not the buttons, which already look like buttons,
    and not the ones inside the gallery, whose whole surface is the target. */
 [data-a11y-links] main a:not([class*="rounded-full"]):not([class*="btn"]) {
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* LARGER TEXT, LETTER AND LINE SPACING, A PLAINER FACE. Over the running text
+   of the page - paragraphs, lists, labels, fields, quotes - and not over:
+   - the hero (#hero), whose words are measured off the page and painted on a
+     canvas, and would part from their own copy;
+   - anything inside a pinned panel (.sticky), which is exactly one screen tall
+     and has no room to give.
+   The browser's own zoom still enlarges those, as it does the whole page.
+
+   `zoom`, not font-size: every block here sets its own pixel size, and 1.2em
+   would be the parent's size and not its own. Only the outermost of a nest is
+   zoomed, or a list item's paragraph would grow twice. */
+[data-a11y-text]
+  main
+  :is(p, li, label, dt, dd, blockquote, figcaption, input, textarea, select):not(
+    :is(p, li, label, dt, dd, blockquote, figcaption) *,
+    #hero *,
+    .sticky *
+  ) {
+  zoom: 1.2;
+}
+
+[data-a11y-spacing] main :not(#hero *, .sticky *) {
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+}
+
+[data-a11y-lines] main :is(p, li, dd, blockquote, figcaption):not(#hero *, .sticky *) {
+  line-height: 2 !important;
+}
+
+/* The plainer face: the type tokens themselves, so every utility follows. The
+   hero keeps its own, for the reason above. */
+[data-a11y-readable] {
+  --font-display: Arial, "Segoe UI", sans-serif;
+  --font-body: Arial, "Segoe UI", sans-serif;
+}
+[data-a11y-readable] #hero {
+  --font-display: var(--font-google-sans), Arial, sans-serif;
+  --font-body: var(--font-assistant), Arial, sans-serif;
 }
 
 /* The panel's own motion switch reaches every section through
@@ -1031,9 +1078,14 @@ video {
    their travel; here they join the flow, the name at its settled 42px
    (GREET_SIZE_SETTLED_PX in MobileAbout). !important because the scroll
    driver may already have written inline sizes, blurs and offsets on the
-   first render, before the preference was known. */
+   first render, before the preference was known.
+   The floating copy is hidden from sight, not from the page: it is the
+   section's h2, and the slot that shows instead is aria-hidden. */
 [data-a11y-motion] .about-greet-float {
-  display: none;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 [data-a11y-motion] .about-greet-slot {
   visibility: visible;
@@ -1060,7 +1112,10 @@ video {
 }
 @media (prefers-reduced-motion: reduce) {
   .about-greet-float {
-    display: none;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
   .about-greet-slot {
     visibility: visible;

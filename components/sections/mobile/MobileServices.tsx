@@ -187,10 +187,11 @@ const HEADING_REST_SCALE = 0.38;
 // "01 / 04", small, over the stage's name. Left to right, so it reads in order
 // inside a right-to-left page, and pushed to the end of its row - the right.
 // It was a 168px numeral, the largest thing on the sheet, and the drawing is
-// what should be.
+// what should be. Both greys clear 4.5:1 on white, as the standard asks of
+// small type.
 const COUNT_ROW = "flex items-baseline justify-end gap-[0.4em] font-display text-[14px] font-bold tracking-[0.2em] select-none";
-const COUNT_DIGIT = "text-black/45";
-const COUNT_TOTAL = "text-black/25";
+const COUNT_DIGIT = "text-black/70";
+const COUNT_TOTAL = "text-black/55";
 const countLabel = (n: number) => String(n).padStart(2, "0");
 
 /** Eases both ends of a 0 → 1 move, so the heading lifts off and lands softly. */

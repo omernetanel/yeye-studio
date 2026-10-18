@@ -187,7 +187,7 @@ export default function LanyardPortrait({ src, alt }: { src: string; alt: string
         className={cn(
           // On a desk only: on a phone the badge sits between two parts of
           // the text, and a line under it read as part of them.
-          "hidden text-center font-body text-m-small text-black/45 transition-opacity duration-300 md:block",
+          "hidden text-center font-body text-m-small text-black/60 transition-opacity duration-300 md:block",
           tried || unavailable ? "opacity-0" : "opacity-100",
         )}
       >

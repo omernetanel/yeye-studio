@@ -136,7 +136,7 @@ export default function AboutPageContent() {
               <p className={`mt-4 ${BODY}`}>
                 ולגבי השם: YE זה הקיצור של שם המשפחה שלי.{" "}
                 <strong className="font-bold text-black">YEYE פשוט נשמע טוב יותר.</strong>{" "}
-                <span className="text-black/45">(כן, זה כל הסיפור.)</span>
+                <span className="text-black/60">(כן, זה כל הסיפור.)</span>
               </p>
             </section>
           </div>

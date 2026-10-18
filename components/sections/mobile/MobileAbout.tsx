@@ -159,7 +159,7 @@ function span(progress: number, range: readonly [number, number]) {
 export default function MobileAbout() {
   const sectionRef = useRef<HTMLElement>(null);
   const introStageRef = useRef<HTMLDivElement>(null);
-  const greetRef = useRef<HTMLDivElement>(null);
+  const greetRef = useRef<HTMLHeadingElement>(null);
   const greetLinesRef = useRef<(HTMLSpanElement | null)[]>([]);
   // The greeting's height at its settled size. Its lines are sized in em and do
   // not wrap, so at any other size the height is this in proportion — one read
@@ -421,8 +421,9 @@ export default function MobileAbout() {
         >
           {/* Laid out at its settled place and size, which is also what
               reduced motion shows. The desktop's markup: em-sized lines, so
-              the pair keeps its proportions at every size on the way up. */}
-          <div
+              the pair keeps its proportions at every size on the way up.
+              The section's heading (the standard's 2.4.10). */}
+          <h2
             ref={greetRef}
             className="about-m-greet absolute inset-x-0 top-[19%] text-center font-display leading-[1.06] font-bold whitespace-nowrap text-white will-change-transform"
             style={{ fontSize: `${GREET_SIZE_SETTLED_PX}px` }}
@@ -449,7 +450,7 @@ export default function MobileAbout() {
                 אני עומר.
               </span>
             </span>
-          </div>
+          </h2>
 
           {/* Anchored to the bottom of the panel, 64px up — the same 64px the
               copy leaves above the cards, so the three blocks keep one rhythm.

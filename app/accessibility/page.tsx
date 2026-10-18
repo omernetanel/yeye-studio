@@ -13,15 +13,20 @@ export const metadata: Metadata = pageMetadata({
  * WRITTEN FROM THE CODE, item by item.
  *
  * Every adaptation listed below was verified in this codebase before it was
- * written here: the panel and what its three switches actually change, the two
+ * written here: the panel and what its seven switches actually change, the two
  * paths that reduced motion travels, the skip link, the focus ring, the labels
  * the form fields carry, the roles on the success and error messages, the
- * headings, the alt text. Nothing is described that does not exist.
+ * headings, the alt text, the site map. Nothing is described that does not
+ * exist.
  *
- * NO COMPLIANCE CLAIM. The page does not say the site meets the Israeli
- * standard or any WCAG level, because no audit has been carried out that would
- * support it. It also does not make the opposite claim — it simply describes
- * what was built. Adding a formal declaration later is a question for a lawyer.
+ * WHAT IT CLAIMS: that the work was done to IS 5568 part 1 (WCAG 2.0 AA with
+ * the Israeli changes) - the standard the site was audited against, criterion
+ * by criterion, in October 2026. Not that a certified accessibility auditor
+ * has approved it; if one does, that goes here, with the date.
+ *
+ * WHAT IT MUST KEEP, by the regulations: how the site was made accessible and
+ * how to use it, what was not made accessible and the other way to get it, and
+ * how to reach the person who handles accessibility.
  *
  * Two phrasings here are deliberately soft and should stay that way unless the
  * work behind them changes: "תמיכה בניווט באמצעות מקלדת" rather than "full
@@ -30,18 +35,23 @@ export const metadata: Metadata = pageMetadata({
  */
 export default function AccessibilityPage() {
   return (
-    <LegalPage title="הצהרת נגישות" updated="1 באוקטובר 2026">
+    <LegalPage title="הצהרת נגישות" updated="18 באוקטובר 2026">
       <p>
         ב־{SITE_NAME} הושקעו מאמצים בהנגשת האתר ובהתאמתו למגוון רחב של משתמשים ואמצעי גלישה.
         הנגישות הייתה חלק מתהליך הפיתוח עצמו ולא תוספת שנעשתה בסופו, ובמסגרתו יושמו באתר התאמות
         נגישות שונות, במטרה לאפשר שימוש נוח ונגיש ככל האפשר.
+      </p>
+      <p>
+        התאמות הנגישות נעשו לפי התקן הישראלי ת״י 5568 חלק 1, &quot;קווים מנחים לנגישות תכנים
+        באינטרנט&quot;, ברמה AA. התקן מבוסס על הנחיות WCAG 2.0 של ארגון W3C, עם השינויים הלאומיים
+        שבו. האתר נבדק מול דרישות התקן באוקטובר 2026.
       </p>
 
       <h2>התאמות הנגישות שבוצעו</h2>
 
       <p>
         <strong>הגדרות נגישות.</strong> בפינה השמאלית התחתונה של כל עמוד יש כפתור &quot;הגדרות נגישות&quot;,
-        שפותח תפריט ובו שלוש הגדרות שהמשתמש יכול להפעיל בעצמו:
+        שפותח תפריט ובו שבע הגדרות שהמשתמש יכול להפעיל בעצמו:
       </p>
       <ul>
         <li>
@@ -50,11 +60,24 @@ export default function AccessibilityPage() {
         </li>
         <li>
           <strong>הפחתת תנועה</strong> - עצירת התנועה באתר, כולל התנועה המונעת מגלילה. במקומה התוכן
-          מופיע בהדרגה, בשינוי שקיפות בלבד וללא תזוזה.
+          מופיע בהדרגה, בשינוי שקיפות בלבד וללא תזוזה. זו גם הדרך לעצור כל דבר שזז באתר מעצמו:
+          סרטונים, גלריית העבודות, שורת הטקסט הרצה והאנימציות.
         </li>
         <li>
           <strong>הדגשת קישורים</strong> - הוספת קו תחתון לקישורים בתוך התוכן, כך שאפשר לזהות אותם
           גם בלי להסתמך על צבע.
+        </li>
+        <li>
+          <strong>טקסט גדול</strong> - הגדלה של הטקסט הרגיל באתר (פסקאות, רשימות, שדות טופס) ב־20%.
+        </li>
+        <li>
+          <strong>ריווח טקסט</strong> - הגדלת הרווח בין האותיות ובין המילים.
+        </li>
+        <li>
+          <strong>גובה שורה</strong> - הגדלת הרווח בין השורות.
+        </li>
+        <li>
+          <strong>גופן קריא</strong> - החלפת הגופנים באתר בגופן פשוט וברור.
         </li>
       </ul>
       <p>
@@ -115,7 +138,13 @@ export default function AccessibilityPage() {
       </p>
       <ul>
         <li>האתר מוגדר בעברית ובכיוון כתיבה מימין לשמאל.</li>
-        <li>לכל עמוד יש כותרת ראשית אחת והיררכיית כותרות מסודרת מתחתיה.</li>
+        <li>
+          לכל עמוד יש כותרת ראשית אחת והיררכיית כותרות מסודרת מתחתיה, ולכל קטע בעמוד יש כותרת משלו.
+        </li>
+        <li>
+          לכל עמוד באתר אפשר להגיע ביותר מדרך אחת: מהתפריט ומהקישורים שבתוך העמודים, וגם מ
+          <Link href="/site-map">מפת האתר</Link>, שהקישור אליה מופיע בתחתית כל עמוד.
+        </li>
         <li>אזור התוכן הראשי והפוטר מסומנים כאזורי תוכן, ובעמודי המשנה גם רצועת הניווט.</li>
         <li>
           הטקסט באתר הוא טקסט אמיתי ולא תמונות של טקסט, וניתן להגדיל אותו בכלי התצוגה של הדפדפן.
@@ -138,6 +167,7 @@ export default function AccessibilityPage() {
           בעמוד הבית מוצג סרטון שיש לו פסקול. הקול כבוי בכל כניסה לעמוד, ומופעל רק בלחיצה על מתג
           &quot;ווליום&quot; שמופיע מעל הסרטון. המתג נגיש במקלדת ומסומן לטכנולוגיות מסייעות כמתג. כאשר
           הפחתת תנועה פעילה הסרטון אינו מתנגן מעצמו: הוא מוצג כתמונה, עם כפתור להפעלה ולעצירה.
+          לתוכנות הקראה מוקרא תיאור של מה שמוצג בסרטון.
         </li>
         <li>
           לפני טופס יצירת הקשר שבסוף עמוד הבית רצה שורת טקסט דקורטיבית בתנועה רציפה. היא אינה
@@ -147,10 +177,11 @@ export default function AccessibilityPage() {
       </ul>
 
       <p>
-        <strong>ניגודיות.</strong> בעיצוב האתר ניתנה תשומת לב לניגודיות בין הטקסטים לרקע שמאחוריהם,
-        וצבעי טקסט משניים כוהו לצורך כך. בנוסף, מצב הניגודיות הגבוהה בתפריט הנגישות מגדיל עוד את
-        הניגודיות של הטקסטים המשניים. חלק מהכותרות מעוצבות בחלקן באפור בהיר כבחירה עיצובית; מצב
-        הניגודיות הגבוהה מכהה גם אותן.
+        <strong>ניגודיות.</strong> הטקסטים באתר, כולל הטקסטים המשניים הקטנים, עומדים ביחס הניגודיות
+        שהתקן דורש מול הרקע שמאחוריהם. חלק מהכותרות הגדולות מעוצבות בחלקן באפור בהיר כבחירה
+        עיצובית, ושורת הטקסט הדקורטיבית הרצה מוצגת באפור; מצב הניגודיות הגבוהה בתפריט הנגישות מכהה
+        את הכותרות האלה, ומגדיל עוד את הניגודיות של כל הטקסטים המשניים. במחשב, טופס יצירת הקשר
+        שבאמצע עמוד הבית מוצג תחילה על גבי סרטון; במצב הניגודיות הגבוהה מוצג מאחוריו רקע כהה.
       </p>
 
       <h2>מגבלות נגישות</h2>
@@ -167,11 +198,21 @@ export default function AccessibilityPage() {
         האלה יכול לעבור בין העבודות בכפתורי המעבר או במקלדת כמתואר למעלה, ושם כל עבודה מופיע גם
         כטקסט.
       </p>
+      <p>
+        לסרטון שבעמוד הבית אין כתוביות. זהו סרטון אווירה שאינו מוסר מידע: מוזיקה, ובאמצעה שירה קצרה
+        ושיחה ברקע, בלי מילים ברורות. תיאור של מה שמוצג בו מוקרא לתוכנות הקראה, ואפשר לפנות אליי
+        בכל שאלה על תוכנו.
+      </p>
+      <p>
+        ההגדרות &quot;טקסט גדול&quot;, &quot;ריווח טקסט&quot; ו&quot;גובה שורה&quot; אינן חלות על
+        המסך הפותח של עמוד הבית ועל הקטעים שננעצים למסך בזמן הגלילה, שבנויים בדיוק לגובה המסך. את
+        הטקסט בהם אפשר להגדיל בכלי ההגדלה (הזום) של הדפדפן, כמו בכל האתר.
+      </p>
 
       <h2>פניות בנושא נגישות</h2>
       <p>
-        לפניות בנושא נגישות ניתן לפנות לעומר, {SITE_NAME}. אם נתקלתם ברכיב שאינו נגיש או בקושי
-        בשימוש באתר, אשמח שתפנו אליי כדי שאוכל לבדוק ולטפל בנושא.
+        האחראי על הנגישות באתר הוא עומר, {SITE_NAME}. אם נתקלתם ברכיב שאינו נגיש או בקושי בשימוש
+        באתר, אשמח שתפנו אליי כדי שאוכל לבדוק ולטפל בנושא.
       </p>
       <p>כדי שאוכל לשחזר את הבעיה ולטפל בה, יעזור לי אם תציינו, ככל שהדבר רלוונטי:</p>
       <ul>
@@ -184,6 +225,9 @@ export default function AccessibilityPage() {
       <ul>
         <li>
           דוא״ל: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+        </li>
+        <li>
+          טלפון: <a href={`tel:+${WHATSAPP_NUMBER}`}>055-275-9445</a>
         </li>
         <li>
           וואטסאפ:{" "}

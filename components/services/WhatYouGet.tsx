@@ -45,7 +45,12 @@ export default function WhatYouGet({ title, subtitle, rows }: WhatYouGetProps) {
                 // The service pages' own dark card - see ServiceCard.
                 <ServiceCard key={item.number} className="h-full p-7">
                   <div className="flex items-start gap-5">
-                    <span className="mt-0.5 shrink-0 font-display text-4xl leading-none font-extrabold text-white/20">
+                    {/* Decoration: a faint numeral that counts nothing the
+                        titles beside it do not already say. */}
+                    <span
+                      aria-hidden="true"
+                      className="mt-0.5 shrink-0 font-display text-4xl leading-none font-extrabold text-white/20"
+                    >
                       {item.number}
                     </span>
                     <div className="flex-1">

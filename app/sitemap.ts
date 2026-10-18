@@ -21,6 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/privacy`, priority: 0.3 },
     { url: `${SITE_URL}/accessibility`, priority: 0.3 },
     { url: `${SITE_URL}/terms`, priority: 0.3 },
+    { url: `${SITE_URL}/site-map`, priority: 0.2 },
     ...serviceSlugs.map((slug) => ({ url: `${SITE_URL}/services/${slug}`, priority: 0.7 })),
   ];
 

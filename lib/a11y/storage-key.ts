@@ -8,3 +8,6 @@
  * key that does not exist. That is exactly what happened once.
  */
 export const A11Y_STORAGE_KEY = "yeye-a11y";
+
+/** Every switch, in the order the panel lists them; here for the same reason. */
+export const A11Y_KEYS = ["contrast", "motion", "links", "text", "spacing", "lines", "readable"] as const;

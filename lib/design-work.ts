@@ -47,8 +47,14 @@ export const designWork: DesignBrand[] = [
         width: 1254,
         height: 1254,
       },
-      // THE PACKAGING GOES HERE, second, once its 3D model exists: between the
-      // logo and the print, not after everything else.
+      // The packaging second: between the logo and the print, not after
+      // everything else.
+      {
+        src: "/images/projects/mays/mays5.webp",
+        alt: "קופסת המאפים של MAY'S: מכסה לבן עם הלוגו בכסף והסלוגן, וצדדים ורודים שזיגוג לבן נוזל עליהם",
+        width: 1448,
+        height: 1086,
+      },
       {
         src: "/images/projects/mays/mays2.webp",
         alt: "כרטיסי ביקור וגיליון מדבקות של MAY'S",

@@ -186,7 +186,7 @@ export default function AboutSection() {
   const { scrollY } = useScroll();
 
   const stageRef = useRef<HTMLDivElement>(null);
-  const greetRef = useRef<HTMLDivElement>(null);
+  const greetRef = useRef<HTMLHeadingElement>(null);
   const greetLinesRef = useRef<(HTMLSpanElement | null)[]>([]);
   const slotRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -554,8 +554,10 @@ export default function AboutSection() {
           </div>
 
           {/* THE GREETING, floating. It lands exactly on the slot the column
-              reserves below, so the layout still decides where it ends up. */}
-          <div
+              reserves below, so the layout still decides where it ends up.
+              It is the section's heading (the standard's 2.4.10): the slot
+              below is aria-hidden, so this is the one copy that is read. */}
+          <h2
             ref={greetRef}
             className="about-greet-float pointer-events-none absolute top-1/2 left-1/2 z-20 text-center font-display leading-[1.06] font-bold whitespace-nowrap text-white will-change-transform"
             style={{ opacity: 0, fontSize: `${GREET_SIZE_ALONE_VW}vw` }}
@@ -592,7 +594,7 @@ export default function AboutSection() {
                 אני עומר.
               </span>
             </span>
-          </div>
+          </h2>
 
           {/* relative z-10 so the rear balloon layer, which sits at z-[5], can
               actually pass BEHIND this. Without a stacking level of its own,

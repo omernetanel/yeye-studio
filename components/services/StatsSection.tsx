@@ -80,7 +80,7 @@ export default function StatsSection({ title, stats }: StatsSectionProps) {
                     href={item.source.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-2 inline-block font-display text-[11px] leading-[1.4] text-black/45 underline decoration-black/20 underline-offset-[3px] transition-colors hover:text-black hover:decoration-black/60"
+                    className="mt-2 inline-block font-display text-[11px] leading-[1.4] text-black/60 underline decoration-black/20 underline-offset-[3px] transition-colors hover:text-black hover:decoration-black/60"
                   >
                     מקור: {/* One left-to-right run, so the year stays after the name. */}
                     <span dir="ltr">{item.source.name}</span>

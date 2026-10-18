@@ -29,7 +29,11 @@ export default function NotFound() {
       <Navbar />
 
       <div className="flex flex-1 flex-col items-center justify-center px-6 pt-[160px] pb-24 text-center">
-        <p className="font-display text-[clamp(72px,16vw,160px)] leading-[0.9] font-extrabold tracking-tight text-black/10">
+        {/* Decoration, faint on purpose: the heading under it says it. */}
+        <p
+          aria-hidden="true"
+          className="font-display text-[clamp(72px,16vw,160px)] leading-[0.9] font-extrabold tracking-tight text-black/10"
+        >
           404
         </p>
         <h1 className="mt-2 font-display text-[clamp(28px,5vw,46px)] leading-[1.15] font-extrabold tracking-tight text-black">

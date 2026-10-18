@@ -2,6 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import {
+  ALargeSmall,
+  Contrast,
+  Link2,
+  MoveHorizontal,
+  Pause,
+  Type,
+  UnfoldVertical,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { resetA11yPrefs, setA11yPref, useA11yPrefs, type A11yPrefs } from "@/lib/a11y/preferences";
 import { useOverDark } from "@/lib/use-over-dark";
 
@@ -69,8 +80,11 @@ function WheelchairMark() {
  * It sits directly above the WhatsApp mark, in the same size and the same
  * corner, because those two are the only floating things on the page and they
  * read as a pair rather than as clutter. What it offers is deliberately short:
- * three switches that actually change something here, and the statement that
- * says what the site can and cannot claim.
+ * switches that actually change something here, and the statement that says
+ * what the site can and cannot claim. Hiding pictures, greyscale, forced
+ * alignment and moving the button were weighed and left out (2026-10-18): none
+ * is asked for by the standard, and each one is another way to break a page
+ * built on exact measures.
  *
  * WHAT IT IS NOT: a widget that overlays the site with its own styling, or a
  * substitute for building the page properly. The switches lean on CSS the site
@@ -78,10 +92,29 @@ function WheelchairMark() {
  * setting uses.
  */
 
-const SWITCHES: { key: keyof A11yPrefs; label: string; hint: string }[] = [
-  { key: "contrast", label: "ניגודיות גבוהה", hint: "מכהה את הטקסטים הקטנים" },
-  { key: "motion", label: "הפחתת תנועה", hint: "בלי תזוזה, רק הופעה עדינה של התוכן" },
-  { key: "links", label: "הדגשת קישורים", hint: "קו תחתון לכל קישור" },
+// Two short groups with a heading each rather than one list of seven: how the
+// page looks, and how its text sits and moves. Each switch carries an icon, for
+// whoever finds a picture quicker to read than a word.
+type Switch = { key: keyof A11yPrefs; label: string; hint: string; Icon: LucideIcon };
+
+const GROUPS: { title: string; switches: Switch[] }[] = [
+  {
+    title: "תצוגה",
+    switches: [
+      { key: "contrast", label: "ניגודיות גבוהה", hint: "מכהה את הטקסטים הקטנים", Icon: Contrast },
+      { key: "links", label: "הדגשת קישורים", hint: "קו תחתון לכל קישור", Icon: Link2 },
+      { key: "readable", label: "גופן קריא", hint: "גופן פשוט וברור בכל האתר", Icon: Type },
+    ],
+  },
+  {
+    title: "טקסט ותנועה",
+    switches: [
+      { key: "text", label: "טקסט גדול", hint: "מגדיל את הטקסט הרגיל ב-20%", Icon: ALargeSmall },
+      { key: "spacing", label: "ריווח טקסט", hint: "יותר מקום בין אותיות ובין מילים", Icon: MoveHorizontal },
+      { key: "lines", label: "גובה שורה", hint: "יותר מקום בין השורות", Icon: UnfoldVertical },
+      { key: "motion", label: "הפחתת תנועה", hint: "בלי תזוזה, רק הופעה עדינה של התוכן", Icon: Pause },
+    ],
+  },
 ];
 
 export default function AccessibilityMenu() {
@@ -163,42 +196,82 @@ export default function AccessibilityMenu() {
           ref={panelRef}
           role="dialog"
           aria-label="הגדרות נגישות"
-          className="absolute bottom-[calc(100%+12px)] left-0 w-[260px] rounded-2xl bg-white p-4 text-right shadow-[0_20px_60px_-20px_rgba(0,0,0,0.45)] ring-1 ring-black/10"
+          // Its own wheel, not the page's smooth scroll.
+          data-lenis-prevent
+          // Scrolls inside itself when it is taller than the room above the
+          // button: seven switches do not fit a short phone at once.
+          className="absolute bottom-[calc(100%+12px)] left-0 max-h-[calc(100svh-200px)] w-[260px] overflow-y-auto overscroll-contain rounded-2xl bg-white p-4 text-right shadow-[0_20px_60px_-20px_rgba(0,0,0,0.45)] ring-1 ring-black/10"
         >
-          <p className="mb-3 font-display text-[15px] font-bold text-black">הגדרות נגישות</p>
+          {/* A close button that can be seen: Escape and a press outside close
+              it too, but neither is something a reader is told. */}
+          <div className="mb-2 flex items-center justify-between">
+            <p className="font-display text-[15px] font-bold text-black">הגדרות נגישות</p>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                buttonRef.current?.focus();
+              }}
+              aria-label="סגירת הגדרות הנגישות"
+              className="-me-1 flex h-8 w-8 items-center justify-center rounded-full text-black transition-colors hover:bg-black/[0.06]"
+            >
+              <X size={18} aria-hidden="true" />
+            </button>
+          </div>
 
-          <div className="flex flex-col gap-1">
-            {SWITCHES.map((item) => {
-              const on = prefs[item.key];
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  role="switch"
-                  aria-checked={on}
-                  onClick={() => setA11yPref(item.key, !on)}
-                  className="flex w-full items-start justify-between gap-3 rounded-xl px-2 py-2 text-right transition-colors hover:bg-black/[0.04]"
-                >
-                  <span className="mt-[3px] flex h-[18px] w-[32px] shrink-0 items-center rounded-full bg-black/15 px-[2px] transition-colors data-[on=true]:bg-black" data-on={on}>
-                    <span
-                      className="block h-[14px] w-[14px] rounded-full bg-white transition-transform duration-200"
-                      style={{ transform: on ? "translateX(-14px)" : "translateX(0)" }}
-                    />
-                  </span>
-                  <span className="flex-1">
-                    <span className="block font-body text-[14px] text-black">{item.label}</span>
-                    {/* Halfway between where this started (/70) and where it
+          {GROUPS.map((group) => (
+            <div key={group.title} role="group" aria-labelledby={`a11y-group-${group.title}`} className="mt-2">
+              <p
+                id={`a11y-group-${group.title}`}
+                className="px-2 pb-1 font-display text-[12px] font-bold text-black/60"
+              >
+                {group.title}
+              </p>
+              <div className="flex flex-col gap-1">
+                {group.switches.map((item) => {
+                  const on = prefs[item.key];
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      role="switch"
+                      aria-checked={on}
+                      onClick={() => setA11yPref(item.key, !on)}
+                      className="flex w-full items-start justify-between gap-3 rounded-xl px-2 py-2 text-right transition-colors hover:bg-black/[0.04]"
+                    >
+                      <span
+                        className="mt-[3px] flex h-[18px] w-[32px] shrink-0 items-center rounded-full bg-black/15 px-[2px] transition-colors data-[on=true]:bg-black"
+                        data-on={on}
+                      >
+                        <span
+                          className="block h-[14px] w-[14px] rounded-full bg-white transition-transform duration-200"
+                          style={{
+                            transform: on ? "translateX(-14px)" : "translateX(0)",
+                          }}
+                        />
+                      </span>
+                      <item.Icon
+                        size={18}
+                        strokeWidth={1.8}
+                        aria-hidden="true"
+                        className="mt-[2px] shrink-0 text-black"
+                      />
+                      <span className="flex-1">
+                        <span className="block font-body text-[14px] text-black">{item.label}</span>
+                        {/* Halfway between where this started (/70) and where it
                         briefly went (/80). At 12px the hint was the hardest line
                         in the panel to read, and this is the panel someone opens
                         because reading is hard - but /80 made the whole panel
                         feel heavy and pulled the hint level with its label.
                         Still clearly short of the black above it. */}
-                    <span className="block font-body text-[12px] text-black/75">{item.hint}</span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                        <span className="block font-body text-[12px] text-black/75">{item.hint}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
 
           <div className="mt-3 flex items-center justify-between border-t border-black/10 pt-3">
             <button

@@ -7,6 +7,8 @@ const LEGAL_LINKS = [
   { label: "פרטיות", href: "/privacy" },
   { label: "נגישות", href: "/accessibility" },
   { label: "תנאי שימוש", href: "/terms" },
+  // The second way to every page (see app/site-map).
+  { label: "מפת האתר", href: "/site-map" },
 ];
 
 interface FooterProps {

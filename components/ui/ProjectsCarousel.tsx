@@ -108,7 +108,7 @@ export default function ProjectsCarousel({
               </span>
               <span className="mt-1 block font-body text-m-small text-black/55 md:text-[15px]">{entry.category}</span>
               {(entry.leavesSite || entry.hasPage) && (
-                <ExternalNote inSite={entry.hasPage} className="mt-1.5 text-black/50" />
+                <ExternalNote inSite={entry.hasPage} className="mt-1.5 text-black/60" />
               )}
             </>
           );
@@ -177,7 +177,7 @@ export default function ProjectsCarousel({
           shown={current.leavesSite || current.hasPage}
           inSite={current.hasPage}
           href={current.href}
-          className="absolute -top-[21px] left-1/2 -translate-x-1/2 whitespace-nowrap text-black/50"
+          className="absolute -top-[21px] left-1/2 -translate-x-1/2 whitespace-nowrap text-black/60"
         />
         {current.opens ? (
           <Link

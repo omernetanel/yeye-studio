@@ -13,8 +13,8 @@ import { ScrollPiece, useScrollPieces } from "@/components/ui/ScrollPiece";
 import { usePrefersReducedMotion } from "@/lib/reduced-motion";
 
 /**
- * The page for MAY'S: a bakery's brand, made whole - mark, line, menu, cards
- * and stickers.
+ * The page for MAY'S: a bakery's brand, made whole - mark, line, menu, cards,
+ * stickers and the box.
  *
  * NOT THE PROJECT PAGE THE SITES GET. Those are built round a live site in a
  * frame, and there is no site here. This one is built round the mark itself:
@@ -42,8 +42,21 @@ const PIECES = [
     width: 1254,
     height: 1254,
   },
-  // THE PACKAGING GOES HERE once its 3D model exists, and after it whatever
-  // else is made: the brand sheet, the posts, the adverts.
+  // Straight after the stickers: the bag shows one in use.
+  {
+    src: "/images/projects/mays/mays4.webp",
+    alt: "שקית מאפים מנייר לבן סגורה במדבקת הלוגו של MAY'S, ולידה התפריט",
+    width: 1448,
+    height: 1086,
+  },
+  {
+    src: "/images/projects/mays/mays5.webp",
+    alt: "קופסת המאפים של MAY'S: מכסה לבן עם הלוגו בכסף והסלוגן, וצדדים ורודים שזיגוג לבן נוזל עליהם",
+    width: 1448,
+    height: 1086,
+  },
+  // Whatever else is made goes after these: the brand sheet, the posts, the
+  // adverts.
   {
     src: "/images/projects/mays/mays3.webp",
     alt: "פוסטר ותפריט של MAY'S",
@@ -247,6 +260,10 @@ export default function MaysCase() {
           home page; one column on a phone. */}
       <section className="relative bg-white px-6 pt-48 pb-24 md:pt-64 md:pb-40">
         <GlazeDrips className="fill-mays-pink-deep" variant={2} />
+        {/* The section's heading, for whoever reads the page by its headings
+            (the standard's 2.4.10). Seen, it would be the caption this
+            section was designed without. */}
+        <h2 className="sr-only">העבודות שנמסרו</h2>
         <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-12 md:gap-x-6">
           {PIECES.map((piece, index) => (
             <div key={piece.src} className={index % 2 === 0 ? "md:col-span-5" : "md:col-span-7 md:mt-48"}>

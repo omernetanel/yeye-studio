@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { A11Y_STORAGE_KEY } from "@/lib/a11y/storage-key";
+import { A11Y_KEYS, A11Y_STORAGE_KEY } from "@/lib/a11y/storage-key";
 
 /**
  * The reader's own settings, kept by the reader.
@@ -10,20 +10,25 @@ import { A11Y_STORAGE_KEY } from "@/lib/a11y/storage-key";
  * captions — and these do not change that for anyone who has not asked. What
  * they do is give the people who need something else a way to get it without
  * leaving: more contrast in the small type, no motion at all, links that
- * announce themselves as links.
+ * announce themselves as links, larger text, more room between letters and
+ * between lines, and a plainer typeface.
  *
- * Held as attributes on <html> so the whole site answers them in CSS, and
- * written to localStorage so a visitor does not have to set them again on
- * every page. That storage is functional, not tracking: nothing is read from
- * it but these three switches, and it never leaves the browser.
+ * Held as attributes on <html> (data-a11y-<key>) so the whole site answers
+ * them in CSS, and written to localStorage so a visitor does not have to set
+ * them again on every page. That storage is functional, not tracking: nothing
+ * is read from it but these switches, and it never leaves the browser.
  */
-export type A11yPrefs = {
-  contrast: boolean;
-  motion: boolean;
-  links: boolean;
-};
+export type A11yPrefs = Record<(typeof A11Y_KEYS)[number], boolean>;
 
-const DEFAULTS: A11yPrefs = { contrast: false, motion: false, links: false };
+const DEFAULTS: A11yPrefs = {
+  contrast: false,
+  motion: false,
+  links: false,
+  text: false,
+  spacing: false,
+  lines: false,
+  readable: false,
+};
 
 let prefs: A11yPrefs = DEFAULTS;
 let hydrated = false;
@@ -34,11 +39,9 @@ function read(): A11yPrefs {
     const raw = window.localStorage.getItem(A11Y_STORAGE_KEY);
     if (!raw) return DEFAULTS;
     const parsed = JSON.parse(raw) as Partial<A11yPrefs>;
-    return {
-      contrast: parsed.contrast === true,
-      motion: parsed.motion === true,
-      links: parsed.links === true,
-    };
+    const next = { ...DEFAULTS };
+    for (const key of A11Y_KEYS) next[key] = parsed[key] === true;
+    return next;
   } catch {
     // Private windows and blocked storage both throw here. The site works
     // without the memory; it just forgets between visits.
@@ -48,9 +51,7 @@ function read(): A11yPrefs {
 
 function apply(next: A11yPrefs) {
   const root = document.documentElement;
-  root.toggleAttribute("data-a11y-contrast", next.contrast);
-  root.toggleAttribute("data-a11y-motion", next.motion);
-  root.toggleAttribute("data-a11y-links", next.links);
+  for (const key of A11Y_KEYS) root.toggleAttribute(`data-a11y-${key}`, next[key]);
 }
 
 // Told just BEFORE the motion setting changes, while the page is still laid

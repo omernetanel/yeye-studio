@@ -267,9 +267,10 @@ function ContactForm() {
   // on it and leans on light type for contrast.
   return (
     <div className="mx-auto w-full max-w-[720px] px-6 text-center">
-      <h3 className="font-display text-m-title font-bold text-white md:text-[38px] md:leading-snug">
+      {/* h2: a section of its own, after "who I am" (the standard's 2.4.10). */}
+      <h2 className="font-display text-m-title font-bold text-white md:text-[38px] md:leading-snug">
         לא חייבים לדעת בדיוק מה רוצים כדי להתחיל.
-      </h3>
+      </h2>
       <p className="mt-4 font-body text-m-body text-white/70">
         תשאירו כמה פרטים ובדרך כלל אחזור אליכם בתוך יום עסקים אחד. בלי מכירות, בלי התחייבות.
       </p>
@@ -418,6 +419,24 @@ function StageVideo({
       // or letterboxed here — the frame is shown whole at every zoom level.
       className="h-full w-full object-cover"
     />
+  );
+}
+
+/**
+ * What the clip shows, for a screen reader: the clip itself is hidden from one
+ * (it is the room's screen, not content), so this stands in for it.
+ *
+ * NO CAPTIONS, on purpose: the regulations put captions on public bodies and
+ * on businesses past a 5-million turnover only, and the clip has no words to
+ * caption - a song and an office conversation, neither in clear words. Built
+ * and taken out (2026-10-18). Past that turnover, they come back.
+ */
+function ClipDescription() {
+  return (
+    <p className="sr-only">
+      בסרטון: ישיבה במשרד, על השולחן סינבון ענק, ואנשים מסביבו מדברים. ברקע מוזיקה, ובאמצע שירה קצרה ושיחה, בלי מילים
+      ברורות.
+    </p>
   );
 }
 
@@ -916,6 +935,7 @@ export default function ContactStage() {
         className="relative -mt-px overflow-x-clip bg-black pt-14 pb-24 md:pt-16"
       >
         <div className="mx-auto w-full max-w-[560px] px-6">
+          <ClipDescription />
           <div ref={gateRef} className="relative aspect-square w-full overflow-hidden">
             <FramedRoom>
               <StageVideo src={videoSrc} videoRef={videoRef} still />
@@ -1000,6 +1020,7 @@ export default function ContactStage() {
           </FramedRoom>
           <VolumeControl on={soundOn} onChange={toggleSound} className={VOLUME_AT_HEAD} />
         </div>
+        <ClipDescription />
 
         {/* And the ask underneath it. No heading over the picture: the block
             below already opens with one, so putting a second line above the
@@ -1068,6 +1089,15 @@ export default function ContactStage() {
         </div>
 
         <div ref={formRef} className="absolute inset-0 z-10 flex items-center justify-center">
+          {/* WITH HIGH CONTRAST ON, a dark wash behind the form (see
+              .a11y-contrast-scrim). The form stands on the clip while it fills
+              the screen, and the clip has bright frames - the table, the roll -
+              where its white type falls short of the standard's ratio. Inside
+              the form's own layer, so it fades with it. */}
+          <div
+            aria-hidden="true"
+            className="a11y-contrast-scrim pointer-events-none absolute inset-0 hidden bg-radial from-black/70 from-35% to-transparent to-75%"
+          />
           <ContactForm />
         </div>
 
@@ -1076,6 +1106,7 @@ export default function ContactStage() {
             it has pulled back. Above the form's layer, which covers the panel.
             The logo and the menu hold the two corners; the middle is free. */}
         <VolumeControl on={soundOn} onChange={toggleSound} className={cn(VOLUME_AT_HEAD, "top-5 z-20")} />
+        <ClipDescription />
       </div>
     </section>
 

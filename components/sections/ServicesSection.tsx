@@ -514,9 +514,9 @@ function ProcessStages() {
               (STAGE_LINES). The white glow lifts the type off the pencil work
               behind it. */}
           <div className="flex flex-col items-start text-start [text-shadow:0_0_22px_#fff,0_0_8px_#fff]">
-            <span className="font-display text-[clamp(13px,1vw,16px)] font-bold tracking-[0.2em] text-black/45">
+            <span className="font-display text-[clamp(13px,1vw,16px)] font-bold tracking-[0.2em] text-black/70">
               {String(index + 1).padStart(2, "0")}
-              <span className="text-black/25"> / 04</span>
+              <span className="text-black/55"> / 04</span>
             </span>
             <h4 className="mt-3 font-display text-[clamp(32px,3.2vw,52px)] leading-[1.1] font-bold whitespace-nowrap text-black">
               {title}
@@ -982,7 +982,7 @@ export default function ServicesSection() {
                 {/* Its drawing, still and at the sheet's half strength
                     (ART_OPACITY in process/art). */}
                 <StageArtBox index={index} className="relative h-[180px] w-auto opacity-50" />
-                <span className="mt-3 font-display text-[13px] font-bold tracking-[0.18em] text-black/35">
+                <span className="mt-3 font-display text-[13px] font-bold tracking-[0.18em] text-black/60">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <h4 className="mt-2 font-display text-[26px] leading-[1.15] font-bold text-black">{title}</h4>

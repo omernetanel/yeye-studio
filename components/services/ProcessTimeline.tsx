@@ -91,7 +91,7 @@ export default function ProcessTimeline({ title, steps }: ProcessTimelineProps) 
                 >
                   <FoldText text={String(index + 1)} silent />
                 </span>
-                <span className="text-[24px] font-bold text-black/30 md:text-[36px]">/{steps.length}</span>
+                <span className="text-[24px] font-bold text-black/45 md:text-[36px]">/{steps.length}</span>
               </p>
 
               <motion.div

@@ -8,7 +8,7 @@ import CalmMotion from "@/components/layout/CalmMotion";
 import KeepPlace from "@/components/layout/KeepPlace";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import AccessibilityMenu from "@/components/layout/AccessibilityMenu";
-import { A11Y_STORAGE_KEY } from "@/lib/a11y/storage-key";
+import { A11Y_KEYS, A11Y_STORAGE_KEY } from "@/lib/a11y/storage-key";
 
 
 /**
@@ -115,7 +115,7 @@ export default function RootLayout({
             its own try/catch, because storage throws in a private window. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var p=JSON.parse(localStorage.getItem('${A11Y_STORAGE_KEY}')||'{}');var r=document.documentElement;if(p.contrast)r.setAttribute('data-a11y-contrast','');if(p.motion)r.setAttribute('data-a11y-motion','');if(p.links)r.setAttribute('data-a11y-links','');}catch(e){}`,
+            __html: `try{var p=JSON.parse(localStorage.getItem('${A11Y_STORAGE_KEY}')||'{}');var r=document.documentElement;${JSON.stringify(A11Y_KEYS)}.forEach(function(k){if(p[k]===true)r.setAttribute('data-a11y-'+k,'')});}catch(e){}`,
           }}
         />
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
