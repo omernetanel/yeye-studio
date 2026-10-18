@@ -233,16 +233,21 @@ export default function MaysCase() {
         </div>
       </section>
 
-      {/* THE LINE, IN THE BRAND'S OWN COLOUR. */}
-      <section className="relative bg-linear-to-b from-mays-pink to-mays-pink-deep px-6 pt-48 pb-24 md:pt-64 md:pb-36">
+      {/* THE LINE, IN THE BRAND'S OWN COLOUR.
+          On a phone it is a screen of its own, as the opening is: the line a
+          word to a row in the middle of it, and the sentence under it at the
+          foot. As one short block it went by too fast. */}
+      <section className="relative flex min-h-[100svh] flex-col bg-linear-to-b from-mays-pink to-mays-pink-deep px-6 pt-48 pb-24 md:block md:min-h-0 md:pt-64 md:pb-36">
         <GlazeDrips className="fill-white" variant={1} />
-        <div className="mx-auto max-w-[1100px]">
+        <div className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col md:block">
           {/* No label over the line. It had one - a small grey word, then a
               sticker, then plain type - and none of them earned the place: the
               sentence under it says what the line is. */}
           <h2
             data-fold-line
-            className="font-display text-[19vw] leading-[0.95] font-extrabold tracking-tight text-black md:text-[clamp(96px,13vw,200px)]"
+            // 27vw: wide enough that no two words share a row, narrow enough
+            // that the longest ("ממכר.") still fits one.
+            className="my-auto font-display text-[27vw] leading-[0.92] font-extrabold tracking-tight text-black md:my-0 md:text-[clamp(96px,13vw,200px)] md:leading-[0.95]"
           >
             <span className="sr-only">זה באמת ממכר.</span>
             <FoldWords text="זה באמת ממכר." />
