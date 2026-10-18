@@ -407,13 +407,15 @@ function ProcessDiagram({ sheetRef }: { sheetRef: RefObject<HTMLDivElement | nul
             the line is centred on that point rather than hanging from it. */}
         <h3
           data-process-heading
-          aria-label={PROCESS_HEADING.join(" ")}
           // Settled SMALL in the top-right corner of the stage field (the same
           // 13% inset as the stages): a title for the sheet, well below each
           // stage's name, so the two do not fight. Centred at the very top it
           // stood in the navbar's own row, between the logo and the menu.
           className="absolute inset-x-[13%] top-[13%] z-10 flex h-0 items-center justify-start gap-[0.28em] font-display text-[28px] leading-[1.05] font-bold text-black"
         >
+          {/* Its words for a screen reader, as text: a label on a heading is
+              not read by every one of them. */}
+          <span className="sr-only">{PROCESS_HEADING.join(" ")}</span>
           {PROCESS_HEADING.map((line) => (
             <span
               key={line}
@@ -424,7 +426,7 @@ function ProcessDiagram({ sheetRef }: { sheetRef: RefObject<HTMLDivElement | nul
               className="block whitespace-nowrap"
               style={{ opacity: 0 }}
             >
-              <FoldText text={line} />
+              <FoldText text={line} silent />
             </span>
           ))}
         </h3>
@@ -780,7 +782,8 @@ export default function ServicesSection() {
     // The two halves of the heading, each from its place in the big two-line
     // stack at the middle of the sheet to its place in the small settled line
     // in the top-right corner.
-    const lines = heading.children;
+    // Not its sr-only copy, which is read and never moved.
+    const lines = Array.from(heading.children).filter((child) => !child.classList.contains("sr-only"));
     const sheetW = sheet.offsetWidth;
     const sheetH = sheet.offsetHeight;
     for (let i = 0; i < lines.length; i++) {

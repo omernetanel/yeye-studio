@@ -51,7 +51,10 @@ export default function ServiceRow({ service, index, compact = false, className 
       )}
     >
       <div className={cn("flex items-center", compact ? "gap-3" : "gap-5")}>
+        {/* The count is for the eye: read aloud it was "zero one" before every
+            service. */}
         <span
+          aria-hidden="true"
           className={cn(
             "font-display font-bold text-black transition-colors duration-200",
             compact ? "text-m-lead" : "text-5xl",

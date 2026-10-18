@@ -428,7 +428,9 @@ export default function MobileAbout() {
             className="about-m-greet absolute inset-x-0 top-[19%] text-center font-display leading-[1.06] font-bold whitespace-nowrap text-white will-change-transform"
             style={{ fontSize: `${GREET_SIZE_SETTLED_PX}px` }}
           >
-            <span className="block text-[0.4em] text-white/70">
+            {/* Read as one line, not a stop per line. */}
+            <span className="sr-only">נעים מאוד, אני עומר.</span>
+            <span aria-hidden="true" className="block text-[0.4em] text-white/70">
               <span
                 ref={(el) => {
                   greetLinesRef.current[0] = el;
@@ -439,7 +441,7 @@ export default function MobileAbout() {
                 נעים מאוד,
               </span>
             </span>
-            <span className="block text-[1.34em]">
+            <span aria-hidden="true" className="block text-[1.34em]">
               <span
                 ref={(el) => {
                   greetLinesRef.current[1] = el;

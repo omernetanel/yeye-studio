@@ -574,7 +574,9 @@ export default function AboutSection() {
 
                 Sizes in em, so the pair keeps its proportions through every
                 size it passes through on the way down to the column. */}
-            <span className="block text-[0.4em] text-white/70">
+            {/* Read as one line, not a stop per line. */}
+            <span className="sr-only">נעים מאוד, אני עומר.</span>
+            <span aria-hidden="true" className="block text-[0.4em] text-white/70">
               <span
                 ref={(el) => {
                   greetLinesRef.current[0] = el;
@@ -584,7 +586,7 @@ export default function AboutSection() {
                 נעים מאוד,
               </span>
             </span>
-            <span className="block text-[1.34em]">
+            <span aria-hidden="true" className="block text-[1.34em]">
               <span
                 ref={(el) => {
                   greetLinesRef.current[1] = el;

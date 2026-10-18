@@ -225,9 +225,12 @@ export default function ProjectsSection() {
               className="relative flex justify-center gap-[0.25em] font-display text-[clamp(40px,5.2vw,78px)] leading-[1.05] font-extrabold tracking-tight whitespace-nowrap text-black"
               style={{ opacity: 0 }}
             >
+              {/* Read once, whole: a word to a box was three stops on a
+                  phone's screen reader. */}
+              <span className="sr-only">{PROJECTS_HEADING.join(" ")}</span>
               {PROJECTS_HEADING.map((word) => (
                 <span key={word} className="block origin-center">
-                  <FoldText text={word} />
+                  <FoldText text={word} silent />
                 </span>
               ))}
             </h2>

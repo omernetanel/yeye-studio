@@ -221,7 +221,7 @@ export default function Navbar() {
       // Same offset as NavMenu's row, phone and desktop both — see there.
       className="fixed left-6 top-[20px] z-50 md:top-[22px]"
     >
-      <Link href="/" tabIndex={docked ? 0 : -1} aria-label="YEYE">
+      <Link href="/" tabIndex={docked ? 0 : -1} aria-label="YEYE Digital, לעמוד הבית">
         <Image
           ref={imgRef}
           src="/images/logo.png"

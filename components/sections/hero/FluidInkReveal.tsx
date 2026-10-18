@@ -149,6 +149,15 @@ void main () {
   gl_Position = vec4(aPosition, 0.0, 1.0);
 }`;
 
+// A WHOLE STROKE IN ONE PASS. The ink was laid as a row of round splats a few
+// pixels apart, each one a pass over the whole texture - and a fast flick is
+// hundreds of them, several times a frame. That is what made quick play slow,
+// jumpy and stuck. This draws the segment A-B at once: at every pixel, the sum
+// those splats would have added, taken as the integral of the same gaussian
+// along the segment (the splats sat far closer together than their own width,
+// so the sum and the integral are the same picture). `strength` carries the
+// per-length factor the CPU works out (see splatSegment); with A = B it is a
+// single round splat at A, as before.
 const SPLAT_SHADER = `#version 300 es
 precision highp float;
 precision highp sampler2D;
@@ -156,15 +165,39 @@ in vec2 vUv;
 uniform sampler2D uTarget;
 uniform float aspectRatio;
 uniform vec3 color;
-uniform vec2 point;
+uniform vec2 pointA;
+uniform vec2 pointB;
+uniform float strength;
 uniform float radius;
 out vec4 fragColor;
+// Abramowitz and Stegun 7.1.26: within 1.5e-7, and no erf in GLSL.
+float erfApprox(float x) {
+  float s = sign(x);
+  x = abs(x);
+  float t = 1.0 / (1.0 + 0.3275911 * x);
+  float y = 1.0 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * exp(-x * x);
+  return s * y;
+}
 void main () {
-  vec2 p = vUv - point;
-  p.x *= aspectRatio;
-  vec3 splat = exp(-dot(p, p) / radius) * color;
+  vec2 a = vec2(pointA.x * aspectRatio, pointA.y);
+  vec2 b = vec2(pointB.x * aspectRatio, pointB.y);
+  vec2 p = vec2(vUv.x * aspectRatio, vUv.y);
+  vec2 ab = b - a;
+  float len = length(ab);
+  float g;
+  if (len < 1e-6) {
+    vec2 d = p - a;
+    g = exp(-dot(d, d) / radius);
+  } else {
+    vec2 dir = ab / len;
+    vec2 ap = p - a;
+    float along = dot(ap, dir);
+    float across2 = max(dot(ap, ap) - along * along, 0.0);
+    float s = sqrt(radius);
+    g = exp(-across2 / radius) * 0.5 * sqrt(3.14159265 * radius) * (erfApprox((len - along) / s) + erfApprox(along / s));
+  }
   vec3 base = texture(uTarget, vUv).xyz;
-  fragColor = vec4(base + splat, 1.0);
+  fragColor = vec4(base + g * strength * color, 1.0);
 }`;
 
 const ADVECTION_SHADER = `#version 300 es
@@ -1263,17 +1296,35 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     // ---- pointer / splat state ----
     let lastPointer = { x: 0.5, y: 0.5, has: false };
 
+    // The wrapper's shape, read where the pointer is read anyway (toUv), so a
+    // splat never measures the page itself.
+    let aspect = 1;
     const toUv = (clientX: number, clientY: number) => {
       const rect = wrapper.getBoundingClientRect();
+      aspect = rect.width / Math.max(rect.height, 1);
       return {
         x: (clientX - rect.left) / rect.width,
         y: 1 - (clientY - rect.top) / rect.height,
       };
     };
 
-    const splat = (x: number, y: number, dx: number, dy: number) => {
-      const rect = wrapper.getBoundingClientRect();
-      const aspect = rect.width / Math.max(rect.height, 1);
+    // One stroke segment, in two passes - velocity, then dye - however long it
+    // is (see SPLAT_SHADER). What it adds is what the row of splats it replaced
+    // added: one splat every CFG.SPLAT_SPACING of the stroke (scaled like the
+    // radius, so the same on-screen spacing whatever the canvas size), each
+    // carrying its share of the movement as velocity and one unit of dye.
+    // Summed along the segment, that is the movement itself over its length for
+    // the velocity, and the splat count over its length for the dye.
+    const splatSegment = (fromX: number, fromY: number, toX: number, toY: number) => {
+      const dx = toX - fromX;
+      const dy = toY - fromY;
+      const steps = Math.max(1, Math.ceil(Math.hypot(dx, dy) / (CFG.SPLAT_SPACING * splatRadiusScale)));
+      // Length in the shader's own space, where x is scaled by the aspect.
+      const length = Math.hypot(dx * aspect, dy);
+      // Too short to be a segment: one round splat at its end, as before.
+      const point = length < 1e-6;
+      const ax = point ? toX : fromX;
+      const ay = point ? toY : fromY;
 
       gl.viewport(0, 0, velocity.write.width, velocity.write.height);
       gl.useProgram(splatProgram.program);
@@ -1282,9 +1333,11 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       gl.bindTexture(gl.TEXTURE_2D, velocity.read.texture);
       gl.uniform1i(splatProgram.uniforms.uTarget, 0);
       gl.uniform1f(splatProgram.uniforms.aspectRatio, aspect);
-      gl.uniform2f(splatProgram.uniforms.point, x, y);
-      gl.uniform3f(splatProgram.uniforms.color, dx * CFG.SPLAT_FORCE, dy * CFG.SPLAT_FORCE, 0);
+      gl.uniform2f(splatProgram.uniforms.pointA, ax, ay);
+      gl.uniform2f(splatProgram.uniforms.pointB, toX, toY);
       gl.uniform1f(splatProgram.uniforms.radius, CFG.SPLAT_RADIUS * splatRadiusScale);
+      gl.uniform3f(splatProgram.uniforms.color, dx * CFG.SPLAT_FORCE, dy * CFG.SPLAT_FORCE, 0);
+      gl.uniform1f(splatProgram.uniforms.strength, point ? 1 : 1 / length);
       drawQuad();
       velocity.swap();
 
@@ -1294,32 +1347,31 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       gl.bindTexture(gl.TEXTURE_2D, dye.read.texture);
       gl.uniform1i(splatProgram.uniforms.uTarget, 0);
       gl.uniform3f(splatProgram.uniforms.color, 1, 1, 1);
+      gl.uniform1f(splatProgram.uniforms.strength, point ? steps : steps / length);
       drawQuad();
       dye.swap();
     };
 
-    // Interpolates along the stroke, not just at raw pointermove events —
-    // without this a fast flick lands as a row of separate dots, since
-    // pointermove fires roughly once per frame and a quick flick can cover
-    // a hundred+ pixels between two consecutive events. CFG.SPLAT_SPACING
-    // is tuned in UV units for a canvas the size of the (tight) logo box;
-    // now that the wrapper spans the whole Hero, the same real on-screen
-    // drag distance maps to a much smaller UV delta, so the raw constant
-    // alone would under-count steps and leave the stroke visibly gappy —
-    // scaled by splatRadiusScale (same ratio the splat radius itself uses)
-    // to keep the same effective on-screen spacing regardless of how big
-    // the canvas has grown.
-    const splatAlongStroke = (fromX: number, fromY: number, toX: number, toY: number) => {
-      const dx = toX - fromX;
-      const dy = toY - fromY;
-      const dist = Math.hypot(dx, dy);
-      const steps = Math.max(1, Math.ceil(dist / (CFG.SPLAT_SPACING * splatRadiusScale)));
-      for (let i = 1; i <= steps; i++) {
-        const t = i / steps;
-        const x = fromX + dx * t;
-        const y = fromY + dy * t;
-        splat(x, y, dx / steps, dy / steps);
+    // THE STROKE IS DRAWN ONCE A FRAME, NOT ONCE AN EVENT. A pointer can report
+    // many times a frame - a fast mouse several, a high-rate one many more -
+    // and each report was drawn the moment it came. They are queued here and
+    // laid down at the start of the next frame (see step). More than a few in
+    // one frame are joined into a few chords: at that speed the pieces between
+    // them are a pixel or two each and the bend is not visible.
+    const MAX_SEGMENTS_PER_FRAME = 4;
+    let pending: number[][] = [];
+    const queueSegment = (fromX: number, fromY: number, toX: number, toY: number) => {
+      pending.push([fromX, fromY, toX, toY]);
+    };
+    const drawPending = () => {
+      if (pending.length === 0) return;
+      const chunk = Math.ceil(pending.length / MAX_SEGMENTS_PER_FRAME);
+      for (let i = 0; i < pending.length; i += chunk) {
+        const first = pending[i];
+        const last = pending[Math.min(i + chunk, pending.length) - 1];
+        splatSegment(first[0], first[1], last[2], last[3]);
       }
+      pending = [];
     };
 
     const handlePointerMove = (e: PointerEvent) => {
@@ -1334,7 +1386,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       }
       const { x, y } = toUv(e.clientX, e.clientY);
       if (lastPointer.has) {
-        splatAlongStroke(lastPointer.x, lastPointer.y, x, y);
+        queueSegment(lastPointer.x, lastPointer.y, x, y);
       }
       lastPointer = { x, y, has: true };
     };
@@ -1364,7 +1416,7 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       }
       const { x, y } = toUv(touch.clientX, touch.clientY);
       if (lastPointer.has) {
-        splatAlongStroke(lastPointer.x, lastPointer.y, x, y);
+        queueSegment(lastPointer.x, lastPointer.y, x, y);
       }
       lastPointer = { x, y, has: true };
     };
@@ -1438,6 +1490,9 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
       lastTime = now;
 
       gl.disable(gl.BLEND);
+
+      // The stroke since the last frame, before the solve moves it on.
+      drawPending();
 
       // curl
       gl.viewport(0, 0, simWidth, simHeight);
@@ -1596,6 +1651,9 @@ const FluidInkReveal = forwardRef<FluidInkRevealHandle, FluidInkRevealProps>(fun
     const stop = () => {
       if (rafId !== null) cancelAnimationFrame(rafId);
       rafId = null;
+      // A stroke left waiting would land all at once on the way back.
+      pending = [];
+      lastPointer.has = false;
       setChromePaintedByHero(false);
       video.pause();
     };

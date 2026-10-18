@@ -26,7 +26,8 @@ export function stackHeading(
   settle: number,
   sameSize = 0,
 ) {
-  const words = Array.from(heading.children) as HTMLElement[];
+  // Not the heading's sr-only copy of itself, which is read and never moved.
+  const words = (Array.from(heading.children) as HTMLElement[]).filter((child) => !child.classList.contains("sr-only"));
   const widest = Math.max(1, ...words.map((word) => word.offsetWidth));
   let scales = words.map(
     (word) => (bigWidth / Math.max(1, word.offsetWidth)) ** (1 - sameSize) * (bigWidth / widest) ** sameSize,

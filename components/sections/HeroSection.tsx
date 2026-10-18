@@ -68,9 +68,11 @@ function FootMarks({
     painted ? "text-transparent" : "text-black/65 transition-colors hover:text-black"
   }`;
   const marks = [
-    { ref: whatsAppRef, href: `https://wa.me/${WHATSAPP_NUMBER}`, label: "WhatsApp", path: WHATSAPP_PATH, external: true },
-    { ref: mailRef, href: `mailto:${CONTACT_EMAIL}`, label: "Email", path: MAIL_PATH, external: false },
-    { ref: instagramRef, href: INSTAGRAM_URL, label: "Instagram", path: INSTAGRAM_PATH, external: true },
+    // Names in Hebrew: in English a screen reader switches to an English voice
+    // for one word in the middle of a Hebrew page.
+    { ref: whatsAppRef, href: `https://wa.me/${WHATSAPP_NUMBER}`, label: "וואטסאפ", path: WHATSAPP_PATH, external: true },
+    { ref: mailRef, href: `mailto:${CONTACT_EMAIL}`, label: "שליחת מייל", path: MAIL_PATH, external: false },
+    { ref: instagramRef, href: INSTAGRAM_URL, label: "אינסטגרם", path: INSTAGRAM_PATH, external: true },
   ];
   return (
     <div className={`${live ? "pointer-events-auto " : ""}flex items-end ${touch ? "gap-6" : "gap-4"}`}>

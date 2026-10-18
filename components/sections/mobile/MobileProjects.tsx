@@ -165,9 +165,12 @@ export default function MobileProjects() {
         className="relative mb-10 flex flex-wrap justify-center gap-x-[0.25em] px-6 font-display text-m-display font-extrabold tracking-tight whitespace-nowrap text-black"
         style={{ opacity: 0 }}
       >
+        {/* Read once, whole: a word to a box was three stops on a phone's
+            screen reader. */}
+        <span className="sr-only">{PROJECTS_HEADING.join(" ")}</span>
         {PROJECTS_HEADING.map((word) => (
           <span key={word} className="block origin-center">
-            <FoldText text={word} />
+            <FoldText text={word} silent />
           </span>
         ))}
       </h2>

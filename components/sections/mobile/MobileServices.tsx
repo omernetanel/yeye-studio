@@ -704,9 +704,11 @@ export default function MobileServices() {
               ref={headingRef}
               className="flex gap-x-[0.25em] font-display text-m-display font-extrabold tracking-tight whitespace-nowrap text-black"
             >
+              {/* Read once, whole, and not a stop per line (see ProjectsSection). */}
+              <span className="sr-only">{PROCESS_HEADING.join(" ")}</span>
               {PROCESS_HEADING.map((words) => (
                 <span key={words} className="block origin-center">
-                  <FoldText text={words} />
+                  <FoldText text={words} silent />
                 </span>
               ))}
             </h2>
