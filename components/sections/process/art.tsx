@@ -13,8 +13,8 @@
  * 3. The code tilts up into its place.
  * 4. A cursor comes up to "Publish" and presses it.
  *
- * Drawn on the sheet at half strength, like the drawing the desk prints under
- * them: the words are what is read, the drawings are the room.
+ * On the desk at half strength, over the pencil sheet printed under them; on
+ * the phone at full strength, as the subject of the page (see showStageArt).
  *
  * The files are the drawings cut to their own edges (so a place on the drawing
  * is a place on its box) and kept to 900 across - more than either layout
@@ -178,9 +178,17 @@ const runs = new WeakMap<HTMLElement, Run>();
 /**
  * Bring one stage's drawing in (`shown`) or send it out. Called as often as
  * the layout likes - only a change does anything. Once out, the story starts
- * again from the beginning the next time it comes in.
+ * again from the beginning the next time it comes in. `strength` is the
+ * opacity it comes in to: the desk prints it over a pencil sheet, the phone
+ * gives it the page.
  */
-export function showStageArt(box: HTMLElement, index: number, shown: boolean, from: [number, number]) {
+export function showStageArt(
+  box: HTMLElement,
+  index: number,
+  shown: boolean,
+  from: [number, number],
+  strength = ART_OPACITY,
+) {
   let run = runs.get(box);
   if (!run) {
     run = { shown: false, progress: 0, opacity: 0, frame: null, last: 0 };
@@ -202,7 +210,7 @@ export function showStageArt(box: HTMLElement, index: number, shown: boolean, fr
       live.opacity = Math.max(0, live.opacity - dt / FADE_OUT_SECONDS);
       if (live.opacity === 0) live.progress = 0;
     }
-    box.style.opacity = String(live.opacity * ART_OPACITY);
+    box.style.opacity = String(live.opacity * strength);
     poseStageArt(box, index, live.progress, from);
     const moving = live.shown ? live.progress < 1 || live.opacity < 1 : live.opacity > 0;
     live.frame = moving ? requestAnimationFrame(step) : null;

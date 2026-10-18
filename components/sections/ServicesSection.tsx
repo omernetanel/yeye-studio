@@ -98,17 +98,23 @@ const HEADING_IN = [3.8, 4.8] as const;
 // A real pause standing big before it settles — at 0.2s it read as shrinking
 // the moment it had arrived — and a slower settle.
 const HEADING_SETTLE = [5.4, 6.2] as const;
-// How much bigger the heading stands before it settles: 234px, as it always
-// has, against the small settled 28.
-const HEADING_BIG_SCALE = 234 / 28;
+// How much bigger the heading stands before it settles: 170px against the
+// small settled 28. It was 234, and its two lines reached down over the
+// scroll cue at the foot of the sheet.
+const HEADING_BIG_SCALE = 170 / 28;
 // Under the stages' own drawings it is the paper's texture, a step below them.
 const DRAWING_OPACITY = 0.35;
 // A stage holds the sheet for STAGE_SPAN, and STAGE_SWAP of that is the
-// handover at its start. 0.95s is about eighty per cent of a screen of scroll
-// each — long enough to read a name and a line without the page feeling stuck.
+// handover at its start (and again at its end, going). 0.95s is about eighty
+// per cent of a screen of scroll each — long enough to read a name and a line
+// without the page feeling stuck.
+//
+// THE SWAP IS SHORT so a stage is whole for most of its span. At 0.3 a swap in
+// and a swap out took 0.6 of every 0.95, and a trackpad's glide, which stops
+// wherever it stops, came to rest in a fade more often than on a stage.
 const STAGES_START = 6.4;
 const STAGE_SPAN = 0.95;
-const STAGE_SWAP = 0.3;
+const STAGE_SWAP = 0.15;
 const STAGE_RISE_PX = 34;
 // Where the magnifier starts its circle, from the middle of its drawing at
 // rest, in the drawing's own widths: it comes in from the right, the side the
@@ -526,13 +532,14 @@ function ProcessStages() {
         </div>
       ))}
 
-      {/* KEEP SCROLLING, at the foot of the sheet under the stages - the
-          phone's own cue, see ScrollCue, and in the phone's own place. On the
-          right side it stood level with each stage's name, an inch from it.
-          Each stage already carries its numeral; what the reader was missing
-          was not the count but a sign that the page goes on. Hidden while the
+      {/* KEEP SCROLLING - the phone's own cue, see ScrollCue - at the foot of
+          the sheet in the middle, as on the phone. Level with the middle on
+          the right it stood an inch from each stage's name. Low enough to
+          clear the big heading's two lines before they shrink (see
+          HEADING_BIG_SCALE). Each stage already carries its numeral; what the
+          reader was missing was a sign that the page goes on. Hidden while the
           services text is up; update() brings it in as that text goes. */}
-      <div data-process-cue style={{ opacity: 0 }} className="absolute bottom-[-20%] left-1/2 -translate-x-1/2">
+      <div data-process-cue style={{ opacity: 0 }} className="absolute bottom-[-28%] left-1/2 -translate-x-1/2">
         <ScrollCue />
       </div>
     </div>
@@ -781,8 +788,9 @@ export default function ServicesSection() {
       const settledX = heading.offsetLeft + line.offsetLeft + line.offsetWidth / 2;
       const settledY = heading.offsetTop + line.offsetTop + line.offsetHeight / 2;
       // Already at full size where it stands: the entrance is the fold alone.
-      // 56%: the middle of the screen, since the sheet is raised 6%.
-      const bigY = sheetH * 0.56 + (i - (lines.length - 1) / 2) * line.offsetHeight * HEADING_BIG_SCALE;
+      // 50%: a little above the middle of the screen (the sheet is raised
+      // 6%), leaving the scroll cue room under it.
+      const bigY = sheetH * 0.5 + (i - (lines.length - 1) / 2) * line.offsetHeight * HEADING_BIG_SCALE;
       const x = lerp(sheetW / 2 - settledX, 0, settle);
       const y = lerp(bigY - settledY, 0, settle);
       line.style.opacity = "1";

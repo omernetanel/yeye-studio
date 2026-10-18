@@ -184,32 +184,44 @@ const HEADING_STACK_SAME_SIZE = 0.5;
  */
 const HEADING_REST_SCALE = 0.38;
 
-// "1/4", the way the site sets a number: the digit as the largest thing on the
-// screen and the total beside it in grey. Left to right, so it reads in order
+// "01 / 04", small, over the stage's name. Left to right, so it reads in order
 // inside a right-to-left page, and pushed to the end of its row - the right.
-const COUNT_ROW = "flex items-baseline justify-end gap-1.5 font-display select-none";
-const COUNT_DIGIT = "text-m-numeral font-extrabold tracking-[-0.04em] text-black";
-const COUNT_TOTAL = "text-m-display font-bold text-black/30";
+// It was a 168px numeral, the largest thing on the sheet, and the drawing is
+// what should be.
+const COUNT_ROW = "flex items-baseline justify-end gap-[0.4em] font-display text-[14px] font-bold tracking-[0.2em] select-none";
+const COUNT_DIGIT = "text-black/45";
+const COUNT_TOTAL = "text-black/25";
+const countLabel = (n: number) => String(n).padStart(2, "0");
 
 /** Eases both ends of a 0 → 1 move, so the heading lifts off and lands softly. */
 function smoothstep(t: number) {
   return t * t * (3 - 2 * t);
 }
 /**
- * Where each stage's drawing stands on the sheet, as shares of the panel: in
- * the lower half, under the words, and each somewhere else - the magnifier low
- * on the left, the screen and its brush on the right, the code wide on the
- * left, the publish screen across the middle. Tried at 375x812 and 375x667:
- * every one ends above the scroll cue.
+ * Each stage's drawing, centred in one box under the heading and as big as
+ * that box allows: the full width, or the full height for the tall ones. The
+ * box is a size container, and each width is min(its width, its height times
+ * the drawing's own aspect) - so a drawing's size comes from its shape and not
+ * from a number per phone.
+ *
+ * ALWAYS IN THE SAME PLACE, NEARLY FULL STRENGTH. They were each somewhere else on
+ * the sheet, at half strength and under the words, and the eye went looking
+ * for them on every stage.
  */
-const ART_PLACES = [
-  "left-[4%] top-[50%] w-[54%]",
-  "left-[36%] top-[54%] w-[56%]",
-  "left-[5%] top-[57%] w-[72%]",
-  "left-[14%] top-[57%] w-[78%]",
+//
+// Each is centred AS A PICTURE, with what moves over it: the brush rests half
+// off the screen's left edge (0.21 of its width), so that box sits 10.5% of
+// its width right of centre, or the pair hangs to the left.
+const ART_SIZES = [
+  "w-[min(100cqw,83.6cqh)] -translate-x-1/2", // 900/1076
+  "w-[min(100cqw,91.5cqh)] -translate-x-[39.5%]", // 900/984, and the brush
+  "w-[min(100cqw,111.9cqh)] -translate-x-1/2", // 900/804
+  "w-[min(100cqw,127.1cqh)] -translate-x-1/2", // 900/708
 ];
-/** Where the magnifier starts its circle, in its own widths from its rest: over the words above it. */
-const MAGNIFIER_FROM: [number, number] = [0.35, -1];
+/** A little under full strength, so the pencil sits in the paper rather than on it. */
+const ART_STRENGTH = 0.75;
+/** Where the magnifier starts its circle, in its own widths from its rest: in from the right. */
+const MAGNIFIER_FROM: [number, number] = [0.7, 0];
 
 /** How small the stages get as they go back into the folding paper. */
 const COLLAPSED_SCALE = 0.55;
@@ -517,12 +529,12 @@ export default function MobileServices() {
         part.style.transform = lift;
       }
 
-      // ITS DRAWING (process/art), behind the words: in as its words begin to
+      // ITS DRAWING (process/art), above the words: in as its words begin to
       // come in - the incoming half of the swap, so the drawing going out and
       // the one coming in barely meet - and out as they begin to go. The story
       // it tells runs on its own, slower clock.
       const art = artRefs.current[index];
-      if (art) showStageArt(art, index, swapIn >= 0.5 && swapOut < 0.5, MAGNIFIER_FROM);
+      if (art) showStageArt(art, index, swapIn >= 0.5 && swapOut < 0.5, MAGNIFIER_FROM, ART_STRENGTH);
     }
 
     const statementOpacity = fadeIn(time, CUE_STATEMENT_IN);
@@ -588,9 +600,9 @@ export default function MobileServices() {
         <div className="mt-12 space-y-16">
           {STAGE_TITLES.map((title, index) => (
             <div key={title}>
-              {/* Its drawing, standing still above it - at the sheet's half
-                  strength (ART_OPACITY), and at rest, which needs no script. */}
-              <StageArtBox index={index} className="relative mx-auto mb-6 w-[64%] opacity-50" />
+              {/* Its drawing, standing still above it, at rest - which needs
+                  no script. */}
+              <StageArtBox index={index} className="relative mx-auto mb-6 w-[56%] opacity-75" />
               <ProcessStage index={index} withCount />
             </div>
           ))}
@@ -658,26 +670,26 @@ export default function MobileServices() {
             until the paper opens, and it sat over the four service rows and
             swallowed every tap on them. Nothing in it is a link. */}
         <div ref={aboutLayerRef} className="pointer-events-none absolute inset-0 opacity-0">
-          {/* THE SHEET, SET THE WAY THE SITE SETS A PAGE: against the right
-              edge, a numeral as the largest thing on it, a heavy title and one
-              sentence. It was a black disc with a line drawing in it over a
-              centred title - a "features" card, and the one screen on the
-              phone that did not look like this studio.
+          {/* THE SHEET, ONE PAGE IN ONE ORDER: the heading small in its
+              corner, the stage's drawing (process/art) as the subject of the
+              page, and under it the count, the name and the sentence against
+              the right edge. Every stage in the same places, so a swap changes
+              what is on the page and not where to look.
 
-              BEHIND THE WORDS, EACH STAGE'S OWN DRAWING (process/art), in the
-              lower half and never twice in the same place, so the sheet
-              changes with the stage and not just its words. Before the words
-              in the markup, so they are painted under them. */}
-          {ART_PLACES.map((place, index) => (
-            <StageArtBox
-              key={place}
-              index={index}
-              className={`absolute opacity-0 ${place}`}
-              boxRef={(element) => {
-                artRefs.current[index] = element;
-              }}
-            />
-          ))}
+              On a short phone the drawing gives up height and the words move
+              up with it, so the words still end above the scroll cue. */}
+          <div className="absolute inset-x-14 top-[max(112px,17%)] h-[30%] [container-type:size] [@media(max-height:700px)]:h-[27%]">
+            {ART_SIZES.map((size, index) => (
+              <StageArtBox
+                key={size}
+                index={index}
+                className={`absolute top-1/2 left-1/2 -translate-y-1/2 opacity-0 ${size}`}
+                boxRef={(element) => {
+                  artRefs.current[index] = element;
+                }}
+              />
+            ))}
+          </div>
 
           {/* The projects heading's entrance: it folds in as a big stack in the
               middle of the opened sheet, then runs back into one line as it
@@ -699,13 +711,12 @@ export default function MobileServices() {
             </h2>
           </div>
 
-          {/* From a fixed line under the heading, not centred in what is left:
-              centred, the numeral hung in the middle of the sheet with a field
-              of empty paper between it and the heading it belongs to. */}
-          <div className="absolute inset-x-6 top-[23%]">
-            {/* "1/4", and it is also the plainest sign that there is more: the
-                "/4" stands still while the digit in front of it changes. All
-                four digits share one grid cell, set against the slash. */}
+          {/* From a fixed line under the drawing's box, not centred in what is
+              left, so the words stand in the same place on every stage. */}
+          <div className="absolute inset-x-6 top-[51%] [@media(max-height:700px)]:top-[47%]">
+            {/* "01 / 04", and it is also the plainest sign that there is more:
+                the "/ 04" stands still while the number in front of it changes.
+                All four share one grid cell, set against the slash. */}
             <p ref={countRef} dir="ltr" aria-hidden="true" className={`${COUNT_ROW} opacity-0`}>
               <span className="grid justify-items-end">
                 {STAGE_TITLES.map((title, index) => (
@@ -716,15 +727,15 @@ export default function MobileServices() {
                     }}
                     className={`${COUNT_DIGIT} opacity-0 [grid-area:1/1]`}
                   >
-                    {index + 1}
+                    {countLabel(index + 1)}
                   </span>
                 ))}
               </span>
-              <span className={COUNT_TOTAL}>/{STAGE_COUNT}</span>
+              <span className={COUNT_TOTAL}>/ {countLabel(STAGE_COUNT)}</span>
             </p>
             {/* All four stacked in one grid cell, so each stage takes the same
                 place as the one before and the block holds still as they swap. */}
-            <div className="mt-6 grid">
+            <div className="mt-2 grid">
               {STAGE_TITLES.map((title, index) => (
                 <ProcessStage
                   key={title}
@@ -739,22 +750,23 @@ export default function MobileServices() {
           </div>
         </div>
 
-        {/* KEEP SCROLLING (see ScrollCue): at the foot of the screen from the
-            first frame of the section, on the ball, until the section lets
-            go. On the panel and not in the layer above, which shrinks away with
-            the crumple. */}
-        <div
-          ref={cueRef}
-          className="pointer-events-none absolute inset-x-0 bottom-[max(18px,env(safe-area-inset-bottom))] flex justify-center opacity-0"
-        >
-          <ScrollCue />
-        </div>
-
         {/* 22%, not 11%. The clip is 9:16 inside a screen that is taller than
             that, so the bottom eighth of this panel is the letterbox — the line
             was sitting half on the footage and half on white. */}
         <div ref={statementLayerRef} className="pointer-events-none absolute inset-x-0 bottom-[22%] px-6 opacity-0">
           <Statement />
+        </div>
+
+        {/* KEEP SCROLLING (see ScrollCue): at the foot of the screen from the
+            first frame of the section, on the ball, until the section lets
+            go. On the panel and not in the layer above, which shrinks away with
+            the crumple. The short line: with the browser's bars showing, the
+            full one stood almost against the fourth service. */}
+        <div
+          ref={cueRef}
+          className="pointer-events-none absolute inset-x-0 bottom-[max(14px,env(safe-area-inset-bottom))] flex justify-center opacity-0"
+        >
+          <ScrollCue short />
         </div>
       </div>
     </section>
@@ -813,9 +825,9 @@ function ProcessStage({
   return (
     <div ref={stageRef} className={`text-right ${className ?? ""}`}>
       {withCount && (
-        <p dir="ltr" aria-hidden="true" className={`${COUNT_ROW} mb-5`}>
-          <span className={COUNT_DIGIT}>{index + 1}</span>
-          <span className={COUNT_TOTAL}>/{STAGE_COUNT}</span>
+        <p dir="ltr" aria-hidden="true" className={`${COUNT_ROW} mb-2`}>
+          <span className={COUNT_DIGIT}>{countLabel(index + 1)}</span>
+          <span className={COUNT_TOTAL}>/ {countLabel(STAGE_COUNT)}</span>
         </p>
       )}
       <h3 className="paper-halo font-display text-m-statement leading-[1.15] font-extrabold text-balance text-black">

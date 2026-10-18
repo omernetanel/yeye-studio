@@ -370,12 +370,17 @@ export default function HeroSection() {
               line it was a caption. Broken and set larger it carries the
               weight of being the only sentence on the screen. Balanced rather
               than hand-broken — a manual break is only ever right at one width;
-              the paper copies whatever break the browser chose. */}
+              the paper copies whatever break the browser chose.
+
+              Capped at 13em so it is two lines on EVERY phone: on the widest
+              (Pro Max) the whole sentence fit on one, and ran under the menu
+              button at its end. Half of it is far under 13em, so it never
+              becomes three. */}
           <p
             ref={taglineRef}
             // font-medium, the weight of the two links under the wordmark: at
             // semibold the line read as a second headline competing with it.
-            className={`text-right font-display text-[21px] leading-[1.3] font-medium text-balance ${
+            className={`max-w-[13em] self-start text-right font-display text-[21px] leading-[1.3] font-medium text-balance ${
               painted ? "text-transparent" : "text-black"
             }`}
           >

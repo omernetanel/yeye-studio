@@ -364,7 +364,7 @@ body {
    a blink - it has to say the page is alive without asking to be looked at. */
 @keyframes scroll-cue {
   0% {
-    transform: translateY(19px);
+    transform: translateY(var(--cue-from, 19px));
     opacity: 0;
   }
   25%,
@@ -372,7 +372,7 @@ body {
     opacity: 1;
   }
   100% {
-    transform: translateY(-32px);
+    transform: translateY(var(--cue-to, -32px));
     opacity: 0;
   }
 }
