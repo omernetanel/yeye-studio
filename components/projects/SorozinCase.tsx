@@ -344,7 +344,7 @@ export default function SorozinCase({ site }: Props) {
           HEADING IS THE DECISION, not an announcement: "and the landing page,
           live" stood here, and only said what the frame under it shows. */}
       <section className="relative bg-white px-6 pt-40 pb-24 md:pt-72 md:pb-40">
-        <BladeCut className="fill-neutral-900" flip dark variant={3} />
+        <BladeCut className="fill-neutral-900" flip variant={3} />
         <div className="mx-auto max-w-[1400px]">
           <div className="mx-auto max-w-[1100px]">
             <h2 className="font-display text-m-display font-extrabold tracking-tight text-black md:text-[clamp(56px,7.4vw,112px)] md:leading-[1.02]">

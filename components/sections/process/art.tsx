@@ -23,6 +23,8 @@
  *     -c:v libwebp -quality 82 -compression_level 6 -pix_fmt yuva420p hiw_1.webp
  */
 
+import { useEffect, useState } from "react";
+
 /**
  * A picture, its shape as a Tailwind aspect class (a class, so it is in the
  * stylesheet), and the same shape as a number - height over width.
@@ -240,14 +242,27 @@ export function StageArtBox({
 }) {
   const art = STAGE_ART[index];
   const rest = art.visitor && visitorRest(art.main, art.visitor);
+  // AFTER THE PAGE, like the sheet's own frames: the section is straight under
+  // the hero, so its drawings would otherwise share the connection with the
+  // hero's clip while that is what is on screen.
+  const [pageLoaded, setPageLoaded] = useState(false);
+  useEffect(() => {
+    const loaded = () => setPageLoaded(true);
+    if (document.readyState === "complete") {
+      loaded();
+      return;
+    }
+    window.addEventListener("load", loaded, { once: true });
+    return () => window.removeEventListener("load", loaded);
+  }, []);
   return (
     <div ref={boxRef} aria-hidden="true" className={`pointer-events-none ${art.main.aspect} ${className ?? ""}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={art.main.src} alt="" className="absolute inset-0 h-full w-full will-change-transform" draggable={false} />
+      <img src={pageLoaded ? art.main.src : undefined} alt="" className="absolute inset-0 h-full w-full will-change-transform" draggable={false} />
       {art.visitor && rest && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={art.visitor.src}
+          src={pageLoaded ? art.visitor.src : undefined}
           alt=""
           className={`absolute max-w-none will-change-transform ${art.visitor.aspect}`}
           // Its place and size come from the data above, so they are set here

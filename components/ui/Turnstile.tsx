@@ -12,7 +12,7 @@ import { TURNSTILE_SITE_KEY } from "@/lib/site";
  * a send that does not carry a token this produced (app/api/contact/route.ts).
  *
  * NOTHING TO SEE, almost always. It runs in the background from the moment
- * the page loads, and only a visitor Cloudflare is unsure of is shown a box to
+ * the page has loaded, and only a visitor Cloudflare is unsure of is shown a box to
  * tick, here, under the fields. Its box is never hidden: hidden, it was never
  * rendered into, and every send was refused as a bot's.
  *
@@ -124,13 +124,16 @@ const Turnstile = forwardRef<TurnstileHandle, { theme: "light" | "dark"; classNa
         });
     };
 
-    // AT ONCE, with the page. It used to wait for the form to come near the
-    // screen; a check that starts with the page is one that is always done by
-    // the time anyone presses send.
-    start();
+    // WITH THE PAGE, as soon as it has loaded. It used to wait for the form to
+    // come near the screen; a check that starts with the page is one that is
+    // always done by the time anyone presses send. Not before the load: its
+    // challenge is over a megabyte, and the hero's clip comes first.
+    if (document.readyState === "complete") start();
+    else window.addEventListener("load", start, { once: true });
 
     return () => {
       cancelled = true;
+      window.removeEventListener("load", start);
       if (widgetRef.current !== null) apiRef.current?.remove(widgetRef.current);
       widgetRef.current = null;
       for (const resolve of waiters.splice(0)) resolve(null);

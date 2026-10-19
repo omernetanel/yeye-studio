@@ -91,7 +91,8 @@ function fadeSound(video: HTMLVideoElement, level: number, timer: { current: num
   }, 16);
 }
 // The room: a dark office front with a wall-mounted screen, and the screen is a
-// hole in the picture.
+// hole in the picture. Held back with the clip, on the same gate, so the two
+// arrive together and neither waits on the other.
 const ROOM_SRC = "/images/open_space_bg.webp";
 
 // How far ahead of the stage the clip starts downloading, as a share of the
@@ -503,7 +504,7 @@ function VolumeControl({
  * fractions of the plate: nothing here is measured by eye, and moving the
  * cut-out moves both.
  */
-function FramedRoom({ children }: { children: ReactNode }) {
+function FramedRoom({ room, children }: { room: string | undefined; children: ReactNode }) {
   return (
     <div
       className="absolute"
@@ -529,7 +530,7 @@ function FramedRoom({ children }: { children: ReactNode }) {
       </div>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={ROOM_SRC}
+        src={room}
         alt=""
         aria-hidden="true"
         width={ROOM_W}
@@ -937,7 +938,7 @@ export default function ContactStage() {
         <div className="mx-auto w-full max-w-[560px] px-6">
           <ClipDescription />
           <div ref={gateRef} className="relative aspect-square w-full overflow-hidden">
-            <FramedRoom>
+            <FramedRoom room={videoSrc && ROOM_SRC}>
               <StageVideo src={videoSrc} videoRef={videoRef} still />
             </FramedRoom>
             <VolumeControl on={soundOn} onChange={toggleSound} className={VOLUME_AT_HEAD} />
@@ -1015,7 +1016,7 @@ export default function ContactStage() {
           data-balloon-floor
           className="relative z-10 aspect-square w-full overflow-hidden"
         >
-          <FramedRoom>
+          <FramedRoom room={videoSrc && ROOM_SRC}>
             <StageVideo src={videoSrc} videoRef={videoRef} />
           </FramedRoom>
           <VolumeControl on={soundOn} onChange={toggleSound} className={VOLUME_AT_HEAD} />
@@ -1075,7 +1076,7 @@ export default function ContactStage() {
 
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={ROOM_SRC}
+            src={videoSrc && ROOM_SRC}
             alt=""
             aria-hidden="true"
             width={ROOM_W}
@@ -1124,7 +1125,7 @@ export default function ContactStage() {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={ROOM_SRC}
+          src={videoSrc && ROOM_SRC}
           alt=""
           width={ROOM_W}
           height={ROOM_H}

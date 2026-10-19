@@ -47,7 +47,6 @@ const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 export default function BladeCut({
   className,
   flip = false,
-  dark = false,
   variant = 0,
   heavy = false,
 }: {
@@ -55,8 +54,6 @@ export default function BladeCut({
   className: string;
   /** The deep end on the other side: the blade goes in from the left. */
   flip?: boolean;
-  /** The section above is dark, so its edge is honed light rather than dark. */
-  dark?: boolean;
   /** Which depth. Each seam on a page takes its own. */
   variant?: number;
   /** Deeper, for the last seam on a page. The section under it has to leave the room. */
@@ -111,21 +108,11 @@ export default function BladeCut({
     >
       {width > 0 && (
         <>
-          {/* The cut itself and its honed edge, stretched together from the
-              top. A pixel over the section above, so no hairline of the page
-              shows between the two. */}
+          {/* The cut, stretched from the top. A pixel over the section above,
+              so no hairline of the page shows between the two. No honed edge
+              along it (removed 2026-10-19): it read as a shadow. */}
           <g ref={cutRef} className="[transform-box:view-box] [transform-origin:0_0]">
             <polygon points={`${from},-1 ${to},-1 ${to},${depth.toFixed(1)} ${from},0`} />
-            <line
-              x1={from}
-              y1={0}
-              x2={to}
-              y2={depth.toFixed(1)}
-              strokeWidth={1.5}
-              // The same hairline at every depth, however far it is stretched.
-              vectorEffect="non-scaling-stroke"
-              className={dark ? "stroke-white/25" : "stroke-black/10"}
-            />
           </g>
         </>
       )}
