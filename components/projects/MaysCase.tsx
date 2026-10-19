@@ -58,8 +58,8 @@ const PIECES = [
   // Whatever else is made goes after these: the brand sheet, the posts, the
   // adverts.
   {
-    src: "/images/projects/mays/mays3.webp",
-    alt: "פוסטר ותפריט של MAY'S",
+    src: "/images/projects/mays/mays3_2.webp",
+    alt: "שני פוסטרים של MAY'S על קיר, \"פשוט ממכר.\": סינבון ביד, ועוגת שמרים חצויה",
     width: 1448,
     height: 1086,
   },
