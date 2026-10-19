@@ -41,14 +41,16 @@ export const designWork: DesignBrand[] = [
     line: "קונדיטוריה / מיתוג מלא",
     page: "/projects/mays",
     pieces: [
+      // The order the brand was made in: the mark, then what it went on - the
+      // box, the print, the posters. Squares and landscapes alternate, so the
+      // two columns they are dealt into each get one of each. The bag is on
+      // the brand's own page only (2026-10-19): four here is enough.
       {
         src: "/images/projects/mays/mays1.webp",
         alt: "הלוגו של MAY'S פתוח על מסך מחשב נייד",
         width: 1254,
         height: 1254,
       },
-      // The packaging second: between the logo and the print, not after
-      // everything else.
       {
         src: "/images/projects/mays/mays5.webp",
         alt: "קופסת המאפים של MAY'S: מכסה לבן עם הלוגו בכסף והסלוגן, וצדדים ורודים שזיגוג לבן נוזל עליהם",
