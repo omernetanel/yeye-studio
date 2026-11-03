@@ -64,8 +64,8 @@ export const designWork: DesignBrand[] = [
         height: 1254,
       },
       {
-        src: "/images/projects/mays/mays3_2.webp",
-        alt: "שני פוסטרים של MAY'S על קיר, \"פשוט ממכר.\": סינבון ביד, ועוגת שמרים חצויה",
+        src: "/images/projects/mays/mays7.webp",
+        alt: "שני פוסטרים של MAY'S על קיר, \"באמת ממכר.\": סינבון ביד, ועוגת שמרים חצויה",
         width: 1448,
         height: 1086,
       },
