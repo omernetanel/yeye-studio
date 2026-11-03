@@ -58,7 +58,7 @@ export const designWork: DesignBrand[] = [
         height: 1086,
       },
       {
-        src: "/images/projects/mays/mays2.webp",
+        src: "/images/projects/mays/mays2_2.webp",
         alt: "כרטיסי ביקור וגיליון מדבקות של MAY'S",
         width: 1254,
         height: 1254,
