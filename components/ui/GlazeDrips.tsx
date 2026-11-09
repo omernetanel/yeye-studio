@@ -178,7 +178,10 @@ export default function GlazeDrips({
     <svg
       ref={svgRef}
       aria-hidden="true"
-      className={cn("pointer-events-none absolute inset-x-0 top-0 block w-full", className)}
+      // A pixel up and allowed to draw past its own top, so the path's row above
+      // the edge is painted: on a screen whose pixel ratio puts the seam between
+      // device pixels, the page showed through there as a white hairline.
+      className={cn("pointer-events-none absolute inset-x-0 -top-px block w-full overflow-visible", className)}
       height={heavy ? HEIGHT_HEAVY : HEIGHT}
     >
       <path ref={pathRef} />
