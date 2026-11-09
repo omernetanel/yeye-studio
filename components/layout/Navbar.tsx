@@ -198,17 +198,18 @@ export default function Navbar() {
         events, deliberately, and sit above everything. What they cover is the
         strip under the clock and under the address bar, where a tap belongs
         to the browser anyway. Phone only - the desk's chrome was never part
-        of this. */}
+        of this - and Safari only: everywhere else they are not displayed
+        (data-ios-safari, set in the layout before the first paint). */}
     <div
       ref={tintRef}
       aria-hidden="true"
-      className="fixed inset-x-0 top-0 z-[60] h-[12px] md:hidden"
+      className="fixed inset-x-0 top-0 z-[60] hidden h-[12px] max-md:[[data-ios-safari]_&]:block"
       style={{ backgroundColor: SITE_BACKGROUND }}
     />
     <div
       ref={bottomTintRef}
       aria-hidden="true"
-      className="fixed inset-x-0 bottom-0 z-[60] h-[12px] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-[60] hidden h-[12px] max-md:[[data-ios-safari]_&]:block"
       style={{ backgroundColor: SITE_BACKGROUND }}
     />
     <motion.div

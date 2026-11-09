@@ -118,6 +118,18 @@ export default function RootLayout({
             __html: `try{var p=JSON.parse(localStorage.getItem('${A11Y_STORAGE_KEY}')||'{}');var r=document.documentElement;${JSON.stringify(A11Y_KEYS)}.forEach(function(k){if(p[k]===true)r.setAttribute('data-a11y-'+k,'')});}catch(e){}`,
           }}
         />
+        {/* SAFARI ON AN iPHONE OR iPAD, marked before the first paint: the one
+            browser that tints its chrome from the Navbar's edge strips, so the
+            only one that shows them. Chrome, Firefox and Edge on iOS, and the
+            in-app browsers (Instagram's opens every link from the profile),
+            draw their own bars, and the strips were bands across the page.
+            In-app browsers leave Safari's "Version/... Safari/" out of their
+            user agent; the others add their own name to it. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: String.raw`var u=navigator.userAgent;if(/iP(hone|od|ad)/.test(u)&&/Version\/[\d.]+.*Safari\//.test(u)&&!/CriOS|FxiOS|EdgiOS|OPiOS/.test(u))document.documentElement.setAttribute('data-ios-safari','');`,
+          }}
+        />
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
         <MediaGuard />
         <CalmMotion />
